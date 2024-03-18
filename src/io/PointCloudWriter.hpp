@@ -10,6 +10,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     LASWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~LASWriterInterface() = default;
 
     virtual void write_pointcloud(
       PointCollection& pointcloud, 

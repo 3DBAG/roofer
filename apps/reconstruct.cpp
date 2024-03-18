@@ -56,7 +56,8 @@ int main(int argc, const char * argv[]) {
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
 
-  std::string path_pointcloud = "/Users/ravi/git/roofer/wippolder/wippolder.las";
+  std::string path_pointcloud = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
+  std::string path_footprint = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
 
   // bool output_all = cmdl[{"-a", "--all"}];
   // bool write_rasters = cmdl[{"-r", "--rasters"}];
@@ -98,7 +99,7 @@ int main(int argc, const char * argv[]) {
   // Try to spawn a new viewer instance.
   rec.spawn().exit_on_failure();
 
-  rec.log("world", 
+  rec.log("world/raw_points", 
     rerun::Collection{rerun::components::AnnotationContext{
       rerun::datatypes::AnnotationInfo(6, "BUILDING", rerun::datatypes::Rgba32(255,0,0)),
       rerun::datatypes::AnnotationInfo(2, "GROUND"),
@@ -110,10 +111,17 @@ int main(int argc, const char * argv[]) {
 
   spdlog::info("Start plane detection");
   auto PlaneDetector = roofer::detection::createPlaneDetector();
-
-  // PlaneDetector->detect(points);
-  spdlog::info("Completed plane detection");
-  // rec.log("world/segmented_points", rerun::Points3D(points).with_class_ids(PlaneDetector->plane_id));
+  PlaneDetector->detect(points);
+  spdlog::info("Completed plane detection [{}]", PlaneDetector->plane_id.size());
+  
+  roofer::vec1i plane_id = PlaneDetector->plane_id;
+  
+  rec.log("world/segmented_points", 
+    rerun::Collection{rerun::components::AnnotationContext{
+      rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(0,0,0))
+    }}
+  );
+  rec.log("world/segmented_points", rerun::Points3D(points).with_class_ids(plane_id));
   spdlog::info("Logged plane detection result");
   // Log the "my_points" entity with our data, using the `Points3D` archetype.
   // rec.log("my_points", rerun::Points3D(pts).with_colors(colors).with_radii({0.5f}));

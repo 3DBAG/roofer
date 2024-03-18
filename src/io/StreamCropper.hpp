@@ -22,6 +22,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     PointCloudCropperInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~PointCloudCropperInterface() = default;
 
     virtual void process(
       std::string source,

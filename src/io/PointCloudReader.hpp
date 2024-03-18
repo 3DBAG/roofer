@@ -9,6 +9,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     PointCloudReaderInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~PointCloudReaderInterface() = default;
 
     virtual void open(const std::string& source) = 0;
 

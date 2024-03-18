@@ -200,9 +200,12 @@ namespace roofer::detection {
   }
   };
 
-struct PlaneDetector : PlaneDetectorInterface {
+class PlaneDetector : public PlaneDetectorInterface {
 
-  void detect(PointCollection& points, const PlaneDetectorConfig cfg) override {
+  public:
+  using PlaneDetectorInterface::PlaneDetectorInterface;
+
+  void detect(const PointCollection& points, const PlaneDetectorConfig cfg) override {
 
     // convert to cgal points with attributes
     PNL_vector pnl_points;
@@ -382,7 +385,7 @@ struct PlaneDetector : PlaneDetectorInterface {
     for(auto& p : pnl_points) {
       auto pid = boost::get<2>(p);
       if (pid==0) ++unsegmented_pt_cnt;
-      // plane_id.push_back(pid);
+      plane_id.push_back(pid);
       // is_wall.push_back(boost::get<3>(p));
       // is_horizontal.push_back(boost::get<9>(p));
     }

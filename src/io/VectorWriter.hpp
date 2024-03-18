@@ -20,6 +20,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     VectorWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~VectorWriterInterface() = default;
 
     virtual void writePolygons(
       const std::string& source, 

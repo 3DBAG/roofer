@@ -48,7 +48,8 @@ struct PlaneDetectorInterface {
     float roof_elevation_min;
     float roof_elevation_max;
 
-    virtual void detect(PointCollection& points, PlaneDetectorConfig config=PlaneDetectorConfig()) = 0;
+    virtual ~PlaneDetectorInterface() = default;
+    virtual void detect(const PointCollection& points, PlaneDetectorConfig config=PlaneDetectorConfig()) = 0;
 };
 
 std::unique_ptr<PlaneDetectorInterface> createPlaneDetector();

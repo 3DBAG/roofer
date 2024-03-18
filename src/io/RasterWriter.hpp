@@ -10,6 +10,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     RasterWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~RasterWriterInterface() = default;
 
     virtual void writeBands(
       const std::string& source, 

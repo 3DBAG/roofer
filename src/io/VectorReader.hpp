@@ -9,6 +9,7 @@ namespace roofer {
     projHelperInterface& pjHelper;
 
     VectorReaderInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    virtual ~VectorReaderInterface() = default;
 
     virtual void open(const std::string& source) = 0;
 
