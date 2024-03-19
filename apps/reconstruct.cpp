@@ -1,7 +1,8 @@
 #include "projHelper.hpp"
 #include "io/PointCloudReader.hpp"
-#include "detection/ShapeDetector.hpp"
+#include "detection/PlaneDetector.hpp"
 #include "detection/AlphaShaper.hpp"
+#include "detection/LineDetector.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -128,7 +129,13 @@ int main(int argc, const char * argv[]) {
   auto AlphaShaper = roofer::detection::createAlphaShaper();
   AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
   spdlog::info("Completed alpha shaper, found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
-
   rec.log("world/alpha_rings", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
+
+  spdlog::info("Start Line Detector");
+  auto LineDetector = roofer::detection::createLineDetector();
+  LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids, PlaneDetector->pts_per_roofplane);
+  // spdlog::info("Completed alpha shaper, found {} rings, {} labels", LineDetector->alpha_rings.size(), LineDetector->roofplane_ids.size());
+  rec.log("world/boundary_lines", rerun::LineStrips3D(LineDetector->edge_segments));
+  
 
 }

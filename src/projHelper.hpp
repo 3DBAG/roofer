@@ -9,6 +9,7 @@ namespace roofer {
     std::optional<arr3d> data_offset;
 
     projHelperInterface() {};
+    virtual ~projHelperInterface() = default;
 
     virtual void proj_construct() = 0;
     virtual void proj_clone_from(const projHelperInterface&) = 0;

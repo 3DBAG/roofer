@@ -60,6 +60,9 @@ add_library(rooferlib
   src/pip_util.cpp
   src/detection/PlaneDetector.cpp
   src/detection/AlphaShaper.cpp
+  src/detection/LineDetector.cpp
+  src/detection/LineDetectorBase.cpp
+  src/detection/LineRegulariserBase.cpp
   src/geometry/Vector2DOpsGEOS.cpp
   src/geometry/NodataCircleComputer.cpp
   src/geometry/PointcloudRasteriser.cpp
