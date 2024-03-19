@@ -59,6 +59,7 @@ add_library(rooferlib
   src/geometry/Raster.cpp
   src/pip_util.cpp
   src/detection/PlaneDetector.cpp
+  src/detection/AlphaShaper.cpp
   src/geometry/Vector2DOpsGEOS.cpp
   src/geometry/NodataCircleComputer.cpp
   src/geometry/PointcloudRasteriser.cpp

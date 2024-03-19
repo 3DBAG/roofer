@@ -3,10 +3,6 @@
 #include <memory>
 
 namespace roofer::detection {
-// Type declarations.
-
-// Types
-typedef std::unordered_map<int, std::pair<Plane, std::vector<Point>>> IndexedPlanesWithPoints;
 
 struct PlaneDetectorConfig{
     float horiz_min_count = 0.95;

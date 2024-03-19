@@ -1,6 +1,7 @@
 #include "projHelper.hpp"
 #include "io/PointCloudReader.hpp"
 #include "detection/ShapeDetector.hpp"
+#include "detection/AlphaShaper.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -112,18 +113,22 @@ int main(int argc, const char * argv[]) {
   spdlog::info("Start plane detection");
   auto PlaneDetector = roofer::detection::createPlaneDetector();
   PlaneDetector->detect(points);
-  spdlog::info("Completed plane detection [{}]", PlaneDetector->plane_id.size());
+  spdlog::info("Completed plane detection, found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
   
   roofer::vec1i plane_id = PlaneDetector->plane_id;
   
   rec.log("world/segmented_points", 
     rerun::Collection{rerun::components::AnnotationContext{
-      rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(0,0,0))
+      rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(30,30,30))
     }}
   );
   rec.log("world/segmented_points", rerun::Points3D(points).with_class_ids(plane_id));
-  spdlog::info("Logged plane detection result");
-  // Log the "my_points" entity with our data, using the `Points3D` archetype.
-  // rec.log("my_points", rerun::Points3D(pts).with_colors(colors).with_radii({0.5f}));
+
+  spdlog::info("Start alpha shaper");
+  auto AlphaShaper = roofer::detection::createAlphaShaper();
+  AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
+  spdlog::info("Completed alpha shaper, found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
+
+  rec.log("world/alpha_rings", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
 
 }
