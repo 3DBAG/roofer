@@ -5,6 +5,7 @@
 #include "detection/LineDetector.hpp"
 #include "detection/LineRegulariser.hpp"
 #include "detection/PlaneIntersector.hpp"
+#include "detection/SegmentRasteriser.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -91,13 +92,22 @@ int main(int argc, const char * argv[]) {
   PointReader->open(path_pointcloud);
   spdlog::info("Reading pointcloud from {}", path_pointcloud);
   roofer::vec1i classification;
-  roofer::PointCollection points;
+  roofer::PointCollection points, points_ground, points_roof;
   roofer::AttributeVecMap attributes;
   PointReader->readPointCloud(points, &classification);
-
   spdlog::info("Read {} points", points.size());
 
+  // split into ground and roof points
+  for (size_t i=0; i<points.size(); ++i) {
+    if( 2 == classification[i] ) {
+      points_ground.push_back(points[i]);
+    } else if( 6 == classification[i] ) {
+      points_roof.push_back(points[i]);
+    }
+  }
 
+  spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
+  
   // Create a new `RecordingStream` which sends data over TCP to the viewer process.
   const auto rec = rerun::RecordingStream("Roofer rerun test");
   // Try to spawn a new viewer instance.
@@ -113,25 +123,36 @@ int main(int argc, const char * argv[]) {
 
   rec.log("world/raw_points", rerun::Points3D(points).with_class_ids(classification));
 
-  spdlog::info("Start plane detection");
+  spdlog::info("Start plane detection (roof)");
   auto PlaneDetector = roofer::detection::createPlaneDetector();
-  PlaneDetector->detect(points);
-  spdlog::info("Completed plane detection, found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
+  PlaneDetector->detect(points_roof);
+  spdlog::info("Completed plane detection (roof), found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
   
-  roofer::vec1i plane_id = PlaneDetector->plane_id;
+  spdlog::info("Start plane detection (ground)");
+  auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
+  PlaneDetector_ground->detect(points_ground);
+  spdlog::info("Completed plane detection (ground), found {} groundplanes", PlaneDetector_ground->pts_per_roofplane.size());
+
   
   rec.log("world/segmented_points", 
     rerun::Collection{rerun::components::AnnotationContext{
       rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(30,30,30))
     }}
   );
-  rec.log("world/segmented_points", rerun::Points3D(points).with_class_ids(plane_id));
+  // spdlog::info("pts {}, ids {}", points.size(), PlaneDetector->plane_id.size());
+  rec.log("world/segmented_points", rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
 
-  spdlog::info("Start alpha shaper");
+  spdlog::info("Start AlphaShaper (roof)");
   auto AlphaShaper = roofer::detection::createAlphaShaper();
   AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
-  spdlog::info("Completed alpha shaper, found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
-  rec.log("world/alpha_rings", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
+  spdlog::info("Completed AlphaShaper (roof), found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
+  rec.log("world/alpha_rings_roof", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
+  
+  spdlog::info("Start AlphaShaper (ground)");
+  auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
+  AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
+  spdlog::info("Completed AlphaShaper (ground), found {} rings, {} labels", AlphaShaper_ground->alpha_rings.size(), AlphaShaper_ground->roofplane_ids.size());
+  rec.log("world/alpha_rings_ground", rerun::LineStrips3D(AlphaShaper_ground->alpha_rings).with_class_ids(AlphaShaper_ground->roofplane_ids));
 
   spdlog::info("Start LineDetector");
   auto LineDetector = roofer::detection::createLineDetector();
@@ -150,5 +171,22 @@ int main(int argc, const char * argv[]) {
   LineRegulariser->compute(LineDetector->edge_segments, PlaneIntersector->segments);
   spdlog::info("Completed LineRegulariser");
   rec.log("world/regularised_lines", rerun::LineStrips3D(LineRegulariser->regularised_edges));
+  
+  spdlog::info("Start SegmentRasteriser");
+  auto SegmentRasteriser = roofer::detection::createSegmentRasteriser();
+  SegmentRasteriser->compute(
+      AlphaShaper->alpha_triangles,
+      AlphaShaper_ground->alpha_triangles
+  );
+  spdlog::info("Completed SegmentRasteriser");
+  
+  SegmentRasteriser->heightfield.set_nodata(0);
+  rec.log("world/heightfield", rerun::DepthImage(
+    {
+      SegmentRasteriser->heightfield.dimy_, 
+      SegmentRasteriser->heightfield.dimx_
+    }, 
+    *SegmentRasteriser->heightfield.vals_)
+  );
 
 }
