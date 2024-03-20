@@ -68,6 +68,7 @@ add_library(rooferlib
   src/detection/SegmentRasteriser.cpp
   src/partitioning/ArrangementBase.cpp
   src/partitioning/ArrangementBuilder.cpp
+  src/partitioning/ArrangementOptimiser.cpp
   src/geometry/Vector2DOpsGEOS.cpp
   src/geometry/NodataCircleComputer.cpp
   src/geometry/PointcloudRasteriser.cpp

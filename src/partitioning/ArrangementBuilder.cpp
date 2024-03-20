@@ -1,5 +1,6 @@
 #include "ArrangementBuilder.hpp"
 #include "ArrangementBase.hpp"
+#include "cgal_shared_definitions.hpp"
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 
@@ -233,6 +234,7 @@ namespace roofer::detection {
 
     public:
     void compute(
+      Arrangement_2 arrangement,
       LinearRing& footprint_,
       std::vector<EPECK::Segment_2>& input_edges,
       ArrangementBuilderConfig cfg

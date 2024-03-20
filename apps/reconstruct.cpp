@@ -8,6 +8,7 @@
 #include "detection/PlaneIntersector.hpp"
 #include "detection/SegmentRasteriser.hpp"
 #include "partitioning/ArrangementBuilder.hpp"
+#include "partitioning/ArrangementOptimiser.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -197,13 +198,25 @@ int main(int argc, const char * argv[]) {
     *heightfield_copy.vals_)
   );
 
+  Arrangement_2 arrangement;
   spdlog::info("Start ArrangementBuilder");
   auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
   ArrangementBuilder->compute(
+      arrangement,
       footprints[0],
       LineRegulariser->exact_regularised_edges
   );
   spdlog::info("Completed ArrangementBuilder");
+
+  spdlog::info("Start ArrangementOptimiser");
+  auto ArrangementOptimiser = roofer::detection::createArrangementOptimiser();
+  ArrangementOptimiser->compute(
+      arrangement,
+      SegmentRasteriser->heightfield,
+      PlaneDetector->pts_per_roofplane,
+      PlaneDetector_ground->pts_per_roofplane
+  );
+  spdlog::info("Completed ArrangementOptimiser");
 
 
 }

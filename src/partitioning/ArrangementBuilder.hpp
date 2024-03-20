@@ -14,13 +14,13 @@ namespace roofer::detection {
   };
 
   struct ArrangementBuilderInterface {
-    Arrangement_2 arrangement;
 
     // add_vector_input("lines", {typeid(Segment), typeid(linereg::Segment_2)});
     // add_input("footprint", {typeid(linereg::Polygon_with_holes_2), typeid(LinearRing)});
 
     virtual ~ArrangementBuilderInterface() = default;
     virtual void compute(
+      Arrangement_2 arrangement,
       LinearRing& footprint,
       std::vector<EPECK::Segment_2>& input_edges,
       ArrangementBuilderConfig config=ArrangementBuilderConfig()
