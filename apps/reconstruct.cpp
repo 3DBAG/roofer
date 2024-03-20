@@ -1,11 +1,13 @@
 #include "projHelper.hpp"
 #include "io/PointCloudReader.hpp"
+#include "io/VectorReader.hpp"
 #include "detection/PlaneDetector.hpp"
 #include "detection/AlphaShaper.hpp"
 #include "detection/LineDetector.hpp"
 #include "detection/LineRegulariser.hpp"
 #include "detection/PlaneIntersector.hpp"
 #include "detection/SegmentRasteriser.hpp"
+#include "partitioning/ArrangementBuilder.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -88,6 +90,11 @@ int main(int argc, const char * argv[]) {
 
   auto pj = roofer::createProjHelper();
   auto PointReader = roofer::createPointCloudReaderLASlib(*pj);
+  auto VectorReader = roofer::createVectorReaderOGR(*pj);
+
+  VectorReader->open(path_footprint);
+  std::vector<roofer::LinearRing> footprints;
+  VectorReader->readPolygons(footprints);
 
   PointReader->open(path_pointcloud);
   spdlog::info("Reading pointcloud from {}", path_pointcloud);
@@ -180,13 +187,23 @@ int main(int argc, const char * argv[]) {
   );
   spdlog::info("Completed SegmentRasteriser");
   
-  SegmentRasteriser->heightfield.set_nodata(0);
+  auto heightfield_copy = SegmentRasteriser->heightfield;
+  heightfield_copy.set_nodata(0);
   rec.log("world/heightfield", rerun::DepthImage(
     {
-      SegmentRasteriser->heightfield.dimy_, 
-      SegmentRasteriser->heightfield.dimx_
+      heightfield_copy.dimy_, 
+      heightfield_copy.dimx_
     }, 
-    *SegmentRasteriser->heightfield.vals_)
+    *heightfield_copy.vals_)
   );
+
+  spdlog::info("Start ArrangementBuilder");
+  auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
+  ArrangementBuilder->compute(
+      footprints[0],
+      LineRegulariser->exact_regularised_edges
+  );
+  spdlog::info("Completed ArrangementBuilder");
+
 
 }
