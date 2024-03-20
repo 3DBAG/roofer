@@ -180,7 +180,7 @@ namespace linereg {
       }
     }
 
-    void add_segments(size_t priority, roofer::SegmentCollection& segs) {
+    void add_segments(size_t priority, const roofer::SegmentCollection& segs) {
       if (segs.size()==0) return;
       size_t i;
       if(segments.find(priority) == segments.end()) {

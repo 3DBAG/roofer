@@ -1,7 +1,9 @@
 #pragma once
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 
+typedef CGAL::Exact_predicates_exact_constructions_kernel EPECK;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel EPICK;
 typedef EPICK::Point_3 Point;
 typedef EPICK::Vector_3 Vector;
