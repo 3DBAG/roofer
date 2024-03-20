@@ -64,6 +64,7 @@ add_library(rooferlib
   src/detection/LineDetectorBase.cpp
   src/detection/LineRegulariserBase.cpp
   src/detection/LineRegulariser.cpp
+  src/detection/PlaneIntersector.cpp
   src/geometry/Vector2DOpsGEOS.cpp
   src/geometry/NodataCircleComputer.cpp
   src/geometry/PointcloudRasteriser.cpp

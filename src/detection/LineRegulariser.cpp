@@ -100,4 +100,9 @@ namespace roofer::detection {
       // output("footprint_out").set(new_fp);
     }
   };
+
+  std::unique_ptr<LineRegulariserInterface> createLineRegulariser() {
+    return std::make_unique<LineRegulariser>();
+  };
+
 }
