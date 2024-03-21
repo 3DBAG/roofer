@@ -330,6 +330,19 @@ namespace roofer::detection {
     }
   };
 
+  std::vector<LinearRing> arr2polygons(Arrangement_2& arr) {
+    std::vector<LinearRing> linear_rings;
+
+    for (const auto face: arr.face_handles()) {
+      if (face->is_fictitious() || face->is_unbounded()) continue;
+
+      LinearRing polygon;
+      arrangementface_to_polygon(face, polygon);
+      linear_rings.push_back(polygon);
+    }
+
+    return linear_rings;
+  }
 
   std::unique_ptr<ArrangementOptimiserInterface> createArrangementOptimiser() {
     return std::make_unique<ArrangementOptimiser>();

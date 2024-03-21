@@ -234,7 +234,7 @@ namespace roofer::detection {
 
     public:
     void compute(
-      Arrangement_2 arrangement,
+      Arrangement_2& arrangement,
       LinearRing& footprint_,
       std::vector<EPECK::Segment_2>& input_edges,
       ArrangementBuilderConfig cfg

@@ -7,14 +7,14 @@
 namespace roofer::detection {
 
   struct ArrangementOptimiserConfig{
-    float data_multiplier = 50.0;
+    float data_multiplier = 8.0;
     float smoothness_multiplier = 1.0;
     bool preset_labels = false;
-    bool do_normalise = true;
-    int n_iterations = 3;
-    int graph_cut_impl = 2;
+    bool do_normalise = false;
+    int n_iterations = 1;
+    int graph_cut_impl = 0;
     bool use_ground = true;
-    bool label_ground_outside_fp = false;
+    bool label_ground_outside_fp = true;
     float z_percentile = 0.9;
   };
 
@@ -37,6 +37,8 @@ namespace roofer::detection {
     ) = 0;
     
   };
+
+  std::vector<LinearRing> arr2polygons(Arrangement_2& arr);
 
   std::unique_ptr<ArrangementOptimiserInterface> createArrangementOptimiser();
 }

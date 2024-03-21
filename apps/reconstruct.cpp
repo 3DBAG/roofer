@@ -19,6 +19,7 @@
 #include "git.h"
 
 #include <rerun.hpp>
+#include <vector>
 
 // Adapters so we can log eigen vectors as rerun positions:
 template <>
@@ -55,7 +56,6 @@ void print_version() {
     git_CommitDate()
   );
 }
-
 
 int main(int argc, const char * argv[]) {
 
@@ -207,6 +207,9 @@ int main(int argc, const char * argv[]) {
       LineRegulariser->exact_regularised_edges
   );
   spdlog::info("Completed ArrangementBuilder");
+  auto alr1 = roofer::detection::arr2polygons(arrangement);
+  spdlog::info("Initial roof partition has {} faces", alr1.size());
+  rec.log("world/initial_partition", rerun::LineStrips3D(alr1));
 
   spdlog::info("Start ArrangementOptimiser");
   auto ArrangementOptimiser = roofer::detection::createArrangementOptimiser();
@@ -217,6 +220,10 @@ int main(int argc, const char * argv[]) {
       PlaneDetector_ground->pts_per_roofplane
   );
   spdlog::info("Completed ArrangementOptimiser");
+
+  auto alr2 = roofer::detection::arr2polygons(arrangement);
+  spdlog::info("Roof partition has {} faces", alr2.size());
+  rec.log("world/optimised_partition", rerun::LineStrips3D(alr2));
 
 
 }

@@ -20,7 +20,7 @@ namespace roofer::detection {
 
     virtual ~ArrangementBuilderInterface() = default;
     virtual void compute(
-      Arrangement_2 arrangement,
+      Arrangement_2& arrangement,
       LinearRing& footprint,
       std::vector<EPECK::Segment_2>& input_edges,
       ArrangementBuilderConfig config=ArrangementBuilderConfig()
