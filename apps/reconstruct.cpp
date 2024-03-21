@@ -9,6 +9,9 @@
 #include "detection/SegmentRasteriser.hpp"
 #include "partitioning/ArrangementBuilder.hpp"
 #include "partitioning/ArrangementOptimiser.hpp"
+#include "partitioning/ArrangementDissolver.hpp"
+#include "partitioning/ArrangementExtruder.hpp"
+#include "partitioning/ArrangementSnapper.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -66,6 +69,7 @@ int main(int argc, const char * argv[]) {
 
   std::string path_pointcloud = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
   std::string path_footprint = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
+  float floor_elevation = -0.16899998486042023;
 
   // bool output_all = cmdl[{"-a", "--all"}];
   // bool write_rasters = cmdl[{"-r", "--rasters"}];
@@ -225,5 +229,32 @@ int main(int argc, const char * argv[]) {
   spdlog::info("Roof partition has {} faces", alr2.size());
   rec.log("world/optimised_partition", rerun::LineStrips3D(alr2));
 
+
+  auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
+  ArrangementDissolver->compute(
+      arrangement,
+      SegmentRasteriser->heightfield
+  );
+  spdlog::info("Completed ArrangementDissolver");
+  auto alr3 = roofer::detection::arr2polygons(arrangement);
+  spdlog::info("Roof partition has {} faces", alr3.size());
+  rec.log("world/ArrangementDissolver", rerun::LineStrips3D(alr3));
+
+  auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
+  ArrangementSnapper->compute(
+      arrangement
+  );
+  spdlog::info("Completed ArrangementSnapper");
+  auto alr4 = roofer::detection::arr2polygons(arrangement);
+  spdlog::info("Roof partition has {} faces", alr4.size());
+  rec.log("world/ArrangementSnapper", rerun::LineStrips3D(alr4));
+  
+  auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
+  ArrangementExtruder->compute(
+      arrangement,
+      floor_elevation
+  );
+  spdlog::info("Completed ArrangementExtruder");
+  rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
 
 }
