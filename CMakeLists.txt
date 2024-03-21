@@ -69,6 +69,9 @@ add_library(rooferlib
   src/partitioning/ArrangementBase.cpp
   src/partitioning/ArrangementBuilder.cpp
   src/partitioning/ArrangementOptimiser.cpp
+  src/partitioning/ArrangementDissolver.cpp
+  src/partitioning/ArrangementSnapper.cpp
+  src/partitioning/cdt_util.cpp
   src/geometry/Vector2DOpsGEOS.cpp
   src/geometry/NodataCircleComputer.cpp
   src/geometry/PointcloudRasteriser.cpp
