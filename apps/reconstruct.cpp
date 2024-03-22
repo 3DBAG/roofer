@@ -10,8 +10,8 @@
 #include "partitioning/ArrangementBuilder.hpp"
 #include "partitioning/ArrangementOptimiser.hpp"
 #include "partitioning/ArrangementDissolver.hpp"
-#include "partitioning/ArrangementExtruder.hpp"
 #include "partitioning/ArrangementSnapper.hpp"
+#include "partitioning/ArrangementExtruder.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -22,7 +22,6 @@
 #include "git.h"
 
 #include <rerun.hpp>
-#include <vector>
 
 // Adapters so we can log eigen vectors as rerun positions:
 template <>
@@ -54,7 +53,7 @@ void print_help(std::string program_name) {
 void print_version() {
   fmt::print("roofer {} ({}{}{})\n", 
     git_Describe(), 
-    git_Branch() == "main" ? "" : fmt::format("{}, ", git_Branch()), 
+    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()), 
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );
@@ -71,10 +70,6 @@ int main(int argc, const char * argv[]) {
   std::string path_footprint = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
   float floor_elevation = -0.16899998486042023;
 
-  // bool output_all = cmdl[{"-a", "--all"}];
-  // bool write_rasters = cmdl[{"-r", "--rasters"}];
-  // bool write_metadata = cmdl[{"-m", "--metadata"}];
-  // bool write_index = cmdl[{"-i", "--index"}];
   bool verbose = cmdl[{"-v", "--verbose"}];
   bool version = cmdl[{"-V", "--version"}];
 
@@ -93,6 +88,7 @@ int main(int argc, const char * argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
+  // read inputs
   auto pj = roofer::createProjHelper();
   auto PointReader = roofer::createPointCloudReaderLASlib(*pj);
   auto VectorReader = roofer::createVectorReaderOGR(*pj);
@@ -117,7 +113,6 @@ int main(int argc, const char * argv[]) {
       points_roof.push_back(points[i]);
     }
   }
-
   spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
   
   // Create a new `RecordingStream` which sends data over TCP to the viewer process.
@@ -132,59 +127,48 @@ int main(int argc, const char * argv[]) {
       rerun::datatypes::AnnotationInfo(1, "UNCLASSIFIED"),
     }}
   );
-
   rec.log("world/raw_points", rerun::Points3D(points).with_class_ids(classification));
 
-  spdlog::info("Start plane detection (roof)");
   auto PlaneDetector = roofer::detection::createPlaneDetector();
   PlaneDetector->detect(points_roof);
-  spdlog::info("Completed plane detection (roof), found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
+  spdlog::info("Completed PlaneDetector (roof), found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
   
-  spdlog::info("Start plane detection (ground)");
   auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
   PlaneDetector_ground->detect(points_ground);
-  spdlog::info("Completed plane detection (ground), found {} groundplanes", PlaneDetector_ground->pts_per_roofplane.size());
-
+  spdlog::info("Completed PlaneDetector (ground), found {} groundplanes", PlaneDetector_ground->pts_per_roofplane.size());
   
   rec.log("world/segmented_points", 
     rerun::Collection{rerun::components::AnnotationContext{
       rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(30,30,30))
     }}
   );
-  // spdlog::info("pts {}, ids {}", points.size(), PlaneDetector->plane_id.size());
   rec.log("world/segmented_points", rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
 
-  spdlog::info("Start AlphaShaper (roof)");
   auto AlphaShaper = roofer::detection::createAlphaShaper();
   AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
   spdlog::info("Completed AlphaShaper (roof), found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
   rec.log("world/alpha_rings_roof", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
   
-  spdlog::info("Start AlphaShaper (ground)");
   auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
   AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
   spdlog::info("Completed AlphaShaper (ground), found {} rings, {} labels", AlphaShaper_ground->alpha_rings.size(), AlphaShaper_ground->roofplane_ids.size());
   rec.log("world/alpha_rings_ground", rerun::LineStrips3D(AlphaShaper_ground->alpha_rings).with_class_ids(AlphaShaper_ground->roofplane_ids));
 
-  spdlog::info("Start LineDetector");
   auto LineDetector = roofer::detection::createLineDetector();
   LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids, PlaneDetector->pts_per_roofplane);
   spdlog::info("Completed LineDetector");
   rec.log("world/boundary_lines", rerun::LineStrips3D(LineDetector->edge_segments));
 
-  spdlog::info("Start PlaneIntersector");
   auto PlaneIntersector = roofer::detection::createPlaneIntersector();
   PlaneIntersector->compute(PlaneDetector->pts_per_roofplane, PlaneDetector->plane_adjacencies);
   spdlog::info("Completed PlaneIntersector");
   rec.log("world/intersection_lines", rerun::LineStrips3D(PlaneIntersector->segments));
   
-  spdlog::info("Start LineRegulariser");
   auto LineRegulariser = roofer::detection::createLineRegulariser();
   LineRegulariser->compute(LineDetector->edge_segments, PlaneIntersector->segments);
   spdlog::info("Completed LineRegulariser");
   rec.log("world/regularised_lines", rerun::LineStrips3D(LineRegulariser->regularised_edges));
   
-  spdlog::info("Start SegmentRasteriser");
   auto SegmentRasteriser = roofer::detection::createSegmentRasteriser();
   SegmentRasteriser->compute(
       AlphaShaper->alpha_triangles,
@@ -203,7 +187,6 @@ int main(int argc, const char * argv[]) {
   );
 
   Arrangement_2 arrangement;
-  spdlog::info("Start ArrangementBuilder");
   auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
   ArrangementBuilder->compute(
       arrangement,
@@ -211,11 +194,9 @@ int main(int argc, const char * argv[]) {
       LineRegulariser->exact_regularised_edges
   );
   spdlog::info("Completed ArrangementBuilder");
-  auto alr1 = roofer::detection::arr2polygons(arrangement);
-  spdlog::info("Initial roof partition has {} faces", alr1.size());
-  rec.log("world/initial_partition", rerun::LineStrips3D(alr1));
+  spdlog::info("Roof partition has {} faces", arrangement.number_of_faces());
+  rec.log("world/initial_partition", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
 
-  spdlog::info("Start ArrangementOptimiser");
   auto ArrangementOptimiser = roofer::detection::createArrangementOptimiser();
   ArrangementOptimiser->compute(
       arrangement,
@@ -224,36 +205,20 @@ int main(int argc, const char * argv[]) {
       PlaneDetector_ground->pts_per_roofplane
   );
   spdlog::info("Completed ArrangementOptimiser");
-
-  auto alr2 = roofer::detection::arr2polygons(arrangement);
-  spdlog::info("Roof partition has {} faces", alr2.size());
-  rec.log("world/optimised_partition", rerun::LineStrips3D(alr2));
-
+  // rec.log("world/optimised_partition", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
 
   auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
-  ArrangementDissolver->compute(
-      arrangement,
-      SegmentRasteriser->heightfield
-  );
+  ArrangementDissolver->compute(arrangement,SegmentRasteriser->heightfield);
   spdlog::info("Completed ArrangementDissolver");
-  auto alr3 = roofer::detection::arr2polygons(arrangement);
-  spdlog::info("Roof partition has {} faces", alr3.size());
-  rec.log("world/ArrangementDissolver", rerun::LineStrips3D(alr3));
-
+  spdlog::info("Roof partition has {} faces", arrangement.number_of_faces());
+  rec.log("world/ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
-  ArrangementSnapper->compute(
-      arrangement
-  );
+  ArrangementSnapper->compute(arrangement);
   spdlog::info("Completed ArrangementSnapper");
-  auto alr4 = roofer::detection::arr2polygons(arrangement);
-  spdlog::info("Roof partition has {} faces", alr4.size());
-  rec.log("world/ArrangementSnapper", rerun::LineStrips3D(alr4));
+  // rec.log("world/ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   
   auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
-  ArrangementExtruder->compute(
-      arrangement,
-      floor_elevation
-  );
+  ArrangementExtruder->compute(arrangement, floor_elevation);
   spdlog::info("Completed ArrangementExtruder");
   rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
 
