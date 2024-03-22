@@ -66,8 +66,8 @@ int main(int argc, const char * argv[]) {
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
 
-  std::string path_pointcloud = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
-  std::string path_footprint = "/Users/ravi/git/roofer/wippolder/output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
+  std::string path_pointcloud = "output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
+  std::string path_footprint = "output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
   float floor_elevation = -0.16899998486042023;
 
   bool verbose = cmdl[{"-v", "--verbose"}];

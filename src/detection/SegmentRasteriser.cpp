@@ -1,5 +1,5 @@
 #include "SegmentRasteriser.hpp"
-#include "spdlog/spdlog.h"
+// #include "spdlog/spdlog.h"
 
 namespace roofer::detection {
   
@@ -41,8 +41,8 @@ namespace roofer::detection {
       SegmentRasteriserConfig cfg
     ) override {
 
-      spdlog::debug("roof_triangles has {} triangles", roof_triangles.size());
-      spdlog::debug("ground_triangles has {} triangles", ground_triangles.size());
+      // spdlog::debug("roof_triangles has {} triangles", roof_triangles.size());
+      // spdlog::debug("ground_triangles has {} triangles", ground_triangles.size());
 
       Box box;
         box.add(roof_triangles.box());
@@ -82,7 +82,7 @@ namespace roofer::detection {
           }
         }
       }
-      spdlog::debug("heightfield has {} values", values.size());
+      // spdlog::debug("heightfield has {} values", values.size());
       // output("data_area").set(float(roofdata_area_cnt)*cellsize_*cellsize_);
       // output("heightfield").set(r);
       // output("values").set(values);

@@ -1,0 +1,31 @@
+[input.footprint]
+path = "wippolder.gpkg"
+id_attribute = "identificatie"
+
+[[input.pointclouds]]
+name = "pointcloud"
+quality = 1
+path = "wippolder.las"
+
+[parameters]
+cellsize = 0.5
+
+[output]
+path = 'output/wippolder'
+
+building_toml_file = '{path}/objects/{bid}/config_{pc_name}.toml'
+building_las_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.las'
+building_raster_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.tif'
+building_gpkg_file = '{path}/objects/{bid}/crop/{bid}.gpkg'
+building_jsonl_file = '{path}/objects/{bid}/reconstruct/{bid}.city.jsonl'
+
+metadata_json_file = '{path}/metadata.json'
+jsonl_list_file = '{path}/features.txt'
+index_file = '{path}/index.gpkg'
+
+crs = "EPSG:2056"
+
+# these get passed through to the geoflow config files that are generated for each building
+[output.reconstruction_parameters]
+GF_PROCESS_CRS="EPSG:2056"
+GF_OUTPUT_CRS="EPSG:2056"
