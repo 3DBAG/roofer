@@ -1,0 +1,1 @@
+unzip the contents of [wippolder.zip](https://data.3dgi.xyz/geoflow-test-data/wippolder.zip) in this folder.

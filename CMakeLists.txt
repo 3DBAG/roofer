@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project (roofer)
 
-option(RF_BUILD_GUI "Build the GUI apps" OFF)
+# option(RF_BUILD_GUI "Build the GUI apps" OFF)
 
 include(FetchContent)
 FetchContent_Declare(cmake_git_version_tracking                   
@@ -47,7 +47,7 @@ if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:precise")
 endif()
 
-add_library(rooferlib
+add_library(roofer
   src/common.cpp
   src/projHelper.cpp
   src/io/VectorReaderOGR.cpp
@@ -56,7 +56,7 @@ add_library(rooferlib
   src/io/StreamCropper.cpp
   src/io/PointCloudWriterLASlib.cpp
   src/io/PointCloudReaderLASlib.cpp
-  src/geometry/Raster.cpp
+  src/Raster.cpp
   src/pip_util.cpp
   src/detection/PlaneDetector.cpp
   src/detection/AlphaShaper.cpp
@@ -65,21 +65,29 @@ add_library(rooferlib
   src/detection/LineRegulariserBase.cpp
   src/detection/LineRegulariser.cpp
   src/detection/PlaneIntersector.cpp
-  src/geometry/Vector2DOpsGEOS.cpp
-  src/geometry/NodataCircleComputer.cpp
-  src/geometry/PointcloudRasteriser.cpp
+  src/detection/SegmentRasteriser.cpp
+  src/partitioning/ArrangementBase.cpp
+  src/partitioning/ArrangementBuilder.cpp
+  src/partitioning/ArrangementOptimiser.cpp
+  src/partitioning/ArrangementDissolver.cpp
+  src/partitioning/ArrangementSnapper.cpp
+  src/partitioning/ArrangementExtruder.cpp
+  src/partitioning/cdt_util.cpp
+  src/misc/Vector2DOpsGEOS.cpp
+  src/misc/NodataCircleComputer.cpp
+  src/misc/PointcloudRasteriser.cpp
   src/quality/select_pointcloud.cpp
 )
 set_target_properties(
-  rooferlib PROPERTIES 
+  roofer PROPERTIES 
   CXX_STANDARD 17
 )
 
-target_include_directories(rooferlib PRIVATE
+target_include_directories(roofer PRIVATE
   src
   external/ptinpoly
 )
-target_link_libraries( rooferlib 
+target_link_libraries( roofer 
   PRIVATE
     PROJ::proj
     GDAL::GDAL

@@ -313,4 +313,8 @@ typedef std::unordered_map<std::string, Image> ImageMap;
 
 std::vector<std::string> split_string(const std::string& s, std::string delimiter);
 
+bool has_duplicates_ring(vec3f& poly, float& dupe_threshold);
+bool is_degenerate(LinearRing& poly, float& dupe_threshold);
+LinearRing fix_duplicates(LinearRing& poly, float& dupe_threshold);
+
 } // namespace roofer

@@ -294,7 +294,7 @@ class AlphaShaper : public AlphaShaperInterface {
       grower.grow(cfg.extract_polygons);
 
       // collect triangles
-      TriangleCollection alpha_triangles;
+      alpha_triangles;
       for (auto fh = A.finite_faces_begin(); fh != A.finite_faces_end(); ++fh) {
         // only export triangles in the interior of a shape (thus excluding holes and exterior)
         if(fh->info().label>=0) {
