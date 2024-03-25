@@ -539,7 +539,7 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
   return parts;
 }
 
-  bool has_duplicates_ring(vec3f& poly, float& dupe_threshold) {
+  bool has_duplicates_ring(const vec3f& poly, const float& dupe_threshold) {
     auto pl = *poly.rbegin();
     for (auto& p : poly) {
       if (std::fabs(pl[0]-p[0])< dupe_threshold && std::fabs(pl[1]-p[1])< dupe_threshold && std::fabs(pl[2]-p[2])< dupe_threshold) {
@@ -550,7 +550,7 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
     return false;
   }
 
-  bool is_degenerate(LinearRing& poly, float& dupe_threshold) {
+  bool is_degenerate(const LinearRing& poly, const float& dupe_threshold) {
     if (poly.size() < 3) return true;
     if (has_duplicates_ring(poly, dupe_threshold)) return true;
 

@@ -12,6 +12,7 @@
 #include "partitioning/ArrangementDissolver.hpp"
 #include "partitioning/ArrangementSnapper.hpp"
 #include "partitioning/ArrangementExtruder.hpp"
+#include "partitioning/MeshTriangulator.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -35,6 +36,20 @@ struct rerun::CollectionAdapter<rerun::Position3D, roofer::PointCollection> {
   Collection<rerun::Position3D> operator()(roofer::PointCollection&& container) {
       std::vector<rerun::Position3D> positions(container.size());
       memcpy(positions.data(), container.data(), container.size() * sizeof(roofer::arr3f));
+      return Collection<rerun::Position3D>::take_ownership(std::move(positions));
+  }
+};
+template <>
+struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
+  /// Borrow for non-temporary.
+  Collection<rerun::Position3D> operator()(const roofer::TriangleCollection& container) {
+      return Collection<rerun::Position3D>::borrow(container[0].data(), container.vertex_count());
+  }
+
+  // Do a full copy for temporaries (otherwise the data might be deleted when the temporary is destroyed).
+  Collection<rerun::Position3D> operator()(roofer::TriangleCollection&& container) {
+      std::vector<rerun::Position3D> positions(container.size());
+      memcpy(positions.data(), container[0].data(), container.vertex_count() * sizeof(roofer::arr3f));
       return Collection<rerun::Position3D>::take_ownership(std::move(positions));
   }
 };
@@ -221,5 +236,10 @@ int main(int argc, const char * argv[]) {
   ArrangementExtruder->compute(arrangement, floor_elevation);
   spdlog::info("Completed ArrangementExtruder");
   rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
+
+  auto MeshTriangulator = roofer::detection::createMeshTriangulatorLegacy();
+  MeshTriangulator->compute(ArrangementExtruder->multisolid);
+  spdlog::info("Completed MeshTriangulator");
+  rec.log("world/MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
 }

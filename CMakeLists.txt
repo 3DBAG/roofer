@@ -73,6 +73,7 @@ add_library(roofer
   src/partitioning/ArrangementSnapper.cpp
   src/partitioning/ArrangementExtruder.cpp
   src/partitioning/cdt_util.cpp
+  src/partitioning/MeshTriangulatorLegacy.cpp
   src/misc/Vector2DOpsGEOS.cpp
   src/misc/NodataCircleComputer.cpp
   src/misc/PointcloudRasteriser.cpp
