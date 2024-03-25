@@ -96,6 +96,21 @@ Write CityJSON metadata.json.
 
 #### reconstruct
 
+init projection
+
+Read the point cloud with createPointCloudReaderLASlib into a PointCollection and a vector of point classes.
+Why use a separate vec for the classes instead of the AttributeVecMap?
+
+points --> plane detection (createPlaneDetector) --> planes
+
+planes --> alpha shapes (createAlphaShaper) --> rings, roofplane_ids
+
+rings, roofplane_ids, planes --> line detection (createLineDetector)
+
+planes --> plane intersection (createPlaneIntersector)
+
+
+
 ### Structures
 
 common::LinearRing : common::Geometry - Represents 3D polygons with inner rings.
@@ -104,6 +119,11 @@ common::LinearRing : common::Geometry - Represents 3D polygons with inner rings.
   - geometry is stored in the `interior_rings_` member
   - `get_data_ptr` returns a pointer to the outer ring
   - the complete geometry (incl. inner rings) are accessed with `interior_rings`
+
+common::PointCollection : common::GeometryCollection : common::Geometry - Stores the point cloud as a vector of `std::array<float, 3>`.
+  - each point can have attributes, backed by an AttributeVecMap
+  - `get_data_ptr` returns a pointer to the first point
+  - can compute its bounding box
 
 common::AttributeVecMap - Stores the attributes of the input polygons as a vector of values per attribute.
   - an `std::unordered_map` of `std::string` + vector, each member stores the complete set of values for all polygons for the attribute
@@ -118,3 +138,5 @@ crop::InputPointcloud - Stores quality information about one input point cloud.
 StreamCropper::PointCloudCropper –
 
 select_pointcloud::CandidatePointCloud
+
+projHelper
