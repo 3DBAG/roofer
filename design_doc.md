@@ -99,17 +99,30 @@ Write CityJSON metadata.json.
 init projection
 
 Read the point cloud with createPointCloudReaderLASlib into a PointCollection and a vector of point classes.
+Split points to ground and building points.
 Why use a separate vec for the classes instead of the AttributeVecMap?
 
 points --> plane detection (createPlaneDetector) --> planes
+points --> plane detection ground (createPlaneDetector) --> planes_ground
 
 planes --> alpha shapes (createAlphaShaper) --> rings, roofplane_ids
+planes --> alpha shapes ground (createAlphaShaper) --> rings, roofplane_ids
 
-rings, roofplane_ids, planes --> line detection (createLineDetector)
+rings, roofplane_ids, planes --> line detection (createLineDetector) --> edge_segments
 
 planes --> plane intersection (createPlaneIntersector)
 
+edge_segments --> regularize the edges (LineRegulariser) --> regularised_edges
 
+alpha shape (+ground) triangles --> segment rasterizer computes heightfields
+
+regularized_edges --> Arrangement --> arrangement
+
+heightfield, planes (+ground), arrangement --> optimize arrangement --> arrangement
+
+heightfield, arrangement --> dissolve arrangement --> snap edges --> arrangement
+
+arrangement, FLOOR_ELEVATION --> extrusion
 
 ### Structures
 
