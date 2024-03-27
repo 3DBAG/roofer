@@ -1,7 +1,7 @@
 #include "../datastructures.hpp"
 
 #include "../Raster.hpp"
-#include "cgal_shared_definitions.hpp"
+#include "../partitioning/cgal_shared_definitions.hpp"
 #include <memory>
 
 namespace roofer::detection {

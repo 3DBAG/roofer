@@ -74,7 +74,7 @@ add_library(roofer
   src/partitioning/ArrangementExtruder.cpp
   src/partitioning/cdt_util.cpp
   src/partitioning/MeshTriangulatorLegacy.cpp
-  src/partitioning/PC2MeshDistCalculator.cpp
+  src/quality/PC2MeshDistCalculator.cpp
   src/misc/Vector2DOpsGEOS.cpp
   src/misc/NodataCircleComputer.cpp
   src/misc/PointcloudRasteriser.cpp

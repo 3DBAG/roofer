@@ -13,7 +13,7 @@
 #include "partitioning/ArrangementSnapper.hpp"
 #include "partitioning/ArrangementExtruder.hpp"
 #include "partitioning/MeshTriangulator.hpp"
-#include "partitioning/PC2MeshDistCalculator.hpp"
+#include "quality/PC2MeshDistCalculator.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
