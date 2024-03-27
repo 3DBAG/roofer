@@ -39,6 +39,9 @@ else()
   find_package(PROJ 9.0.0 REQUIRED CONFIG)
 endif()
 
+find_package( nlohmann_json 3.10.5 CONFIG REQUIRED )
+add_subdirectory(external/val3dity)
+
 if (MSVC)
   # windows.h breaks std::min/std::max, fix by define
   add_definitions(-DNOMINMAX)
@@ -75,6 +78,7 @@ add_library(roofer
   src/partitioning/cdt_util.cpp
   src/partitioning/MeshTriangulatorLegacy.cpp
   src/quality/PC2MeshDistCalculator.cpp
+  src/quality/Val3dator.cpp
   src/misc/Vector2DOpsGEOS.cpp
   src/misc/NodataCircleComputer.cpp
   src/misc/PointcloudRasteriser.cpp
@@ -97,6 +101,7 @@ target_link_libraries( roofer
     CGAL::CGAL CGAL::CGAL_Core #Eigen3::Eigen
     LASlib
     GEOS::geos_c
+    val3dity
   PUBLIC
     fmt::fmt
     spdlog::spdlog
