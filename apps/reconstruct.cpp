@@ -13,6 +13,7 @@
 #include "partitioning/ArrangementSnapper.hpp"
 #include "partitioning/ArrangementExtruder.hpp"
 #include "partitioning/MeshTriangulator.hpp"
+#include "partitioning/PC2MeshDistCalculator.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -241,5 +242,10 @@ int main(int argc, const char * argv[]) {
   MeshTriangulator->compute(ArrangementExtruder->multisolid);
   spdlog::info("Completed MeshTriangulator");
   rec.log("world/MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
+ 
+  auto PC2MeshDistCalculator = roofer::detection::createPC2MeshDistCalculator();
+  PC2MeshDistCalculator->compute(PlaneDetector->pts_per_roofplane, MeshTriangulator->multitrianglecol, MeshTriangulator->ring_ids);
+  spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
+  // rec.log("world/PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
 }
