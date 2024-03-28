@@ -584,4 +584,42 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
     return new_lr;
   }
 
+  std::time_t Date::to_time_t() {
+    std::tm tm{};
+    tm.tm_year = this->year - 1900;
+    tm.tm_mon = this->month - 1;
+    tm.tm_mday = this->day;
+    return std::mktime(&tm);
+  }
+
+  std::string Date::format_to_ietf() {
+    std::time_t t = this->to_time_t();
+    char timeString[std::size("yyyy-mm-dd")];
+    std::strftime(std::data(timeString), std::size(timeString),
+                  "%FT", std::gmtime(&t));
+    std::string ret(timeString);
+    return ret;
+  }
+
+  std::time_t DateTime::to_time_t() {
+    std::tm tm{};
+    tm.tm_year = this->date.year - 1900;
+    tm.tm_mon = this->date.month - 1;
+    tm.tm_mday = this->date.day;
+    tm.tm_hour = this->time.hour;
+    tm.tm_min = this->time.minute;
+    tm.tm_sec = this->time.second;
+    return std::mktime(&tm);
+  }
+
+  // Format to date-time, ignoring the time zone and assuming UTC.
+  // According to https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+  std::string DateTime::format_to_ietf() {
+    std::time_t t = this->to_time_t();
+    char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+    std::strftime(std::data(timeString), std::size(timeString),
+                  "%FT%TZ", std::gmtime(&t));
+    std::string ret(timeString);
+    return ret;
+  }
 } // namespace roofer

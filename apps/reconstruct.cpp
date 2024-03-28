@@ -14,11 +14,14 @@
 #include "partitioning/ArrangementExtruder.hpp"
 #include "partitioning/MeshTriangulator.hpp"
 #include "quality/PC2MeshDistCalculator.hpp"
+#include "quality/Val3dator.hpp"
+#include "io/CityJsonWriter.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
 
 #include "fmt/format.h"
+#include <fmt/ranges.h>
 #include "spdlog/spdlog.h"
 
 #include "git.h"
@@ -111,13 +114,13 @@ int main(int argc, const char * argv[]) {
 
   VectorReader->open(path_footprint);
   std::vector<roofer::LinearRing> footprints;
-  VectorReader->readPolygons(footprints);
+  roofer::AttributeVecMap attributes;
+  VectorReader->readPolygons(footprints, &attributes);
 
   PointReader->open(path_pointcloud);
   spdlog::info("Reading pointcloud from {}", path_pointcloud);
   roofer::vec1i classification;
   roofer::PointCollection points, points_ground, points_roof;
-  roofer::AttributeVecMap attributes;
   PointReader->readPointCloud(points, &classification);
   spdlog::info("Read {} points", points.size());
 
@@ -247,5 +250,23 @@ int main(int argc, const char * argv[]) {
   PC2MeshDistCalculator->compute(PlaneDetector->pts_per_roofplane, MeshTriangulator->multitrianglecol, MeshTriangulator->ring_ids);
   spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
   // rec.log("world/PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
+
+  auto Val3dator = roofer::detection::createVal3dator();
+  Val3dator->compute(ArrangementExtruder->multisolid);
+  spdlog::info("Completed Val3dator. Errors={}", fmt::join(Val3dator->errors, ", "));
+  
+  auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+  std::string dest = "output/output.city.jsonl";
+  std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
+  multisolidvec.push_back(ArrangementExtruder->multisolid);
+  CityJsonWriter->write(
+    dest,
+    footprints,
+    multisolidvec,
+    multisolidvec,
+    multisolidvec,
+    attributes
+  );
+  spdlog::info("Completed CityJsonWriter ", dest);
 
 }

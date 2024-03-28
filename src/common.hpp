@@ -49,11 +49,15 @@ typedef std::vector<std::optional<float>> veco1f;
 typedef std::vector<std::optional<arr3f>> veco3f;
 typedef std::vector<std::optional<std::string>> veco1s;
 
+typedef std::unordered_map<std::string,std::string> StrMap;
+
 // modelled after https://gdal.org/api/ogrfeature_cpp.html#_CPPv4NK10OGRFeature18GetFieldAsDateTimeEiPiPiPiPiPiPiPi
 struct Date {
   int year;
   int month;
   int day;
+  std::time_t to_time_t();
+  std::string format_to_ietf();
 };
 struct Time {
   int hour;
@@ -64,6 +68,8 @@ struct Time {
 struct DateTime {
   Date date;
   Time time;
+  std::time_t to_time_t();
+  std::string format_to_ietf();
 };
 
 typedef std::vector<std::optional<Date>> veco1D;
@@ -71,7 +77,7 @@ typedef std::vector<std::optional<Time>> veco1T;
 typedef std::vector<std::optional<DateTime>> veco1DT;
 
 // Attribute types
-typedef std::variant<bool, int, std::string, float> attribute_value;
+typedef std::variant<bool, int, std::string, float, Date, DateTime, Time> attribute_value;
 typedef std::unordered_map<std::string, std::vector<attribute_value>> AttributeMap;
 
 typedef std::variant<
