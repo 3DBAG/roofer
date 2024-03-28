@@ -1,0 +1,4 @@
+set(LIBRARY_SOURCES "library.cpp")
+set(LIBRARY_HEADERS "library.h")
+
+add_library(${LIBRARY_NAME} STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
