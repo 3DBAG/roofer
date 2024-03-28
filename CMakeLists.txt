@@ -59,6 +59,7 @@ add_library(roofer
   src/io/StreamCropper.cpp
   src/io/PointCloudWriterLASlib.cpp
   src/io/PointCloudReaderLASlib.cpp
+  src/io/CityJsonWriter.cpp
   src/Raster.cpp
   src/pip_util.cpp
   src/detection/PlaneDetector.cpp
