@@ -226,34 +226,36 @@ int main(int argc, const char * argv[]) {
   spdlog::info("Completed ArrangementOptimiser");
   // rec.log("world/optimised_partition", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
 
-  auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
-  ArrangementDissolver->compute(arrangement,SegmentRasteriser->heightfield);
-  spdlog::info("Completed ArrangementDissolver");
-  spdlog::info("Roof partition has {} faces", arrangement.number_of_faces());
-  rec.log("world/ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
-  auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
-  ArrangementSnapper->compute(arrangement);
-  spdlog::info("Completed ArrangementSnapper");
-  // rec.log("world/ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
+  // LoD2
+    auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
+    ArrangementDissolver->compute(arrangement,SegmentRasteriser->heightfield);
+    spdlog::info("Completed ArrangementDissolver");
+    spdlog::info("Roof partition has {} faces", arrangement.number_of_faces());
+    rec.log("world/ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
+    auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
+    ArrangementSnapper->compute(arrangement);
+    spdlog::info("Completed ArrangementSnapper");
+    // rec.log("world/ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
+    
+    auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
+    ArrangementExtruder->compute(arrangement, floor_elevation);
+    spdlog::info("Completed ArrangementExtruder");
+    rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
+
+    auto MeshTriangulator = roofer::detection::createMeshTriangulatorLegacy();
+    MeshTriangulator->compute(ArrangementExtruder->multisolid);
+    spdlog::info("Completed MeshTriangulator");
+    rec.log("world/MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
   
-  auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
-  ArrangementExtruder->compute(arrangement, floor_elevation);
-  spdlog::info("Completed ArrangementExtruder");
-  rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
+    auto PC2MeshDistCalculator = roofer::detection::createPC2MeshDistCalculator();
+    PC2MeshDistCalculator->compute(PlaneDetector->pts_per_roofplane, MeshTriangulator->multitrianglecol, MeshTriangulator->ring_ids);
+    spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
+    // rec.log("world/PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
-  auto MeshTriangulator = roofer::detection::createMeshTriangulatorLegacy();
-  MeshTriangulator->compute(ArrangementExtruder->multisolid);
-  spdlog::info("Completed MeshTriangulator");
-  rec.log("world/MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
- 
-  auto PC2MeshDistCalculator = roofer::detection::createPC2MeshDistCalculator();
-  PC2MeshDistCalculator->compute(PlaneDetector->pts_per_roofplane, MeshTriangulator->multitrianglecol, MeshTriangulator->ring_ids);
-  spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
-  // rec.log("world/PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
-
-  auto Val3dator = roofer::detection::createVal3dator();
-  Val3dator->compute(ArrangementExtruder->multisolid);
-  spdlog::info("Completed Val3dator. Errors={}", fmt::join(Val3dator->errors, ", "));
+    auto Val3dator = roofer::detection::createVal3dator();
+    Val3dator->compute(ArrangementExtruder->multisolid);
+    spdlog::info("Completed Val3dator. Errors={}", fmt::join(Val3dator->errors, ", "));
+  // end LoD2
   
   auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
   std::string dest = "output/output.city.jsonl";
