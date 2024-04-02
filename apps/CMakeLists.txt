@@ -13,6 +13,13 @@ set_target_properties(
 )
 target_link_libraries(reconstruct PRIVATE roofer CGAL::CGAL_Core cmake_git_version_tracking rerun_sdk)
 
+add_executable(reconstruct_api reconstruct_api.cpp)
+set_target_properties(
+        reconstruct_api PROPERTIES
+        CXX_STANDARD 17
+)
+target_link_libraries(reconstruct_api PRIVATE roofer CGAL::CGAL_Core cmake_git_version_tracking rerun_sdk)
+
 add_executable(crop crop.cpp)
 set_target_properties(
   crop PROPERTIES 
