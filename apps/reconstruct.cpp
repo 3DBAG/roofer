@@ -120,8 +120,9 @@ int main(int argc, const char * argv[]) {
   std::string path_pointcloud = "output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
   std::string path_footprint = "output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
   std::string path_output_jsonl = "output/output.city.jsonl";
-  std::string crs_process = "output/output.city.jsonl";
-  std::string crs_output = "output/output.city.jsonl";
+  std::string crs_process = "EPSG:7415";
+  std::string crs_output = "EPSG:7415";
+  std::string skip_attribute_name = "kas_warenhuis";
   float offset_x = 85373.406000000003;
   float offset_y = 447090.51799999998;
   float offset_z = 0;
@@ -155,9 +156,33 @@ int main(int argc, const char * argv[]) {
     if(tml_path_output_jsonl.has_value())
       path_output_jsonl = *tml_path_output_jsonl;
     
+    auto tml_crs_process = config["GF_PROCESS_CRS"].value<std::string>();
+    if(tml_crs_process.has_value())
+      crs_process = *tml_crs_process;
+    
+    auto tml_crs_output = config["GF_OUTPUT_CRS"].value<std::string>();
+    if(tml_crs_output.has_value())
+      crs_output = *tml_crs_output;
+    
     auto tml_floor_elevation = config["GROUND_ELEVATION"].value<float>();
     if(tml_floor_elevation.has_value())
       floor_elevation = *tml_floor_elevation;
+    
+    auto tml_offset_x = config["GF_PROCESS_OFFSET_X"].value<float>();
+    if(tml_offset_x.has_value())
+      offset_x = *tml_offset_x;
+    
+    auto tml_offset_y = config["GF_PROCESS_OFFSET_Y"].value<float>();
+    if(tml_offset_y.has_value())
+      offset_y = *tml_offset_y;
+    
+    auto tml_offset_z = config["GF_PROCESS_OFFSET_Z"].value<float>();
+    if(tml_offset_z.has_value())
+      offset_z = *tml_offset_z;
+
+    auto tml_skip_attribute_name = config["skip_attribute_name"].value<float>();
+    if(tml_skip_attribute_name.has_value())
+      skip_attribute_name = *tml_skip_attribute_name;
 
   } else {
     spdlog::error("No config file specified\n");
@@ -166,6 +191,9 @@ int main(int argc, const char * argv[]) {
 
   // read inputs
   auto pj = roofer::createProjHelper();
+  pj->set_process_crs(crs_process.c_str());
+  roofer::arr3d offset = {offset_x, offset_y, offset_z};
+  pj->set_data_offset(offset);
   auto PointReader = roofer::createPointCloudReaderLASlib(*pj);
   auto VectorReader = roofer::createVectorReaderOGR(*pj);
 
@@ -315,6 +343,7 @@ int main(int argc, const char * argv[]) {
   // end LoD2
   
   auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+  CityJsonWriter->CRS_ = crs_output;
   std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
   multisolidvec.push_back(ArrangementExtruder->multisolid);
   CityJsonWriter->write(
