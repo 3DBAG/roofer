@@ -28,6 +28,9 @@
 
 #include <rerun.hpp>
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 // Adapters so we can log eigen vectors as rerun positions:
 template <>
 struct rerun::CollectionAdapter<rerun::Position3D, roofer::PointCollection> {
@@ -62,11 +65,13 @@ void print_help(std::string program_name) {
   // see http://docopt.org/
   fmt::print("Usage:\n");
   fmt::print("   {}", program_name);
+  fmt::print(" -c <file>\n");
   fmt::print("Options:\n");
   // std::cout << "   -v, --version                Print version information\n";
   fmt::print("   -h, --help                   Show this help message\n");
   fmt::print("   -V, --version                Show version\n");
   fmt::print("   -v, --verbose                Be more verbose\n");
+  fmt::print("   -c <file>, --config <file>   Config file\n");
 }
 
 void print_version() {
@@ -78,16 +83,20 @@ void print_version() {
   );
 }
 
+// TODO
+// [x] add cmd options for config and output
+// [x] read toml config
+// [x] parse toml config
+// [ ] handle kas_warenhuis==true case
+// [ ] handle no planes in input pc case
+// [ ] LoD12, LoD13
+
 int main(int argc, const char * argv[]) {
 
   auto cmdl = argh::parser({ "-c", "--config" });
 
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
-
-  std::string path_pointcloud = "output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
-  std::string path_footprint = "output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
-  float floor_elevation = -0.16899998486042023;
 
   bool verbose = cmdl[{"-v", "--verbose"}];
   bool version = cmdl[{"-V", "--version"}];
@@ -105,6 +114,54 @@ int main(int argc, const char * argv[]) {
     spdlog::set_level(spdlog::level::debug);
   } else {
     spdlog::set_level(spdlog::level::warn);
+  }
+
+  std::string config_path;
+  std::string path_pointcloud = "output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
+  std::string path_footprint = "output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
+  std::string path_output_jsonl = "output/output.city.jsonl";
+  std::string crs_process = "output/output.city.jsonl";
+  std::string crs_output = "output/output.city.jsonl";
+  float offset_x = 85373.406000000003;
+  float offset_y = 447090.51799999998;
+  float offset_z = 0;
+  float floor_elevation = -0.16899998486042023;
+
+  toml::table config;
+
+  if (cmdl({"-c", "--config"}) >> config_path) {
+    if (!fs::exists(config_path)) {
+      spdlog::error("No such config file: {}", config_path);
+      print_help(program_name);
+      return EXIT_FAILURE;
+    }
+    spdlog::info("Reading configuration from file {}", config_path);
+    try {
+      config = toml::parse_file( config_path );
+    } catch (const std::exception& e) {
+      spdlog::error("Unable to parse config file {}.\n{}", config_path, e.what());
+      return EXIT_FAILURE;
+    }
+
+    auto tml_path_footprint = config["INPUT_FOOTPRINT"].value<std::string>();
+    if(tml_path_footprint.has_value())
+      path_footprint = *tml_path_footprint;
+    
+    auto tml_path_pointcloud = config["INPUT_POINTCLOUD"].value<std::string>();
+    if(tml_path_pointcloud.has_value())
+      path_pointcloud = *tml_path_pointcloud;
+    
+    auto tml_path_output_jsonl = config["OUTPUT_JSONL"].value<std::string>();
+    if(tml_path_output_jsonl.has_value())
+      path_output_jsonl = *tml_path_output_jsonl;
+    
+    auto tml_floor_elevation = config["GROUND_ELEVATION"].value<float>();
+    if(tml_floor_elevation.has_value())
+      floor_elevation = *tml_floor_elevation;
+
+  } else {
+    spdlog::error("No config file specified\n");
+    return EXIT_FAILURE;
   }
 
   // read inputs
@@ -258,17 +315,16 @@ int main(int argc, const char * argv[]) {
   // end LoD2
   
   auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-  std::string dest = "output/output.city.jsonl";
   std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
   multisolidvec.push_back(ArrangementExtruder->multisolid);
   CityJsonWriter->write(
-    dest,
+    path_output_jsonl,
     footprints,
     multisolidvec,
     multisolidvec,
     multisolidvec,
     attributes
   );
-  spdlog::info("Completed CityJsonWriter ", dest);
+  spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
 
 }
