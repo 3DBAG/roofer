@@ -12,7 +12,7 @@ namespace roofer::detection {
     bool dissolve_outside_fp = true;
     bool dissolve_all_interior = false;
     bool skip_execution = false;
-    float step_height_threshold = 1.0;
+    float step_height_threshold = 3.0;
   };
 
   struct ArrangementDissolverInterface {
