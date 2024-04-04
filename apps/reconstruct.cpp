@@ -65,7 +65,7 @@ struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
 // Create a new `RecordingStream` which sends data over TCP to the viewer process.
 const auto rec = rerun::RecordingStream("Roofer rerun test");
 
-enum LOD {LOD12, LOD13, LOD22};
+enum LOD {LOD12=12, LOD13=13, LOD22=22};
 
 std::unordered_map<int, roofer::Mesh> extrude(
   Arrangement_2 arrangement, 
@@ -84,6 +84,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     dissolve_step_edges = true,
     extrude_LoD2 = false;
   }
+  std::string worldname = fmt::format("world/lod{}/", (int)lod);
 
   auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
   ArrangementDissolver->compute(
@@ -96,13 +97,13 @@ std::unordered_map<int, roofer::Mesh> extrude(
   );
   spdlog::info("Completed ArrangementDissolver");
   spdlog::info("Roof partition has {} faces", arrangement.number_of_faces());
-  rec.log("world/ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
+  rec.log(worldname+"ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
   ArrangementSnapper->compute(
     arrangement
   );
   spdlog::info("Completed ArrangementSnapper");
-  // rec.log("world/ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
+  // rec.log(worldname+"ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   
   auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
   ArrangementExtruder->compute(
@@ -113,14 +114,14 @@ std::unordered_map<int, roofer::Mesh> extrude(
     }
   );
   spdlog::info("Completed ArrangementExtruder");
-  rec.log("world/ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
+  rec.log(worldname+"ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
 
   auto MeshTriangulator = roofer::detection::createMeshTriangulatorLegacy();
   MeshTriangulator->compute(
     ArrangementExtruder->multisolid
   );
   spdlog::info("Completed MeshTriangulator");
-  rec.log("world/MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
+  rec.log(worldname+"MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
   auto PC2MeshDistCalculator = roofer::detection::createPC2MeshDistCalculator();
   PC2MeshDistCalculator->compute(
@@ -129,7 +130,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     MeshTriangulator->ring_ids
   );
   spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
-  // rec.log("world/PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
+  // rec.log(worldname+"PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
   auto Val3dator = roofer::detection::createVal3dator();
   Val3dator->compute(
@@ -166,9 +167,10 @@ void print_version() {
 // [x] add cmd options for config and output
 // [x] read toml config
 // [x] parse toml config
-// [ ] handle kas_warenhuis==true case
-// [ ] handle no planes in input pc case
+// [x] handle kas_warenhuis==true case
+// [.] handle no planes in input pc case. Write empty output?
 // [x] LoD12, LoD13
+// [ ] write generated attributes to output as well (eg. val3dity_codes, rmse etc...)
 
 int main(int argc, const char * argv[]) {
 
@@ -314,6 +316,12 @@ int main(int argc, const char * argv[]) {
   auto PlaneDetector = roofer::detection::createPlaneDetector();
   PlaneDetector->detect(points_roof);
   spdlog::info("Completed PlaneDetector (roof), found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
+
+  bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes";
+  if (pointcloud_insufficient) {
+    spdlog::info("Pointcloud is insufficient, cannot reconstruct");
+    return 1;
+  }
   
   auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
   PlaneDetector_ground->detect(points_ground);
@@ -327,11 +335,10 @@ int main(int argc, const char * argv[]) {
   rec.log("world/segmented_points", rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
 
   // check skip_attribute
-  bool no_planes = PlaneDetector->pts_per_roofplane.size() == 0;
   bool skip = false;
   if ( auto vec = attributes.get_if<bool>(skip_attribute_name)) {
     if ((*vec)[fp_i].has_value()) {
-      skip = (*vec)[fp_i].value() && ;
+      skip = (*vec)[fp_i].value();
     }
   }
   // skip = skip || no_planes;
@@ -344,6 +351,20 @@ int main(int argc, const char * argv[]) {
       floor_elevation,
       PlaneDetector->roof_elevation_70p
     );
+
+    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+    CityJsonWriter->CRS_ = crs_output;
+    std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
+    multisolidvec.push_back(SimplePolygonExtruder->multisolid);
+    CityJsonWriter->write(
+      path_output_jsonl,
+      footprints,
+      multisolidvec,
+      multisolidvec,
+      multisolidvec,
+      attributes
+    );
+    spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
     auto AlphaShaper = roofer::detection::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
@@ -430,23 +451,24 @@ int main(int argc, const char * argv[]) {
       PlaneDetector.get(),
       LOD22
     );
+
+    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+    CityJsonWriter->CRS_ = crs_output;
+    std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec12, multisolidvec13, multisolidvec22;
+    multisolidvec12.push_back(multisolids_lod12);
+    multisolidvec13.push_back(multisolids_lod13);
+    multisolidvec22.push_back(multisolids_lod22);
+    CityJsonWriter->write(
+      path_output_jsonl,
+      footprints,
+      multisolidvec12,
+      multisolidvec13,
+      multisolidvec22,
+      attributes
+    );
+    spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
   }
   // end LoD2
-  
-  auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-  CityJsonWriter->CRS_ = crs_output;
-  std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
-  multisolidvec.push_back(multisolids_lod12);
-  multisolidvec.push_back(multisolids_lod13);
-  multisolidvec.push_back(multisolids_lod22);
-  CityJsonWriter->write(
-    path_output_jsonl,
-    footprints,
-    multisolidvec,
-    multisolidvec,
-    multisolidvec,
-    attributes
-  );
-  spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
+
 
 }
