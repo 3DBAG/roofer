@@ -31,6 +31,7 @@
 #include <rerun.hpp>
 
 #include <filesystem>
+#include <string>
 namespace fs = std::filesystem;
 
 // Adapters so we can log eigen vectors as rerun positions:
@@ -62,14 +63,14 @@ struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
       return Collection<rerun::Position3D>::take_ownership(std::move(positions));
   }
 };
-// Create a new `RecordingStream` which sends data over TCP to the viewer process.
-const auto rec = rerun::RecordingStream("Roofer rerun test");
 
 enum LOD {LOD12=12, LOD13=13, LOD22=22};
 
 std::unordered_map<int, roofer::Mesh> extrude(
   Arrangement_2 arrangement, 
   float floor_elevation,
+  std::vector<std::optional<std::string> >& attr_val3dity,
+  std::vector<std::optional<float> >& attr_rmse,
   roofer::detection::SegmentRasteriserInterface* SegmentRasteriser,
   roofer::detection::PlaneDetectorInterface* PlaneDetector,
   LOD lod
@@ -84,6 +85,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     dissolve_step_edges = true,
     extrude_LoD2 = false;
   }
+  const auto& rec = rerun::RecordingStream::current();
   std::string worldname = fmt::format("world/lod{}/", (int)lod);
 
   auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
@@ -129,6 +131,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     MeshTriangulator->multitrianglecol, 
     MeshTriangulator->ring_ids
   );
+  attr_rmse.push_back(PC2MeshDistCalculator->rms_error);
   spdlog::info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
   // rec.log(worldname+"PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
 
@@ -136,7 +139,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
   Val3dator->compute(
     ArrangementExtruder->multisolid
   );
-  spdlog::info("Completed Val3dator. Errors={}", fmt::join(Val3dator->errors, ", "));
+  attr_val3dity.push_back(Val3dator->errors.front());
+  spdlog::info("Completed Val3dator. Errors={}", Val3dator->errors.front());
   
   return ArrangementExtruder->multisolid;
 }
@@ -168,9 +172,9 @@ void print_version() {
 // [x] read toml config
 // [x] parse toml config
 // [x] handle kas_warenhuis==true case
-// [.] handle no planes in input pc case. Write empty output?
 // [x] LoD12, LoD13
-// [ ] write generated attributes to output as well (eg. val3dity_codes, rmse etc...)
+// [x] write generated attributes to output as well (eg. val3dity_codes, rmse etc...)
+// [.] handle no planes in input pc case. Write empty output?
 
 int main(int argc, const char * argv[]) {
 
@@ -301,8 +305,11 @@ int main(int argc, const char * argv[]) {
   }
   spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
   
+  // Create a new `RecordingStream` which sends data over TCP to the viewer process.
+  const auto rec = rerun::RecordingStream("Roofer rerun test");
   // Try to spawn a new viewer instance.
   rec.spawn().exit_on_failure();
+  rec.set_global();
 
   rec.log("world/raw_points", 
     rerun::Collection{rerun::components::AnnotationContext{
@@ -317,9 +324,20 @@ int main(int argc, const char * argv[]) {
   PlaneDetector->detect(points_roof);
   spdlog::info("Completed PlaneDetector (roof), found {} roofplanes", PlaneDetector->pts_per_roofplane.size());
 
+  auto& attr_roof_type = attributes.insert_vec<std::string>("b3_dak_type");
+  attr_roof_type.push_back(PlaneDetector->roof_type);
+  auto& attr_roof_elevation_50p = attributes.insert_vec<float>("b3_h_dak_50p");
+  attr_roof_elevation_50p.push_back(PlaneDetector->roof_elevation_50p);
+  auto& attr_roof_elevation_70p = attributes.insert_vec<float>("b3_h_dak_70p");
+  attr_roof_elevation_70p.push_back(PlaneDetector->roof_elevation_70p);
+  auto& attr_roof_elevation_min = attributes.insert_vec<float>("b3_h_dak_min");
+  attr_roof_elevation_min.push_back(PlaneDetector->roof_elevation_min);
+  auto& attr_roof_elevation_max = attributes.insert_vec<float>("b3_h_dak_max");
+  attr_roof_elevation_max.push_back(PlaneDetector->roof_elevation_max);
+
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
-    spdlog::info("Pointcloud is insufficient, cannot reconstruct");
+    spdlog::error("Pointcloud is insufficient, cannot reconstruct");
     return 1;
   }
   
@@ -343,6 +361,9 @@ int main(int argc, const char * argv[]) {
   }
   // skip = skip || no_planes;
   spdlog::info("Skip = {}", skip);
+  
+  auto& attr_skip = attributes.insert_vec<bool>("b3_reconstructie_onvolledig");
+  attr_skip.push_back(skip);
 
   if (skip) {
     auto SimplePolygonExtruder = roofer::detection::createSimplePolygonExtruder();
@@ -430,23 +451,36 @@ int main(int argc, const char * argv[]) {
     // rec.log("world/optimised_partition", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
 
     // LoDs
+      // attributes to be filled during reconstruction
+    auto& attr_val3dity_lod12 = attributes.insert_vec<std::string>("b3_val3dity_lod12");
+    auto& attr_rmse_lod12 = attributes.insert_vec<float>("b3_rmse_lod12");
     auto multisolids_lod12 = extrude(
       arrangement,
       floor_elevation,
+      attr_val3dity_lod12,
+      attr_rmse_lod12,
       SegmentRasteriser.get(),
       PlaneDetector.get(),
       LOD12
     );
+    auto& attr_val3dity_lod13 = attributes.insert_vec<std::string>("b3_val3dity_lod13");
+    auto& attr_rmse_lod13 = attributes.insert_vec<float>("b3_rmse_lod13");
     auto multisolids_lod13 = extrude(
       arrangement,
       floor_elevation,
+      attr_val3dity_lod13,
+      attr_rmse_lod13,
       SegmentRasteriser.get(),
       PlaneDetector.get(),
       LOD13
     );
+    auto& attr_val3dity_lod22 = attributes.insert_vec<std::string>("b3_val3dity_lod22");
+    auto& attr_rmse_lod22 = attributes.insert_vec<float>("b3_rmse_lod22");
     auto multisolids_lod22 = extrude(
       arrangement,
       floor_elevation,
+      attr_val3dity_lod22,
+      attr_rmse_lod22,
       SegmentRasteriser.get(),
       PlaneDetector.get(),
       LOD22
