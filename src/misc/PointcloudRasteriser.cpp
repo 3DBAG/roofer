@@ -1,6 +1,6 @@
 #include "../datastructures.hpp"
-#include "../pip_util.hpp"
-#include "Raster.hpp"
+#include "../misc/pip_util.hpp"
+#include "../datastructures/Raster.hpp"
 #include "PointcloudRasteriser.hpp"
 
 #include <numeric>

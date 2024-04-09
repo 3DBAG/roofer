@@ -1,6 +1,19 @@
 #pragma once
 
-#include "../detection/cgal_shared_definitions.hpp"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+
+typedef CGAL::Exact_predicates_exact_constructions_kernel EPECK;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel EPICK;
+typedef EPICK::Point_3 Point;
+typedef EPICK::Vector_3 Vector;
+typedef EPICK::Vector_2 Vector_2;
+typedef EPICK::Plane_3 Plane;
+typedef EPICK::Line_3 Line;
+
+typedef std::unordered_map<int, std::pair<Plane, std::vector<Point>>> IndexedPlanesWithPoints;
+
+// Arrangment definitions
 
 #include <CGAL/Arrangement_2.h>
 #include <CGAL/Arr_linear_traits_2.h>

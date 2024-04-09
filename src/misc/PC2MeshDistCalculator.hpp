@@ -1,6 +1,6 @@
 #include "../datastructures.hpp"
 
-#include "../partitioning/cgal_shared_definitions.hpp"
+#include "../reconstruction/cgal_shared_definitions.hpp"
 #include <memory>
 
 namespace roofer::detection {
