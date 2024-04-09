@@ -34,6 +34,25 @@
 
 namespace roofer {
   /*
+   * @brief Configuration parameters for single instance building reconstruction
+   *
+   * //todo doc
+   */
+    struct ReconstructionConfig {
+        float lambda = 1./9;
+        bool clip_ground = true;
+        int lod = 22;
+        float lod13_step_height = 3.0;
+
+        bool is_valid() {
+            return  (lambda>=0 && lambda <=1.0) &&
+                    lod==12 || lod==13 || lod ==22 &&
+                    lod13_step_height > 0;
+        }
+   };
+
+
+  /*
    * @brief Reconstructs a single instance of a building from a point cloud with
    * one floor elevation
    *
@@ -42,7 +61,8 @@ namespace roofer {
   Mesh reconstruct_single_instance(const PointCollection& points_roof,
                                    const PointCollection& points_ground,
                                    std::vector<roofer::LinearRing>& footprints,
-                                   const float floor_elevation)
+                                   const float floor_elevation,
+                                   ReconstructionConfig cfg=ReconstructionConfig())
   {
 #ifdef ROOFER_VERBOSE
     std::cout << "Reconstructing single instance" << std::endl;
@@ -112,14 +132,27 @@ namespace roofer {
         arrangement,
         SegmentRasteriser->heightfield,
         PlaneDetector->pts_per_roofplane,
-        PlaneDetector_ground->pts_per_roofplane
+        PlaneDetector_ground->pts_per_roofplane,
+        {
+            .data_multiplier = (1-cfg.lambda),
+            .smoothness_multiplier = cfg.lambda,
+            .use_ground = cfg.clip_ground
+        }
     );
 
 #ifdef ROOFER_VERBOSE
         std::cout << "Running arrangement dissolver" << std::endl;
 #endif
     auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
-    ArrangementDissolver->compute(arrangement,SegmentRasteriser->heightfield);
+    ArrangementDissolver->compute(
+        arrangement,
+        SegmentRasteriser->heightfield,
+        {
+            .dissolve_step_edges = cfg.lod==13,
+            .dissolve_all_interior = cfg.lod==12,
+            .step_height_threshold = cfg.lod13_step_height
+        }
+    );
 
 #ifdef ROOFER_VERBOSE
         std::cout << "Running arrangement snapper" << std::endl;
@@ -131,7 +164,13 @@ namespace roofer {
         std::cout << "Running arrangement extruder" << std::endl;
 #endif
     auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
-    ArrangementExtruder->compute(arrangement, floor_elevation);
+    ArrangementExtruder->compute(
+        arrangement, 
+        floor_elevation,
+        {
+            .LoD2 = cfg.lod==22
+        }    
+    );
 
     assert(ArrangementExtruder->meshes.size() == 1);
     return ArrangementExtruder->meshes.front();
@@ -146,10 +185,11 @@ namespace roofer {
    */
   Mesh reconstruct_single_instance(const PointCollection& points_roof,
                                    std::vector<roofer::LinearRing>& footprints,
-                                   const float floor_elevation)
+                                   const float floor_elevation,
+                                   ReconstructionConfig cfg=ReconstructionConfig())
   {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation);
+    return reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation, cfg);
   }
 
 
