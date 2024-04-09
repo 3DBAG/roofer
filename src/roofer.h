@@ -74,6 +74,9 @@ namespace roofer {
 #endif
     auto PlaneDetector = roofer::detection::createPlaneDetector();
     PlaneDetector->detect(points_roof);
+    if (PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes") {
+        throw rooferException("Pointcloud insufficient; unable to detect planes");
+    }
     auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
     PlaneDetector_ground->detect(points_ground);
 
@@ -82,6 +85,9 @@ namespace roofer {
 #endif
     auto AlphaShaper = roofer::detection::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
+    if (AlphaShaper->alpha_rings.size() == 0) {
+        throw rooferException("Pointcloud insufficient; unable to extract boundary lines");
+    }
     auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
     AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
 
@@ -110,6 +116,7 @@ namespace roofer {
     auto SegmentRasterizerCfg = roofer::detection::SegmentRasteriserConfig();
     if (points_ground.empty()) {
         SegmentRasterizerCfg.use_ground = false;
+        cfg.clip_ground = false;
     }
     SegmentRasteriser->compute(
         AlphaShaper->alpha_triangles,
