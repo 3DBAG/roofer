@@ -8,10 +8,15 @@
 #include "fmt/format.h"
 #include "git.h"
 #include "roofer.h"
+
+#include "misc/projHelper.hpp"
+#include "io/PointCloudReader.hpp"
+#include "io/VectorReader.hpp"
+
 #include "spdlog/spdlog.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel          K;
-typedef CGAL::Point_3<K>                                              Point_3;
+typedef CGAL::Point_3<K>                                             Point_3;
 
 // Adapters so we can log eigen vectors as rerun positions:
 template <>

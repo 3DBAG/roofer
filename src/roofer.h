@@ -15,20 +15,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include "projHelper.hpp"
-#include "io/PointCloudReader.hpp"
-#include "io/VectorReader.hpp"
-#include "detection/PlaneDetector.hpp"
-#include "detection/AlphaShaper.hpp"
-#include "detection/LineDetector.hpp"
-#include "detection/LineRegulariser.hpp"
-#include "detection/PlaneIntersector.hpp"
-#include "detection/SegmentRasteriser.hpp"
-#include "partitioning/ArrangementBuilder.hpp"
-#include "partitioning/ArrangementOptimiser.hpp"
-#include "partitioning/ArrangementDissolver.hpp"
-#include "partitioning/ArrangementSnapper.hpp"
-#include "partitioning/ArrangementExtruder.hpp"
+#include "reconstruction/PlaneDetector.hpp"
+#include "reconstruction/AlphaShaper.hpp"
+#include "reconstruction/LineDetector.hpp"
+#include "reconstruction/LineRegulariser.hpp"
+#include "reconstruction/PlaneIntersector.hpp"
+#include "reconstruction/SegmentRasteriser.hpp"
+#include "reconstruction/ArrangementBuilder.hpp"
+#include "reconstruction/ArrangementOptimiser.hpp"
+#include "reconstruction/ArrangementDissolver.hpp"
+#include "reconstruction/ArrangementSnapper.hpp"
+#include "reconstruction/ArrangementExtruder.hpp"
 
 
 //todo: maybe hide the reconstruction workflow from the API
