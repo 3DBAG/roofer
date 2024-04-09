@@ -1,14 +1,14 @@
-#include "projHelper.hpp"
+#include "misc/projHelper.hpp"
 #include "io/VectorReader.hpp"
 #include "io/VectorWriter.hpp"
 #include "io/RasterWriter.hpp"
 #include "io/StreamCropper.hpp"
 #include "io/PointCloudWriter.hpp"
-#include "Raster.hpp"
+#include "datastructures/Raster.hpp"
 #include "misc/Vector2DOps.hpp"
 #include "misc/NodataCircleComputer.hpp"
 #include "misc/PointcloudRasteriser.hpp"
-#include "quality/select_pointcloud.hpp"
+#include "misc/select_pointcloud.hpp"
 
 #include "external/argh.h"
 #include "external/toml.hpp"
@@ -49,7 +49,7 @@ void print_help(std::string program_name) {
 void print_version() {
   fmt::print("roofer {} ({}{}{})\n", 
     git_Describe(), 
-    git_Branch() == "main" ? "" : fmt::format("{}, ", git_Branch()), 
+    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()), 
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );

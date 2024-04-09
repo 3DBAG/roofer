@@ -1,8 +1,8 @@
 #include "StreamCropper.hpp"
 
 #include <lasreader.hpp>
-#include "pip_util.hpp"
-#include "../Raster.hpp"
+#include "../misc/pip_util.hpp"
+#include "../datastructures/Raster.hpp"
 #include "spdlog/spdlog.h"
 
 #include <bitset>

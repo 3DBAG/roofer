@@ -540,7 +540,7 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
   return parts;
 }
 
-  bool has_duplicates_ring(vec3f& poly, float& dupe_threshold) {
+  bool has_duplicates_ring(const vec3f& poly, const float& dupe_threshold) {
     auto pl = *poly.rbegin();
     for (auto& p : poly) {
       if (std::fabs(pl[0]-p[0])< dupe_threshold && std::fabs(pl[1]-p[1])< dupe_threshold && std::fabs(pl[2]-p[2])< dupe_threshold) {
@@ -551,7 +551,7 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
     return false;
   }
 
-  bool is_degenerate(LinearRing& poly, float& dupe_threshold) {
+  bool is_degenerate(const LinearRing& poly, const float& dupe_threshold) {
     if (poly.size() < 3) return true;
     if (has_duplicates_ring(poly, dupe_threshold)) return true;
 
@@ -585,4 +585,42 @@ std::vector<std::string> split_string(const std::string& s, std::string delimite
     return new_lr;
   }
 
+  std::time_t Date::to_time_t() {
+    std::tm tm{};
+    tm.tm_year = this->year - 1900;
+    tm.tm_mon = this->month - 1;
+    tm.tm_mday = this->day;
+    return std::mktime(&tm);
+  }
+
+  std::string Date::format_to_ietf() {
+    std::time_t t = this->to_time_t();
+    char timeString[std::size("yyyy-mm-dd")];
+    std::strftime(std::data(timeString), std::size(timeString),
+                  "%FT", std::gmtime(&t));
+    std::string ret(timeString);
+    return ret;
+  }
+
+  std::time_t DateTime::to_time_t() {
+    std::tm tm{};
+    tm.tm_year = this->date.year - 1900;
+    tm.tm_mon = this->date.month - 1;
+    tm.tm_mday = this->date.day;
+    tm.tm_hour = this->time.hour;
+    tm.tm_min = this->time.minute;
+    tm.tm_sec = this->time.second;
+    return std::mktime(&tm);
+  }
+
+  // Format to date-time, ignoring the time zone and assuming UTC.
+  // According to https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+  std::string DateTime::format_to_ietf() {
+    std::time_t t = this->to_time_t();
+    char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+    std::strftime(std::data(timeString), std::size(timeString),
+                  "%FT%TZ", std::gmtime(&t));
+    std::string ret(timeString);
+    return ret;
+  }
 } // namespace roofer

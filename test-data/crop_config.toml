@@ -23,9 +23,9 @@ metadata_json_file = '{path}/metadata.json'
 jsonl_list_file = '{path}/features.txt'
 index_file = '{path}/index.gpkg'
 
-crs = "EPSG:2056"
+crs = "EPSG:7415"
 
 # these get passed through to the geoflow config files that are generated for each building
 [output.reconstruction_parameters]
-GF_PROCESS_CRS="EPSG:2056"
-GF_OUTPUT_CRS="EPSG:2056"
+GF_PROCESS_CRS="EPSG:7415"
+GF_OUTPUT_CRS="EPSG:7415"

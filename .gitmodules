@@ -4,3 +4,6 @@
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "external/val3dity"]
+	path = external/val3dity
+	url = https://github.com/Ylannl/val3dity.git
