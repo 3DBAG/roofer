@@ -39,9 +39,13 @@ namespace roofer {
    * //todo doc
    */
     struct ReconstructionConfig {
+        // control optimisation
         float lambda = 1./9;
+        // enable clipping parts off the footprint where ground planes are detected
         bool clip_ground = true;
+        // requested LoD
         int lod = 22;
+        // step height used for LoD13 generalisation
         float lod13_step_height = 3.0;
 
         bool is_valid() {
