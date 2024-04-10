@@ -55,7 +55,6 @@ namespace roofer {
         }
    };
 
-
   /*
    * @brief Reconstructs a single instance of a building from a point cloud with
    * one floor elevation
@@ -68,6 +67,12 @@ namespace roofer {
                                    const float floor_elevation,
                                    ReconstructionConfig cfg=ReconstructionConfig())
   {
+    // check if configuration is valid
+    if (!cfg.is_valid()) {
+      //todo temp until error handling is finished
+      throw rooferException("Invalid roofer configuration");
+    }
+
 #ifdef ROOFER_VERBOSE
     std::cout << "Reconstructing single instance" << std::endl;
     std::cout << "Running plane detectors" << std::endl;

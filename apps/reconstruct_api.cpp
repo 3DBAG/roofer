@@ -111,15 +111,27 @@ int main(int argc, const char * argv[]) {
   spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
 
   // reconstruct
-  spdlog::info("Reconstructing");
-  auto mesh = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation);
+  spdlog::info("Reconstructing LoD2.2");
+  auto mesh_lod22 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation);
+  spdlog::info("Reconstructing LoD1.3");
+  auto mesh_lod13 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation,
+                                                        { .lod = 13, .lod13_step_height = 2. });
+  spdlog::info("Reconstructing LoD1.2");
+  auto mesh_lod12 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation,
+                                                        {.lod = 12 });
+
+  std::vector<roofer::Mesh> meshes = {mesh_lod22, mesh_lod13, mesh_lod12};
+  std::vector<std::string> names = {"lod22", "lod13", "lod12"};
 
   spdlog::info("Outputting to OBJ files");
   spdlog::info("Converting to CGAL mesh");
-  CGAL::Surface_mesh<Point_3> cgalmesh = roofer::Mesh2CGALSurfaceMesh<Point_3>(mesh);
+  int i = 0;
+  for (auto& mesh : meshes) {
+    spdlog::info(names[i] + ": converting to CGAL mesh and outputting");
+    CGAL::Surface_mesh<Point_3> cgalmesh = roofer::Mesh2CGALSurfaceMesh<Point_3>(mesh);
 
-  spdlog::info("Writing to obj file");
-  std::string filename("output.obj");
-  CGAL::IO::write_OBJ(filename, cgalmesh);
-
+    spdlog::info("Writing to obj file");
+    std::string filename("output_" + names[i++] + ".obj");
+    CGAL::IO::write_OBJ(filename, cgalmesh);
+  }
 }
