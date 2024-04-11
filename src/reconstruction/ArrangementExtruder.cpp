@@ -230,9 +230,6 @@ namespace roofer::detection {
           auto& pl_a = f_a->data().plane;
           auto& pl_b = f_b->data().plane;
 
-          //todo ip: use information from the group above to determine whether
-          // I'm chashing the vertex elevation or not
-
           // edge has no length
           if(CGAL::squared_distance(p1,p2)<snap_tolerance)
             continue;
@@ -252,16 +249,14 @@ namespace roofer::detection {
           if (fp_a && !fp_b) {
             auto pt_elevation_1 = proj_tri_util::interpolate_from_cdt(p1, base_cdt);
             auto pt_elevation_2 = proj_tri_util::interpolate_from_cdt(p2, base_cdt);
-            auto pt_elevation = (pt_elevation_1 + pt_elevation_2) / 2.; //todo temp, can be linear interpolation
-            h1b=h2b=pt_elevation;
-            //            h1b=h2b=floor_elevation;
+            h1b=  pt_elevation_1;
+            h2b = pt_elevation_2;
             part_id = f_a->data().part_id;
           } else if (!fp_a && fp_b) {
             auto pt_elevation_1 = proj_tri_util::interpolate_from_cdt(p1, base_cdt);
             auto pt_elevation_2 = proj_tri_util::interpolate_from_cdt(p2, base_cdt);
-            auto pt_elevation = (pt_elevation_1 + pt_elevation_2) / 2.; //todo temp, can be linear interpolation
-            h1a=h2a=pt_elevation;
-            //            h1a=h2a=floor_elevation;
+            h1a = pt_elevation_1;
+            h2a = pt_elevation_2;
             part_id = f_b->data().part_id;
           } else{ // both sides have the same part_id
             part_id = f_b->data().part_id;
