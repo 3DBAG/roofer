@@ -1,6 +1,7 @@
 #include "../datastructures.hpp"
 
 #include "cgal_shared_definitions.hpp"
+#include "cdt_util.hpp"
 #include <memory>
 #include <vector>
 
@@ -33,9 +34,16 @@ namespace roofer::detection {
     virtual void compute(
       Arrangement_2& arrangement,
       const float floor_elevation,
+      const proj_tri_util::CDT& base_cdt,
       ArrangementExtruderConfig config=ArrangementExtruderConfig()
     ) = 0;
-    
+
+    virtual void compute(
+        Arrangement_2& arrangement,
+        const float floor_elevation,
+        ArrangementExtruderConfig config=ArrangementExtruderConfig()
+    ) = 0;
+
   };
 
   std::unique_ptr<ArrangementExtruderInterface> createArrangementExtruder();

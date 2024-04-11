@@ -13,17 +13,22 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#pragma once
+
 #include "../datastructures.hpp"
+#include "cgal_shared_definitions.hpp"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Projection_traits_xy_3.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Triangulation_face_base_with_info_2.h>
 
+#include <CGAL/Triangulation_vertex_base_with_id_2.h>
+
 namespace tri_util {
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-  typedef CGAL::Exact_predicates_inexact_constructions_kernel Epeck;
   typedef CGAL::Exact_predicates_tag Tag;
   struct VertexInfo {
     bool hasPoint = false;
@@ -61,4 +66,34 @@ namespace tri_util {
   void insert_ring(roofer::vec3f& ring, CDT& cdt);
 
   CDT create_from_polygon(roofer::LinearRing& poly);
+}
+
+// utils for triangulation with projection traits
+namespace proj_tri_util {
+  struct FaceInfo2
+  {
+    FaceInfo2() {}
+    int nesting_level;
+    bool in_domain() {
+      return nesting_level%2 == 1;
+    }
+  };
+
+  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+  typedef CGAL::Projection_traits_xy_3<K> Projection_traits;
+  typedef CGAL::Triangulation_vertex_base_with_id_2<Projection_traits>              Vb;
+  typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo2, Projection_traits>   Fbb;
+  typedef CGAL::Constrained_triangulation_face_base_2<Projection_traits, Fbb>       Fb;
+  typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                               TDS;
+  typedef CGAL::Exact_intersections_tag                                             Itag;
+  typedef CGAL::Constrained_Delaunay_triangulation_2<Projection_traits, TDS, Itag>  CDT;
+//  typedef CGAL::Constrained_triangulation_plus_2<CDTt>                            CDT;
+
+  CDT cdt_from_linearing(const roofer::LinearRing& poly);
+
+  float interpolate_from_cdt(const Point_2& p, const CDT& cdt);
+
+  //todo temp for testing
+  void write_cdt_to_obj(const CDT& cdt, const std::string& filename);
+
 }

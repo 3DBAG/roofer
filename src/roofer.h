@@ -15,20 +15,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include "reconstruction/PlaneDetector.hpp"
 #include "reconstruction/AlphaShaper.hpp"
+#include "reconstruction/ArrangementBuilder.hpp"
+#include "reconstruction/ArrangementDissolver.hpp"
+#include "reconstruction/ArrangementExtruder.hpp"
+#include "reconstruction/ArrangementOptimiser.hpp"
+#include "reconstruction/ArrangementSnapper.hpp"
 #include "reconstruction/LineDetector.hpp"
 #include "reconstruction/LineRegulariser.hpp"
+#include "reconstruction/PlaneDetector.hpp"
 #include "reconstruction/PlaneIntersector.hpp"
 #include "reconstruction/SegmentRasteriser.hpp"
-#include "reconstruction/ArrangementBuilder.hpp"
-#include "reconstruction/ArrangementOptimiser.hpp"
-#include "reconstruction/ArrangementDissolver.hpp"
-#include "reconstruction/ArrangementSnapper.hpp"
-#include "reconstruction/ArrangementExtruder.hpp"
+#include "reconstruction/cdt_util.hpp"
 
-
-//todo: maybe hide the reconstruction workflow from the API
+// todo: maybe hide the reconstruction workflow from the API
 //todo: 1. reconstruct with 2d polygons and with height info
 //      2. reconstruct with 3d polygons containing height info per vertex
 
@@ -72,6 +72,10 @@ namespace roofer {
       //todo temp until error handling is finished
       throw rooferException("Invalid roofer configuration");
     }
+
+    //todo ip temp
+    // create projected triangulation from the footprints
+    proj_tri_util::CDT base_cdt = proj_tri_util::cdt_from_linearing(footprints[0]);
 
 #ifdef ROOFER_VERBOSE
     std::cout << "Reconstructing single instance" << std::endl;
@@ -183,6 +187,7 @@ namespace roofer {
     ArrangementExtruder->compute(
         arrangement, 
         floor_elevation,
+        base_cdt, //todo temp testing
         {
             .LoD2 = cfg.lod==22
         }    
