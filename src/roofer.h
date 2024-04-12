@@ -69,156 +69,159 @@ namespace roofer {
                                    Footprint& footprint,
                                    ReconstructionConfig cfg=ReconstructionConfig())
   {
-    // check if configuration is valid
-    if (!cfg.is_valid()) {
-      //todo temp until error handling is finished
-      throw rooferException("Invalid roofer configuration");
-    }
-
-    // prepare footprint data type
-    // template deduction will fail if not convertible to LinearRing
-    if constexpr (std::is_same_v<Footprint, CGAL::Polygon_with_holes_2<EPICK>>){
-      // convert 2D footprint to LinearRing
-      roofer::LinearRing linearRing;
-      for (auto& p : footprint.outer_boundary()) {
-        float x = p.x(); float y = p.y();
-        linearRing.push_back({x, y, 0.});
+    try {
+      // check if configuration is valid
+      if (!cfg.is_valid()) {
+        throw rooferException("Invalid roofer configuration.");
       }
-      for (auto& hole : footprint.holes()) {
-        vec3f iring;
-        for (auto& p : hole) {
-          float x = p.x(); float y = p.y();
-          iring.push_back({x, y, 0.});
+
+      // prepare footprint data type
+      // template deduction will fail if not convertible to LinearRing
+      if constexpr (std::is_same_v<Footprint,
+                                   CGAL::Polygon_with_holes_2<EPICK>>) {
+        // convert 2D footprint to LinearRing
+        roofer::LinearRing linearRing;
+        for (auto& p : footprint.outer_boundary()) {
+          float x = p.x();
+          float y = p.y();
+          linearRing.push_back({x, y, 0.});
         }
-        linearRing.interior_rings().push_back(iring);
+        for (auto& hole : footprint.holes()) {
+          vec3f iring;
+          for (auto& p : hole) {
+            float x = p.x();
+            float y = p.y();
+            iring.push_back({x, y, 0.});
+          }
+          linearRing.interior_rings().push_back(iring);
+        }
+        cfg.override_with_floor_elevation = true;
       }
-      cfg.override_with_floor_elevation = true;
-    }
 
-    std::unique_ptr<proj_tri_util::CDT> base_cdt_ptr = nullptr;
-    if (!cfg.override_with_floor_elevation) {
-      proj_tri_util::CDT base_cdt = proj_tri_util::cdt_from_linearing(footprint);
-      base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
-    }
-
-#ifdef ROOFER_VERBOSE
-    std::cout << "Reconstructing single instance" << std::endl;
-    std::cout << "Running plane detectors" << std::endl;
-#endif
-    auto PlaneDetector = roofer::detection::createPlaneDetector();
-    PlaneDetector->detect(points_roof);
-    if (PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes") {
-        throw rooferException("Pointcloud insufficient; unable to detect planes");
-    }
-    auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
-    PlaneDetector_ground->detect(points_ground);
+      std::unique_ptr<proj_tri_util::CDT> base_cdt_ptr = nullptr;
+      if (!cfg.override_with_floor_elevation) {
+        proj_tri_util::CDT base_cdt =
+            proj_tri_util::cdt_from_linearing(footprint);
+        base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
+      }
 
 #ifdef ROOFER_VERBOSE
-    std::cout << "Computing alpha shapes" << std::endl;
+      std::cout << "Reconstructing single instance" << std::endl;
+      std::cout << "Running plane detectors" << std::endl;
 #endif
-    auto AlphaShaper = roofer::detection::createAlphaShaper();
-    AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
-    if (AlphaShaper->alpha_rings.size() == 0) {
-        throw rooferException("Pointcloud insufficient; unable to extract boundary lines");
-    }
-    auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
-    AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
+      auto PlaneDetector = roofer::detection::createPlaneDetector();
+      PlaneDetector->detect(points_roof);
+      if (PlaneDetector->roof_type == "no points" ||
+          PlaneDetector->roof_type == "no planes") {
+        throw rooferException(
+            "Pointcloud insufficient; unable to detect planes");
+      }
+      auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
+      PlaneDetector_ground->detect(points_ground);
 
 #ifdef ROOFER_VERBOSE
-    std::cout << "Running line detector" << std::endl;
+      std::cout << "Computing alpha shapes" << std::endl;
 #endif
-    auto LineDetector = roofer::detection::createLineDetector();
-    LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids, PlaneDetector->pts_per_roofplane);
+      auto AlphaShaper = roofer::detection::createAlphaShaper();
+      AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
+      if (AlphaShaper->alpha_rings.size() == 0) {
+        throw rooferException(
+            "Pointcloud insufficient; unable to extract boundary lines");
+      }
+      auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
+      AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
 
 #ifdef ROOFER_VERBOSE
-    std::cout << "Running plane intersector" << std::endl;
+      std::cout << "Running line detector" << std::endl;
 #endif
-    auto PlaneIntersector = roofer::detection::createPlaneIntersector();
-    PlaneIntersector->compute(PlaneDetector->pts_per_roofplane, PlaneDetector->plane_adjacencies);
+      auto LineDetector = roofer::detection::createLineDetector();
+      LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
+                           PlaneDetector->pts_per_roofplane);
 
 #ifdef ROOFER_VERBOSE
-        std::cout << "Running line regulariser" << std::endl;
+      std::cout << "Running plane intersector" << std::endl;
 #endif
-    auto LineRegulariser = roofer::detection::createLineRegulariser();
-    LineRegulariser->compute(LineDetector->edge_segments, PlaneIntersector->segments);
+      auto PlaneIntersector = roofer::detection::createPlaneIntersector();
+      PlaneIntersector->compute(PlaneDetector->pts_per_roofplane,
+                                PlaneDetector->plane_adjacencies);
 
 #ifdef ROOFER_VERBOSE
-        std::cout << "Running segment rasteriser" << std::endl;
+      std::cout << "Running line regulariser" << std::endl;
 #endif
-    auto SegmentRasteriser = roofer::detection::createSegmentRasteriser();
-    auto SegmentRasterizerCfg = roofer::detection::SegmentRasteriserConfig();
-    if (points_ground.empty()) {
+      auto LineRegulariser = roofer::detection::createLineRegulariser();
+      LineRegulariser->compute(LineDetector->edge_segments,
+                               PlaneIntersector->segments);
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running segment rasteriser" << std::endl;
+#endif
+      auto SegmentRasteriser = roofer::detection::createSegmentRasteriser();
+      auto SegmentRasterizerCfg = roofer::detection::SegmentRasteriserConfig();
+      if (points_ground.empty()) {
         SegmentRasterizerCfg.use_ground = false;
         cfg.clip_ground = false;
+      }
+      SegmentRasteriser->compute(AlphaShaper->alpha_triangles,
+                                 AlphaShaper_ground->alpha_triangles,
+                                 SegmentRasterizerCfg);
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running arrangement builder" << std::endl;
+#endif
+      Arrangement_2 arrangement;
+      auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
+      ArrangementBuilder->compute(arrangement, footprint,
+                                  LineRegulariser->exact_regularised_edges);
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running arrangement optimiser" << std::endl;
+#endif
+      auto ArrangementOptimiser =
+          roofer::detection::createArrangementOptimiser();
+      ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
+                                    PlaneDetector->pts_per_roofplane,
+                                    PlaneDetector_ground->pts_per_roofplane,
+                                    {.data_multiplier = (1 - cfg.lambda),
+                                     .smoothness_multiplier = cfg.lambda,
+                                     .use_ground = cfg.clip_ground});
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running arrangement dissolver" << std::endl;
+#endif
+      auto ArrangementDissolver =
+          roofer::detection::createArrangementDissolver();
+      ArrangementDissolver->compute(
+          arrangement, SegmentRasteriser->heightfield,
+          {.dissolve_step_edges = cfg.lod == 13,
+           .dissolve_all_interior = cfg.lod == 12,
+           .step_height_threshold = cfg.lod13_step_height});
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running arrangement snapper" << std::endl;
+#endif
+      auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
+      ArrangementSnapper->compute(arrangement);
+
+#ifdef ROOFER_VERBOSE
+      std::cout << "Running arrangement extruder" << std::endl;
+#endif
+      auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
+      ArrangementExtruder->compute(arrangement, cfg.floor_elevation,
+                                   {.LoD2 = cfg.lod == 22},
+                                   std::move(base_cdt_ptr));
+
+//      assert(ArrangementExtruder->meshes.size() == 1);
+      //todo temp
+      if (ArrangementExtruder->meshes.size() != 1) {
+        throw rooferException("More than one output mesh!");
+      }
+      return ArrangementExtruder->meshes.front();
+    } catch (const std::exception& e) {
+#ifdef ROOFER_VERBOSE
+      std::cout << "Reconstruction failed, exception thrown: " << e.what() << std::endl;
+#endif
+      throw rooferException(e.what());
     }
-    SegmentRasteriser->compute(
-        AlphaShaper->alpha_triangles,
-        AlphaShaper_ground->alpha_triangles,
-        SegmentRasterizerCfg
-    );
-
-#ifdef ROOFER_VERBOSE
-        std::cout << "Running arrangement builder" << std::endl;
-#endif
-    Arrangement_2 arrangement;
-    auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
-    ArrangementBuilder->compute(
-        arrangement,
-        footprint,
-        LineRegulariser->exact_regularised_edges
-    );
-
-#ifdef ROOFER_VERBOSE
-        std::cout << "Running arrangement optimiser" << std::endl;
-#endif
-    auto ArrangementOptimiser = roofer::detection::createArrangementOptimiser();
-    ArrangementOptimiser->compute(
-        arrangement,
-        SegmentRasteriser->heightfield,
-        PlaneDetector->pts_per_roofplane,
-        PlaneDetector_ground->pts_per_roofplane,
-        {
-            .data_multiplier = (1-cfg.lambda),
-            .smoothness_multiplier = cfg.lambda,
-            .use_ground = cfg.clip_ground
-        }
-    );
-
-#ifdef ROOFER_VERBOSE
-        std::cout << "Running arrangement dissolver" << std::endl;
-#endif
-    auto ArrangementDissolver = roofer::detection::createArrangementDissolver();
-    ArrangementDissolver->compute(
-        arrangement,
-        SegmentRasteriser->heightfield,
-        {
-            .dissolve_step_edges = cfg.lod==13,
-            .dissolve_all_interior = cfg.lod==12,
-            .step_height_threshold = cfg.lod13_step_height
-        }
-    );
-
-#ifdef ROOFER_VERBOSE
-        std::cout << "Running arrangement snapper" << std::endl;
-#endif
-    auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
-    ArrangementSnapper->compute(arrangement);
-
-#ifdef ROOFER_VERBOSE
-        std::cout << "Running arrangement extruder" << std::endl;
-#endif
-    auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
-    ArrangementExtruder->compute(
-        arrangement,
-        cfg.floor_elevation,
-        {
-            .LoD2 = cfg.lod==22
-        },
-        std::move(base_cdt_ptr)
-    );
-
-    assert(ArrangementExtruder->meshes.size() == 1);
-    return ArrangementExtruder->meshes.front();
   }
 
   /*
