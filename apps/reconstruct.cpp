@@ -174,7 +174,7 @@ void print_version() {
 // [x] handle kas_warenhuis==true case
 // [x] LoD12, LoD13
 // [x] write generated attributes to output as well (eg. val3dity_codes, rmse etc...)
-// [.] handle no planes in input pc case. Write empty output?
+// [x] handle no planes in input pc case. Write empty output?
 
 int main(int argc, const char * argv[]) {
 
@@ -275,8 +275,12 @@ int main(int argc, const char * argv[]) {
     return EXIT_FAILURE;
   }
 
-  // read inputs
+  // Create Writer. TODO: check if we can write to output file prior to doing reconstruction?
   auto pj = roofer::createProjHelper();
+  auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+  CityJsonWriter->CRS_ = crs_output;
+
+  // read inputs
   pj->set_process_crs(crs_process.c_str());
   roofer::arr3d offset = {offset_x, offset_y, offset_z};
   pj->set_data_offset(offset);
@@ -335,10 +339,19 @@ int main(int argc, const char * argv[]) {
   auto& attr_roof_elevation_max = attributes.insert_vec<float>("b3_h_dak_max");
   attr_roof_elevation_max.push_back(PlaneDetector->roof_elevation_max);
 
+  auto& attr_skip = attributes.insert_vec<bool>("b3_reconstructie_onvolledig");
+
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
-    spdlog::error("Pointcloud is insufficient, cannot reconstruct");
-    return 1;
+    attr_skip.push_back(true);
+    CityJsonWriter->write(
+      path_output_jsonl,
+      footprints,
+      nullptr,
+      nullptr,
+      nullptr,
+      attributes
+    );
   }
   
   auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
@@ -361,8 +374,6 @@ int main(int argc, const char * argv[]) {
   }
   // skip = skip || no_planes;
   spdlog::info("Skip = {}", skip);
-  
-  auto& attr_skip = attributes.insert_vec<bool>("b3_reconstructie_onvolledig");
   attr_skip.push_back(skip);
 
   if (skip) {
@@ -372,17 +383,14 @@ int main(int argc, const char * argv[]) {
       floor_elevation,
       PlaneDetector->roof_elevation_70p
     );
-
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-    CityJsonWriter->CRS_ = crs_output;
     std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
     multisolidvec.push_back(SimplePolygonExtruder->multisolid);
     CityJsonWriter->write(
       path_output_jsonl,
       footprints,
-      multisolidvec,
-      multisolidvec,
-      multisolidvec,
+      &multisolidvec,
+      &multisolidvec,
+      &multisolidvec,
       attributes
     );
     spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
@@ -486,8 +494,6 @@ int main(int argc, const char * argv[]) {
       LOD22
     );
 
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-    CityJsonWriter->CRS_ = crs_output;
     std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec12, multisolidvec13, multisolidvec22;
     multisolidvec12.push_back(multisolids_lod12);
     multisolidvec13.push_back(multisolids_lod13);
@@ -495,9 +501,9 @@ int main(int argc, const char * argv[]) {
     CityJsonWriter->write(
       path_output_jsonl,
       footprints,
-      multisolidvec12,
-      multisolidvec13,
-      multisolidvec22,
+      &multisolidvec12,
+      &multisolidvec13,
+      &multisolidvec22,
       attributes
     );
     spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
