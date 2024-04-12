@@ -31,17 +31,12 @@ namespace roofer::detection {
   // add_output("multisolid", typeid(std::unordered_map<int, Mesh>));
 
     virtual ~ArrangementExtruderInterface() = default;
-    virtual void compute(
-      Arrangement_2& arrangement,
-      const float floor_elevation,
-      const proj_tri_util::CDT& base_cdt,
-      ArrangementExtruderConfig config=ArrangementExtruderConfig()
-    ) = 0;
 
     virtual void compute(
         Arrangement_2& arrangement,
         const float floor_elevation,
-        ArrangementExtruderConfig config=ArrangementExtruderConfig()
+        ArrangementExtruderConfig config=ArrangementExtruderConfig(),
+        std::unique_ptr<proj_tri_util::CDT> base_cdt = nullptr
     ) = 0;
 
   };

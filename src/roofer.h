@@ -28,9 +28,7 @@
 #include "reconstruction/SegmentRasteriser.hpp"
 #include "reconstruction/cdt_util.hpp"
 
-// todo: maybe hide the reconstruction workflow from the API
-//todo: 1. reconstruct with 2d polygons and with height info
-//      2. reconstruct with 3d polygons containing height info per vertex
+#include "CGAL/Polygon_with_holes_2.h"
 
 namespace roofer {
   /*
@@ -40,13 +38,17 @@ namespace roofer {
    */
     struct ReconstructionConfig {
         // control optimisation
-        float lambda = 1./9;
+        float lambda = 1./9.;
         // enable clipping parts off the footprint where ground planes are detected
         bool clip_ground = true;
         // requested LoD
         int lod = 22;
         // step height used for LoD13 generalisation
-        float lod13_step_height = 3.0;
+        float lod13_step_height = 3.;
+        // floor elevation
+        float floor_elevation = 0.;
+        // force flat floor
+        bool override_with_floor_elevation = false;
 
         bool is_valid() {
             return  (lambda>=0 && lambda <=1.0) &&
@@ -61,10 +63,10 @@ namespace roofer {
    *
    * //todo doc
    */
+  template <typename Footprint>
   Mesh reconstruct_single_instance(const PointCollection& points_roof,
                                    const PointCollection& points_ground,
-                                   std::vector<roofer::LinearRing>& footprints,
-                                   const float floor_elevation,
+                                   Footprint& footprint,
                                    ReconstructionConfig cfg=ReconstructionConfig())
   {
     // check if configuration is valid
@@ -73,9 +75,31 @@ namespace roofer {
       throw rooferException("Invalid roofer configuration");
     }
 
-    //todo ip temp
-    // create projected triangulation from the footprints
-    proj_tri_util::CDT base_cdt = proj_tri_util::cdt_from_linearing(footprints[0]);
+    // prepare footprint data type
+    // template deduction will fail if not convertible to LinearRing
+    if constexpr (std::is_same_v<Footprint, CGAL::Polygon_with_holes_2<EPICK>>){
+      // convert 2D footprint to LinearRing
+      roofer::LinearRing linearRing;
+      for (auto& p : footprint.outer_boundary()) {
+        float x = p.x(); float y = p.y();
+        linearRing.push_back({x, y, 0.});
+      }
+      for (auto& hole : footprint.holes()) {
+        vec3f iring;
+        for (auto& p : hole) {
+          float x = p.x(); float y = p.y();
+          iring.push_back({x, y, 0.});
+        }
+        linearRing.interior_rings().push_back(iring);
+      }
+      cfg.override_with_floor_elevation = true;
+    }
+
+    std::unique_ptr<proj_tri_util::CDT> base_cdt_ptr = nullptr;
+    if (!cfg.override_with_floor_elevation) {
+      proj_tri_util::CDT base_cdt = proj_tri_util::cdt_from_linearing(footprint);
+      base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
+    }
 
 #ifdef ROOFER_VERBOSE
     std::cout << "Reconstructing single instance" << std::endl;
@@ -140,7 +164,7 @@ namespace roofer {
     auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
     ArrangementBuilder->compute(
         arrangement,
-        footprints[0],
+        footprint,
         LineRegulariser->exact_regularised_edges
     );
 
@@ -185,12 +209,12 @@ namespace roofer {
 #endif
     auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
     ArrangementExtruder->compute(
-        arrangement, 
-        floor_elevation,
-        base_cdt, //todo temp testing
+        arrangement,
+        cfg.floor_elevation,
         {
             .LoD2 = cfg.lod==22
-        }    
+        },
+        std::move(base_cdt_ptr)
     );
 
     assert(ArrangementExtruder->meshes.size() == 1);
@@ -204,14 +228,13 @@ namespace roofer {
    * Overload for when the ground points are not available
    * //todo doc
    */
+  template <typename Footprint>
   Mesh reconstruct_single_instance(const PointCollection& points_roof,
-                                   std::vector<roofer::LinearRing>& footprints,
-                                   const float floor_elevation,
+                                   Footprint& footprint,
                                    ReconstructionConfig cfg=ReconstructionConfig())
   {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation, cfg);
+    return reconstruct_single_instance(points_roof, points_ground, footprint, cfg);
   }
-
 
 } // namespace roofer

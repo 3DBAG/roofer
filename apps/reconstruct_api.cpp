@@ -125,17 +125,19 @@ int main(int argc, const char * argv[]) {
   // write that terrain to obj
   proj_tri_util::write_cdt_to_obj(cdt_test, "terrain.obj");
   // interpolate from terrain pts to get footprint elevations
-  for (auto& footprint : footprints) {
-    for (auto& p : footprint) {
-      Point_2 pt(p[0], p[1]);
-      auto elevation = proj_tri_util::interpolate_from_cdt(pt, cdt_test);
-      p[2] = elevation;
-    }
+  for (auto& p : footprints.front()) {
+    Point_2 pt(p[0], p[1]);
+    auto elevation = proj_tri_util::interpolate_from_cdt(pt, cdt_test);
+    p[2] = elevation;
   }
 
   // reconstruct
   spdlog::info("Reconstructing LoD2.2");
-  auto mesh_lod22 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation);
+//  auto mesh_lod22 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints.front(),
+//                                                        {.floor_elevation = floor_elevation,
+//                                                         .override_with_floor_elevation = true});
+  auto mesh_lod22 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints.front());
+
   /*
   spdlog::info("Reconstructing LoD1.3");
   auto mesh_lod13 = roofer::reconstruct_single_instance(points_roof, points_ground, footprints, floor_elevation,
