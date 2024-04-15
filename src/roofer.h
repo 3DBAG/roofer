@@ -26,6 +26,7 @@
 #include "reconstruction/PlaneDetector.hpp"
 #include "reconstruction/PlaneIntersector.hpp"
 #include "reconstruction/SegmentRasteriser.hpp"
+#include "reconstruction/ElevationProvider.hpp"
 #include "reconstruction/cdt_util.hpp"
 
 #include "CGAL/Polygon_with_holes_2.h"
@@ -98,11 +99,14 @@ namespace roofer {
         cfg.override_with_floor_elevation = true;
       }
 
-      std::unique_ptr<proj_tri_util::CDT> base_cdt_ptr = nullptr;
+      std::unique_ptr<roofer::detection::ElevationProvider> elevation_provider = nullptr;
       if (!cfg.override_with_floor_elevation) {
         proj_tri_util::CDT base_cdt =
             proj_tri_util::cdt_from_linearing(footprint);
-        base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
+        auto base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
+        elevation_provider = roofer::detection::createElevationProvider(*base_cdt_ptr);
+      } else {
+        elevation_provider = roofer::detection::createElevationProvider(cfg.floor_elevation);
       }
 
 #ifdef ROOFER_VERBOSE
@@ -206,9 +210,9 @@ namespace roofer {
       std::cout << "Running arrangement extruder" << std::endl;
 #endif
       auto ArrangementExtruder = roofer::detection::createArrangementExtruder();
-      ArrangementExtruder->compute(arrangement, cfg.floor_elevation,
-                                   {.LoD2 = cfg.lod == 22},
-                                   std::move(base_cdt_ptr));
+      ArrangementExtruder->compute(arrangement,
+                                   *elevation_provider,
+                                   {.LoD2 = cfg.lod == 22});
 
 //      assert(ArrangementExtruder->meshes.size() == 1);
       //todo temp

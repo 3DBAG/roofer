@@ -76,6 +76,7 @@ add_library(roofer
   src/reconstruction/ArrangementDissolver.cpp
   src/reconstruction/ArrangementSnapper.cpp
   src/reconstruction/ArrangementExtruder.cpp
+  src/reconstruction/ElevationProvider.cpp
   src/reconstruction/cdt_util.cpp
   src/reconstruction/MeshTriangulatorLegacy.cpp
   src/reconstruction/SimplePolygonExtruder.cpp

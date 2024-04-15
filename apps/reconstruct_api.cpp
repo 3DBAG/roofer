@@ -2,17 +2,14 @@
 
 #include <rerun.hpp>
 
-#include "cgal_utils.hpp"
 #include "external/argh.h"
-#include "external/toml.hpp"
 #include "fmt/format.h"
 #include "git.h"
-#include "roofer.h"
-
-#include "misc/projHelper.hpp"
 #include "io/PointCloudReader.hpp"
 #include "io/VectorReader.hpp"
-
+#include "misc/cgal_utils.hpp"
+#include "misc/projHelper.hpp"
+#include "roofer.h"
 #include "spdlog/spdlog.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel          K;

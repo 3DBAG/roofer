@@ -90,9 +90,8 @@ namespace roofer::detection {
     public:
     void compute(
         Arrangement_2& arr,
-        const float floor_elevation,
-        ArrangementExtruderConfig cfg,
-        std::unique_ptr<proj_tri_util::CDT> base_cdt
+        const ElevationProvider& elevation_provider,
+        ArrangementExtruderConfig cfg
     ) override {
       typedef Arrangement_2::Traits_2 AT;
       float snap_tolerance = std::pow(10,-cfg.snap_tolerance_exp);
@@ -100,12 +99,8 @@ namespace roofer::detection {
       // assume we have only one unbounded faces that just has the building footprint as a hole
 
       auto unbounded_face = arr.unbounded_face();
-      if (base_cdt) {
-        // grab footprint elevations from base_cdt and calculate percentiles
-      } else {
-        unbounded_face->data().elevation_70p=floor_elevation;
-        unbounded_face->data().elevation_97p=floor_elevation;
-      }
+      unbounded_face->data().elevation_70p=elevation_provider.get_percentile(0.7);
+      unbounded_face->data().elevation_97p=elevation_provider.get_percentile(0.97);
 
       // floor
       if (cfg.do_floor) {
@@ -117,11 +112,7 @@ namespace roofer::detection {
           auto first = he;
           do {
             if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance) {
-              float pt_elevation;
-              if (base_cdt)
-                pt_elevation = proj_tri_util::interpolate_from_cdt( he->source()->point(), *base_cdt);
-              else
-                pt_elevation = floor_elevation;
+              float pt_elevation = elevation_provider.get(he->source()->point());
               floor.push_back(v2p(he->source(), pt_elevation));
             }
             he = he->next();
@@ -144,11 +135,7 @@ namespace roofer::detection {
             auto first = he;
             do {
               if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance) {
-                float pt_elevation;
-                if (base_cdt)
-                  pt_elevation = proj_tri_util::interpolate_from_cdt( he->source()->point(), *base_cdt);
-                else
-                  pt_elevation = floor_elevation;
+                float pt_elevation = elevation_provider.get(he->source()->point());
                 hole.push_back(v2p(he->source(), pt_elevation));
               }
               he = he->next();
@@ -198,10 +185,7 @@ namespace roofer::detection {
           } else if (f->data().in_footprint) {
             h = cfg.nodata_elevation;
           } else {
-            if (base_cdt)
-              h = proj_tri_util::interpolate_from_cdt(p, *base_cdt);
-            else
-              h = floor_elevation;
+            h = elevation_provider.get(p);
           }
           heights.push_back(std::make_pair(h, f));
         } while (++he!=first);
@@ -259,20 +243,12 @@ namespace roofer::detection {
           // // set base (ground) elevation to vertices adjacent to a face oustide the building fp
           int part_id;
           if (fp_a && !fp_b) {
-            if (base_cdt) {
-              h1b = proj_tri_util::interpolate_from_cdt(p1, *base_cdt);
-              h2b = proj_tri_util::interpolate_from_cdt(p2, *base_cdt);
-            } else {
-              h1b=h2b=floor_elevation;
-            }
+            h1b = elevation_provider.get(p1);
+            h2b = elevation_provider.get(p2);
             part_id = f_a->data().part_id;
           } else if (!fp_a && fp_b) {
-            if (base_cdt) {
-              h1a = proj_tri_util::interpolate_from_cdt(p1, *base_cdt);
-              h2a = proj_tri_util::interpolate_from_cdt(p2, *base_cdt);
-            } else {
-              h1a=h2a=floor_elevation;
-            }
+            h1a = elevation_provider.get(p1);
+            h2a = elevation_provider.get(p2);
             part_id = f_b->data().part_id;
           } else{ // both sides have the same part_id
             part_id = f_b->data().part_id; 
@@ -469,6 +445,18 @@ namespace roofer::detection {
         meshes.push_back(mm.second);
       }
       
+    }
+
+    /*
+     * Convenience overload when base_elevation is passed
+     */
+    void compute(
+        Arrangement_2& arr,
+        float base_elevation,
+        ArrangementExtruderConfig cfg
+    ) override {
+      auto const_elevation_provider_ptr = createElevationProvider(base_elevation);
+      compute(arr, *const_elevation_provider_ptr, cfg);
     }
 
   };
