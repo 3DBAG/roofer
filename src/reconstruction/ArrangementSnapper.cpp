@@ -28,6 +28,8 @@
 
 namespace roofer::detection {
 
+namespace arragementsnapper {
+
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
   typedef CGAL::Exact_predicates_inexact_constructions_kernel Epeck;
   typedef CGAL::Exact_predicates_tag Tag;
@@ -517,8 +519,10 @@ namespace roofer::detection {
     }
   };
 
+} // namespace arragementsnapper
+
   std::unique_ptr<ArrangementSnapperInterface> createArrangementSnapper() {
-    return std::make_unique<ArrangementSnapper>();
+    return std::make_unique<arragementsnapper::ArrangementSnapper>();
   }
 
-}
+} // namespace roofer::detection

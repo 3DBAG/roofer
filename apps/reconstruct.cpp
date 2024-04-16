@@ -67,7 +67,7 @@ struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
 enum LOD {LOD12=12, LOD13=13, LOD22=22};
 
 std::unordered_map<int, roofer::Mesh> extrude(
-  Arrangement_2 arrangement, 
+  roofer::Arrangement_2 arrangement,
   float floor_elevation,
   std::vector<std::optional<std::string> >& attr_val3dity,
   std::vector<std::optional<float> >& attr_rmse,
@@ -429,7 +429,7 @@ int main(int argc, const char * argv[]) {
       *heightfield_copy.vals_)
     );
 
-    Arrangement_2 arrangement;
+    roofer::Arrangement_2 arrangement;
     auto ArrangementBuilder = roofer::detection::createArrangementBuilder();
     ArrangementBuilder->compute(
         arrangement,

@@ -26,6 +26,8 @@
 
 #include <CGAL/Triangulation_vertex_base_with_id_2.h>
 
+namespace roofer {
+
 namespace tri_util {
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -66,7 +68,8 @@ namespace tri_util {
   void insert_ring(roofer::vec3f& ring, CDT& cdt);
 
   CDT create_from_polygon(roofer::LinearRing& poly);
-}
+
+} // namespace tri_util
 
 // utils for triangulation with projection traits
 namespace proj_tri_util {
@@ -96,4 +99,6 @@ namespace proj_tri_util {
   //todo temp for testing
   void write_cdt_to_obj(const CDT& cdt, const std::string& filename);
 
-}
+} // namespace proj_tri_util
+
+} // namespace roofer

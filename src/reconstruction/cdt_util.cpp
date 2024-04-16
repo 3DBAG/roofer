@@ -21,6 +21,8 @@
 #include <CGAL/Surface_mesh.h>
 
 
+namespace roofer {
+
 namespace tri_util {
 
   void mark_domains(CDT& ct,
@@ -105,7 +107,8 @@ namespace tri_util {
 
     return triangulation;
   }
-}
+
+} // namespace tri_util
 
 namespace proj_tri_util {
   //todo quick implementation, upper code might be reused
@@ -188,4 +191,6 @@ namespace proj_tri_util {
     CGAL::IO::write_OBJ(filename, mesh);
   }
 
-}
+} // namespace proj_tri_util
+
+} //namespace roofer

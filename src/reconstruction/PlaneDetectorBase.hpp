@@ -28,6 +28,8 @@
 #include <deque>
 #include <queue>
 
+namespace roofer {
+
 namespace planedect {
 
 class PlaneDS : public regiongrower::CGAL_RegionGrowerDS {
@@ -106,4 +108,7 @@ class DistAndNormalTester {
     return valid;
   }
 };
-};
+
+} // namespace planedect
+
+} // namespace roofer

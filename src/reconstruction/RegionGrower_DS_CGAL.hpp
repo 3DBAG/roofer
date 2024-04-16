@@ -13,6 +13,8 @@
 
 #include "cgal_shared_definitions.hpp"
 
+namespace roofer {
+
 namespace regiongrower {
 
 class CGAL_RegionGrowerDS {
@@ -31,22 +33,22 @@ class CGAL_RegionGrowerDS {
   roofer::PointCollection& points;
   vecvecui neighbours;
   size_t size;
-  
-  CGAL_RegionGrowerDS(roofer::PointCollection& points, size_t N=15) 
+
+  CGAL_RegionGrowerDS(roofer::PointCollection& points, size_t N=15)
     : points(points)
   {
     size = points.size();
-    
+
     std::vector<point_index> indexed_points;
     indexed_points.reserve(size);
-    
+
     size_t i=0;
     for(auto p: points)
       indexed_points.push_back(std::make_pair(Point(p[0], p[1], p[2]),i++));
     Tree tree;
     tree.insert(indexed_points.begin(), indexed_points.end());
     neighbours.resize(size);
-    
+
     for(auto pi : indexed_points){
       auto p = pi.first;
       neighbours[pi.second].reserve(N);
@@ -74,4 +76,7 @@ class CGAL_RegionGrowerDS {
   }
 };
 
-}
+} // namespace regiongrower
+
+} // namespace roofer
+

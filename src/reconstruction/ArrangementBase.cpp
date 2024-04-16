@@ -16,6 +16,8 @@
 #include "ArrangementBase.hpp"
 #include <stack>
 
+namespace roofer::detection {
+
 template<typename E, typename P> bool ccb_to_polygon_3(E he, P& polygon, double h=0) {
   auto first = he;
 
@@ -348,3 +350,5 @@ void arr_label_buildingparts(Arrangement_2& arr) {
     }
   }
 }
+
+} // namespace roofer::detection

@@ -2,14 +2,13 @@
 
 #include <rerun.hpp>
 
+#include "roofer.h"
 #include "external/argh.h"
 #include "fmt/format.h"
 #include "git.h"
 #include "io/PointCloudReader.hpp"
 #include "io/VectorReader.hpp"
 #include "misc/cgal_utils.hpp"
-#include "misc/projHelper.hpp"
-#include "roofer.h"
 #include "spdlog/spdlog.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel          K;
@@ -108,23 +107,23 @@ int main(int argc, const char * argv[]) {
   spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
 
   //todo temp test get the footprint heights
-  proj_tri_util::CDT cdt_test;
+  roofer::proj_tri_util::CDT cdt_test;
   //get the DT of the terrain
   spdlog::info("Constructing DT from terrain and interpolating footprint elevations");
   int k = 0;
   for (auto& p : points_ground) {
     if (k % 200 == 0) { //randomly thin
-      proj_tri_util::CDT::Point pt(p[0], p[1], p[2]);
+      roofer::proj_tri_util::CDT::Point pt(p[0], p[1], p[2]);
       cdt_test.insert(pt);
     }
     ++k;
   }
   // write that terrain to obj
-  proj_tri_util::write_cdt_to_obj(cdt_test, "terrain.obj");
+  roofer::proj_tri_util::write_cdt_to_obj(cdt_test, "terrain.obj");
   // interpolate from terrain pts to get footprint elevations
   for (auto& p : footprints.front()) {
-    Point_2 pt(p[0], p[1]);
-    auto elevation = proj_tri_util::interpolate_from_cdt(pt, cdt_test);
+    roofer::Point_2 pt(p[0], p[1]);
+    auto elevation = roofer::proj_tri_util::interpolate_from_cdt(pt, cdt_test);
     p[2] = elevation;
   }
 
