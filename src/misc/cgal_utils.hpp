@@ -18,44 +18,55 @@
 #include "datastructures.hpp"
 
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Polygon_mesh_processing/manifoldness.h>
+#include <CGAL/Polygon_mesh_processing/repair.h>
+#include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
+#include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 
 namespace roofer {
 
-  template <typename Point>
-  CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
+template <typename Point>
+CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
   typedef typename CGAL::Surface_mesh<Point> SurfaceMesh;
   typedef typename SurfaceMesh::Vertex_index VertexIndex;
   namespace PMP = CGAL::Polygon_mesh_processing;
 
   SurfaceMesh smesh;
-
-  std::map<arr3f, VertexIndex> vertex_map;
+  std::map<arr3f, std::size_t> vertex_map;
   std::set<arr3f> vertex_set;
-  for (const auto& ring : gfmesh.get_polygons())
+  std::vector<Point> points;
+  for (const auto &ring : gfmesh.get_polygons())
   {
-    for (auto& v : ring)
+    for (auto &v : ring)
     {
       auto [it, did_insert] = vertex_set.insert(v);
       if (did_insert)
       {
-        vertex_map[v] = smesh.add_vertex(Point(v[0], v[1], v[2]));
+        vertex_map[v] = points.size();
+        points.push_back(Point(v[0],v[1],v[2]));
       }
     }
   }
 
-  for (auto& ring : gfmesh.get_polygons())
-  {
-    std::vector<VertexIndex> rindices;
+  // First build a polygon soup
+  std::vector<std::vector<std::size_t> > polygons;
+  for (auto& ring : gfmesh.get_polygons()) {
+    std::vector<std::size_t> rindices;
     rindices.reserve(ring.size());
-    for (auto& p : ring)
-    {
+    for(auto& p : ring) {
       rindices.push_back(vertex_map[p]);
     }
-    smesh.add_face(rindices);
+    polygons.push_back(rindices);
   }
+  CGAL::Polygon_mesh_processing::repair_polygon_soup(points, polygons);
+  CGAL::Polygon_mesh_processing::orient_polygon_soup(points, polygons);
+  CGAL::Polygon_mesh_processing::duplicate_non_manifold_edges_in_polygon_soup(points, polygons);
+  CGAL::Polygon_mesh_processing::polygon_soup_to_polygon_mesh(points, polygons, smesh);
 
-  if (!CGAL::is_triangle_mesh(smesh)) PMP::triangulate_faces(smesh);
+  if(!CGAL::is_triangle_mesh(smesh)) PMP::triangulate_faces(smesh);
+
+  CGAL::Polygon_mesh_processing::duplicate_non_manifold_vertices(smesh);
 
   return smesh;
 }

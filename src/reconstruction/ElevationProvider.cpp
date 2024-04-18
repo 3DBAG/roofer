@@ -37,10 +37,10 @@ namespace roofer::detection {
   };
 
   struct InterpolatedElevationProvider : public ElevationProvider {
-    std::shared_ptr<const proj_tri_util::CDT> base_cdt_ptr_;
+    std::shared_ptr<const proj_tri_util::DT> base_cdt_ptr_;
 
-    InterpolatedElevationProvider(const proj_tri_util::CDT& base_cdt)
-        : base_cdt_ptr_(std::make_shared<const proj_tri_util::CDT>(base_cdt)) {};
+    InterpolatedElevationProvider(const proj_tri_util::DT& base_cdt)
+        : base_cdt_ptr_(std::make_shared<const proj_tri_util::DT>(base_cdt)) {};
 
     virtual float get(const Point_2 pt) const override {
       return proj_tri_util::interpolate_from_cdt(pt, *base_cdt_ptr_);
@@ -76,7 +76,7 @@ namespace roofer::detection {
     return std::make_unique<ConstantElevationProvider>(floor_elevation);
   }
 
-  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::CDT& base_cdt) {
+  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::DT& base_cdt) {
     return std::make_unique<InterpolatedElevationProvider>(base_cdt);
   }
 

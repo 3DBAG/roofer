@@ -107,13 +107,13 @@ int main(int argc, const char * argv[]) {
   spdlog::info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
 
   //todo temp test get the footprint heights
-  roofer::proj_tri_util::CDT cdt_test;
+  roofer::proj_tri_util::DT cdt_test;
   //get the DT of the terrain
   spdlog::info("Constructing DT from terrain and interpolating footprint elevations");
   int k = 0;
   for (auto& p : points_ground) {
     if (k % 200 == 0) { //randomly thin
-      roofer::proj_tri_util::CDT::Point pt(p[0], p[1], p[2]);
+      roofer::proj_tri_util::DT::Point pt(p[0], p[1], p[2]);
       cdt_test.insert(pt);
     }
     ++k;

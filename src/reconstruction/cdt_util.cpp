@@ -111,44 +111,46 @@ namespace tri_util {
 } // namespace tri_util
 
 namespace proj_tri_util {
-  //todo quick implementation, upper code might be reused
-  CDT cdt_from_linearing(const roofer::LinearRing& poly) {
+  DT cdt_from_linearing(const roofer::LinearRing& poly) {
     // store roofer's LinearRing as CGAL Polygon_2 with proj traits
     typedef CGAL::Polygon_2<Projection_traits> Polygon_3;
     typedef Projection_traits::Point_2 Point_3;
-    std::vector<Polygon_3> rings;
-    Polygon_3 ring;
-    for (auto& p : poly) {
-      ring.push_back(Point_3(p[0], p[1], p[2]));
-    }
-    rings.push_back(ring);
-    ring.clear();
-    for (auto& hole : poly.interior_rings()) {
-      for (auto& p : hole) {
-        ring.push_back(Point_3(p[0], p[1], p[2]));
-      }
-      rings.push_back(ring);
-      ring.clear();
-    }
-
-    //add rings to cdt
-    CDT cdt;
-    for (auto& rring : rings) {
-      cdt.insert_constraint(rring.begin(), rring.end(), true);
-    }
+    DT cdt;
+    for (auto& p : poly)
+      cdt.insert(Point_3(p[0], p[1], p[2]));
+    for (auto& ring : poly.interior_rings())
+      for (auto& p : ring) cdt.insert(Point_3(p[0], p[1], p[2]));
 
     return cdt;
   }
 
-  float interpolate_from_cdt(const Point_2& p, const CDT& cdt)  {
-    CDT::Face_handle fh = nullptr;
-    CDT::Point pt(CGAL::to_double(p.x()), CGAL::to_double(p.y()), 0);
+  float interpolate_from_cdt(const Point_2& p, const DT& cdt)  {
+    DT::Face_handle fh = nullptr;
+    DT::Point pt(CGAL::to_double(p.x()), CGAL::to_double(p.y()), 0);
 
-    CDT::Locate_type lt;
+    DT::Locate_type lt;
     int li;
     fh = cdt.locate(pt, lt, li, fh);
-    if (lt == CDT::OUTSIDE_CONVEX_HULL) {
-      rooferException("Point is outside convex hull!"); //todo temp to test
+    if (lt == DT::OUTSIDE_CONVEX_HULL) {
+      // borderline case when point is on the edge of the convex hull
+      std::vector<DT::Point> interp_edge;
+      // the point landed on infinite face on the other side of the edge
+      if (!cdt.is_infinite(fh->vertex(0))) interp_edge.push_back(fh->vertex(0)->point());
+      if (!cdt.is_infinite(fh->vertex(1))) interp_edge.push_back(fh->vertex(1)->point());
+      if (!cdt.is_infinite(fh->vertex(2))) interp_edge.push_back(fh->vertex(2)->point());
+      assert(interp_edge.size() == 2);
+
+      EPICK::Point_2 pt1(interp_edge[0].x(), interp_edge[0].y());
+      EPICK::Point_2 pt2(interp_edge[1].x(), interp_edge[1].y());
+      EPICK::Point_2 pt_int(pt.x(), pt.y());
+
+      // approximate with 1D linear interpolation along the neighbouring edge
+      double g1 = CGAL::approximate_sqrt(CGAL::squared_distance(pt1, pt_int))
+                  / CGAL::approximate_sqrt(CGAL::squared_distance(pt1, pt2));
+
+      float h_int = interp_edge[0].z() + g1 * (interp_edge[1].z() - interp_edge[0].z());
+
+      return h_int;
     }
 
     std::vector<double> coords;
@@ -169,9 +171,9 @@ namespace proj_tri_util {
   }
 
   //todo temp function for testing
-  void write_cdt_to_obj(const CDT& cdt, const std::string& filename) {
+  void write_cdt_to_obj(const DT& cdt, const std::string& filename) {
     typedef CGAL::Surface_mesh<EPICK::Point_3> Mesh;
-    std::map<CDT::Vertex_handle, int> indices;
+    std::map<DT::Vertex_handle, int> indices;
     std::vector<Mesh::vertex_index> mesh_vertex;
     std::vector<Mesh::face_index> face_index;
     mesh_vertex.reserve(cdt.number_of_vertices());
@@ -180,7 +182,7 @@ namespace proj_tri_util {
     for (const auto& it : cdt.finite_vertex_handles()) {
       mesh_vertex.emplace_back(mesh.add_vertex(it->point()));
       //        outstream << it->point() << std::endl;
-      indices.insert(std::pair<CDT::Vertex_handle, int>(it, counter++));
+      indices.insert(std::pair<DT::Vertex_handle, int>(it, counter++));
     }
     for (const auto& it : cdt.finite_face_handles()) {
       int v1 = indices[it->vertex(0)];

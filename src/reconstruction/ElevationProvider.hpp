@@ -30,6 +30,6 @@ namespace roofer::detection {
   };
 
   std::unique_ptr<ElevationProvider> createElevationProvider(const float floor_elevation);
-  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::CDT& base_cdt);
+  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::DT& base_cdt);
 
 } // namespace roofer::detection

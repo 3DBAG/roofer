@@ -101,9 +101,9 @@ namespace roofer {
 
       std::unique_ptr<roofer::detection::ElevationProvider> elevation_provider = nullptr;
       if (!cfg.override_with_floor_elevation) {
-        proj_tri_util::CDT base_cdt =
+        proj_tri_util::DT base_cdt =
             proj_tri_util::cdt_from_linearing(footprint);
-        auto base_cdt_ptr = std::make_unique<proj_tri_util::CDT>(base_cdt);
+        auto base_cdt_ptr = std::make_unique<proj_tri_util::DT>(base_cdt);
         elevation_provider = roofer::detection::createElevationProvider(*base_cdt_ptr);
       } else {
         elevation_provider = roofer::detection::createElevationProvider(cfg.floor_elevation);
