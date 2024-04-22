@@ -44,3 +44,6 @@ Then, we could rerun the reconstruction of only the problematic object even from
 There is a Rust library, [bincode](https://crates.io/crates/bincode), which can de/serialize Rust objects to binary files, using "zero-fluff" encoding.
 If there is a C++ equivalent, we could use that to dump the inputs to files.
 Then write a converter from the binary to GIS formats.
+
+
+Consider [lwlog](https://github.com/ChristianPanov/lwlog) as an *spdlog* alternative.

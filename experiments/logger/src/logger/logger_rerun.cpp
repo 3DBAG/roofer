@@ -6,22 +6,23 @@
 #ifdef USE_LOGGER_RERUN
 
 #include <rerun.hpp>
+
 #include "logger.h"
 
 namespace Logger {
-    void debug(std::string_view message) {
-    }
+  Logger &Logger::get_logger() {
+    static auto &&logger = Logger();
+    return logger;
+  }
 
-    void info(std::string_view message) {
-    }
+  void Logger::debug(std::string_view message) {}
 
-    void warning(std::string_view message) {
-    }
+  void Logger::info(std::string_view message) {}
 
-    void error(std::string_view message) {
-    }
+  void Logger::warning(std::string_view message) {}
 
-    void critical(std::string_view message) {
-    }
-} // Logger
+  void Logger::error(std::string_view message) {}
+
+  void Logger::critical(std::string_view message) {}
+}  // namespace Logger
 #endif

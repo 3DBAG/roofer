@@ -12,6 +12,26 @@ int main() {
     if (use_spdlog) {
         std::cout << "use_spdlog cmake config variable is set" << "\n";
     }
-    Logger::info("Hello from Logger::info");
+
+    auto &logger = Logger::Logger::get_logger();
+    auto &logger2 = Logger::Logger::get_logger();
+    auto &logger3 = Logger::Logger::get_logger();
+
+    std::cout << "setting log level to info" << "\n";
+    logger.set_level(Logger::LogLevel::INFO);
+    logger.debug("debug message");
+    logger2.info("Hello from Logger::info");
+    logger.warning("warning message");
+    logger3.error("error message");
+    logger3.critical("critical message");
+
+    std::cout << "setting log level to error" << "\n";
+    logger.set_level(Logger::LogLevel::ERROR);
+    logger.debug("debug message");
+    logger2.info("Hello from Logger::info");
+    logger.warning("warning message");
+    logger3.error("error message");
+    logger3.critical("critical message");
+
     return 0;
 }
