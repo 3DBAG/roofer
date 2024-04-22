@@ -511,7 +511,7 @@ namespace roofer {
           acqusition_year = (int)lasreader->header.file_creation_year;
         }
         while (lasreader->read_point()) {
-          if (!use_file_creation_year)
+          if (!use_file_creation_year && cfg.use_acquisition_year)
             acqusition_year = getAcquisitionYearOfPoint(&lasreader->point);
           pip_collector.add_point(
               pjHelper.coord_transform_fwd(lasreader->point.get_x(),

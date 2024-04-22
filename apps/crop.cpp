@@ -292,8 +292,10 @@ int main(int argc, const char* argv[]) {
   }
 
   // get yoc attribute vector (nullptr if it does not exist)
+  bool use_acquisition_year = true;
   auto yoc_vec = attributes.get_if<int>(year_of_construction_attribute);
   if (!yoc_vec) {
+    use_acquisition_year = false;
     spdlog::warn(
         "year_of_construction_attribute '{}' not found in input footprints",
         year_of_construction_attribute);
@@ -313,7 +315,7 @@ int main(int argc, const char* argv[]) {
     PointCloudCropper->process(
         ipc.path, footprints, buffered_footprints, ipc.building_clouds,
         ipc.ground_elevations, ipc.acquisition_years,
-        {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class});
+        {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class, .use_acquisition_year = use_acquisition_year});
     if (ipc.date != 0) {
       spdlog::info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
