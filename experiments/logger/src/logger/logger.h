@@ -8,6 +8,7 @@
  * */
 
 #include <string_view>
+#include <memory>
 
 namespace Logger {
 
