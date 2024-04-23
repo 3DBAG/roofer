@@ -547,6 +547,7 @@ int main(int argc, const char* argv[]) {
             {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1]},
             {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
             {"skip_attribute_name", low_lod_attribute},
+            {"id_attribute", building_bid_attribute},
         };
 
         if (write_metadata) {
@@ -634,7 +635,7 @@ int main(int argc, const char* argv[]) {
 
     auto metadatajson = toml::table{
         {"type", "CityJSON"},
-        {"version", "1.1"},
+        {"version", "2.0"},
         {"CityObjects", toml::table{}},
         {"vertices", toml::array{}},
         {"transform",
