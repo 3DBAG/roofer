@@ -25,27 +25,21 @@ namespace {
   std::string get_now_string() {
     using system_clock = std::chrono::system_clock;
     auto now = system_clock::now();
-    auto cnow = system_clock::to_time_t(now);
-    auto result = std::string{std::ctime(&cnow)};
-    // ctime result always ends with '\n', we don't want it in our logs
-    if (!result.empty()) result.pop_back();
-    return result;
+    return std::format("{:%F %T}", now);
   }
 }  // namespace
 
 namespace Logger {
   struct Logger::logger_impl {
     LogLevel level = LogLevel::default_level;
-    std::osyncstream stream{std::cout};
 
     logger_impl() = default;
     ~logger_impl() = default;
 
-    void write_message(LogLevel log_level, std::string_view message) {
-      stream << "[" << get_now_string() << "]\t"
-             << string_from_log_level(log_level) << '\t' << message
-             << '\n';
-      stream.emit();
+    static void write_message(LogLevel log_level, std::string_view message) {
+      std::osyncstream{std::cout} << "[" << get_now_string() << "]\t"
+                                  << string_from_log_level(log_level) << '\t'
+                                  << message << '\n';
     }
   };
 
