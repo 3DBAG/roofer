@@ -11,4 +11,5 @@ target_link_libraries(
     ${EXECUTABLE_NAME}
     PRIVATE "LibRoofer"
             "LibLogger"
-            fmt::fmt)
+            fmt::fmt
+            ${CMAKE_THREAD_LIBS_INIT})
