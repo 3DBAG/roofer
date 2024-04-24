@@ -3,20 +3,13 @@
 #include <map>
 
 namespace roofer::detection {
-  
-  class PlaneIntersector : public PlaneIntersectorInterface {
 
-    bool get_line_extend(
-      EPICK::Line_3* l,
-      const std::vector<Point>& points,
-      double& dmin,
-      double& dmax,
-      Point& pmin,
-      Point& pmax,
-      float& min_dist_to_line_sq
-    ) {
+  class PlaneIntersector : public PlaneIntersectorInterface {
+    bool get_line_extend(EPICK::Line_3* l, const std::vector<Point>& points,
+                         double& dmin, double& dmax, Point& pmin, Point& pmax,
+                         float& min_dist_to_line_sq) {
       size_t cnt = 0;
-      bool setminmax=false;  
+      bool setminmax = false;
       double sqd_min = 1 + min_dist_to_line_sq;
 
       auto lp = l->point();
@@ -25,16 +18,15 @@ namespace roofer::detection {
 
       for (const auto& p : points) {
         auto sqd = CGAL::squared_distance(*l, p);
-        if (sqd > min_dist_to_line_sq)
-          continue;
-        auto av = p-lp;
-        auto d = av*lv;
+        if (sqd > min_dist_to_line_sq) continue;
+        auto av = p - lp;
+        auto d = av * lv;
         if (!setminmax) {
-          setminmax=true;
-          dmin=dmax=d;
-          pmin=pmax=p;
+          setminmax = true;
+          dmin = dmax = d;
+          pmin = pmax = p;
         }
-        if (d < dmin){
+        if (d < dmin) {
           dmin = d;
           pmin = p;
         }
@@ -48,19 +40,17 @@ namespace roofer::detection {
       return cnt > 1;
     }
 
-    public:
-    void compute(
-        const IndexedPlanesWithPoints& pts_per_roofplane,
-        const std::map<size_t, std::map<size_t, size_t>>& plane_adj,
-        PlaneIntersectorConfig cfg
-      ) override {
-      float min_dist_to_line_sq = cfg.min_dist_to_line*cfg.min_dist_to_line;
-      float sq_min_length = cfg.min_length*cfg.min_length;
+   public:
+    void compute(const IndexedPlanesWithPoints& pts_per_roofplane,
+                 const std::map<size_t, std::map<size_t, size_t>>& plane_adj,
+                 PlaneIntersectorConfig cfg) override {
+      float min_dist_to_line_sq = cfg.min_dist_to_line * cfg.min_dist_to_line;
+      float sq_min_length = cfg.min_length * cfg.min_length;
 
       vec1f length;
       vec1f dists;
-      size_t ring_cntr=0;
-      for(auto& [id_hi, ids_lo] : plane_adj) {
+      size_t ring_cntr = 0;
+      for (auto& [id_hi, ids_lo] : plane_adj) {
         auto& plane_hi = pts_per_roofplane.at(id_hi).first;
         auto& plane_pts_hi = pts_per_roofplane.at(id_hi).second;
         // // auto& alpha_ring = alpha_rings.get<LinearRing>(ring_cntr++);
@@ -77,10 +67,12 @@ namespace roofer::detection {
               Point pmin_hi, pmax_hi;
               double dmin_lo, dmax_lo;
               double dmin_hi, dmax_hi;
-              
+
               // skip this line if it is too far away any of the plane_pts
-              if( !get_line_extend(l, plane_pts_hi, dmin_hi, dmax_hi, pmin_hi, pmax_hi, min_dist_to_line_sq) || 
-                  !get_line_extend(l, plane_pts_lo, dmin_lo, dmax_lo, pmin_lo, pmax_lo, min_dist_to_line_sq) )
+              if (!get_line_extend(l, plane_pts_hi, dmin_hi, dmax_hi, pmin_hi,
+                                   pmax_hi, min_dist_to_line_sq) ||
+                  !get_line_extend(l, plane_pts_lo, dmin_lo, dmax_lo, pmin_lo,
+                                   pmax_lo, min_dist_to_line_sq))
                 continue;
 
               // take the overlap between the two extends
@@ -89,33 +81,27 @@ namespace roofer::detection {
                 ppmin = l->projection(pmin_lo);
               else
                 ppmin = l->projection(pmin_hi);
-              
+
               if (dmax_lo < dmax_hi)
                 ppmax = l->projection(pmax_lo);
               else
                 ppmax = l->projection(pmax_hi);
-              
+
               // Check for infinity (quick fix for linux crash)
               auto sx = float(CGAL::to_double(ppmin.x()));
               auto sy = float(CGAL::to_double(ppmin.y()));
               auto tx = float(CGAL::to_double(ppmax.x()));
               auto ty = float(CGAL::to_double(ppmax.y()));
               float sq_length;
-              if (!((std::isinf(sx) || std::isinf(sy)) || (std::isinf(tx) || std::isinf(ty)))) {
-                sq_length = float(CGAL::to_double(CGAL::squared_distance(ppmin, ppmax)));
-                if(sq_length > 1E-10) {
-                  arr3f source = {
-                    sx,
-                    sy,
-                    float(CGAL::to_double(ppmin.z()))
-                  };
-                  arr3f target = {
-                    tx,
-                    ty,
-                    float(CGAL::to_double(ppmax.z()))
-                  };
+              if (!((std::isinf(sx) || std::isinf(sy)) ||
+                    (std::isinf(tx) || std::isinf(ty)))) {
+                sq_length = float(
+                    CGAL::to_double(CGAL::squared_distance(ppmin, ppmax)));
+                if (sq_length > 1E-10) {
+                  arr3f source = {sx, sy, float(CGAL::to_double(ppmin.z()))};
+                  arr3f target = {tx, ty, float(CGAL::to_double(ppmax.z()))};
                   if (sq_length > sq_min_length) {
-                    segments.push_back({source,target});
+                    segments.push_back({source, target});
                     length.push_back(std::sqrt(sq_length));
                   }
                 }
@@ -131,4 +117,4 @@ namespace roofer::detection {
     return std::make_unique<PlaneIntersector>();
   };
 
-}
+}  // namespace roofer::detection
