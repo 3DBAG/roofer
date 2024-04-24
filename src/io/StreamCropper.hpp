@@ -16,6 +16,7 @@ namespace roofer {
     bool clear_if_insufficient = true;
     std::string wkt_="";
     bool handle_overlap_points = false;
+    bool use_acquisition_year = true;
   };
   struct PointCloudCropperInterface {
 

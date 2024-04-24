@@ -36,9 +36,9 @@ namespace roofer::io {
     virtual void write(
       const std::string& source, 
       const std::vector<LinearRing >& footprints,
-      const std::vector<std::unordered_map<int, Mesh> >& geometry_lod12,
-      const std::vector<std::unordered_map<int, Mesh> >& geometry_lod13,
-      const std::vector<std::unordered_map<int, Mesh> >& geometry_lod22,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod12,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod13,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod22,
       const AttributeVecMap& attributes) = 0;
   };
 

@@ -174,7 +174,7 @@ void print_version() {
 // [x] handle kas_warenhuis==true case
 // [x] LoD12, LoD13
 // [x] write generated attributes to output as well (eg. val3dity_codes, rmse etc...)
-// [.] handle no planes in input pc case. Write empty output?
+// [x] handle no planes in input pc case. Write empty output?
 
 int main(int argc, const char * argv[]) {
 
@@ -208,9 +208,16 @@ int main(int argc, const char * argv[]) {
   std::string crs_process = "EPSG:7415";
   std::string crs_output = "EPSG:7415";
   std::string skip_attribute_name = "kas_warenhuis";
+  std::string building_bid_attribute = "CCA";
   float offset_x = 85373.406000000003;
   float offset_y = 447090.51799999998;
   float offset_z = 0;
+  float CITYJSON_TRANSLATE_X = offset_x;
+  float CITYJSON_TRANSLATE_Y = offset_y;
+  float CITYJSON_TRANSLATE_Z = offset_z;
+  float CITYJSON_SCALE_X = 0.01;
+  float CITYJSON_SCALE_Y = 0.01;
+  float CITYJSON_SCALE_Z = 0.01;
   float floor_elevation = -0.16899998486042023;
   size_t fp_i = 0;
 
@@ -235,9 +242,11 @@ int main(int argc, const char * argv[]) {
       path_footprint = *tml_path_footprint;
     
     auto tml_path_pointcloud = config["INPUT_POINTCLOUD"].value<std::string>();
-    if(tml_path_pointcloud.has_value())
-      path_pointcloud = *tml_path_pointcloud;
-    
+    if (tml_path_pointcloud.has_value()) path_pointcloud = *tml_path_pointcloud;
+
+    auto tml_building_bid_attribute = config["id_attribute"].value<std::string>();
+    if (tml_building_bid_attribute.has_value()) building_bid_attribute = *tml_building_bid_attribute;
+
     auto tml_path_output_jsonl = config["OUTPUT_JSONL"].value<std::string>();
     if(tml_path_output_jsonl.has_value())
       path_output_jsonl = *tml_path_output_jsonl;
@@ -266,6 +275,24 @@ int main(int argc, const char * argv[]) {
     if(tml_offset_z.has_value())
       offset_z = *tml_offset_z;
 
+    auto tml_CITYJSON_TRANSLATE_X = config["CITYJSON_TRANSLATE_X"].value<float>();
+    if (tml_CITYJSON_TRANSLATE_X.has_value()) CITYJSON_TRANSLATE_X = *tml_CITYJSON_TRANSLATE_X;
+
+    auto tml_CITYJSON_TRANSLATE_Y = config["CITYJSON_TRANSLATE_Y"].value<float>();
+    if (tml_CITYJSON_TRANSLATE_Y.has_value()) CITYJSON_TRANSLATE_Y = *tml_CITYJSON_TRANSLATE_Y;
+
+    auto tml_CITYJSON_TRANSLATE_Z = config["CITYJSON_TRANSLATE_Z"].value<float>();
+    if (tml_CITYJSON_TRANSLATE_Z.has_value()) CITYJSON_TRANSLATE_Z = *tml_CITYJSON_TRANSLATE_Z;
+
+    auto tml_CITYJSON_SCALE_X = config["CITYJSON_SCALE_X"].value<float>();
+    if (tml_CITYJSON_SCALE_X.has_value()) CITYJSON_SCALE_X = *tml_CITYJSON_SCALE_X;
+
+    auto tml_CITYJSON_SCALE_Y = config["CITYJSON_SCALE_Y"].value<float>();
+    if (tml_CITYJSON_SCALE_Y.has_value()) CITYJSON_SCALE_Y = *tml_CITYJSON_SCALE_Y;
+
+    auto tml_CITYJSON_SCALE_Z = config["CITYJSON_SCALE_Z"].value<float>();
+    if (tml_CITYJSON_SCALE_Z.has_value()) CITYJSON_SCALE_Z = *tml_CITYJSON_SCALE_Z;
+
     auto tml_skip_attribute_name = config["skip_attribute_name"].value<float>();
     if(tml_skip_attribute_name.has_value())
       skip_attribute_name = *tml_skip_attribute_name;
@@ -275,8 +302,19 @@ int main(int argc, const char * argv[]) {
     return EXIT_FAILURE;
   }
 
-  // read inputs
+  // Create Writer. TODO: check if we can write to output file prior to doing reconstruction?
   auto pj = roofer::createProjHelper();
+  auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+  CityJsonWriter->CRS_ = crs_output;
+  CityJsonWriter->identifier_attribute = building_bid_attribute;
+  CityJsonWriter->translate_x_ = CITYJSON_TRANSLATE_X;
+  CityJsonWriter->translate_y_ = CITYJSON_TRANSLATE_Y;
+  CityJsonWriter->translate_z_ = CITYJSON_TRANSLATE_Z;
+  CityJsonWriter->scale_x_ = CITYJSON_SCALE_X;
+  CityJsonWriter->scale_y_ = CITYJSON_SCALE_Y;
+  CityJsonWriter->scale_z_ = CITYJSON_SCALE_Z;
+
+  // read inputs
   pj->set_process_crs(crs_process.c_str());
   roofer::arr3d offset = {offset_x, offset_y, offset_z};
   pj->set_data_offset(offset);
@@ -335,10 +373,19 @@ int main(int argc, const char * argv[]) {
   auto& attr_roof_elevation_max = attributes.insert_vec<float>("b3_h_dak_max");
   attr_roof_elevation_max.push_back(PlaneDetector->roof_elevation_max);
 
+  auto& attr_skip = attributes.insert_vec<bool>("b3_reconstructie_onvolledig");
+
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" || PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
-    spdlog::error("Pointcloud is insufficient, cannot reconstruct");
-    return 1;
+    attr_skip.push_back(true);
+    CityJsonWriter->write(
+      path_output_jsonl,
+      footprints,
+      nullptr,
+      nullptr,
+      nullptr,
+      attributes
+    );
   }
   
   auto PlaneDetector_ground = roofer::detection::createPlaneDetector();
@@ -361,8 +408,6 @@ int main(int argc, const char * argv[]) {
   }
   // skip = skip || no_planes;
   spdlog::info("Skip = {}", skip);
-  
-  auto& attr_skip = attributes.insert_vec<bool>("b3_reconstructie_onvolledig");
   attr_skip.push_back(skip);
 
   if (skip) {
@@ -372,17 +417,14 @@ int main(int argc, const char * argv[]) {
       floor_elevation,
       PlaneDetector->roof_elevation_70p
     );
-
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-    CityJsonWriter->CRS_ = crs_output;
     std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
     multisolidvec.push_back(SimplePolygonExtruder->multisolid);
     CityJsonWriter->write(
       path_output_jsonl,
       footprints,
-      multisolidvec,
-      multisolidvec,
-      multisolidvec,
+      &multisolidvec,
+      &multisolidvec,
+      &multisolidvec,
       attributes
     );
     spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);
@@ -486,8 +528,6 @@ int main(int argc, const char * argv[]) {
       LOD22
     );
 
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-    CityJsonWriter->CRS_ = crs_output;
     std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec12, multisolidvec13, multisolidvec22;
     multisolidvec12.push_back(multisolids_lod12);
     multisolidvec13.push_back(multisolids_lod13);
@@ -495,9 +535,9 @@ int main(int argc, const char * argv[]) {
     CityJsonWriter->write(
       path_output_jsonl,
       footprints,
-      multisolidvec12,
-      multisolidvec13,
-      multisolidvec22,
+      &multisolidvec12,
+      &multisolidvec13,
+      &multisolidvec22,
       attributes
     );
     spdlog::info("Completed CityJsonWriter to {}", path_output_jsonl);

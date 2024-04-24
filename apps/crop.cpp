@@ -287,9 +287,13 @@ int main(int argc, const char * argv[]) {
   }
 
   // get yoc attribute vector (nullptr if it does not exist)
+  bool use_acquisition_year = true;
   auto yoc_vec = attributes.get_if<int>(year_of_construction_attribute);
   if (!yoc_vec) {
-    spdlog::warn("year_of_construction_attribute '{}' not found in input footprints", year_of_construction_attribute);
+    use_acquisition_year = false;
+    spdlog::warn(
+        "year_of_construction_attribute '{}' not found in input footprints",
+        year_of_construction_attribute);
   }
 
   // simplify + buffer footprints
@@ -304,18 +308,10 @@ int main(int argc, const char * argv[]) {
     spdlog::info("Cropping pointcloud {}...", ipc.name);
 
     PointCloudCropper->process(
-      ipc.path,
-      footprints,
-      buffered_footprints,
-      ipc.building_clouds,
-      ipc.ground_elevations,
-      ipc.acquisition_years,
-      {
-        .ground_class = ipc.grnd_class, 
-        .building_class = ipc.bld_class
-      }
-    );
-    if (ipc.date!=0) {
+        ipc.path, footprints, buffered_footprints, ipc.building_clouds,
+        ipc.ground_elevations, ipc.acquisition_years,
+        {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class, .use_acquisition_year = use_acquisition_year});
+    if (ipc.date != 0) {
       spdlog::info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(), ipc.date);
     }
@@ -534,11 +530,30 @@ int main(int argc, const char * argv[]) {
           {"GROUND_ELEVATION", h_ground},
           {"OUTPUT_JSONL", jsonl_path },
 
+<<<<<<< HEAD
+        auto gf_config = toml::table{
+            {"INPUT_FOOTPRINT", fp_path},
+            // {"INPUT_POINTCLOUD", sresult.explanation ==
+            // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? "" :
+            // pc_path},
+            {"INPUT_POINTCLOUD", pc_path},
+            {"BID", bid},
+            {"GROUND_ELEVATION", h_ground},
+            {"OUTPUT_JSONL", jsonl_path},
+
+            {"GF_PROCESS_OFFSET_OVERRIDE", true},
+            {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0]},
+            {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1]},
+            {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
+            {"skip_attribute_name", low_lod_attribute},
+            {"id_attribute", building_bid_attribute},
+=======
           {"GF_PROCESS_OFFSET_OVERRIDE", true},
           {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0] },
           {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1] },
           {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2] },
           {"skip_attribute_name", low_lod_attribute },
+>>>>>>> parent of fb7a088 (apply consistent code formatting)
         };
 
         if (write_metadata) {
@@ -614,6 +629,20 @@ int main(int argc, const char * argv[]) {
     auto md_trans = *pj->data_offset;
 
     auto metadatajson = toml::table{
+<<<<<<< HEAD
+        {"type", "CityJSON"},
+        {"version", "2.0"},
+        {"CityObjects", toml::table{}},
+        {"vertices", toml::array{}},
+        {"transform",
+         toml::table{
+             {"scale", toml::array{md_scale[0], md_scale[1], md_scale[2]}},
+             {"translate", toml::array{md_trans[0], md_trans[1], md_trans[2]}},
+         }},
+        {"metadata",
+         toml::table{{"referenceSystem",
+                      "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
+=======
       { "type", "CityJSON" },
       { "version", "1.1" },
       { "CityObjects", toml::table{} },
@@ -628,6 +657,7 @@ int main(int argc, const char * argv[]) {
         }
       }
     };
+>>>>>>> parent of fb7a088 (apply consistent code formatting)
     // serializing as JSON using toml::json_formatter:
     std::string metadata_json_file = fmt::format(metadata_json_file_spec, fmt::arg("path", output_path));
     

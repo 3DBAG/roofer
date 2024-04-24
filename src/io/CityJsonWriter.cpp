@@ -136,9 +136,9 @@ namespace roofer::io {
 
     void write_cityobjects(
       const std::vector<LinearRing >& footprints,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod12,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod13,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod22,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod12,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod13,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod22,
       const AttributeVecMap& attributes,
       nlohmann::json&                         outputJSON,
       std::vector<arr3d>&           vertex_vec,
@@ -152,16 +152,16 @@ namespace roofer::io {
       size_t bp_counter = 0;
 
       // we expect at least one of the geomtry inputs is set
-      bool export_lod12 = multisolids_lod12.size();
-      bool export_lod13 = multisolids_lod13.size();
-      bool export_lod22 = multisolids_lod22.size();
+      bool export_lod12 = multisolids_lod12;
+      bool export_lod13 = multisolids_lod13;
+      bool export_lod22 = multisolids_lod22;
       size_t geometry_count = 0;
       if (export_lod12)
-        geometry_count = multisolids_lod12.size();
+        geometry_count = multisolids_lod12->size();
       else if (export_lod13)
-        geometry_count = multisolids_lod13.size();
+        geometry_count = multisolids_lod13->size();
       else if (export_lod22)
-        geometry_count = multisolids_lod22.size();
+        geometry_count = multisolids_lod22->size();
 
       typedef std::unordered_map<int, Mesh> MeshMap;
       nlohmann::json j_null;
@@ -264,19 +264,19 @@ namespace roofer::io {
         
 
         bool has_solids = false;
-        if (export_lod12) has_solids = multisolids_lod12.at(i).size();
-        if (export_lod13) has_solids = multisolids_lod13.at(i).size();
-        if (export_lod22) has_solids = multisolids_lod22.at(i).size();
+        if (export_lod12) has_solids = multisolids_lod12->at(i).size();
+        if (export_lod13) has_solids = multisolids_lod13->at(i).size();
+        if (export_lod22) has_solids = multisolids_lod22->at(i).size();
 
         Box building_bbox;
         if (has_solids) {
           MeshMap meshmap;
           if (export_lod22) {
-            meshmap = multisolids_lod22.at(i);
+            meshmap = multisolids_lod22->at(i);
           } else if (export_lod13) {
-            meshmap = multisolids_lod13.at(i);
+            meshmap = multisolids_lod13->at(i);
           } else if (export_lod12) {
-            meshmap = multisolids_lod12.at(i);
+            meshmap = multisolids_lod12->at(i);
           }
           for ( const auto& [sid, solid_lodx] : meshmap ) {
             auto buildingPart = nlohmann::json::object();
@@ -289,23 +289,23 @@ namespace roofer::io {
             // Use try-except here for some rare cases when the sid's between different lod's do not line up (eg for very fragmented buildings from poor dim pointcloud).
             if (export_lod12) {
               try {
-                building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod12.at(i).at(sid));
-                buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod12.at(i).at(sid), "1.2", vertex_map));
+                building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod12->at(i).at(sid));
+                buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod12->at(i).at(sid), "1.2", vertex_map));
               } catch (const std::exception& e) {
                 // std::cout << "skipping lod 12 building part\n";
               }
             }
             if (export_lod13) {
               try {
-                building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod13.at(i).at(sid));
-                buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod13.at(i).at(sid), "1.3", vertex_map));
+                building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod13->at(i).at(sid));
+                buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod13->at(i).at(sid), "1.3", vertex_map));
               } catch (const std::exception& e) {
                 // std::cout << "skipping lod 13 building part\n";
               }
             }
             if (export_lod22) {
-              building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod22.at(i).at(sid));
-              buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod22.at(i).at(sid), "2.2", vertex_map));
+              building_bbox = add_vertices_mesh(vertex_map, vertex_vec, vertex_set, multisolids_lod22->at(i).at(sid));
+              buildingPart["geometry"].push_back(mesh2jSolid(multisolids_lod22->at(i).at(sid), "2.2", vertex_map));
             }
 
             //attributes
@@ -346,9 +346,9 @@ namespace roofer::io {
     void write(
       const std::string& source, 
       const std::vector<LinearRing >& footprints,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod12,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod13,
-      const std::vector<std::unordered_map<int, Mesh> >& multisolids_lod22,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod12,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod13,
+      const std::vector<std::unordered_map<int, Mesh> >* multisolids_lod22,
       const AttributeVecMap& attributes
     ) override {
 

@@ -433,12 +433,79 @@ struct PointCloudCropper : public PointCloudCropperInterface {
         if (fs::exists(filepaths)) lasfiles.push_back(filepaths);
         else spdlog::info ("{} does not exist", filepaths);
       }
-    } else {
-      // std::cout << "filepaths_ is not a directory or file, assuming a list of LAS files" << std::endl;
-      for (std::string filepath : filepath_parts)
-      {
-        if (fs::exists(filepath)) lasfiles.push_back(filepath);
-        else spdlog::info ("{} does not exist", filepath);
+
+      for (auto lasfile : lasfiles) {
+        LASreadOpener lasreadopener;
+        lasreadopener.set_file_name(lasfile.c_str());
+        LASreader* lasreader = lasreadopener.open();
+
+        std::string wkt = cfg.wkt_;
+        if (wkt.size() == 0) {
+          getOgcWkt(&lasreader->header, wkt);
+        }
+        if (wkt.size() != 0) {
+          pjHelper.set_fwd_crs_transform(wkt.c_str());
+        }
+
+        if (!lasreader) {
+          spdlog::warn("cannot read las file: {}", lasfile);
+          continue;
+        }
+
+        Box file_bbox;
+        file_bbox.add(pjHelper.coord_transform_fwd(lasreader->get_min_x(),
+                                                   lasreader->get_min_y(),
+                                                   lasreader->get_min_z()));
+        file_bbox.add(pjHelper.coord_transform_fwd(lasreader->get_max_x(),
+                                                   lasreader->get_max_y(),
+                                                   lasreader->get_max_z()));
+
+        if (!file_bbox.intersects(pip_collector.completearea_bb)) {
+          spdlog::info("no intersection footprints with las file: {}", lasfile);
+          continue;
+        }
+
+        // tell lasreader our area of interest. It will then use quadtree
+        // indexing if available (.lax file created with lasindex)
+        pjHelper.set_rev_crs_transform(wkt.c_str());
+        const auto aoi_min =
+            pjHelper.coord_transform_rev(pip_collector.completearea_bb.min());
+        const auto aoi_max =
+            pjHelper.coord_transform_rev(pip_collector.completearea_bb.max());
+        pjHelper.clear_rev_crs_transform();
+        // std::cout << lasreader->npoints << std::endl;
+        // std::cout << lasreader->get_min_x() << " " << lasreader->get_min_y()
+        // << " " << lasreader->get_min_z() << std::endl; std::cout <<
+        // aoi_min[0] << " " << aoi_min[1] << " " << aoi_min[2] << std::endl;
+        // std::cout << lasreader->get_max_x() << " " << lasreader->get_max_y()
+        // << " " << lasreader->get_max_z() << std::endl; std::cout <<
+        // aoi_max[0] << " " << aoi_max[1] << " " << aoi_max[2] << std::endl;
+        lasreader->inside_rectangle(aoi_min[0], aoi_min[1], aoi_max[0],
+                                    aoi_max[1]);
+
+        // The point cloud acquisition year is the year of the GPS time of the
+        // last point in the AOI. Unless, GPS Week Time is used, in which case
+        // we default to the 'file creation year'.
+        int acqusition_year(0);
+        bool use_file_creation_year = useFileCreationYear(lasreader);
+        if (use_file_creation_year) {
+          acqusition_year = (int)lasreader->header.file_creation_year;
+        }
+        while (lasreader->read_point()) {
+          if (!use_file_creation_year && cfg.use_acquisition_year)
+            acqusition_year = getAcquisitionYearOfPoint(&lasreader->point);
+          pip_collector.add_point(
+              pjHelper.coord_transform_fwd(lasreader->point.get_x(),
+                                           lasreader->point.get_y(),
+                                           lasreader->point.get_z()),
+              lasreader->point.get_classification(), acqusition_year);
+        }
+        spdlog::info("Point cloud acquisition year: {}",
+                     acqusition_year);  // just for debug
+
+        pjHelper.clear_fwd_crs_transform();
+        lasreader->close();
+        delete lasreader;
       }
     }
 
