@@ -1,12 +1,12 @@
 
+#include "../datastructures.hpp"
+#include "../misc/projHelper.hpp"
 #include <cstddef>
 #include <memory>
 
-#include "../datastructures.hpp"
-#include "../misc/projHelper.hpp"
-
 namespace roofer::io {
   struct CityJsonWriterInterface {
+
     // parameter variables
     std::string CRS_ = "EPSG:7415";
     std::string filepath_;
@@ -27,23 +27,20 @@ namespace roofer::io {
 
     projHelperInterface& pjHelper;
 
-    CityJsonWriterInterface(projHelperInterface& pjh) : pjHelper(pjh){};
+    CityJsonWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~CityJsonWriterInterface() = default;
 
-    // add_poly_input("part_attributes", {typeid(bool), typeid(int),
-    // typeid(float), typeid(std::string), typeid(Date), typeid(Time),
-    // typeid(DateTime)}); add_poly_input("attributes", {typeid(bool),
-    // typeid(int), typeid(float), typeid(std::string), typeid(std::string),
-    // typeid(Date), typeid(Time), typeid(DateTime)});
+    // add_poly_input("part_attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
+    // add_poly_input("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
 
     virtual void write(
-        const std::string& source, const std::vector<LinearRing>& footprints,
-        const std::vector<std::unordered_map<int, Mesh> >* geometry_lod12,
-        const std::vector<std::unordered_map<int, Mesh> >* geometry_lod13,
-        const std::vector<std::unordered_map<int, Mesh> >* geometry_lod22,
-        const AttributeVecMap& attributes) = 0;
+      const std::string& source, 
+      const std::vector<LinearRing >& footprints,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod12,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod13,
+      const std::vector<std::unordered_map<int, Mesh> >* geometry_lod22,
+      const AttributeVecMap& attributes) = 0;
   };
 
-  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(
-      projHelperInterface& pjh);
-}  // namespace roofer::io
+  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(projHelperInterface& pjh);
+}

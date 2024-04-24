@@ -1,11 +1,10 @@
-#include <memory>
-
 #include "../datastructures.hpp"
 #include "cgal_shared_definitions.hpp"
+#include <memory>
 
 namespace roofer::detection {
 
-  struct LineRegulariserConfig {
+  struct LineRegulariserConfig{
     float dist_threshold = 0.5;
     float angle_threshold = 0.15;
     float extension = 1.0;
@@ -16,9 +15,8 @@ namespace roofer::detection {
     std::vector<EPECK::Segment_2> exact_regularised_edges;
     std::vector<Segment> regularised_edges;
 
-    // add_input("edge_segments", {typeid(SegmentCollection),
-    // typeid(LineString)}); add_input("ints_segments",
-    // typeid(SegmentCollection));
+    // add_input("edge_segments", {typeid(SegmentCollection), typeid(LineString)});
+    // add_input("ints_segments", typeid(SegmentCollection));
 
     // add_vector_output("regularised_edges", typeid(Segment));
     // add_vector_output("exact_regularised_edges", typeid());
@@ -31,10 +29,12 @@ namespace roofer::detection {
 
     virtual ~LineRegulariserInterface() = default;
     virtual void compute(
-        const SegmentCollection& edge_segments,
-        const SegmentCollection& ints_segments,
-        LineRegulariserConfig config = LineRegulariserConfig()) = 0;
+      const SegmentCollection& edge_segments,
+      const SegmentCollection& ints_segments,
+      LineRegulariserConfig config=LineRegulariserConfig()
+    ) = 0;
+    
   };
 
   std::unique_ptr<LineRegulariserInterface> createLineRegulariser();
-}  // namespace roofer::detection
+}
