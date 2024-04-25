@@ -2,10 +2,10 @@
 #include "ArrangementBase.hpp"
 
 #include <CGAL/property_map.h>
-#include "alpha_expansion_graphcut.h"
+#include <CGAL/boost/graph/alpha_expansion_graphcut.h>
 #include <CGAL/graph_traits_dual_arrangement_2.h>
 #include <CGAL/Arr_face_index_map.h>
-#include "Alpha_expansion_MaxFlow_tag.h"
+#include <CGAL/boost/graph/Alpha_expansion_MaxFlow_tag.h>
 
 #include <algorithm>
 #include <vector>
@@ -34,8 +34,11 @@
     friend vertex_descriptor target(edge_descriptor& e, const FootprintGraph& g) {
       return e->twin()->face();
     };
-    friend size_t num_vertices(const FootprintGraph& g) {
+    friend vertex_container::size_type num_vertices(const FootprintGraph& g) {
       return g.vertices_.size();
+    };
+    friend edge_container::size_type num_edges(const FootprintGraph& g) {
+      return g.edges_.size();
     };
     friend std::pair<vertex_iterator, vertex_iterator> vertices(const FootprintGraph& g) {
       return std::make_pair(g.vertices_.begin(), g.vertices_.end());
@@ -52,6 +55,8 @@
       typedef boost::disallow_parallel_edge_tag edge_parallel_category;
       typedef boost::edge_list_graph_tag traversal_category;
       typedef boost::directed_tag directed_category;
+      typedef FootprintGraph::vertex_container::size_type vertices_size_type;
+      typedef FootprintGraph::edge_container::size_type edges_size_type;
     };
   }
 
@@ -282,31 +287,28 @@ namespace roofer::detection {
         result = CGAL::alpha_expansion_graphcut(
           graph, 
           Edge_weight_property_map(),
-          Vertex_index_map(),
           Vertex_label_cost_property_map(),
           Vertex_label_property_map(),
-          CGAL::Alpha_expansion_boost_adjacency_list_tag(),
-          cfg.n_iterations
+          CGAL::parameters::vertex_index_map(Vertex_index_map()).implementation_tag(
+          CGAL::Alpha_expansion_boost_adjacency_list_tag())
         );
       } else if (cfg.graph_cut_impl==1) {
         result = CGAL::alpha_expansion_graphcut(
           graph, 
           Edge_weight_property_map(),
-          Vertex_index_map(),
           Vertex_label_cost_property_map(),
           Vertex_label_property_map(),
-          CGAL::Alpha_expansion_boost_compressed_sparse_row_tag(),
-          cfg.n_iterations
+          CGAL::parameters::vertex_index_map(Vertex_index_map()).implementation_tag(
+          CGAL::Alpha_expansion_boost_compressed_sparse_row_tag())
         );
       } else if (cfg.graph_cut_impl==2) {
         result = CGAL::alpha_expansion_graphcut(
           graph, 
           Edge_weight_property_map(),
-          Vertex_index_map(),
           Vertex_label_cost_property_map(),
           Vertex_label_property_map(),
-          CGAL::Alpha_expansion_MaxFlow_tag(),
-          cfg.n_iterations
+          CGAL::parameters::vertex_index_map(Vertex_index_map()).implementation_tag(
+          CGAL::Alpha_expansion_MaxFlow_tag())
         );
       }
 
