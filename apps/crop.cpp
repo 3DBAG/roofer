@@ -521,14 +521,6 @@ int main(int argc, const char * argv[]) {
         
         // Correct ground height for offset, NB this ignores crs transformation
         double h_ground = input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
-        
-        auto gf_config = toml::table {
-          {"INPUT_FOOTPRINT", fp_path},
-          // {"INPUT_POINTCLOUD", sresult.explanation == roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? "" : pc_path},
-          {"INPUT_POINTCLOUD", pc_path},
-          {"BID", bid},
-          {"GROUND_ELEVATION", h_ground},
-          {"OUTPUT_JSONL", jsonl_path },
 
         auto gf_config = toml::table{
             {"INPUT_FOOTPRINT", fp_path},
