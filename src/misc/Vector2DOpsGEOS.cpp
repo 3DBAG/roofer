@@ -15,8 +15,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <geos_c.h>
 
+#include "fmt/format.h"
+#include "logger/logger.h"
 #include "Vector2DOps.hpp"
-#include "spdlog/spdlog.h"
 
 namespace roofer {
 
@@ -24,7 +25,7 @@ namespace roofer {
 
   enum ORIENTATION { CW, CCW };
 
-  void print_geos_message(const char* message, ...) { spdlog::error(message); }
+  void print_geos_message(const char* message, ...) { logger::Logger::get_logger().error(message); }
 
   GEOSGeometry* orient_ring(const GEOSGeometry*& g_ring,
                             ORIENTATION orientation) {
@@ -141,9 +142,11 @@ namespace roofer {
       // GEOSContext_setNoticeHandler_r(gc, print_geos_message);
       // GEOSContext_setErrorHandler_r(gc, print_geos_message);
 
+      auto &logger = logger::Logger::get_logger();
+
       for (auto& lr : polygons) {
         if (lr.size() < 3) {
-          spdlog::info("feature skipped with less than 3 points");
+          logger.info("feature skipped with less than 3 points");
           // if (output_failures) polygons_out.push_back(lr);
           continue;
         }
@@ -152,7 +155,7 @@ namespace roofer {
         to_geos_polygon(lr, g_polygon);
 
         if (GEOSisValid_r(gc, g_polygon) != 1) {
-          spdlog::info("feature not valid");
+          logger.info("feature not valid");
           GEOSGeom_destroy_r(gc, g_polygon);
           // if (output_failures) polygons_out.push_back(lr);
           continue;
@@ -161,7 +164,7 @@ namespace roofer {
         GEOSGeometry* simplified_geom =
             GEOSSimplify_r(gc, g_polygon, double(tolerance));
         if (GEOSisValid_r(gc, simplified_geom) != 1) {
-          spdlog::info("feature not valid after simplify");
+          logger.info("feature not valid after simplify");
           GEOSGeom_destroy_r(gc, g_polygon);
           // if (output_failures) polygons_out.push_back(lr);
           continue;
@@ -175,7 +178,7 @@ namespace roofer {
             GEOSGeom_getCoordSeq_r(gc, g_ring);
         GEOSCoordSeq_getSize_r(gc, g_coord_seq, &size);
         if (size == 0) {
-          spdlog::info("feature size 0 after simplify");
+          logger.info("feature size 0 after simplify");
           // if (output_failures) polygons_out.push_back(lr);
         } else {
           lr = from_geos_polygon(simplified_geom);
@@ -191,6 +194,8 @@ namespace roofer {
                          float offset = 4) override {
       gc = GEOS_init_r();
 
+      auto &logger = logger::Logger::get_logger();
+
       for (auto& lr : polygons) {
         GEOSGeometry* g_polygon = nullptr;
         to_geos_polygon(lr, g_polygon);
@@ -200,7 +205,7 @@ namespace roofer {
         orient_polygon(buffered_geom, CCW);
 
         if (GEOSisValid_r(gc, buffered_geom) != 1) {
-          spdlog::info("feature not simplified");
+          logger.info("feature not simplified");
         } else {
           lr = from_geos_polygon(buffered_geom);
         }

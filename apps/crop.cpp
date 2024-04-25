@@ -18,12 +18,12 @@
 #include "io/StreamCropper.hpp"
 #include "io/VectorReader.hpp"
 #include "io/VectorWriter.hpp"
+#include "logger/logger.h"
 #include "misc/NodataCircleComputer.hpp"
 #include "misc/PointcloudRasteriser.hpp"
 #include "misc/Vector2DOps.hpp"
 #include "misc/projHelper.hpp"
 #include "misc/select_pointcloud.hpp"
-#include "spdlog/spdlog.h"
 namespace fs = std::filesystem;
 
 void print_help(std::string program_name) {
@@ -102,10 +102,12 @@ int main(int argc, const char* argv[]) {
     return EXIT_SUCCESS;
   }
 
+  auto &logger = roofer::logger::Logger::get_logger();
+
   if (verbose) {
-    spdlog::set_level(spdlog::level::debug);
+    logger.set_level(roofer::logger::LogLevel::DEBUG);
   } else {
-    spdlog::set_level(spdlog::level::warn);
+    logger.set_level(roofer::logger::LogLevel::WARNING);
   }
 
   std::vector<InputPointcloud> input_pointclouds;
@@ -133,16 +135,16 @@ int main(int argc, const char* argv[]) {
   toml::table config;
   if (cmdl({"-c", "--config"}) >> config_path) {
     if (!fs::exists(config_path)) {
-      spdlog::error("No such config file: {}", config_path);
+      logger.error(fmt::format("No such config file: {}", config_path));
       print_help(program_name);
       return EXIT_FAILURE;
     }
-    spdlog::info("Reading configuration from file {}", config_path);
+    logger.info(fmt::format("Reading configuration from file {}", config_path));
     try {
       config = toml::parse_file(config_path);
     } catch (const std::exception& e) {
-      spdlog::error("Unable to parse config file {}.\n{}", config_path,
-                    e.what());
+      logger.error(fmt::format("Unable to parse config file {}.\n{}", config_path,
+                    e.what()));
       return EXIT_FAILURE;
     }
 
@@ -257,7 +259,7 @@ int main(int argc, const char* argv[]) {
     if (output_crs_.has_value()) output_crs = *output_crs_;
 
   } else {
-    spdlog::error("No config file specified\n");
+    logger.error("No config file specified\n");
     return EXIT_FAILURE;
   }
 
@@ -271,7 +273,7 @@ int main(int argc, const char* argv[]) {
   auto LASWriter = roofer::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
-  spdlog::info("Reading footprints from {}", path_footprint);
+  logger.info(fmt::format("Reading footprints from {}", path_footprint));
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   VectorReader->readPolygons(footprints, &attributes);
@@ -296,13 +298,13 @@ int main(int argc, const char* argv[]) {
   auto yoc_vec = attributes.get_if<int>(year_of_construction_attribute);
   if (!yoc_vec) {
     use_acquisition_year = false;
-    spdlog::warn(
+    logger.warning(fmt::format(
         "year_of_construction_attribute '{}' not found in input footprints",
-        year_of_construction_attribute);
+        year_of_construction_attribute));
   }
 
   // simplify + buffer footprints
-  spdlog::info("Simplifying and buffering footprints...");
+  logger.info("Simplifying and buffering footprints...");
   VectorOps->simplify_polygons(footprints);
   auto buffered_footprints = footprints;
   VectorOps->buffer_polygons(buffered_footprints);
@@ -310,14 +312,14 @@ int main(int argc, const char* argv[]) {
   // Crop all pointclouds
   std::map<std::string, std::vector<roofer::PointCollection>> point_clouds;
   for (auto& ipc : input_pointclouds) {
-    spdlog::info("Cropping pointcloud {}...", ipc.name);
+    logger.info(fmt::format("Cropping pointcloud {}...", ipc.name));
 
     PointCloudCropper->process(
         ipc.path, footprints, buffered_footprints, ipc.building_clouds,
         ipc.ground_elevations, ipc.acquisition_years,
         {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class, .use_acquisition_year = use_acquisition_year});
     if (ipc.date != 0) {
-      spdlog::info("Overriding acquisition year from config file");
+      logger.info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
                 ipc.date);
     }
@@ -327,7 +329,7 @@ int main(int argc, const char* argv[]) {
   // thin
   // compute nodata maxcircle
   for (auto& ipc : input_pointclouds) {
-    spdlog::info("Analysing pointcloud {}...", ipc.name);
+    logger.info(fmt::format("Analysing pointcloud {}...", ipc.name));
     ipc.nodata_radii.resize(N_fp);
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
@@ -348,10 +350,10 @@ int main(int argc, const char* argv[]) {
       bool low_lod = *(*low_lod_vec)[i];
       if (low_lod) {
         target_density = max_point_density_low_lod;
-        spdlog::info(
+        logger.info(fmt::format(
             "Applying extra thinning and skipping nodata circle calculation "
             "[low_lod_attribute = {}]",
-            low_lod);
+            low_lod));
       }
 
       gridthinPointcloud(ipc.building_clouds[i], ipc.building_rasters[i]["cnt"],
@@ -404,7 +406,7 @@ int main(int argc, const char* argv[]) {
   }
 
   // write out geoflow config + pointcloud / fp for each building
-  spdlog::info("Selecting and writing pointclouds");
+  logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(building_bid_attribute);
   auto& pc_select = attributes.insert_vec<std::string>("pc_select");
   auto& pc_source = attributes.insert_vec<std::string>("pc_source");
@@ -451,7 +453,7 @@ int main(int argc, const char* argv[]) {
 
     // this is a sanity check and should never happen
     if (!selected) {
-      spdlog::error("Unable to select pointcloud");
+      logger.error("Unable to select pointcloud");
       exit(1);
     }
 

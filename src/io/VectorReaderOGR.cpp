@@ -24,8 +24,9 @@
 #include <unordered_map>
 #include <variant>
 
+#include "fmt/format.h"
+#include "logger/logger.h"
 #include "VectorReader.hpp"
-#include "spdlog/spdlog.h"
 
 namespace fs = std::filesystem;
 
@@ -158,8 +159,9 @@ namespace roofer {
 
     void readPolygons(std::vector<LinearRing>& polygons,
                       AttributeVecMap* attributes) override {
+      auto &logger = logger::Logger::get_logger();
       layer_count = poDS->GetLayerCount();
-      spdlog::info("Layer count: {}", layer_count);
+      logger.info(fmt::format("Layer count: {}", layer_count));
       OGRLayer* poLayer;
 
       poLayer = poDS->GetLayerByName(layer_name_.c_str());
@@ -178,11 +180,11 @@ namespace roofer {
       if (poLayer == nullptr)
         throw(rooferException("Could not get the selected layer "));
 
-      spdlog::info("Layer '{}' feature count: {}", poLayer->GetName(),
-                   poLayer->GetFeatureCount());
+      logger.info(fmt::format("Layer '{}' feature count: {}", poLayer->GetName(),
+                   poLayer->GetFeatureCount()));
       auto geometry_type = poLayer->GetGeomType();
       auto geometry_type_name = OGRGeometryTypeToName(geometry_type);
-      spdlog::info("Layer geometry type: {}", geometry_type_name);
+      logger.info(fmt::format("Layer geometry type: {}", geometry_type_name));
 
       auto layer_def = poLayer->GetLayerDefn();
       auto field_count = layer_def->GetFieldCount();

@@ -24,7 +24,6 @@
 #include <variant>
 
 #include "VectorWriter.hpp"
-#include "spdlog/spdlog.h"
 
 namespace fs = std::filesystem;
 

@@ -1,0 +1,7 @@
+#pragma once
+
+#include <cstdint>
+#include <string_view>
+
+#cmakedefine USE_LOGGER_SPDLOG
+#cmakedefine USE_LOGGER_RERUN

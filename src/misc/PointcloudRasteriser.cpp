@@ -7,7 +7,6 @@
 #include "../datastructures.hpp"
 #include "../datastructures/Raster.hpp"
 #include "../misc/pip_util.hpp"
-#include "spdlog/spdlog.h"
 
 namespace roofer {
 

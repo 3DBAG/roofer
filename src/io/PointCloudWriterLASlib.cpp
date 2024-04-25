@@ -4,8 +4,9 @@
 #include <filesystem>
 #include <laswriter.hpp>
 
+#include "fmt/format.h"
+#include "logger/logger.h"
 #include "PointCloudWriter.hpp"
-#include "spdlog/spdlog.h"
 
 namespace fs = std::filesystem;
 
@@ -17,6 +18,8 @@ namespace roofer {
                                       std::string path) {
       LASwriteOpener laswriteopener;
       laswriteopener.set_file_name(path.c_str());
+
+      auto &logger = logger::Logger::get_logger();
 
       LASheader lasheader;
       lasheader.x_scale_factor = 0.01;
@@ -46,7 +49,7 @@ namespace roofer {
 
       LASwriter* laswriter = laswriteopener.open(&lasheader);
       if (laswriter == 0) {
-        spdlog::error("ERROR: could not open laswriter");
+        logger.error("ERROR: could not open laswriter");
         return;
       }
 
@@ -95,7 +98,7 @@ namespace roofer {
         laswriter->write_point(&laspoint);
         laswriter->update_inventory(&laspoint);
 
-        if ((++i) % 100000000 == 0) spdlog::info("Written {0} points...", i);
+        if ((++i) % 100000000 == 0) logger.info(fmt::format("Written {0} points...", i));
       }
 
       laswriter->update_header(&lasheader, TRUE);

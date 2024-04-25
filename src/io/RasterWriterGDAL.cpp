@@ -16,6 +16,7 @@
 
 #include <gdal_priv.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -24,7 +25,6 @@
 #include <variant>
 
 #include "RasterWriter.hpp"
-#include "spdlog/spdlog.h"
 
 namespace fs = std::filesystem;
 

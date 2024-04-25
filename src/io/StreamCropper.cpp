@@ -6,8 +6,9 @@
 #include <lasreader.hpp>
 
 #include "../datastructures/Raster.hpp"
+#include "fmt/format.h"
+#include "logger/logger.h"
 #include "../misc/pip_util.hpp"
-#include "spdlog/spdlog.h"
 namespace fs = std::filesystem;
 
 namespace roofer {
@@ -190,6 +191,8 @@ namespace roofer {
       };
       std::unordered_map<size_t, PolyInfo> poly_info;
 
+      auto &logger = logger::Logger::get_logger();
+
       for (size_t poly_i = 0; poly_i < polygons.size(); poly_i++) {
         auto& polygon = polygons.at(poly_i);
         auto& point_cloud = point_clouds.at(poly_i);
@@ -306,8 +309,8 @@ namespace roofer {
         diff_sum += std::pow(mean_density - (info.pt_count_bld / info.area), 2);
       }
       float std_dev_density = std::sqrt(diff_sum / poly_info.size());
-      spdlog::info("Mean point density = {}", mean_density);
-      spdlog::info("Standard deviation = {}", std_dev_density);
+      logger.info(fmt::format("Mean point density = {}", mean_density));
+      logger.info(fmt::format("Standard deviation = {}", std_dev_density));
 
       float cov_thres = mean_density - coverage_threshold * std_dev_density;
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
@@ -348,6 +351,7 @@ namespace roofer {
   // year' as acquisition year.
   bool useFileCreationYear(LASreader* lasreader) {
     typedef std::bitset<sizeof(uint16_t)> GlobalEncodingBits;
+    auto &logger = logger::Logger::get_logger();
     // Table 4 in
     // https://www.asprs.org/wp-content/uploads/2010/12/LAS_1_4_r13.pdf
     bool gps_standard_time =
@@ -355,7 +359,7 @@ namespace roofer {
     if (gps_standard_time) {
       return false;
     } else {
-      spdlog::info(
+      logger.info(
           "No good GPS time available, defaulting to file creation year");
       // If it is GPS Week Time, probably could handle this better here, but I'm
       // simplifying. Also, AHN3 for instance uses week time, but there is no
@@ -367,19 +371,20 @@ namespace roofer {
   }
 
   void getOgcWkt(LASheader* lasheader, std::string& wkt) {
+    auto &logger = logger::Logger::get_logger();
     for (int i = 0; i < (int)lasheader->number_of_variable_length_records;
          i++) {
       if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
       {
-        spdlog::info("Found and ignored: OGC MATH TRANSFORM WKT");
+        logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
       } else if (lasheader->vlrs[i].record_id ==
                  2112)  // OGC COORDINATE SYSTEM WKT
       {
-        spdlog::info("Found: OGC COORDINATE SYSTEM WKT");
+        logger.info("Found: OGC COORDINATE SYSTEM WKT");
         wkt = (char*)(lasheader->vlrs[i].data);
       } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
       {
-        spdlog::info("Found and ignored: GeoKeyDirectoryTag");
+        logger.info("Found and ignored: GeoKeyDirectoryTag");
       }
     }
 
@@ -388,12 +393,12 @@ namespace roofer {
       if (strcmp(lasheader->evlrs[i].user_id, "LASF_Projection") == 0) {
         if (lasheader->evlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
         {
-          spdlog::info("Found and ignored: OGC MATH TRANSFORM WKT");
+          logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
 
         } else if (lasheader->evlrs[i].record_id ==
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
-          spdlog::info("Found: OGC COORDINATE SYSTEM WKT");
+          logger.info("Found: OGC COORDINATE SYSTEM WKT");
           wkt = (char*)(lasheader->evlrs[i].data);
         }
       }
@@ -415,6 +420,8 @@ namespace roofer {
       vec1i poly_pt_counts_grd;
       vec1s poly_ptcoverage_class;
       vec1f poly_densities;
+
+      auto &logger = logger::Logger::get_logger();
 
       PointsInPolygonsCollector pip_collector{
           polygons,           buf_polygons,
@@ -440,7 +447,7 @@ namespace roofer {
           if (fs::exists(filepaths))
             lasfiles.push_back(filepaths);
           else
-            spdlog::info("{} does not exist", filepaths);
+            logger.info(fmt::format("{} does not exist", filepaths));
         }
       } else {
         // std::cout << "filepaths_ is not a directory or file, assuming a list
@@ -449,7 +456,7 @@ namespace roofer {
           if (fs::exists(filepath))
             lasfiles.push_back(filepath);
           else
-            spdlog::info("{} does not exist", filepath);
+            logger.info(fmt::format("{} does not exist", filepath));
         }
       }
 
@@ -467,7 +474,7 @@ namespace roofer {
         }
 
         if (!lasreader) {
-          spdlog::warn("cannot read las file: {}", lasfile);
+          logger.warning(fmt::format("cannot read las file: {}", lasfile));
           continue;
         }
 
@@ -480,7 +487,7 @@ namespace roofer {
                                                    lasreader->get_max_z()));
 
         if (!file_bbox.intersects(pip_collector.completearea_bb)) {
-          spdlog::info("no intersection footprints with las file: {}", lasfile);
+          logger.info(fmt::format("no intersection footprints with las file: {}", lasfile));
           continue;
         }
 
@@ -519,8 +526,8 @@ namespace roofer {
                                            lasreader->point.get_z()),
               lasreader->point.get_classification(), acqusition_year);
         }
-        spdlog::info("Point cloud acquisition year: {}",
-                     acqusition_year);  // just for debug
+        logger.info(fmt::format("Point cloud acquisition year: {}",
+                     acqusition_year));  // just for debug
 
         pjHelper.clear_fwd_crs_transform();
         lasreader->close();
