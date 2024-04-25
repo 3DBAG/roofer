@@ -1,5 +1,7 @@
 #include "SimplePolygonExtruder.hpp"
 
+#include <algorithm>
+
 namespace roofer::detection {
   
   class SimplePolygonExtruder : public SimplePolygonExtruderInterface{

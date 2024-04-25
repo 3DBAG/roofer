@@ -3,27 +3,30 @@
 #include <laswriter.hpp>
 
 #include <iomanip>
-#include "spdlog/spdlog.h"
+#include "fmt/format.h"
+#include "logger/logger.h"
 
 namespace roofer {
 
 class PointCloudReaderLASlib : public PointCloudReaderInterface {
 
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
+        auto &logger = logger::Logger::get_logger();
+
         for (int i = 0; i < (int)lasheader->number_of_variable_length_records; i++)
         {
             if (lasheader->vlrs[i].record_id == 2111) // OGC MATH TRANSFORM WKT
             {
-                spdlog::debug("Found and ignored: OGC MATH TRANSFORM WKT");
+                logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
             }
             else if (lasheader->vlrs[i].record_id == 2112) // OGC COORDINATE SYSTEM WKT
             {
-                spdlog::debug("Found: OGC COORDINATE SYSTEM WKT");
+                logger.debug("Found: OGC COORDINATE SYSTEM WKT");
                 wkt = (char *)(lasheader->vlrs[i].data);
             }
             else if (lasheader->vlrs[i].record_id == 34735) // GeoKeyDirectoryTag
             {
-                spdlog::debug("Found and ignored: GeoKeyDirectoryTag");
+                logger.debug("Found and ignored: GeoKeyDirectoryTag");
             }
         }
 
@@ -33,17 +36,17 @@ class PointCloudReaderLASlib : public PointCloudReaderInterface {
             {
             if (lasheader->evlrs[i].record_id == 2111) // OGC MATH TRANSFORM WKT
             {
-                spdlog::debug("Found and ignored: OGC MATH TRANSFORM WKT");
+                logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
 
             }
             else if (lasheader->evlrs[i].record_id == 2112) // OGC COORDINATE SYSTEM WKT
             {
-                spdlog::debug("Found: OGC COORDINATE SYSTEM WKT");
+                logger.debug("Found: OGC COORDINATE SYSTEM WKT");
                 wkt = (char *)(lasheader->evlrs[i].data);
             }
             }
         }
-        spdlog::debug(wkt);
+        logger.debug(wkt);
     }
 
     LASreader* lasreader;
@@ -65,7 +68,8 @@ class PointCloudReaderLASlib : public PointCloudReaderInterface {
         vec1f* intensities,
         vec3f* colors) {
 
-        spdlog::debug("Attemting to find OGC CRS WKT...");
+        auto &logger = logger::Logger::get_logger();
+        logger.debug("Attemting to find OGC CRS WKT...");
         // std::string wkt = manager.substitute_globals(wkt_);
         std::string wkt = "";
         getOgcWkt(&lasreader->header, wkt);
