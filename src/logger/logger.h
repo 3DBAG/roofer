@@ -11,8 +11,8 @@
  * */
 #pragma once
 
-#include <string_view>
 #include <memory>
+#include <string_view>
 
 namespace roofer::logger {
 
@@ -34,7 +34,7 @@ namespace roofer::logger {
 
     // Copy is cheap, because of the shared implementation.
     Logger(const Logger &) = default;
-    Logger& operator=(const Logger &) = default;
+    Logger &operator=(const Logger &) = default;
 
     // Move would leave the object in a default state which does not make sense
     // here.
@@ -67,4 +67,4 @@ namespace roofer::logger {
     std::shared_ptr<logger_impl> impl_;
   };
 
-} // namespace roofer::logger
+}  // namespace roofer::logger

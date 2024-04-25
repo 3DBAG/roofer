@@ -70,7 +70,6 @@ namespace roofer::logger {
       stderr_sink->set_level(cast_level(new_level));
       file_sink->set_level(cast_level(new_level));
     }
-
   };
 
   void Logger::set_level(LogLevel level) {
