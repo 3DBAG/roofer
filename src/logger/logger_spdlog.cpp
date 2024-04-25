@@ -1,5 +1,6 @@
-/*
- * Copyright (c) 2024 Balázs Dukai.
+/**
+ * spdlog logging backend implementation.
+ * Logs messages to stdout, stderr, file.
  */
 #include "config.hpp"
 
@@ -110,5 +111,5 @@ namespace roofer::logger {
     assert(impl_);
     impl_->logger_stderr.critical(message);
   }
-}  // namespace Logger
+}  // namespace roofer::logger
 #endif

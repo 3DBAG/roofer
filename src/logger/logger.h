@@ -1,11 +1,15 @@
-/*
- * Copyright (c) 2024 Balázs Dukai.
- */
-#pragma once
-
 /**
- * Logger module for roofer.
+ * Logger library for roofer.
+ *
+ * Implements a generic logger facade that can use different logging backends.
+ * The logging backend is selected compile time with the USE_LOGGER_* option.
+ * Currently available backends:
+ *  - internal (default)
+ *  - spdlog (enable with USE_LOGGER_SPDLOG)
+ *
+ * Each implementation is thread-safe.
  * */
+#pragma once
 
 #include <string_view>
 #include <memory>
@@ -38,8 +42,8 @@ namespace roofer::logger {
     Logger &operator=(Logger &&) noexcept = delete;
 
     /**
-     * @brief Set the minimum level for the logger implementation. Messages with a
-     * below will be ignored.
+     * @brief Set the minimum level for the logger implementation. Messages
+     * with a level below will be ignored.
      */
     void set_level(LogLevel level);
 
@@ -63,4 +67,4 @@ namespace roofer::logger {
     std::shared_ptr<logger_impl> impl_;
   };
 
-}  // namespace Logger
+} // namespace roofer::logger

@@ -1,5 +1,6 @@
-/*
- * Copyright (c) 2024 Balázs Dukai.
+/**
+ * Internal logging backend implementation.
+ * Logs all messages to stdout.
  */
 #include "config.hpp"
 
@@ -13,7 +14,7 @@
 #include "logger.h"
 
 namespace {
-  /** @brief Convert log level into string */
+  /** @brief Convert the log level into string */
   std::string string_from_log_level(roofer::logger::LogLevel level) {
     std::array<std::string, 6> names = {"OFF",     "DEBUG", "INFO",
                                         "WARNING", "ERROR", "CRITICAL"};
@@ -96,5 +97,5 @@ namespace roofer::logger {
     }
     impl_->write_message(LogLevel::CRITICAL, message);
   }
-}  // namespace Logger
+}  // namespace roofer::logger
 #endif
