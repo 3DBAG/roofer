@@ -530,7 +530,6 @@ int main(int argc, const char * argv[]) {
           {"GROUND_ELEVATION", h_ground},
           {"OUTPUT_JSONL", jsonl_path },
 
-<<<<<<< HEAD
         auto gf_config = toml::table{
             {"INPUT_FOOTPRINT", fp_path},
             // {"INPUT_POINTCLOUD", sresult.explanation ==
@@ -547,13 +546,6 @@ int main(int argc, const char * argv[]) {
             {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
             {"skip_attribute_name", low_lod_attribute},
             {"id_attribute", building_bid_attribute},
-=======
-          {"GF_PROCESS_OFFSET_OVERRIDE", true},
-          {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0] },
-          {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1] },
-          {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2] },
-          {"skip_attribute_name", low_lod_attribute },
->>>>>>> parent of fb7a088 (apply consistent code formatting)
         };
 
         if (write_metadata) {
@@ -629,7 +621,6 @@ int main(int argc, const char * argv[]) {
     auto md_trans = *pj->data_offset;
 
     auto metadatajson = toml::table{
-<<<<<<< HEAD
         {"type", "CityJSON"},
         {"version", "2.0"},
         {"CityObjects", toml::table{}},
@@ -642,22 +633,6 @@ int main(int argc, const char * argv[]) {
         {"metadata",
          toml::table{{"referenceSystem",
                       "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
-=======
-      { "type", "CityJSON" },
-      { "version", "1.1" },
-      { "CityObjects", toml::table{} },
-      { "vertices", toml::array{} },
-      { "transform", toml::table{
-          { "scale", toml::array{md_scale[0], md_scale[1], md_scale[2]} },
-          { "translate", toml::array{md_trans[0], md_trans[1], md_trans[2]} },
-        }
-      },
-      { "metadata", toml::table{
-          { "referenceSystem", "https://www.opengis.net/def/crs/EPSG/0/7415" }
-        }
-      }
-    };
->>>>>>> parent of fb7a088 (apply consistent code formatting)
     // serializing as JSON using toml::json_formatter:
     std::string metadata_json_file = fmt::format(metadata_json_file_spec, fmt::arg("path", output_path));
     
