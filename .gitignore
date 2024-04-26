@@ -11,3 +11,9 @@ tests/output/*
 !tests/output/README.md
 !tests/output/label-style.qml
 resources/roofer_data
+
+# Local build scripts
+build-deps-balazs.sh
+
+# Virtual environments
+.venv
