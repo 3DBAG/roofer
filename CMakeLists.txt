@@ -113,7 +113,7 @@ add_library(roofer
 )
 set_target_properties(
   roofer PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
 )
 
 target_include_directories(roofer PRIVATE
