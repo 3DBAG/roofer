@@ -23,6 +23,7 @@
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#include <reconstruction/MeshTriangulator.hpp>
 
 namespace roofer {
 
@@ -30,43 +31,70 @@ template <typename Point>
 CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
   typedef typename CGAL::Surface_mesh<Point> SurfaceMesh;
   typedef typename SurfaceMesh::Vertex_index VertexIndex;
+  typedef typename Point::FT FT;
   namespace PMP = CGAL::Polygon_mesh_processing;
 
   SurfaceMesh smesh;
-  std::map<arr3f, std::size_t> vertex_map;
-  std::set<arr3f> vertex_set;
-  std::vector<Point> points;
-  for (const auto &ring : gfmesh.get_polygons())
-  {
-    for (auto &v : ring)
-    {
-      auto [it, did_insert] = vertex_set.insert(v);
-      if (did_insert)
-      {
-        vertex_map[v] = points.size();
-        points.push_back(Point(v[0],v[1],v[2]));
-      }
-    }
-  }
+  typename std::vector<Point> points;
 
-  // First build a polygon soup
-  std::vector<std::vector<std::size_t> > polygons;
-  for (auto& ring : gfmesh.get_polygons()) {
-    std::vector<std::size_t> rindices;
-    rindices.reserve(ring.size());
-    for(auto& p : ring) {
-      rindices.push_back(vertex_map[p]);
+    // method of triangulating everything
+    /*
+    auto mesh_triangulator = detection::createMeshTriangulatorLegacy();
+    std::vector<Mesh> temp_mesh; temp_mesh.push_back(gfmesh);
+    mesh_triangulator->compute(temp_mesh);
+
+    std::vector<std::vector<std::size_t>> polygons;
+    for (const auto &tri : mesh_triangulator->triangles)
+    {
+        std::vector<std::size_t> rindices; rindices.reserve(3);
+        for (auto &v : tri)
+        {
+            points.push_back(CGAL::make_array<typename Point::FT>(v[0], v[1], v[2]));
+            rindices.push_back(points.size() - 1);
+        }
+        polygons.push_back(rindices);
     }
-    polygons.push_back(rindices);
-  }
-  CGAL::Polygon_mesh_processing::repair_polygon_soup(points, polygons);
-  CGAL::Polygon_mesh_processing::orient_polygon_soup(points, polygons);
-  CGAL::Polygon_mesh_processing::duplicate_non_manifold_edges_in_polygon_soup(points, polygons);
-  CGAL::Polygon_mesh_processing::polygon_soup_to_polygon_mesh(points, polygons, smesh);
+     */
+
+    // method of triangulating polygons that have holes
+    std::vector<std::vector<std::size_t>> polygons;
+    for (const auto &ring : gfmesh.get_polygons())
+    {
+        if (ring.interior_rings().empty()) {
+            std::vector<std::size_t> rindices;
+            rindices.reserve(ring.vertex_count());
+            for (auto& v: ring) {
+                points.push_back(Point(v[0], v[1], v[2]));
+                rindices.push_back(points.size() - 1);
+            }
+            polygons.push_back(rindices);
+        } else {
+            auto poly_triangulator = detection::createMeshTriangulatorLegacy();
+            std::vector<LinearRing> temp_ring; temp_ring.push_back(ring);
+            poly_triangulator->compute(temp_ring);
+            for (const auto &tri : poly_triangulator->triangles)
+            {
+                std::vector<std::size_t> rindices; rindices.reserve(3);
+                for (auto &v : tri)
+                {
+                    points.push_back(Point(v[0], v[1], v[2]));
+                    rindices.push_back(points.size() - 1);
+                }
+                polygons.push_back(rindices);
+            }
+        }
+    }
+
+
+  // turn polygon soup into polygon mesh
+  PMP::repair_polygon_soup(points, polygons);
+  PMP::orient_polygon_soup(points, polygons);
+  PMP::duplicate_non_manifold_edges_in_polygon_soup(points, polygons);
+  PMP::polygon_soup_to_polygon_mesh(points, polygons, smesh);
 
   if(!CGAL::is_triangle_mesh(smesh)) PMP::triangulate_faces(smesh);
 
-  CGAL::Polygon_mesh_processing::duplicate_non_manifold_vertices(smesh);
+  PMP::duplicate_non_manifold_vertices(smesh);
 
   return smesh;
 }
