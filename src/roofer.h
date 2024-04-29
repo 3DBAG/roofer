@@ -185,8 +185,8 @@ namespace roofer {
       ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
                                     PlaneDetector->pts_per_roofplane,
                                     PlaneDetector_ground->pts_per_roofplane,
-                                    {.data_multiplier = (1 - cfg.lambda),
-                                     .smoothness_multiplier = cfg.lambda,
+                                    {.data_multiplier = cfg.lambda,
+                                     .smoothness_multiplier = (1 - cfg.lambda),
                                      .use_ground = cfg.clip_ground});
 
 #ifdef ROOFER_VERBOSE
