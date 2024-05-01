@@ -11,14 +11,14 @@ set_target_properties(
   reconstruct PROPERTIES 
   CXX_STANDARD 20
 )
-target_link_libraries(reconstruct PRIVATE roofer "LibLogger" CGAL::CGAL_Core cmake_git_version_tracking rerun_sdk)
+target_link_libraries(reconstruct PRIVATE roofer "logger" CGAL::CGAL_Core cmake_git_version_tracking rerun_sdk)
 
 add_executable(crop crop.cpp)
 set_target_properties(
   crop PROPERTIES 
   CXX_STANDARD 20
 )
-target_link_libraries(crop PRIVATE roofer "LibLogger" cmake_git_version_tracking)
+target_link_libraries(crop PRIVATE roofer "logger" cmake_git_version_tracking)
 
 install(TARGETS crop DESTINATION bin)
 

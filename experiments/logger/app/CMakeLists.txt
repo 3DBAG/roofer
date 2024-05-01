@@ -10,6 +10,6 @@ target_include_directories(
 target_link_libraries(
     ${EXECUTABLE_NAME}
     PRIVATE "LibRoofer"
-            "LibLogger"
+            "logger"
             fmt::fmt
             ${CMAKE_THREAD_LIBS_INIT})
