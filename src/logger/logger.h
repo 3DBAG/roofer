@@ -8,6 +8,10 @@
  *  - spdlog (enable with USE_LOGGER_SPDLOG)
  *
  * Each implementation is thread-safe.
+ *
+ * References:
+ * - https://hnrck.io/post/singleton-design-pattern/
+ * - https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime/blob/master/src/helpers/logger.h
  * */
 #pragma once
 
