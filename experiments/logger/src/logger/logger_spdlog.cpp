@@ -69,7 +69,6 @@ namespace Logger {
       stderr_sink->set_level(cast_level(new_level));
       file_sink->set_level(cast_level(new_level));
     }
-
   };
 
   void Logger::set_level(LogLevel level) {
@@ -86,29 +85,23 @@ namespace Logger {
     return singleton;
   }
 
-  void Logger::debug(std::string_view message) {
+  void Logger::log(LogLevel level, std::string_view message) {
     assert(impl_);
-    impl_->logger_stdout.debug(message);
+    switch (level) {
+      case LogLevel::OFF:
+        break;
+      case LogLevel::DEBUG:
+        impl_->logger_stdout.debug(message);
+      case LogLevel::INFO:
+        impl_->logger_stdout.info(message);
+      case LogLevel::WARNING:
+        impl_->logger_stdout.warn(message);
+      case LogLevel::ERROR:
+        impl_->logger_stderr.error(message);
+      case LogLevel::CRITICAL:
+        impl_->logger_stderr.critical(message);
+    }
   }
 
-  void Logger::info(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stdout.info(message);
-  }
-
-  void Logger::warning(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stdout.warn(message);
-  }
-
-  void Logger::error(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stderr.error(message);
-  }
-
-  void Logger::critical(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stderr.critical(message);
-  }
 }  // namespace Logger
 #endif

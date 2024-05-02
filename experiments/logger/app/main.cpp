@@ -10,12 +10,9 @@
 static void test_function(int i) {
   auto &logger = Logger::Logger::get_logger();
 
-  const auto message =
-      std::string("this is the message n° " + std::to_string(i) + ".");
-
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-  logger.info(message);
+  logger.info("this is the message n° {}.", i);
 }
 
 int main() {
@@ -33,7 +30,7 @@ int main() {
 
   std::cout << "setting log level to info" << "\n";
   logger.set_level(Logger::LogLevel::INFO);
-  logger.debug("debug message");
+  //  logger.debug("debug message");
   logger2.info("Hello from Logger::info");
   logger.warning("warning message");
   logger3.error("error message");
@@ -41,7 +38,7 @@ int main() {
 
   std::cout << "setting log level to error" << "\n";
   logger.set_level(Logger::LogLevel::ERROR);
-  logger.debug("debug message");
+  //  logger.debug("debug message");
   logger2.info("Hello from Logger::info");
   logger.warning("warning message");
   logger3.error("error message");
@@ -49,6 +46,12 @@ int main() {
 
   std::cout << "setting log level to debug" << "\n";
   logger.set_level(Logger::LogLevel::DEBUG);
+
+  std::string str = "string";
+  int k = 42;
+  double d = 12.34;
+  logger.debug("debug message with formatted {}", str);
+  logger.debug("debug message with formatted {} and {} and {}", str, k, d);
 
   auto nr_threads = 10;
 
@@ -58,9 +61,7 @@ int main() {
     threads_auto_join.emplace_back(
         [](const int id) {
           auto &logger = Logger::Logger::get_logger();
-          const auto message =
-              "I am thread [" + std::to_string(id) + "]";
-          logger.info(message);
+          logger.info("I am thread [{}]", id);
         },
         i);
   }
