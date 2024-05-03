@@ -4,7 +4,7 @@
 #include <numeric>
 #include <algorithm>
 
-#include "spdlog/spdlog.h"
+#include "logger/logger.h"
 
 namespace roofer {
 
@@ -53,6 +53,8 @@ namespace roofer {
 
   const PointCloudSelectResult selectPointCloud(const std::vector<CandidatePointCloud>& candidates,
                                                 const selectPointCloudConfig cfg) {
+    auto &logger = logger::Logger::get_logger();
+
     PointCloudSelectResult result;
     std::vector<const CandidatePointCloud*> candidates_quality;
     std::vector<const CandidatePointCloud*> candidates_date;
@@ -100,7 +102,7 @@ namespace roofer {
         }
       }
       // we should never reach this point (since the above loop will at some point compare latest to itselft and there should be no mutation)
-      spdlog::error("Unable to select pointcloud");
+      logger.error("Unable to select pointcloud");
       exit(1);
     }
     // spdlog::debug("best_suffcient={}", best_suffcient->name);

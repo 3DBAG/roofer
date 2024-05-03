@@ -16,11 +16,11 @@
 
 #include "RasterWriter.hpp"
 
+#include <algorithm>
 #include <unordered_map>
 #include <variant>
 #include <fstream>
 #include <iomanip>
-#include "spdlog/spdlog.h"
 #include <sstream>
 #include <filesystem>
 

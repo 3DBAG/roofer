@@ -14,7 +14,7 @@
 #include "external/toml.hpp"
 
 #include "fmt/format.h"
-#include "spdlog/spdlog.h"
+#include "logger/logger.h"
 
 #include "git.h"
 
@@ -31,25 +31,25 @@ namespace fs = std::filesystem;
 
 void print_help(std::string program_name) {
   // see http://docopt.org/
-  fmt::print("Usage:\n");
-  fmt::print("   {}", program_name);
-  fmt::print(" -c <file>\n");
-  fmt::print("Options:\n");
+  std::cout << "Usage:" << "\n";
+  std::cout << "   " << program_name;
+  std::cout << " -c <file>" << "\n";
+  std::cout << "Options:" << "\n";
   // std::cout << "   -v, --version                Print version information\n";
-  fmt::print("   -h, --help                   Show this help message\n");
-  fmt::print("   -V, --version                Show version\n");
-  fmt::print("   -v, --verbose                Be more verbose\n");
-  fmt::print("   -c <file>, --config <file>   Config file\n");
-  fmt::print("   -r, --rasters                Output rasterised building pointclouds\n");
-  fmt::print("   -m, --metadata               Output metadata.json file\n");
-  fmt::print("   -i, --index                  Output index.gpkg file\n");
-  fmt::print("   -a, --all                    Output files for each candidate point cloud instead of only the optimal candidate\n");
+  std::cout << "   -h, --help                   Show this help message" << "\n";
+  std::cout << "   -V, --version                Show version" << "\n";
+  std::cout << "   -v, --verbose                Be more verbose" << "\n";
+  std::cout << "   -c <file>, --config <file>   Config file" << "\n";
+  std::cout << "   -r, --rasters                Output rasterised building pointclouds" << "\n";
+  std::cout << "   -m, --metadata               Output metadata.json file" << "\n";
+  std::cout << "   -i, --index                  Output index.gpkg file" << "\n";
+  std::cout << "   -a, --all                    Output files for each candidate point cloud instead of only the optimal candidate" << "\n";
 }
 
 void print_version() {
-  fmt::print("roofer {} ({}{}{})\n", 
+  std::cout << std::format("roofer {} ({}{}{})\n",
     git_Describe(), 
-    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()), 
+    std::strcmp(git_Branch(), "main") ? "" : std::format("{}, ", git_Branch()),
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );
@@ -101,10 +101,12 @@ int main(int argc, const char * argv[]) {
     return EXIT_SUCCESS;
   }
 
+  auto &logger = roofer::logger::Logger::get_logger();
+
   if (verbose) {
-    spdlog::set_level(spdlog::level::debug);
+    logger.set_level(roofer::logger::LogLevel::DEBUG);
   } else {
-    spdlog::set_level(spdlog::level::warn);
+    logger.set_level(roofer::logger::LogLevel::WARNING);
   }
 
   std::vector<InputPointcloud> input_pointclouds;
@@ -132,15 +134,15 @@ int main(int argc, const char * argv[]) {
   toml::table config;
   if (cmdl({"-c", "--config"}) >> config_path) {
     if (!fs::exists(config_path)) {
-      spdlog::error("No such config file: {}", config_path);
+      logger.error("No such config file: {}", config_path);
       print_help(program_name);
       return EXIT_FAILURE;
     }
-    spdlog::info("Reading configuration from file {}", config_path);
+    logger.info("Reading configuration from file {}", config_path);
     try {
       config = toml::parse_file( config_path );
     } catch (const std::exception& e) {
-      spdlog::error("Unable to parse config file {}.\n{}", config_path, e.what());
+      logger.error("Unable to parse config file {}.\n{}", config_path, e.what());
       return EXIT_FAILURE;
     }
 
@@ -254,7 +256,7 @@ int main(int argc, const char * argv[]) {
       output_crs = *output_crs_;
 
   } else {
-    spdlog::error("No config file specified\n");
+    logger.error("No config file specified");
     return EXIT_FAILURE;
   }
 
@@ -268,7 +270,7 @@ int main(int argc, const char * argv[]) {
   auto LASWriter = roofer::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
-  spdlog::info("Reading footprints from {}", path_footprint);
+  logger.info("Reading footprints from {}", path_footprint);
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   VectorReader->readPolygons(footprints, &attributes);
@@ -291,13 +293,13 @@ int main(int argc, const char * argv[]) {
   auto yoc_vec = attributes.get_if<int>(year_of_construction_attribute);
   if (!yoc_vec) {
     use_acquisition_year = false;
-    spdlog::warn(
+    logger.warning(
         "year_of_construction_attribute '{}' not found in input footprints",
         year_of_construction_attribute);
   }
 
   // simplify + buffer footprints
-  spdlog::info("Simplifying and buffering footprints...");
+  logger.info("Simplifying and buffering footprints...");
   VectorOps->simplify_polygons(footprints);
   auto buffered_footprints = footprints;
   VectorOps->buffer_polygons(buffered_footprints);
@@ -305,15 +307,16 @@ int main(int argc, const char * argv[]) {
   // Crop all pointclouds
   std::map<std::string, std::vector<roofer::PointCollection>> point_clouds;
   for (auto& ipc : input_pointclouds) {
-    spdlog::info("Cropping pointcloud {}...", ipc.name);
+    logger.info("Cropping pointcloud {}...", ipc.name);
 
     PointCloudCropper->process(
         ipc.path, footprints, buffered_footprints, ipc.building_clouds,
         ipc.ground_elevations, ipc.acquisition_years,
         {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class, .use_acquisition_year = use_acquisition_year});
     if (ipc.date != 0) {
-      spdlog::info("Overriding acquisition year from config file");
-      std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(), ipc.date);
+      logger.info("Overriding acquisition year from config file");
+      std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
+                ipc.date);
     }
   }
 
@@ -321,7 +324,7 @@ int main(int argc, const char * argv[]) {
   // thin
   // compute nodata maxcircle
   for (auto& ipc : input_pointclouds) {
-    spdlog::info("Analysing pointcloud {}...", ipc.name);
+    logger.info("Analysing pointcloud {}...", ipc.name);
     ipc.nodata_radii.resize(N_fp);
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
@@ -344,7 +347,10 @@ int main(int argc, const char * argv[]) {
       bool low_lod = *(*low_lod_vec)[i];
       if (low_lod) {
         target_density = max_point_density_low_lod;
-        spdlog::info("Applying extra thinning and skipping nodata circle calculation [low_lod_attribute = {}]", low_lod);
+        logger.info(
+            "Applying extra thinning and skipping nodata circle calculation "
+            "[low_lod_attribute = {}]",
+            low_lod);
       }
 
       gridthinPointcloud(
@@ -405,7 +411,7 @@ int main(int argc, const char * argv[]) {
   }
   
   // write out geoflow config + pointcloud / fp for each building
-  spdlog::info("Selecting and writing pointclouds");
+  logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(building_bid_attribute);
   auto& pc_select = attributes.insert_vec<std::string>("pc_select");
   auto& pc_source = attributes.insert_vec<std::string>("pc_source");
@@ -453,7 +459,7 @@ int main(int argc, const char * argv[]) {
     
     // this is a sanity check and should never happen
     if (!selected) {
-      spdlog::error("Unable to select pointcloud");
+      logger.error("Unable to select pointcloud");
       exit(1);
     }
 
@@ -493,7 +499,7 @@ int main(int argc, const char * argv[]) {
     }
     {
       // fs::create_directories(fs::path(fname).parent_path());
-      std::string fp_path = fmt::format(building_gpkg_file_spec, fmt::arg("bid", bid), fmt::arg("path", output_path));
+      std::string fp_path = fmt::format(fmt::runtime(building_gpkg_file_spec), fmt::arg("bid", bid), fmt::arg("path", output_path));
       VectorWriter->writePolygons(fp_path, footprints, attributes, i, i+1);
 
       size_t j=0;
@@ -503,9 +509,9 @@ int main(int argc, const char * argv[]) {
           continue;
         };
 
-        std::string pc_path = fmt::format(building_las_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string raster_path = fmt::format(building_raster_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string jsonl_path = fmt::format(building_jsonl_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string pc_path = fmt::format(fmt::runtime(building_las_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string raster_path = fmt::format(fmt::runtime(building_raster_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
         
         if (write_rasters) {
           RasterWriter->writeBands(
@@ -522,7 +528,7 @@ int main(int argc, const char * argv[]) {
         // Correct ground height for offset, NB this ignores crs transformation
         double h_ground = input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
 
-        auto gf_config = toml::table{
+        auto gf_config = toml::table {
             {"INPUT_FOOTPRINT", fp_path},
             // {"INPUT_POINTCLOUD", sresult.explanation ==
             // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? "" :
@@ -554,7 +560,7 @@ int main(int argc, const char * argv[]) {
 
         if(!only_write_selected) {
           std::ofstream ofs;
-          std::string config_path = fmt::format(building_toml_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
@@ -563,26 +569,26 @@ int main(int argc, const char * argv[]) {
         }
         if(selected->index == j) {
           // set optimal jsonl path
-          std::string jsonl_path = fmt::format(building_jsonl_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
           jsonl_paths[""].push_back( jsonl_path );
 
           // write optimal config
           std::ofstream ofs;
-          std::string config_path = fmt::format(building_toml_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
         }
         ++j;
       }
-    }
+    };
     // write config
   }
 
   // Write index output
   if (write_index) {
-    std::string index_file = fmt::format(index_file_spec, fmt::arg("path", output_path));
+    std::string index_file = fmt::format(fmt::runtime(index_file_spec), fmt::arg("path", output_path));
     VectorWriter->writePolygons(index_file, footprints, attributes);
     
     // write nodata circles
@@ -596,7 +602,7 @@ int main(int argc, const char * argv[]) {
     
     for(auto& [name, pathsvec] : jsonl_paths) {
       if(pathsvec.size()!=0) {
-        std::string jsonl_list_file = fmt::format(jsonl_list_file_spec, fmt::arg("path", output_path), fmt::arg("pc_name", name));
+        std::string jsonl_list_file = fmt::format(fmt::runtime(jsonl_list_file_spec), fmt::arg("path", output_path), fmt::arg("pc_name", name));
         std::ofstream ofs;
         ofs.open(jsonl_list_file);
         for(auto& jsonl_p : pathsvec) {
@@ -626,7 +632,7 @@ int main(int argc, const char * argv[]) {
          toml::table{{"referenceSystem",
                       "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
     // serializing as JSON using toml::json_formatter:
-    std::string metadata_json_file = fmt::format(metadata_json_file_spec, fmt::arg("path", output_path));
+    std::string metadata_json_file = fmt::format(fmt::runtime(metadata_json_file_spec), fmt::arg("path", output_path));
     
     // minimize json
     std::stringstream ss;

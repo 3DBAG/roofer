@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <random>
 
-#include "spdlog/spdlog.h"
-
 namespace roofer {
 
   void RasterisePointcloud(
