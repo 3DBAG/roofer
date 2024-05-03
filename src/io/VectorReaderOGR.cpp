@@ -117,7 +117,7 @@ class VectorReaderOGR : public VectorReaderInterface {
   public:
   using VectorReaderInterface::VectorReaderInterface;
   
-  void open(const std::string& source) {
+  void open(const std::string& source) override {
     if (GDALGetDriverCount() == 0)
       GDALAllRegister();
     poDS = GDALDatasetUniquePtr(GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
@@ -253,6 +253,10 @@ class VectorReaderOGR : public VectorReaderInterface {
 
 
     poLayer->ResetReading();
+    if (this->region_of_interest.has_value()) {
+      auto& roi = *this->region_of_interest;;
+      poLayer->SetSpatialFilterRect(roi[0], roi[1], roi[2], roi[3]);
+    }
 
     
     // if ((poLayer->GetFeatureCount()) < feature_select || feature_select < 0)

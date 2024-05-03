@@ -9,6 +9,7 @@ path = "wippolder.las"
 
 [parameters]
 cellsize = 0.5
+region_of_interest = [ 0, 0, 100, 100 ]
 
 [output]
 path = 'output/wippolder'
