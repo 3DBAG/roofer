@@ -11,6 +11,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #include "logger.h"
 
 namespace Logger {
@@ -89,17 +91,22 @@ namespace Logger {
     assert(impl_);
     switch (level) {
       case LogLevel::OFF:
-        break;
+        return;
       case LogLevel::DEBUG:
         impl_->logger_stdout.debug(message);
+        return;
       case LogLevel::INFO:
         impl_->logger_stdout.info(message);
+        return;
       case LogLevel::WARNING:
         impl_->logger_stdout.warn(message);
+        return;
       case LogLevel::ERROR:
         impl_->logger_stderr.error(message);
+        return;
       case LogLevel::CRITICAL:
         impl_->logger_stderr.critical(message);
+        return;
     }
   }
 
