@@ -86,29 +86,28 @@ namespace roofer::logger {
     return singleton;
   }
 
-  void Logger::debug(std::string_view message) {
+  void Logger::log(LogLevel level, std::string_view message) {
     assert(impl_);
-    impl_->logger_stdout.debug(message);
+    switch (level) {
+      case LogLevel::OFF:
+        return;
+      case LogLevel::DEBUG:
+        impl_->logger_stdout.debug(message);
+        return;
+      case LogLevel::INFO:
+        impl_->logger_stdout.info(message);
+        return;
+      case LogLevel::WARNING:
+        impl_->logger_stdout.warn(message);
+        return;
+      case LogLevel::ERROR:
+        impl_->logger_stderr.error(message);
+        return;
+      case LogLevel::CRITICAL:
+        impl_->logger_stderr.critical(message);
+        return;
+    }
   }
 
-  void Logger::info(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stdout.info(message);
-  }
-
-  void Logger::warning(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stdout.warn(message);
-  }
-
-  void Logger::error(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stderr.error(message);
-  }
-
-  void Logger::critical(std::string_view message) {
-    assert(impl_);
-    impl_->logger_stderr.critical(message);
-  }
 }  // namespace roofer::logger
 #endif

@@ -3,7 +3,6 @@
 #include <lasreader.hpp>
 #include "../misc/pip_util.hpp"
 #include "../datastructures/Raster.hpp"
-#include "fmt/format.h"
 #include "logger/logger.h"
 
 #include <bitset>
@@ -288,8 +287,8 @@ class PointsInPolygonsCollector  {
       diff_sum += std::pow(mean_density - (info.pt_count_bld / info.area), 2);
     }
     float std_dev_density = std::sqrt(diff_sum / poly_info.size());
-    logger.info(fmt::format("Mean point density = {}", mean_density));
-    logger.info(fmt::format("Standard deviation = {}", std_dev_density));
+    logger.info("Mean point density = {}", mean_density);
+    logger.info("Standard deviation = {}", std_dev_density);
 
     float cov_thres = mean_density - coverage_threshold * std_dev_density;
     for (size_t poly_i=0; poly_i < polygons.size(); ++poly_i) {
@@ -438,7 +437,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
         }
       } else {
         if (fs::exists(filepaths)) lasfiles.push_back(filepaths);
-        else logger.info(fmt::format("{} does not exist", filepaths));
+        else logger.info("{} does not exist", filepaths);
       }
 
       for (auto lasfile : lasfiles) {
@@ -455,7 +454,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
         }
 
         if (!lasreader) {
-          logger.warning(fmt::format("cannot read las file: {}", lasfile));
+          logger.warning("cannot read las file: {}", lasfile);
           continue;
         }
 
@@ -468,7 +467,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
                                                    lasreader->get_max_z()));
 
         if (!file_bbox.intersects(pip_collector.completearea_bb)) {
-          logger.info(fmt::format("no intersection footprints with las file: {}", lasfile));
+          logger.info("no intersection footprints with las file: {}", lasfile);
           continue;
         }
 
@@ -507,7 +506,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
                                            lasreader->point.get_z()),
               lasreader->point.get_classification(), acqusition_year);
         }
-        logger.info(fmt::format("Point cloud acquisition year: {}", acqusition_year));  // just for debug
+        logger.info("Point cloud acquisition year: {}", acqusition_year);  // just for debug
 
         pjHelper.clear_fwd_crs_transform();
         lasreader->close();
@@ -530,7 +529,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
       }
       
       if (!lasreader){
-        logger.warning(fmt::format("cannot read las file: {}", lasfile));
+        logger.warning("cannot read las file: {}", lasfile);
         continue;
       }
 
@@ -547,7 +546,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
       ));
 
       if(!file_bbox.intersects(pip_collector.completearea_bb)){
-        logger.info(fmt::format("no intersection footprints with las file: {}", lasfile));
+        logger.info("no intersection footprints with las file: {}", lasfile);
         continue;
       }
 
@@ -589,7 +588,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
         );
         
       }
-      logger.info(fmt::format("Point cloud acquisition year: {}", acqusition_year)); // just for debug
+      logger.info("Point cloud acquisition year: {}", acqusition_year); // just for debug
       
       pjHelper.clear_fwd_crs_transform();
       lasreader->close();

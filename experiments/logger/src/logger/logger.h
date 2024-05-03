@@ -52,28 +52,28 @@ namespace Logger {
     static Logger &get_logger();
 
     template <typename... Args>
-    void debug(std::format_string<Args...> fmt_str, Args &&...args) {
-      log(LogLevel::DEBUG, format(fmt_str, std::forward<Args>(args)...));
+    void debug(std::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::DEBUG, std::format(fmt, std::forward<Args>(args)...));
     }
 
     template <typename... Args>
-    void info(std::format_string<Args...> fmt_str, Args &&...args) {
-      log(LogLevel::INFO, format(fmt_str, std::forward<Args>(args)...));
+    void info(std::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::INFO, std::format(fmt, std::forward<Args>(args)...));
     }
 
     template <typename... Args>
-    void warning(std::format_string<Args...> fmt_str, Args &&...args) {
-      log(LogLevel::WARNING, format(fmt_str, std::forward<Args>(args)...));
+    void warning(std::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::WARNING, std::format(fmt, std::forward<Args>(args)...));
     }
 
     template <typename... Args>
-    void error(std::format_string<Args...> fmt_str, Args &&...args) {
-      log(LogLevel::ERROR, format(fmt_str, std::forward<Args>(args)...));
+    void error(std::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::ERROR, std::format(fmt, std::forward<Args>(args)...));
     }
 
     template <typename... Args>
-    void critical(std::format_string<Args...> fmt_str, Args &&...args) {
-      log(LogLevel::CRITICAL, format(fmt_str, std::forward<Args>(args)...));
+    void critical(std::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::CRITICAL, std::format(fmt, std::forward<Args>(args)...));
     }
 
    private:
@@ -86,14 +86,6 @@ namespace Logger {
 
     void log(LogLevel level, std::string_view message);
 
-    template <typename... Args>
-    static std::string format(std::format_string<Args...> fmt_str,
-                              Args &&...args) {
-      std::string str;
-      auto it = std::back_inserter(str);
-      std::format_to(it, fmt_str, std::forward<Args>(args)...);
-      return str;
-    }
   };
 
 }  // namespace Logger

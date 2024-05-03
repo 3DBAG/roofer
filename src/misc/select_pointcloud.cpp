@@ -4,7 +4,6 @@
 #include <numeric>
 #include <algorithm>
 
-#include "fmt/format.h"
 #include "logger/logger.h"
 
 namespace roofer {

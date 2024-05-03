@@ -3,7 +3,6 @@
 #include <laswriter.hpp>
 
 #include <iomanip>
-#include "fmt/format.h"
 #include "logger/logger.h"
 
 namespace roofer {
@@ -46,7 +45,7 @@ class PointCloudReaderLASlib : public PointCloudReaderInterface {
             }
             }
         }
-        logger.debug(wkt);
+        logger.debug("{}", wkt);
     }
 
     LASreader* lasreader;

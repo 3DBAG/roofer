@@ -5,7 +5,6 @@
 #include <filesystem>
 
 #include <ogrsf_frmts.h>
-#include "fmt/format.h"
 #include "logger/logger.h"
 
 namespace fs = std::filesystem;
@@ -96,7 +95,7 @@ namespace roofer {
         laswriter->write_point(&laspoint);
         laswriter->update_inventory(&laspoint);
         
-        if((++i)%100000000==0) logger.info(fmt::format("Written {0} points...", i));
+        if((++i)%100000000==0) logger.info("Written {0} points...", i);
       } 
 
       laswriter->update_header(&lasheader, TRUE);

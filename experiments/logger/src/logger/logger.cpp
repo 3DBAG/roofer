@@ -12,7 +12,6 @@
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
-#include <format>
 #include <iostream>
 #include <mutex>
 #include <queue>

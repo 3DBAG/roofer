@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <geos_c.h>
 
-#include "fmt/format.h"
 #include "logger/logger.h"
 #include "Vector2DOps.hpp"
 
@@ -26,7 +25,7 @@ namespace roofer {
     enum ORIENTATION {CW, CCW};
 
     void print_geos_message(const char * message, ...) {
-        logger::Logger::get_logger().error(message);
+        logger::Logger::get_logger().error("{}", message);
     }
 
     GEOSGeometry* orient_ring(const GEOSGeometry *& g_ring, ORIENTATION orientation) {

@@ -31,25 +31,25 @@ namespace fs = std::filesystem;
 
 void print_help(std::string program_name) {
   // see http://docopt.org/
-  fmt::print("Usage:\n");
-  fmt::print("   {}", program_name);
-  fmt::print(" -c <file>\n");
-  fmt::print("Options:\n");
+  std::cout << "Usage:" << "\n";
+  std::cout << "   " << program_name;
+  std::cout << " -c <file>" << "\n";
+  std::cout << "Options:" << "\n";
   // std::cout << "   -v, --version                Print version information\n";
-  fmt::print("   -h, --help                   Show this help message\n");
-  fmt::print("   -V, --version                Show version\n");
-  fmt::print("   -v, --verbose                Be more verbose\n");
-  fmt::print("   -c <file>, --config <file>   Config file\n");
-  fmt::print("   -r, --rasters                Output rasterised building pointclouds\n");
-  fmt::print("   -m, --metadata               Output metadata.json file\n");
-  fmt::print("   -i, --index                  Output index.gpkg file\n");
-  fmt::print("   -a, --all                    Output files for each candidate point cloud instead of only the optimal candidate\n");
+  std::cout << "   -h, --help                   Show this help message" << "\n";
+  std::cout << "   -V, --version                Show version" << "\n";
+  std::cout << "   -v, --verbose                Be more verbose" << "\n";
+  std::cout << "   -c <file>, --config <file>   Config file" << "\n";
+  std::cout << "   -r, --rasters                Output rasterised building pointclouds" << "\n";
+  std::cout << "   -m, --metadata               Output metadata.json file" << "\n";
+  std::cout << "   -i, --index                  Output index.gpkg file" << "\n";
+  std::cout << "   -a, --all                    Output files for each candidate point cloud instead of only the optimal candidate" << "\n";
 }
 
 void print_version() {
-  fmt::print("roofer {} ({}{}{})\n", 
+  std::cout << std::format("roofer {} ({}{}{})\n",
     git_Describe(), 
-    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()), 
+    std::strcmp(git_Branch(), "main") ? "" : std::format("{}, ", git_Branch()),
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );
@@ -134,15 +134,15 @@ int main(int argc, const char * argv[]) {
   toml::table config;
   if (cmdl({"-c", "--config"}) >> config_path) {
     if (!fs::exists(config_path)) {
-      logger.error(fmt::format("No such config file: {}", config_path));
+      logger.error("No such config file: {}", config_path);
       print_help(program_name);
       return EXIT_FAILURE;
     }
-    logger.info(fmt::format("Reading configuration from file {}", config_path));
+    logger.info("Reading configuration from file {}", config_path);
     try {
       config = toml::parse_file( config_path );
     } catch (const std::exception& e) {
-      logger.error(fmt::format("Unable to parse config file {}.\n{}", config_path, e.what()));
+      logger.error("Unable to parse config file {}.\n{}", config_path, e.what());
       return EXIT_FAILURE;
     }
 
@@ -256,7 +256,7 @@ int main(int argc, const char * argv[]) {
       output_crs = *output_crs_;
 
   } else {
-    logger.error("No config file specified\n");
+    logger.error("No config file specified");
     return EXIT_FAILURE;
   }
 
@@ -270,7 +270,7 @@ int main(int argc, const char * argv[]) {
   auto LASWriter = roofer::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
-  logger.info(fmt::format("Reading footprints from {}", path_footprint));
+  logger.info("Reading footprints from {}", path_footprint);
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   VectorReader->readPolygons(footprints, &attributes);
@@ -293,9 +293,9 @@ int main(int argc, const char * argv[]) {
   auto yoc_vec = attributes.get_if<int>(year_of_construction_attribute);
   if (!yoc_vec) {
     use_acquisition_year = false;
-    logger.warning(fmt::format(
+    logger.warning(
         "year_of_construction_attribute '{}' not found in input footprints",
-        year_of_construction_attribute));
+        year_of_construction_attribute);
   }
 
   // simplify + buffer footprints
@@ -307,7 +307,7 @@ int main(int argc, const char * argv[]) {
   // Crop all pointclouds
   std::map<std::string, std::vector<roofer::PointCollection>> point_clouds;
   for (auto& ipc : input_pointclouds) {
-    logger.info(fmt::format("Cropping pointcloud {}...", ipc.name));
+    logger.info("Cropping pointcloud {}...", ipc.name);
 
     PointCloudCropper->process(
         ipc.path, footprints, buffered_footprints, ipc.building_clouds,
@@ -324,7 +324,7 @@ int main(int argc, const char * argv[]) {
   // thin
   // compute nodata maxcircle
   for (auto& ipc : input_pointclouds) {
-    logger.info(fmt::format("Analysing pointcloud {}...", ipc.name));
+    logger.info("Analysing pointcloud {}...", ipc.name);
     ipc.nodata_radii.resize(N_fp);
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
@@ -347,10 +347,10 @@ int main(int argc, const char * argv[]) {
       bool low_lod = *(*low_lod_vec)[i];
       if (low_lod) {
         target_density = max_point_density_low_lod;
-        logger.info(fmt::format(
+        logger.info(
             "Applying extra thinning and skipping nodata circle calculation "
             "[low_lod_attribute = {}]",
-            low_lod));
+            low_lod);
       }
 
       gridthinPointcloud(
