@@ -499,7 +499,7 @@ int main(int argc, const char * argv[]) {
     }
     {
       // fs::create_directories(fs::path(fname).parent_path());
-      std::string fp_path = fmt::format(building_gpkg_file_spec, fmt::arg("bid", bid), fmt::arg("path", output_path));
+      std::string fp_path = fmt::format(fmt::runtime(building_gpkg_file_spec), fmt::arg("bid", bid), fmt::arg("path", output_path));
       VectorWriter->writePolygons(fp_path, footprints, attributes, i, i+1);
 
       size_t j=0;
@@ -509,9 +509,9 @@ int main(int argc, const char * argv[]) {
           continue;
         };
 
-        std::string pc_path = fmt::format(building_las_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string raster_path = fmt::format(building_raster_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string jsonl_path = fmt::format(building_jsonl_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string pc_path = fmt::format(fmt::runtime(building_las_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string raster_path = fmt::format(fmt::runtime(building_raster_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
         
         if (write_rasters) {
           RasterWriter->writeBands(
@@ -560,7 +560,7 @@ int main(int argc, const char * argv[]) {
 
         if(!only_write_selected) {
           std::ofstream ofs;
-          std::string config_path = fmt::format(building_toml_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
@@ -569,13 +569,13 @@ int main(int argc, const char * argv[]) {
         }
         if(selected->index == j) {
           // set optimal jsonl path
-          std::string jsonl_path = fmt::format(building_jsonl_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
           jsonl_paths[""].push_back( jsonl_path );
 
           // write optimal config
           std::ofstream ofs;
-          std::string config_path = fmt::format(building_toml_file_spec, fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
@@ -588,7 +588,7 @@ int main(int argc, const char * argv[]) {
 
   // Write index output
   if (write_index) {
-    std::string index_file = fmt::format(index_file_spec, fmt::arg("path", output_path));
+    std::string index_file = fmt::format(fmt::runtime(index_file_spec), fmt::arg("path", output_path));
     VectorWriter->writePolygons(index_file, footprints, attributes);
     
     // write nodata circles
@@ -602,7 +602,7 @@ int main(int argc, const char * argv[]) {
     
     for(auto& [name, pathsvec] : jsonl_paths) {
       if(pathsvec.size()!=0) {
-        std::string jsonl_list_file = fmt::format(jsonl_list_file_spec, fmt::arg("path", output_path), fmt::arg("pc_name", name));
+        std::string jsonl_list_file = fmt::format(fmt::runtime(jsonl_list_file_spec), fmt::arg("path", output_path), fmt::arg("pc_name", name));
         std::ofstream ofs;
         ofs.open(jsonl_list_file);
         for(auto& jsonl_p : pathsvec) {
@@ -632,7 +632,7 @@ int main(int argc, const char * argv[]) {
          toml::table{{"referenceSystem",
                       "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
     // serializing as JSON using toml::json_formatter:
-    std::string metadata_json_file = fmt::format(metadata_json_file_spec, fmt::arg("path", output_path));
+    std::string metadata_json_file = fmt::format(fmt::runtime(metadata_json_file_spec), fmt::arg("path", output_path));
     
     // minimize json
     std::stringstream ss;
