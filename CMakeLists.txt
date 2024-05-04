@@ -75,63 +75,63 @@ if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:precise")
 endif()
 
-add_library(roofer
-  src/common.cpp
-  src/misc/projHelper.cpp
-  src/io/VectorReaderOGR.cpp
-  src/io/VectorWriterOGR.cpp
-  src/io/RasterWriterGDAL.cpp
-  src/io/StreamCropper.cpp
-  src/io/PointCloudWriterLASlib.cpp
-  src/io/PointCloudReaderLASlib.cpp
-  src/io/CityJsonWriter.cpp
-  src/datastructures/Raster.cpp
-  src/misc/pip_util.cpp
-  src/reconstruction/PlaneDetector.cpp
-  src/reconstruction/AlphaShaper.cpp
-  src/reconstruction/LineDetector.cpp
-  src/reconstruction/LineDetectorBase.cpp
-  src/reconstruction/LineRegulariserBase.cpp
-  src/reconstruction/LineRegulariser.cpp
-  src/reconstruction/PlaneIntersector.cpp
-  src/reconstruction/SegmentRasteriser.cpp
-  src/reconstruction/ArrangementBase.cpp
-  src/reconstruction/ArrangementBuilder.cpp
-  src/reconstruction/ArrangementOptimiser.cpp
-  src/reconstruction/ArrangementDissolver.cpp
-  src/reconstruction/ArrangementSnapper.cpp
-  src/reconstruction/ArrangementExtruder.cpp
-  src/reconstruction/cdt_util.cpp
-  src/reconstruction/MeshTriangulatorLegacy.cpp
-  src/reconstruction/SimplePolygonExtruder.cpp
-  src/misc/PC2MeshDistCalculator.cpp
-  src/misc/Val3dator.cpp
-  src/misc/Vector2DOpsGEOS.cpp
-  src/misc/NodataCircleComputer.cpp
-  src/misc/PointcloudRasteriser.cpp
-  src/misc/select_pointcloud.cpp
-)
-set_target_properties(
-  roofer PROPERTIES
-  CXX_STANDARD 20
-)
-
-target_include_directories(roofer PRIVATE
-  src
-  external/ptinpoly
-)
-target_link_libraries( roofer
-  PRIVATE
-    PROJ::proj
-    GDAL::GDAL
-    ptinpoly
-    CGAL::CGAL CGAL::CGAL_Core #Eigen3::Eigen
-    LASlib
-    GEOS::geos_c
-    val3dity
-  PUBLIC
-    fmt::fmt
-)
+#add_library(roofer
+#  src/common/common.cpp
+#  src/io/VectorReaderOGR.cpp
+#  src/io/VectorWriterOGR.cpp
+#  src/io/RasterWriterGDAL.cpp
+#  src/io/StreamCropper.cpp
+#  src/io/PointCloudWriterLASlib.cpp
+#  src/io/PointCloudReaderLASlib.cpp
+#  src/io/CityJsonWriter.cpp
+#  src/datastructures/Raster.cpp
+#  src/misc/pip_util.cpp
+#  src/misc/projHelper.cpp
+#  src/misc/PC2MeshDistCalculator.cpp
+#  src/misc/Val3dator.cpp
+#  src/misc/Vector2DOpsGEOS.cpp
+#  src/misc/NodataCircleComputer.cpp
+#  src/misc/PointcloudRasteriser.cpp
+#  src/misc/select_pointcloud.cpp
+#  src/reconstruction/PlaneDetector.cpp
+#  src/reconstruction/AlphaShaper.cpp
+#  src/reconstruction/LineDetector.cpp
+#  src/reconstruction/LineDetectorBase.cpp
+#  src/reconstruction/LineRegulariserBase.cpp
+#  src/reconstruction/LineRegulariser.cpp
+#  src/reconstruction/PlaneIntersector.cpp
+#  src/reconstruction/SegmentRasteriser.cpp
+#  src/reconstruction/ArrangementBase.cpp
+#  src/reconstruction/ArrangementBuilder.cpp
+#  src/reconstruction/ArrangementOptimiser.cpp
+#  src/reconstruction/ArrangementDissolver.cpp
+#  src/reconstruction/ArrangementSnapper.cpp
+#  src/reconstruction/ArrangementExtruder.cpp
+#  src/reconstruction/cdt_util.cpp
+#  src/reconstruction/MeshTriangulatorLegacy.cpp
+#  src/reconstruction/SimplePolygonExtruder.cpp
+#)
+#set_target_properties(
+#  roofer PROPERTIES
+#  CXX_STANDARD 20
+#)
+#
+#target_include_directories(roofer PRIVATE
+#  src
+#  external/ptinpoly
+#)
+#target_link_libraries( roofer
+#  PRIVATE
+#    PROJ::proj
+#    GDAL::GDAL
+#    ptinpoly
+#    CGAL::CGAL CGAL::CGAL_Core #Eigen3::Eigen
+#    LASlib
+#    GEOS::geos_c
+#    val3dity
+#  PUBLIC
+#    fmt::fmt
+#)
 
 # Use configure files to configure compile-time variable for using them runtime,
 # e.g. version numbers and feature flags
@@ -145,3 +145,8 @@ endif()
 add_subdirectory(apps)
 
 # INSTALL TARGETS
+install(
+    TARGETS "crop"
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)

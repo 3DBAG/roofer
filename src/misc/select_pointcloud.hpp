@@ -1,5 +1,5 @@
 #include <string>
-#include "../misc/PointcloudRasteriser.hpp"
+#include "PointcloudRasteriser.hpp"
 
 namespace roofer {
 

@@ -1,6 +1,8 @@
 
-#include "../datastructures.hpp"
 #include <memory>
+
+#include "common.hpp"
+#include "datastructures.hpp"
 
 namespace roofer {
   struct Vector2DOpsInterface {

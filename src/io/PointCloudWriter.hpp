@@ -1,8 +1,9 @@
 
 
-#include "../datastructures.hpp"
-#include "../misc/projHelper.hpp"
 #include <memory>
+
+#include "projHelper.hpp"
+#include "datastructures.hpp"
 
 namespace roofer {
   struct LASWriterInterface {

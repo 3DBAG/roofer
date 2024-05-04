@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../datastructures.hpp"
 #include <memory>
 #include <unordered_map>
+
+#include "common.hpp"
+#include "datastructures.hpp"
 
 namespace roofer {
 

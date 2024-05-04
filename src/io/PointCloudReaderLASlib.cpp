@@ -3,7 +3,7 @@
 #include <laswriter.hpp>
 
 #include <iomanip>
-#include "logger/logger.h"
+#include "logger.h"
 
 namespace roofer {
 

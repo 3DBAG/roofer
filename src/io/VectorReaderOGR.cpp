@@ -25,7 +25,7 @@
 #include <filesystem>
 
 #include <ogrsf_frmts.h>
-#include "logger/logger.h"
+#include "logger.h"
 
 namespace fs = std::filesystem;
 

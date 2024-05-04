@@ -1,6 +1,6 @@
-#include "../datastructures.hpp"
-
 #include <memory>
+
+#include "datastructures.hpp"
 
 namespace roofer::detection {
 

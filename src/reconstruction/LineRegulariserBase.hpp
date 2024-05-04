@@ -15,13 +15,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
-#include "../datastructures.hpp"
 
 #include <boost/heap/fibonacci_heap.hpp>
+
+#include "datastructures.hpp"
 
 namespace linereg {
   typedef CGAL::Exact_predicates_exact_constructions_kernel K;

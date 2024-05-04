@@ -15,8 +15,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include "ptinpoly.h"
-#include "datastructures.hpp"
 #include <vector>
+
+#include "common.hpp"
+#include "datastructures.hpp"
+#include "ptinpoly.h"
 
 pGridSet build_grid(const roofer::vec3f& ring);

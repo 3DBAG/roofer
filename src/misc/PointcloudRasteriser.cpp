@@ -1,11 +1,12 @@
-#include "../datastructures.hpp"
-#include "../misc/pip_util.hpp"
-#include "../datastructures/Raster.hpp"
 #include "PointcloudRasteriser.hpp"
 
-#include <numeric>
 #include <algorithm>
+#include <numeric>
 #include <random>
+
+#include "../datastructures/Raster.hpp"
+#include "../misc/pip_util.hpp"
+#include "datastructures.hpp"
 
 namespace roofer {
 

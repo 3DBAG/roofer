@@ -15,14 +15,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <CGAL/Arr_segment_traits_2.h>
+#include <CGAL/Arr_default_overlay_traits.h>
 #include <CGAL/Arr_observer.h>
 #include <CGAL/Arr_overlay_2.h>
-#include <CGAL/Arr_default_overlay_traits.h>
+#include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Polygon_2.h>
 
 #include "cgal_shared_definitions.hpp"
-#include "../datastructures.hpp"
+#include "datastructures.hpp"
 
 typedef CGAL::Polygon_2<EPECK>                           Polygon_2;
 

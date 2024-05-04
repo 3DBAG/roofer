@@ -4,7 +4,7 @@
 #include <numeric>
 #include <algorithm>
 
-#include "logger/logger.h"
+#include "logger.h"
 
 namespace roofer {
 

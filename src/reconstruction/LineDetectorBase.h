@@ -27,7 +27,7 @@
 
 typedef CGAL::Cartesian<double> SCK;
 
-#include "../datastructures.hpp"
+#include "datastructures.hpp"
 
 namespace linedect {
   typedef CGAL::Exact_predicates_inexact_constructions_kernel cgal_kernel;

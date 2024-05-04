@@ -15,18 +15,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include "../datastructures.hpp"
-#include "cgal_shared_definitions.hpp"
-
-#include "RegionGrower_DS_CGAL.hpp"
-#include "RegionGrower.hpp"
-
-#include <CGAL/linear_least_squares_fitting_3.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Plane_3.h>
+#include <CGAL/linear_least_squares_fitting_3.h>
 
 #include <deque>
 #include <queue>
+
+#include "RegionGrower.hpp"
+#include "RegionGrower_DS_CGAL.hpp"
+#include "cgal_shared_definitions.hpp"
+#include "datastructures.hpp"
 
 namespace planedect {
 

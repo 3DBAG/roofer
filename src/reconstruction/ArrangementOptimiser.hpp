@@ -1,8 +1,8 @@
-#include "../datastructures.hpp"
-
-#include "../datastructures/Raster.hpp"
-#include "cgal_shared_definitions.hpp"
 #include <memory>
+
+#include "Raster.hpp"
+#include "cgal_shared_definitions.hpp"
+#include "datastructures.hpp"
 
 namespace roofer::detection {
 

@@ -1,8 +1,9 @@
 
-#include "../datastructures.hpp"
-#include "../misc/projHelper.hpp"
 #include <cstddef>
 #include <memory>
+
+#include "projHelper.hpp"
+#include "datastructures.hpp"
 
 namespace roofer::io {
   struct CityJsonWriterInterface {

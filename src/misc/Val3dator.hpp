@@ -1,7 +1,7 @@
-#include "../datastructures.hpp"
-
-#include "../reconstruction/cgal_shared_definitions.hpp"
 #include <memory>
+
+#include "cgal_shared_definitions.hpp"
+#include "datastructures.hpp"
 
 namespace roofer::detection {
 

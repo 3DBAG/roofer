@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <geos_c.h>
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "Vector2DOps.hpp"
 
 namespace roofer {

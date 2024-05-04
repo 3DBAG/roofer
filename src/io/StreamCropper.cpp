@@ -1,9 +1,9 @@
 #include "StreamCropper.hpp"
 
 #include <lasreader.hpp>
-#include "../misc/pip_util.hpp"
-#include "../datastructures/Raster.hpp"
-#include "logger/logger.h"
+#include "pip_util.hpp"
+#include "Raster.hpp"
+#include "logger.h"
 
 #include <bitset>
 #include <ctime>

@@ -11,6 +11,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Search_traits_adapter.h>
 
+#include "common.hpp"
 #include "cgal_shared_definitions.hpp"
 
 namespace regiongrower {
