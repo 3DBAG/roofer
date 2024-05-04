@@ -5,9 +5,6 @@ set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include")
 add_library("logger" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("logger" PUBLIC ${LIBRARY_INCLUDES})
 
-if (${USE_LOGGER_SPDLOG})
-    target_link_libraries(
-            "logger"
-            PRIVATE spdlog::spdlog
-    )
-endif ()
+if(${USE_LOGGER_SPDLOG})
+  target_link_libraries("logger" PRIVATE spdlog::spdlog)
+endif()

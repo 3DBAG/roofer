@@ -1,15 +1,7 @@
-
-#include_directories(../src)
-
-# Download the rerun_sdk
-include(FetchContent)
-FetchContent_Declare(rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
-FetchContent_MakeAvailable(rerun_sdk)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 add_subdirectory(crop)
 add_subdirectory(reconstruct)
-
 
 # add polyscope
 # if(${RF_BUILD_GUI})
