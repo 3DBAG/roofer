@@ -1,26 +1,63 @@
-cmake_minimum_required(VERSION 3.21)
-project (roofer)
+# Require at least CMake 3.25, because in 3.24 and 3.25 there were a couple of
+# FetchContent-related changes
+cmake_minimum_required(VERSION 3.25)
 
+project (roofer LANGUAGES C CXX)
+
+# Global CMake variables are set here We use C++20, with the assumption that we
+# only implement features that are supported by GCC, Clang, MSVC, Apple Clang
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Don't use extensions, because they might affect compiler compatibility
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
-# option(RF_BUILD_GUI "Build the GUI apps" OFF)
+option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
 option(USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 
-include(FetchContent)
+# CMAKE MODULES
 
-# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
-if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-    cmake_policy(SET CMP0135 NEW)
+# CMake modules, like the documentation module, go in here
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
+
+## Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+#if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+#    cmake_policy(SET CMP0135 NEW)
+#endif()
+
+# EXTERNAL LIBRARIES
+
+message(STATUS "Using VCPKG package manager")
+include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
+find_package(nlohmann_json REQUIRED)
+find_package(fmt REQUIRED)
+find_package(GEOS CONFIG REQUIRED)
+find_package(laslib CONFIG REQUIRED)
+find_package(CGAL 5.4 QUIET COMPONENTS Core REQUIRED)
+# GDAL
+find_package( GDAL CONFIG REQUIRED )
+if (WIN32) # vcpkg doesn't work when there is a version number here
+  find_package(PROJ REQUIRED CONFIG)
+else()
+  find_package(PROJ 9.0.0 REQUIRED CONFIG)
+endif()
+if(USE_LOGGER_SPDLOG)
+  message(STATUS "Logging backend: spdlog")
+  find_package(spdlog REQUIRED)
+else()
+    message(STATUS "Logging backend: internal")
+endif()
+if(ENABLE_TESTING)
+  find_package(Catch2 REQUIRED)
+  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 endif()
 
-FetchContent_Declare(cmake_git_version_tracking
-  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
-  GIT_TAG 904dbda1336ba4b9a1415a68d5f203f576b696bb
-)
+# We have to use CPM (or FetchContent) even with vcpkg, because of
+# cmake-git-version-tracking and val3dity
+include(CPM)
+CPMAddPackage("gh:andrew-hardin/cmake-git-version-tracking#6c0cb87edd029ddfb403a8e24577c144a03605a6")
 set(GIT_IGNORE_UNTRACKED TRUE)
-FetchContent_MakeAvailable(cmake_git_version_tracking)
+CPMAddPackage("gh:Ylannl/val3dity#gfp")
 
 # ptinpoly
 add_library(ptinpoly STATIC external/ptinpoly/ptinpoly.c)
@@ -29,43 +66,6 @@ set_target_properties(
   C_STANDARD 11
   POSITION_INDEPENDENT_CODE ON
 )
-
-FetchContent_Declare(
-    fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt
-    GIT_TAG 10.2.1
-    GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(fmt)
-
-if(USE_LOGGER_SPDLOG)
-    message(STATUS "Logging backend: spdlog")
-    FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG v1.13.0
-        GIT_SHALLOW TRUE)
-    FetchContent_MakeAvailable(spdlog)
-else()
-    message(STATUS "Logging backend: internal")
-endif()
-
-find_package(GEOS CONFIG REQUIRED)
-
-find_package(laslib CONFIG REQUIRED)
-# find_package(Eigen3 CONFIG REQUIRED)
-# add_definitions(-DCGAL_EIGEN3_ENABLED)
-find_package(CGAL 5.4 QUIET COMPONENTS Core REQUIRED)
-
-# GDAL
-find_package( GDAL CONFIG REQUIRED )
-if (WIN32) # vcpkg doesn't work when there is a version number here
-  find_package(PROJ REQUIRED CONFIG)
-else()
-  find_package(PROJ 9.0.0 REQUIRED CONFIG)
-endif()
-
-find_package( nlohmann_json 3.10.5 CONFIG REQUIRED )
-add_subdirectory(external/val3dity)
 
 if (MSVC)
   # windows.h breaks std::min/std::max, fix by define
@@ -133,6 +133,15 @@ target_link_libraries( roofer
     fmt::fmt
 )
 
+# Use configure files to configure compile-time variable for using them runtime,
+# e.g. version numbers and feature flags
 add_subdirectory(configured)
 add_subdirectory(src)
+if(ENABLE_TESTING)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 add_subdirectory(apps)
+
+# INSTALL TARGETS
