@@ -1,6 +1,9 @@
 # Build dirs
 cmake-build-*
 
+# CMake
+CMakeUserPresets.json
+
 # IDE
 .idea
 .run

@@ -23,8 +23,6 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 # EXTERNAL LIBRARIES
 
-message(STATUS "Using VCPKG package manager")
-include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 find_package(nlohmann_json REQUIRED)
 find_package(fmt REQUIRED)
 find_package(GEOS CONFIG REQUIRED)
