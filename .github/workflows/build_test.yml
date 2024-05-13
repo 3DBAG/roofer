@@ -83,6 +83,8 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
       - if: runner.os != 'macOS'
         name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -92,6 +94,8 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -G Ninja
+          -DCMAKE_MAKE_PR
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.strings.outputs.cmake-toolchain-file }}
           -S ${{ github.workspace }}
 
