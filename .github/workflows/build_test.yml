@@ -84,6 +84,8 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - uses: seanmiddleditch/gha-setup-ninja@master
+        with:
+          destination: ${{ github.workspace }}/ninja-build
 
       - if: runner.os != 'macOS'
         name: Configure CMake
@@ -95,6 +97,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -G Ninja
+          -DCMAKE_MAKE_PROGRAM=${{ github.workspace }}/ninja-build/ninja
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.strings.outputs.cmake-toolchain-file }}
           -S ${{ github.workspace }}
 
@@ -108,6 +111,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -G Ninja
+          -DCMAKE_MAKE_PROGRAM=${{ github.workspace }}/ninja-build/ninja
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.strings.outputs.cmake-toolchain-file }}
           -DAPPLE:BOOL=ON
           -S ${{ github.workspace }}
