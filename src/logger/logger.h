@@ -23,7 +23,7 @@
 
 namespace roofer::logger {
 
-  enum class LogLevel : std::uint8_t {
+  enum LogLevel : uint8_t {
     OFF = 0,
     DEBUG,
     INFO,
