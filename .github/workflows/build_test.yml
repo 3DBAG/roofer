@@ -24,44 +24,53 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-13, macos-14]
+#        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
+        os: [ubuntu-22.04, ubuntu-24.04]
         build_type: [Release]
         c_compiler: [gcc-13, clang-15, cl]
         include:
-          - os: windows-2022
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-22.04
             c_compiler: gcc-13
             cpp_compiler: g++-13
           - os: ubuntu-22.04
             c_compiler: clang-15
             cpp_compiler: clang++-15
-          - os: macos-13
-            c_compiler: /usr/local/opt/llvm@15/bin/clang
-            cpp_compiler: /usr/local/opt/llvm@15/bin/clang++
-          - os: macos-14
-            c_compiler: /usr/local/opt/llvm@15/bin/clang
-            cpp_compiler: /usr/local/opt/llvm@15/bin/clang++
-        exclude:
-          - os: windows-2022
+          - os: ubuntu-24.04
             c_compiler: gcc-13
-          - os: windows-2022
-            c_compiler: clang-15
+            cpp_compiler: g++-13
+          - os: ubuntu-24.04
+            c_compiler: clang-18
+            cpp_compiler: clang++-18
+#          - os: windows-2022
+#            c_compiler: cl
+#            cpp_compiler: cl
+#          - os: macos-13
+#            c_compiler: /usr/local/opt/llvm@15/bin/clang
+#            cpp_compiler: /usr/local/opt/llvm@15/bin/clang++
+#          - os: macos-14
+#            c_compiler: /usr/local/opt/llvm@15/bin/clang
+#            cpp_compiler: /usr/local/opt/llvm@15/bin/clang++
+        exclude:
           - os: ubuntu-22.04
             c_compiler: cl
-          - os: macos-13
+          - os: ubuntu-24.04
             c_compiler: cl
-          - os: macos-13
-            c_compiler: gcc-13
-          - os: macos-13
-            c_compiler: clang-15
-          - os: macos-14
-            c_compiler: cl
-          - os: macos-14
-            c_compiler: gcc-13
-          - os: macos-14
-            c_compiler: clang-15
+#          - os: windows-2022
+#            c_compiler: gcc-13
+#          - os: windows-2022
+#            c_compiler: clang-15
+#          - os: macos-13
+#            c_compiler: cl
+#          - os: macos-13
+#            c_compiler: gcc-13
+#          - os: macos-13
+#            c_compiler: clang-15
+#          - os: macos-14
+#            c_compiler: cl
+#          - os: macos-14
+#            c_compiler: gcc-13
+#          - os: macos-14
+#            c_compiler: clang-15
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
@@ -83,20 +92,10 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - if: runner.os != 'macOS'
-        name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DCMAKE_TOOLCHAIN_FILE=${{ steps.strings.outputs.cmake-toolchain-file }}
-          -S ${{ github.workspace }}
+      - name: Update vcpkg baseling
+        run: vcpkg x-update-baseline
 
-      - if: runner.os == 'macOS'
-        name: Configure CMake
+      - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: >
@@ -105,7 +104,6 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.strings.outputs.cmake-toolchain-file }}
-          -DAPPLE:BOOL=ON
           -S ${{ github.workspace }}
 
       - name: Build
