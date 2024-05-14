@@ -27,7 +27,7 @@ jobs:
 #        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
         os: [ubuntu-22.04, ubuntu-24.04]
         build_type: [Release]
-        c_compiler: [gcc-13, clang-15, cl]
+        c_compiler: [gcc-13, clang-15, clang-18, cl]
         include:
           - os: ubuntu-22.04
             c_compiler: gcc-13
@@ -53,8 +53,12 @@ jobs:
         exclude:
           - os: ubuntu-22.04
             c_compiler: cl
+          - os: ubuntu-22.04
+            c_compiler: clang-18
           - os: ubuntu-24.04
             c_compiler: cl
+          - os: ubuntu-24.04
+            c_compiler: clang-15
 #          - os: windows-2022
 #            c_compiler: gcc-13
 #          - os: windows-2022
@@ -92,7 +96,7 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - name: Update vcpkg baseling
+      - name: Update vcpkg baseline
         run: vcpkg x-update-baseline
 
       - name: Configure CMake
