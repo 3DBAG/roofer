@@ -25,22 +25,22 @@ jobs:
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
 #        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
-        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14]
+        os: [macos-13, macos-14]
         build_type: [Release]
         c_compiler: [gcc-13, clang-15, clang-18, cl]
         include:
-          - os: ubuntu-22.04
-            c_compiler: gcc-13
-            cpp_compiler: g++-13
-          - os: ubuntu-22.04
-            c_compiler: clang-15
-            cpp_compiler: clang++-15
-          - os: ubuntu-24.04
-            c_compiler: gcc-13
-            cpp_compiler: g++-13
-          - os: ubuntu-24.04
-            c_compiler: clang-18
-            cpp_compiler: clang++-18
+          # - os: ubuntu-22.04
+          #   c_compiler: gcc-13
+          #   cpp_compiler: g++-13
+          # - os: ubuntu-22.04
+          #   c_compiler: clang-15
+          #   cpp_compiler: clang++-15
+          # - os: ubuntu-24.04
+          #   c_compiler: gcc-13
+          #   cpp_compiler: g++-13
+          # - os: ubuntu-24.04
+          #   c_compiler: clang-18
+          #   cpp_compiler: clang++-18
 #          - os: windows-2022
 #            c_compiler: cl
 #            cpp_compiler: cl
@@ -51,14 +51,14 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
         exclude:
-          - os: ubuntu-22.04
-            c_compiler: cl
-          - os: ubuntu-22.04
-            c_compiler: clang-18
-          - os: ubuntu-24.04
-            c_compiler: cl
-          - os: ubuntu-24.04
-            c_compiler: clang-15
+          # - os: ubuntu-22.04
+          #   c_compiler: cl
+          # - os: ubuntu-22.04
+          #   c_compiler: clang-18
+          # - os: ubuntu-24.04
+          #   c_compiler: cl
+          # - os: ubuntu-24.04
+          #   c_compiler: clang-15
 #          - os: windows-2022
 #            c_compiler: gcc-13
 #          - os: windows-2022
@@ -106,7 +106,7 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg && ./bootstrap-vcpkg.sh
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-          echo "$VCPKG_ROOT" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
       - name: Update vcpkg baseline
         run: vcpkg x-update-baseline
