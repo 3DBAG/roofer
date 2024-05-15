@@ -47,9 +47,11 @@ jobs:
           - os: macos-13
             c_compiler: clang
             cpp_compiler: clang++
+            build_type: Release
           - os: macos-14
             c_compiler: clang
             cpp_compiler: clang++
+            build_type: Release
         exclude:
           # - os: ubuntu-22.04
           #   c_compiler: cl
