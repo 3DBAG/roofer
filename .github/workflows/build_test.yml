@@ -106,7 +106,7 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg && ./bootstrap-vcpkg.sh
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-          echo "PATH=$VCPKG_ROOT:$PATH" >> "$GITHUB_ENV"
+          echo "$VCPKG_ROOT" >> $GITHUB_PATH
 
       - name: Update vcpkg baseline
         run: vcpkg x-update-baseline
