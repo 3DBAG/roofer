@@ -100,7 +100,7 @@ jobs:
         run: vcpkg x-update-baseline
 
       - if: runner.os == 'macOS'
-        name: "macOS compilers"
+        name: "Install additional macOS build tools"
         run: |
           brew install autoconf autoconf-archive automake libtool m4
           which m4

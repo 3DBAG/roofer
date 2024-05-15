@@ -19,6 +19,7 @@
 #include <format>
 #include <memory>
 #include <string>
+#include <cstdint>
 #include <string_view>
 
 namespace roofer::logger {
