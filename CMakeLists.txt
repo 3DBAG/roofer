@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
 option(USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 
