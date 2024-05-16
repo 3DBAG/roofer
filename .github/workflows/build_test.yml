@@ -76,12 +76,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set reusable strings
+      - if: runner.os == 'Windows'
+        name: Set reusable strings (windows)
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         id: strings
         shell: bash
         run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+          "BUILD_OUTPUT_DIR=${{ github.workspace }}/build" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - if: runner.os != 'Windows'
+        name: Set reusable strings (unix)
+        # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+        id: strings
+        shell: bash
+        run: |
+          echo "BUILD_OUTPUT_DIR=${{ github.workspace }}/build" >> "$GITHUB_ENV"
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - uses: actions/github-script@v7
@@ -105,13 +115,12 @@ jobs:
         name: "Install additional macOS build tools"
         run: |
           brew install autoconf autoconf-archive automake libtool m4
-          which m4
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          cmake -B ${{ env.BUILD_OUTPUT_DIR }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           --preset vcpkg-minimal
@@ -119,12 +128,12 @@ jobs:
 
       - name: Build
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --verbose
+        run: cmake --build ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
-      - run: ldd ${{ steps.strings.outputs.build-output-dir }}/apps/crop/crop
+      - run: ldd ${{ env.BUILD_OUTPUT_DIR }}/apps/crop/crop
 
 #    - name: Test
-#      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+#      working-directory: ${{ env.BUILD_OUTPUT_DIR }}
 #      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
 #      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
 #      run: ctest --build-config ${{ matrix.build_type }}
