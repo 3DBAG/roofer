@@ -9,6 +9,7 @@
 
 #if !defined(USE_LOGGER_SPDLOG)
 
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
