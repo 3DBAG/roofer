@@ -7,6 +7,19 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
+    },
+    {
+      "name": "vcpkg-minimal",
+      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "BUILD_SHARED_LIBS": "OFF",
+        "USE_VAL3DITY": "OFF",
+        "USE_RERUN": "OFF",
+        "USE_LOGGER_SPDLOG": "OFF",
+        "ENABLE_TESTING": "OFF",
+        "BUILD_APPS": "ON"
+      }
     }
   ]
 }

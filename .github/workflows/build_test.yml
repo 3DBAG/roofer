@@ -24,63 +24,51 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-#        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
-        os: [macos-13, macos-14]
-        build_type: [Release]
-        c_compiler: [gcc-13, clang-15, clang-18, cl]
+        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
+        build_type: [ Release ]
+        c_compiler: [ gcc, clang, cl ]
+        # Default compilers:
+        #   - Ubuntu 22.04 (jammy): gcc-11, clang-14
+        #   - Ubuntu 24.04 (noble): gcc-13, clang-18
         include:
-          # - os: ubuntu-22.04
-          #   c_compiler: gcc-13
-          #   cpp_compiler: g++-13
-          # - os: ubuntu-22.04
-          #   c_compiler: clang-15
-          #   cpp_compiler: clang++-15
-          # - os: ubuntu-24.04
-          #   c_compiler: gcc-13
-          #   cpp_compiler: g++-13
-          # - os: ubuntu-24.04
-          #   c_compiler: clang-18
-          #   cpp_compiler: clang++-18
-#          - os: windows-2022
-#            c_compiler: cl
-#            cpp_compiler: cl
+          - os: ubuntu-22.04
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-22.04
+            c_compiler: clang
+            cpp_compiler: clang++
+          - os: ubuntu-24.04
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-24.04
+            c_compiler: clang
+            cpp_compiler: clang++
+          - os: windows-2022
+            c_compiler: cl
+            cpp_compiler: cl
           - os: macos-13
             c_compiler: clang
             cpp_compiler: clang++
-            build_type: Release
           - os: macos-14
             c_compiler: clang
             cpp_compiler: clang++
-            build_type: Release
         exclude:
-          # - os: ubuntu-22.04
-          #   c_compiler: cl
-          # - os: ubuntu-22.04
-          #   c_compiler: clang-18
-          # - os: ubuntu-24.04
-          #   c_compiler: cl
-          # - os: ubuntu-24.04
-          #   c_compiler: clang-15
-#          - os: windows-2022
-#            c_compiler: gcc-13
-#          - os: windows-2022
-#            c_compiler: clang-15
+          - os: ubuntu-22.04
+            c_compiler: cl
+          - os: ubuntu-24.04
+            c_compiler: cl
+          - os: windows-2022
+            c_compiler: gcc
+          - os: windows-2022
+            c_compiler: clang
           - os: macos-13
             c_compiler: cl
           - os: macos-13
-            c_compiler: gcc-13
-          - os: macos-13
-            c_compiler: clang-15
+            c_compiler: gcc
           - os: macos-14
             c_compiler: cl
           - os: macos-14
-            c_compiler: gcc-13
-          - os: macos-14
-            c_compiler: clang-15
-          - os: macos-13
-            c_compiler: clang-18
-          - os: macos-14
-            c_compiler: clang-18
+            c_compiler: gcc
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
@@ -126,7 +114,7 @@ jobs:
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          --preset vcpkg
+          --preset vcpkg-minimal
           -S ${{ github.workspace }}
 
       - name: Build
