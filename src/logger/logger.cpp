@@ -18,6 +18,7 @@
 #include <thread>
 
 #include "logger.h"
+#include <fmt/chrono.h>
 
 namespace {
   /** @brief Convert the log level into string */
@@ -32,7 +33,7 @@ namespace {
   std::string get_now_string() {
     using system_clock = std::chrono::system_clock;
     auto now = system_clock::now();
-    return std::format("{:%F %T}", now);
+    return fmt::format("{:%F %T}", now);
   }
 }  // namespace
 
