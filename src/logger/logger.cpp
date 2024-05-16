@@ -16,6 +16,7 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <sstream>
 
 #include "logger.h"
 #include <fmt/chrono.h>
