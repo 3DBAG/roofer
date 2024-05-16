@@ -79,7 +79,6 @@ jobs:
       - if: runner.os == 'Windows'
         name: Set reusable strings (windows)
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-        id: strings
         shell: bash
         run: |
           "BUILD_OUTPUT_DIR=${{ github.workspace }}/build" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -88,7 +87,6 @@ jobs:
       - if: runner.os != 'Windows'
         name: Set reusable strings (unix)
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-        id: strings
         shell: bash
         run: |
           echo "BUILD_OUTPUT_DIR=${{ github.workspace }}/build" >> "$GITHUB_ENV"
