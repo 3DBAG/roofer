@@ -92,7 +92,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
   #ifdef USE_RERUN
   const auto& rec = rerun::RecordingStream::current();
   #endif
-  std::string worldname = std::format("world/lod{}/", (int)lod);
+  std::string worldname = fmt::format("world/lod{}/", (int)lod);
 
   auto &logger = roofer::logger::Logger::get_logger();
 
@@ -179,9 +179,9 @@ void print_help(std::string program_name) {
 }
 
 void print_version() {
-  std::cout << std::format("roofer {} ({}{}{})\n",
+  std::cout << fmt::format("roofer {} ({}{}{})\n",
     git_Describe(), 
-    std::strcmp(git_Branch(), "main") ? "" : std::format("{}, ", git_Branch()),
+    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()),
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );

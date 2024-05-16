@@ -27,13 +27,11 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 # EXTERNAL LIBRARIES
 
-
 find_package(fmt REQUIRED)
 find_package(
   CGAL 5.4 QUIET
   COMPONENTS Core
   REQUIRED)
-
 find_package(nlohmann_json REQUIRED)
 find_package(GEOS CONFIG REQUIRED)
 find_package(laslib CONFIG REQUIRED)
@@ -48,10 +46,12 @@ endif()
 
 if(USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")
+  set(SPDLOG_FMT_EXTERNAL ON)
   find_package(spdlog REQUIRED)
 else()
   message(STATUS "Logging backend: internal")
 endif()
+
 if(ENABLE_TESTING)
   find_package(Catch2 REQUIRED)
   list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)

@@ -16,11 +16,12 @@
  * */
 #pragma once
 
-#include <format>
 #include <memory>
 #include <string>
 #include <cstdint>
 #include <string_view>
+
+#include "fmt/format.h"
 
 namespace roofer::logger {
 
@@ -57,28 +58,28 @@ namespace roofer::logger {
     static Logger &get_logger();
 
     template <typename... Args>
-    void debug(std::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::DEBUG, std::vformat(fmt.get(), std::make_format_args(args...)));
+    void debug(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::DEBUG, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
-    void info(std::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::INFO, std::vformat(fmt.get(), std::make_format_args(args...)));
+    void info(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::INFO, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
-    void warning(std::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::WARNING, std::vformat(fmt.get(), std::make_format_args(args...)));
+    void warning(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::WARNING, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
-    void error(std::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::ERROR, std::vformat(fmt.get(), std::make_format_args(args...)));
+    void error(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::ERROR, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
-    void critical(std::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::CRITICAL, std::vformat(fmt.get(), std::make_format_args(args...)));
+    void critical(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::CRITICAL, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
    private:

@@ -46,9 +46,9 @@ void print_help(std::string program_name) {
 }
 
 void print_version() {
-  std::cout << std::format("roofer {} ({}{}{})\n",
+  std::cout << fmt::format("roofer {} ({}{}{})\n",
     git_Describe(), 
-    std::strcmp(git_Branch(), "main") ? "" : std::format("{}, ", git_Branch()),
+    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()),
     git_AnyUncommittedChanges() ? "dirty, " : "", 
     git_CommitDate()
   );
