@@ -26,13 +26,13 @@
 namespace roofer::logger {
 
   enum class LogLevel : std::uint8_t {
-    OFF = 0,
-    DEBUG,
-    INFO,
-    default_level = INFO,
-    WARNING,
-    ERROR,
-    CRITICAL,
+    off = 0,
+    debug,
+    info,
+    default_level = info,
+    warning,
+    error,
+    critical,
   };
 
   class Logger final {
@@ -59,27 +59,27 @@ namespace roofer::logger {
 
     template <typename... Args>
     void debug(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::DEBUG, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::debug, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void info(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::INFO, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::info, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void warning(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::WARNING, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::warning, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void error(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::ERROR, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::error, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void critical(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::CRITICAL, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::critical, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
     }
 
    private:

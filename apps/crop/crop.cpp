@@ -103,9 +103,9 @@ int main(int argc, const char * argv[]) {
   auto &logger = roofer::logger::Logger::get_logger();
 
   if (verbose) {
-    logger.set_level(roofer::logger::LogLevel::DEBUG);
+    logger.set_level(roofer::logger::LogLevel::debug);
   } else {
-    logger.set_level(roofer::logger::LogLevel::WARNING);
+    logger.set_level(roofer::logger::LogLevel::warning);
   }
 
   std::vector<InputPointcloud> input_pointclouds;
