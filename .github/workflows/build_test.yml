@@ -76,16 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - if: runner.os == 'Windows'
-        name: Set reusable strings (windows)
-        # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-        shell: bash
-        run: |
-          "BUILD_OUTPUT_DIR=${{ github.workspace }}/build" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-      - if: runner.os != 'Windows'
-        name: Set reusable strings (unix)
+      - name: Set reusable strings
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         shell: bash
         run: |
