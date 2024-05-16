@@ -4,3 +4,5 @@
 #include <string_view>
 
 #cmakedefine USE_LOGGER_SPDLOG
+#cmakedefine USE_RERUN
+#cmakedefine USE_VAL3DITY
