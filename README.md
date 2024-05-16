@@ -26,7 +26,7 @@ Currently it is using rerun.io to visualise the result. You need to install the 
 
 clone this repository. Then
 
-```
+```sh
 cd roofer-dev
 git submodule update --init --recursive
 mkdir build
@@ -34,6 +34,19 @@ cd build
 cmake ..
 cmake --build . --parallel 10
 ```
+
+### With VCPKG
+
+Setup vcpkg
+```sh
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg && ./bootstrap-vcpkg.sh
+```
+
+brew install autoconf automake libtool m4
+
+export PATH="/opt/homebrew/opt/m4/bin:$PATH"
+
 
 This assumes you have CGAL, GDAL, PROJ, GEOS, LASlib  preinstalled on your system
 

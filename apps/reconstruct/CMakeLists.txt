@@ -2,14 +2,21 @@ set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/reconstruct.cpp")
 
 add_executable("reconstruct" ${APP_SOURCES})
 set_target_properties("reconstruct" PROPERTIES CXX_STANDARD 20)
+
+set(RECONSTRUCT_LINK_LIBS 
+  "common"
+  "datastructures"
+  "misc"
+  "io"
+  "reconstruction"
+  "logger"
+  CGAL::CGAL_Core
+  cmake_git_version_tracking
+)
+if(USE_RERUN)
+    list(APPEND RECONSTRUCT_LINK_LIBS rerun_sdk)
+endif()
+
 target_link_libraries(
   "reconstruct"
-  PRIVATE "common"
-          "datastructures"
-          "misc"
-          "io"
-          "reconstruction"
-          "logger"
-          CGAL::CGAL_Core
-          cmake_git_version_tracking
-          rerun_sdk)
+  PRIVATE ${RECONSTRUCT_LINK_LIBS})

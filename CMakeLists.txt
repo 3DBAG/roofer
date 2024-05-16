@@ -13,9 +13,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
 option(USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
+option(USE_RERUN "Enable features dependent on Rerun" OFF)
+option(USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
+option(BUILD_APPS "Build applications in addition to library" ON)
 
 # CMAKE MODULES
 
@@ -24,14 +27,17 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 # EXTERNAL LIBRARIES
 
-find_package(nlohmann_json REQUIRED)
+
 find_package(fmt REQUIRED)
-find_package(GEOS CONFIG REQUIRED)
-find_package(laslib CONFIG REQUIRED)
 find_package(
   CGAL 5.4 QUIET
   COMPONENTS Core
   REQUIRED)
+
+find_package(nlohmann_json REQUIRED)
+find_package(GEOS CONFIG REQUIRED)
+find_package(laslib CONFIG REQUIRED)
+
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
 if(WIN32) # vcpkg doesn't work when there is a version number here
@@ -39,6 +45,7 @@ if(WIN32) # vcpkg doesn't work when there is a version number here
 else()
   find_package(PROJ 9.0.0 REQUIRED CONFIG)
 endif()
+
 if(USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")
   find_package(spdlog REQUIRED)
@@ -57,10 +64,16 @@ cpmaddpackage(
   "gh:andrew-hardin/cmake-git-version-tracking#6c0cb87edd029ddfb403a8e24577c144a03605a6"
 )
 set(GIT_IGNORE_UNTRACKED TRUE)
-cpmaddpackage("gh:Ylannl/val3dity#gfp")
-cpmaddpackage(
-  NAME rerun_sdk URL
-  https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+
+if(USE_VAL3DITY)
+  cpmaddpackage("gh:Ylannl/val3dity#gfp")
+endif()
+
+if(USE_RERUN)
+  cpmaddpackage(
+    NAME rerun_sdk URL
+    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+endif()
 
 # ptinpoly
 add_library(ptinpoly STATIC external/ptinpoly/ptinpoly.c)
@@ -84,17 +97,19 @@ if(ENABLE_TESTING)
   enable_testing()
   add_subdirectory(tests)
 endif()
-add_subdirectory(apps)
 
 # INSTALL TARGETS
-install(
-  TARGETS "crop"
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+if(BUILD_APPS)
+  add_subdirectory(apps)
+  install(
+    TARGETS "crop"
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
 
-install(
-  TARGETS "reconstruct"
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  install(
+    TARGETS "reconstruct"
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+endif()
