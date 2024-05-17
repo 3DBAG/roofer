@@ -52,11 +52,6 @@ else()
   message(STATUS "Logging backend: internal")
 endif()
 
-if(RF_ENABLE_TESTING)
-  find_package(Catch2 REQUIRED)
-  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
-endif()
-
 # We have to use CPM (or FetchContent) even with vcpkg, because of
 # cmake-git-version-tracking, val3dity, rerun
 include(CPM)
@@ -72,7 +67,8 @@ endif()
 if(RF_USE_RERUN)
   cpmaddpackage(
     NAME rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
+  )
 endif()
 
 if(MSVC)
@@ -91,12 +87,16 @@ add_subdirectory(src)
 if(RF_ENABLE_TESTING)
   include(CTest)
   enable_testing()
+  # We use the apps in the integration tests, so we need to build them here
+  add_subdirectory(apps)
   add_subdirectory(tests)
 endif()
 
 # INSTALL TARGETS
 if(BUILD_APPS)
-  add_subdirectory(apps)
+  if(NOT RF_ENABLE_TESTING)
+    add_subdirectory(apps)
+  endif()
   install(
     TARGETS "crop"
     ARCHIVE DESTINATION lib
