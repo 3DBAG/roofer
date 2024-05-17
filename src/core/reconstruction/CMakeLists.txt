@@ -44,6 +44,6 @@ add_library("reconstruction" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("reconstruction" PUBLIC ${LIBRARY_INCLUDES})
 
 target_link_libraries(
-  "reconstruction" PRIVATE "datastructures" CGAL::CGAL
+  "reconstruction" PRIVATE "common" CGAL::CGAL
                            CGAL::CGAL_Core # Eigen3::Eigen
 )

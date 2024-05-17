@@ -5,7 +5,6 @@ set_target_properties("reconstruct" PROPERTIES CXX_STANDARD 20)
 
 set(RECONSTRUCT_LINK_LIBS 
   "common"
-  "datastructures"
   "misc"
   "io"
   "reconstruction"

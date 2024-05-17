@@ -4,8 +4,8 @@
 #include <numeric>
 #include <random>
 
-#include "../datastructures/Raster.hpp"
-#include "../misc/pip_util.hpp"
+#include "Raster.hpp"
+#include "pip_util.hpp"
 #include "datastructures.hpp"
 
 namespace roofer {

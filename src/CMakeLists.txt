@@ -1,6 +1,2 @@
-add_subdirectory(common)
-add_subdirectory(datastructures)
-add_subdirectory(io)
-add_subdirectory(logger)
-add_subdirectory(misc)
-add_subdirectory(reconstruction)
+add_subdirectory(core)
+add_subdirectory(extra)

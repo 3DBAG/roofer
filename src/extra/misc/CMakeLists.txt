@@ -28,7 +28,6 @@ target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
 
 set(MISC_LINK_LIBS 
     "common"
-    "datastructures"
     "logger"
     "reconstruction"
     PROJ::proj

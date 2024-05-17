@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "../datastructures/Raster.hpp"
+#include "Raster.hpp"
 #include "cgal_shared_definitions.hpp"
 #include "datastructures.hpp"
 

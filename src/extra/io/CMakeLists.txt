@@ -18,5 +18,5 @@ set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include")
 
 add_library("io" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("io" PRIVATE "datastructures" "misc" "logger" GDAL::GDAL
+target_link_libraries("io" PRIVATE "common" "misc" "logger" GDAL::GDAL
                                    LASlib)
