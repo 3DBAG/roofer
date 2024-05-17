@@ -36,4 +36,4 @@ endif()
 
 target_link_libraries(
   "misc"
-  PRIVATE ${MISC_LINK_LIBS})
+  PUBLIC ${MISC_LINK_LIBS})

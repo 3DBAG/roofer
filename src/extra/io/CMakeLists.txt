@@ -20,7 +20,7 @@ set(LIBRARY_INCLUDES
 
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("io" PRIVATE 
+target_link_libraries("io" PUBLIC 
     GDAL::GDAL 
     LASlib
     PROJ::proj)
