@@ -1,7 +1,8 @@
-#include "projHelper.hpp"
 #include <proj.h>
 
 #include <iostream>
+
+#include <roofer/misc/projHelper.hpp>
 
 namespace roofer {
   static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};

@@ -1,11 +1,10 @@
-// #include <lasreader.hpp>
-#include "PointCloudWriter.hpp"
-#include <laswriter.hpp>
-
 #include <filesystem>
 
+#include <laswriter.hpp>
 #include <ogrsf_frmts.h>
-#include "logger.h"
+
+#include <roofer/io/PointCloudWriter.hpp>
+#include <roofer/logger/logger.h>
 
 namespace fs = std::filesystem;
 

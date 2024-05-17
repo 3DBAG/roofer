@@ -13,9 +13,9 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "ArrangementBase.hpp"
-#include "ArrangementSnapper.hpp"
-#include "cdt_util.hpp"
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <roofer/reconstruction/ArrangementSnapper.hpp>
+#include <roofer/reconstruction/cdt_util.hpp>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 // #include <CGAL/Constrained_triangulation_2.h>

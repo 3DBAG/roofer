@@ -1,5 +1,3 @@
-#include "NodataCircleComputer.hpp"
-
 // includes for defining the Voronoi diagram adaptor
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
@@ -12,7 +10,8 @@
 
 #include <chrono>
 
-#include "ptinpoly.h"
+#include <roofer/common/ptinpoly.h>
+#include <roofer/misc/NodataCircleComputer.hpp>
 
 static const double PI = 3.141592653589793238462643383279502884;
 

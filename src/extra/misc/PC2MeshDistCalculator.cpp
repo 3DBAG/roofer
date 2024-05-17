@@ -1,5 +1,3 @@
-#include "PC2MeshDistCalculator.hpp"
-
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_traits.h>
@@ -8,6 +6,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include <list>
+#include <roofer/misc/PC2MeshDistCalculator.hpp>
 
 namespace roofer::detection {
 

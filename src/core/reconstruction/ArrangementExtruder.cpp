@@ -1,5 +1,5 @@
-#include "ArrangementBase.hpp"
-#include "ArrangementExtruder.hpp"
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <roofer/reconstruction/ArrangementExtruder.hpp>
 
 namespace roofer::detection {
 

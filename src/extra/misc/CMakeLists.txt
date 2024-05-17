@@ -1,37 +1,31 @@
 set(LIBRARY_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/NodataCircleComputer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/PC2MeshDistCalculator.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/pip_util.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/PointcloudRasteriser.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/projHelper.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/select_pointcloud.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Vector2DOpsGEOS.cpp")
+    "NodataCircleComputer.cpp"
+    "PC2MeshDistCalculator.cpp"
+    "PointcloudRasteriser.cpp"
+    "projHelper.cpp"
+    "select_pointcloud.cpp"
+    "Vector2DOpsGEOS.cpp")
 if(USE_VAL3DITY)
     list(APPEND LIBRARY_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Val3dator.cpp")
 endif()
 set(LIBRARY_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/NodataCircleComputer.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/PC2MeshDistCalculator.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/pip_util.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/PointcloudRasteriser.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/projHelper.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/select_pointcloud.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Vector2DOps.hpp")
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/NodataCircleComputer.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/PC2MeshDistCalculator.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/PointcloudRasteriser.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/projHelper.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/select_pointcloud.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/Vector2DOps.hpp")
 if(USE_VAL3DITY)
     list(APPEND LIBRARY_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Val3dator.hpp")
 endif()
-set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include"
-                     "${PROJECT_SOURCE_DIR}/external/ptinpoly")
+set(LIBRARY_INCLUDES 
+    "${ROOFER_INCLUDE_DIR}" 
+    "${CMAKE_BINARY_DIR}/configured_files/include")
 
-add_library("misc" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+add_library("misc" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
 
-set(MISC_LINK_LIBS 
-    "common"
-    "logger"
-    "reconstruction"
-    PROJ::proj
-    ptinpoly
+set(MISC_LINK_LIBS
     CGAL::CGAL
     CGAL::CGAL_Core # Eigen3::Eigen
     GEOS::geos_c

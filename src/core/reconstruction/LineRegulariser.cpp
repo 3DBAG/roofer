@@ -1,5 +1,5 @@
-#include "LineRegulariser.hpp"
-#include "LineRegulariserBase.hpp"
+#include <roofer/reconstruction/LineRegulariser.hpp>
+#include <roofer/reconstruction/LineRegulariserBase.hpp>
 
 namespace roofer::detection {
 

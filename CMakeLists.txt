@@ -75,11 +75,6 @@ if(USE_RERUN)
     https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
 endif()
 
-# ptinpoly
-add_library(ptinpoly STATIC external/ptinpoly/ptinpoly.c)
-set_target_properties(ptinpoly PROPERTIES C_STANDARD 11
-                                          POSITION_INDEPENDENT_CODE ON)
-
 if(MSVC)
   # windows.h breaks std::min/std::max, fix by define
   add_definitions(-DNOMINMAX)
@@ -90,6 +85,7 @@ endif()
 
 # Use configure files to configure compile-time variable for using them runtime,
 # e.g. version numbers and feature flags
+set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(configured)
 add_subdirectory(src)
 if(ENABLE_TESTING)

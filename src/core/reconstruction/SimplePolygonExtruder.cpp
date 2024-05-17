@@ -1,4 +1,4 @@
-#include "SimplePolygonExtruder.hpp"
+#include <roofer/reconstruction/SimplePolygonExtruder.hpp>
 
 #include <algorithm>
 

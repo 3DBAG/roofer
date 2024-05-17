@@ -1,4 +1,4 @@
-#include "SegmentRasteriser.hpp"
+#include <roofer/reconstruction/SegmentRasteriser.hpp>
 // #include "spdlog/spdlog.h"
 
 namespace roofer::detection {

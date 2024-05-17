@@ -1,7 +1,7 @@
-#include "LineDetector.hpp"
 #include <set>
-#include "LineDetectorBase.h"
-#include "LineRegulariserBase.hpp"
+#include <roofer/reconstruction/LineDetector.hpp>
+#include <roofer/reconstruction/LineDetectorBase.hpp>
+#include <roofer/reconstruction/LineRegulariserBase.hpp>
 
 namespace roofer::detection {
 

@@ -1,22 +1,3 @@
-#include "projHelper.hpp"
-#include "VectorReader.hpp"
-#include "VectorWriter.hpp"
-#include "RasterWriter.hpp"
-#include "StreamCropper.hpp"
-#include "PointCloudWriter.hpp"
-#include "Vector2DOps.hpp"
-#include "NodataCircleComputer.hpp"
-#include "PointcloudRasteriser.hpp"
-#include "select_pointcloud.hpp"
-
-#include "argh.h"
-#include "toml.hpp"
-
-#include "fmt/format.h"
-#include "logger.h"
-
-#include "git.h"
-
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
@@ -26,6 +7,25 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "argh.h"
+#include "toml.hpp"
+#include "fmt/format.h"
+
+#include <roofer/misc/projHelper.hpp>
+#include <roofer/io/VectorReader.hpp>
+#include <roofer/io/VectorWriter.hpp>
+#include <roofer/io/RasterWriter.hpp>
+#include <roofer/io/StreamCropper.hpp>
+#include <roofer/io/PointCloudWriter.hpp>
+#include <roofer/misc/Vector2DOps.hpp>
+#include <roofer/misc/NodataCircleComputer.hpp>
+#include <roofer/misc/PointcloudRasteriser.hpp>
+#include <roofer/misc/select_pointcloud.hpp>
+#include <roofer/logger/logger.h>
+
+#include "git.h"
+
 namespace fs = std::filesystem;
 
 void print_help(std::string program_name) {

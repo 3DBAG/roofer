@@ -16,8 +16,8 @@
 // #include "point_edge.h"
 // #include "stepedge_nodes.hpp"
 
-#include "PlaneDetectorBase.hpp"
-#include "PlaneDetector.hpp"
+#include <roofer/reconstruction/PlaneDetectorBase.hpp>
+#include <roofer/reconstruction/PlaneDetector.hpp>
 
 #include <CGAL/Shape_detection/Efficient_RANSAC.h>
 

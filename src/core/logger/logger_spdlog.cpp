@@ -12,7 +12,7 @@
 
 #include <cassert>
 
-#include "logger.h"
+#include <roofer/logger/logger.h">
 
 namespace roofer::logger {
   spdlog::level::level_enum cast_level(LogLevel level) {

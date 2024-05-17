@@ -1,6 +1,6 @@
-#include "ArrangementBase.hpp"
-#include "MeshTriangulator.hpp"
-#include "cdt_util.hpp"
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <roofer/reconstruction/MeshTriangulator.hpp>
+#include <roofer/reconstruction/cdt_util.hpp>
 #include <CGAL/Cartesian.h>
 
 namespace roofer::detection {

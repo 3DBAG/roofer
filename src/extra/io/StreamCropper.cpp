@@ -1,13 +1,14 @@
-#include "StreamCropper.hpp"
-
 #include <lasreader.hpp>
-#include "pip_util.hpp"
-#include "Raster.hpp"
-#include "logger.h"
 
 #include <bitset>
 #include <ctime>
 #include <filesystem>
+
+#include <roofer/io/StreamCropper.hpp>
+#include <roofer/common/pip_util.hpp>
+#include <roofer/common/Raster.hpp>
+#include <roofer/logger/logger.h>
+
 namespace fs = std::filesystem;
 
 namespace roofer {

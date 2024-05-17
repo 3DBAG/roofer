@@ -13,7 +13,7 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "ArrangementBase.hpp"
+#include <roofer/reconstruction/ArrangementBase.hpp>
 #include <stack>
 
 template<typename E, typename P> bool ccb_to_polygon_3(E he, P& polygon, double h=0) {

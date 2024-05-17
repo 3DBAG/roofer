@@ -1,10 +1,9 @@
-#include "select_pointcloud.hpp"
-
 #include <cmath>
 #include <numeric>
 #include <algorithm>
 
-#include "logger.h"
+#include <roofer/misc/select_pointcloud.hpp>
+#include <roofer/logger/logger.h>
 
 namespace roofer {
 

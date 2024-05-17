@@ -1,9 +1,9 @@
-#include "PointCloudReader.hpp"
 #include <lasreader.hpp>
 #include <laswriter.hpp>
 
 #include <iomanip>
-#include "logger.h"
+#include <roofer/io/PointCloudReader.hpp>
+#include <roofer/logger/logger.h>
 
 namespace roofer {
 

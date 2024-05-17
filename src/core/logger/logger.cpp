@@ -19,7 +19,7 @@
 #include <thread>
 #include <sstream>
 
-#include "logger.h"
+#include <roofer/logger/logger.h>
 #include <fmt/chrono.h>
 
 namespace {

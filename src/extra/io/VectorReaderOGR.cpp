@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "VectorReader.hpp"
-
 #include <unordered_map>
 #include <variant>
 #include <fstream>
@@ -25,7 +23,9 @@
 #include <filesystem>
 
 #include <ogrsf_frmts.h>
-#include "logger.h"
+
+#include <roofer/io/VectorReader.hpp>
+#include <roofer/logger/logger.h>
 
 namespace fs = std::filesystem;
 

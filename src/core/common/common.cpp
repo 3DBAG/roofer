@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "common.hpp"
+#include <roofer/common/common.hpp>
 
 namespace roofer
 {

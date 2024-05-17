@@ -1,5 +1,5 @@
-#include "ArrangementOptimiser.hpp"
-#include "ArrangementBase.hpp"
+#include <roofer/reconstruction/ArrangementOptimiser.hpp>
+#include <roofer/reconstruction/ArrangementBase.hpp>
 
 #include <CGAL/property_map.h>
 #include <CGAL/boost/graph/alpha_expansion_graphcut.h>

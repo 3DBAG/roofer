@@ -1,5 +1,5 @@
-#include "ArrangementBase.hpp"
-#include "ArrangementDissolver.hpp"
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <roofer/reconstruction/ArrangementDissolver.hpp>
 
 namespace roofer::detection {
   

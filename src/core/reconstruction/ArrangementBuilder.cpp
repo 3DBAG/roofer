@@ -1,6 +1,6 @@
-#include "ArrangementBuilder.hpp"
-#include "ArrangementBase.hpp"
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/ArrangementBuilder.hpp>
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 

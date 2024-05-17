@@ -1,10 +1,10 @@
-#include "Val3dator.hpp"
-
 // val3dity
 #include "Surface.h"
 #include "Solid.h"
 #include "MultiSolid.h"
 #include "GenericObject.h"
+
+#include <roofer/misc/Val3dator.hpp>
 
 namespace roofer::detection {
 

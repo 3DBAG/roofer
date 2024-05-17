@@ -1,39 +1,39 @@
-#include "projHelper.hpp"
-#include "PointCloudReader.hpp"
-#include "VectorReader.hpp"
-#include "PlaneDetector.hpp"
-#include "AlphaShaper.hpp"
-#include "LineDetector.hpp"
-#include "LineRegulariser.hpp"
-#include "PlaneIntersector.hpp"
-#include "SegmentRasteriser.hpp"
-#include "ArrangementBuilder.hpp"
-#include "ArrangementOptimiser.hpp"
-#include "ArrangementDissolver.hpp"
-#include "ArrangementSnapper.hpp"
-#include "ArrangementExtruder.hpp"
-#include "MeshTriangulator.hpp"
-#include "SimplePolygonExtruder.hpp"
-#include "PC2MeshDistCalculator.hpp"
-#ifdef USE_VAL3DITY
-  #include "Val3dator.hpp"
-#endif
-#include "CityJsonWriter.hpp"
+
+#include <cstddef>
+#include <filesystem>
+#include <string>
 
 #include "argh.h"
 #include "toml.hpp"
-
-#include "logger.h"
-
-#include "git.h"
-
-#include <cstddef>
 #ifdef USE_RERUN
   #include <rerun.hpp>
 #endif
 
-#include <filesystem>
-#include <string>
+#include <roofer/misc/projHelper.hpp>
+#include <roofer/io/PointCloudReader.hpp>
+#include <roofer/io/VectorReader.hpp>
+#include <roofer/reconstruction/PlaneDetector.hpp>
+#include <roofer/reconstruction/AlphaShaper.hpp>
+#include <roofer/reconstruction/LineDetector.hpp>
+#include <roofer/reconstruction/LineRegulariser.hpp>
+#include <roofer/reconstruction/PlaneIntersector.hpp>
+#include <roofer/reconstruction/SegmentRasteriser.hpp>
+#include <roofer/reconstruction/ArrangementBuilder.hpp>
+#include <roofer/reconstruction/ArrangementOptimiser.hpp>
+#include <roofer/reconstruction/ArrangementDissolver.hpp>
+#include <roofer/reconstruction/ArrangementSnapper.hpp>
+#include <roofer/reconstruction/ArrangementExtruder.hpp>
+#include <roofer/reconstruction/MeshTriangulator.hpp>
+#include <roofer/reconstruction/SimplePolygonExtruder.hpp>
+#include <roofer/misc/PC2MeshDistCalculator.hpp>
+#ifdef USE_VAL3DITY
+  #include <roofer/misc/Val3dator.hpp>
+#endif
+#include <roofer/io/CityJsonWriter.hpp>
+#include <roofer/logger/logger.h>
+
+#include "git.h"
+
 namespace fs = std::filesystem;
 
 #ifdef USE_RERUN

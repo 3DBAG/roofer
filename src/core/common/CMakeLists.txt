@@ -1,10 +1,14 @@
-set(LIBRARY_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Raster.cpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/common.cpp")
-set(LIBRARY_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Raster.hpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/datastructures.hpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/common.hpp")
-set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include")
+set(LIBRARY_SOURCES "Raster.cpp"
+                    "ptinpoly.c"
+                    "pip_util.cpp"
+                    "common.cpp")
+set(LIBRARY_HEADERS "${ROOFER_INCLUDE_DIR}/roofer/common/Raster.hpp"
+                    "${ROOFER_INCLUDE_DIR}/roofer/common/datastructures.hpp"
+                    "${ROOFER_INCLUDE_DIR}/roofer/common/ptinpoly.h"
+                    "${ROOFER_INCLUDE_DIR}/roofer/common/pip_util.hpp"
+                    "${ROOFER_INCLUDE_DIR}/roofer/common/common.hpp")
+set(LIBRARY_INCLUDES  "${ROOFER_INCLUDE_DIR}" 
+                      "${CMAKE_BINARY_DIR}/configured_files/include")
 
-add_library("common" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+add_library("common" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("common" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("common")

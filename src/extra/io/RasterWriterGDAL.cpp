@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "RasterWriter.hpp"
-
 #include <algorithm>
 #include <unordered_map>
 #include <variant>
@@ -25,6 +23,7 @@
 #include <filesystem>
 
 #include <gdal_priv.h>
+#include <roofer/io/RasterWriter.hpp>
 
 namespace fs = std::filesystem;
 

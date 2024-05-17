@@ -1,4 +1,4 @@
-#include "AlphaShaper.hpp"
+#include <roofer/reconstruction/AlphaShaper.hpp>
 
 // 2D alpha shapes
 #include <CGAL/Delaunay_triangulation_2.h>

@@ -1,4 +1,4 @@
-#include "PlaneIntersector.hpp"
+#include <roofer/reconstruction/PlaneIntersector.hpp>
 
 #include <map>
 

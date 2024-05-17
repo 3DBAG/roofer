@@ -1,9 +1,9 @@
-#include "CityJsonWriter.hpp"
 #include <nlohmann/json.hpp>
 #include <set>
 #include <fstream>
 #include <iomanip>
 #include <filesystem>
+#include <roofer/io/CityJsonWriter.hpp>
 
 namespace fs = std::filesystem;
 

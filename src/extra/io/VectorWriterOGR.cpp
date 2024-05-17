@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "VectorWriter.hpp"
-
 #include <unordered_map>
 #include <variant>
 #include <fstream>
@@ -24,6 +22,8 @@
 #include <filesystem>
 
 #include <ogrsf_frmts.h>
+
+#include <roofer/io/VectorWriter.hpp>
 
 namespace fs = std::filesystem;
 

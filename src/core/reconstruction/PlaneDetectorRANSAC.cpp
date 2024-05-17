@@ -2,7 +2,7 @@
 #pragma warning(disable:4244) // boost::number_distance::distance()
                               // converts 64 to 32 bits integers
 #endif
-#include "ShapeDetector.hpp"
+#include <roofer/reconstruction/ShapeDetector.hpp>
 #include <iostream>
 #include <utility>
 #include <CGAL/property_map.h>

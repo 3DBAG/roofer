@@ -16,7 +16,7 @@
 
 #include <queue>
 #include <stack>
-#include "LineDetectorBase.h"
+#include <roofer/reconstruction/LineDetectorBase.hpp>
 
 using namespace std;
 using namespace linedect;
