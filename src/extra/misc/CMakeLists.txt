@@ -35,6 +35,4 @@ if(USE_VAL3DITY)
     list(APPEND MISC_LINK_LIBS val3dity)
 endif()
 
-target_link_libraries(
-  "misc"
-  PUBLIC ${MISC_LINK_LIBS})
+target_link_libraries("misc" PUBLIC ${MISC_LINK_LIBS})

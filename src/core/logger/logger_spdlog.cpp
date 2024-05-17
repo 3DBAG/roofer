@@ -4,7 +4,7 @@
  */
 #include "config.hpp"
 
-#ifdef USE_LOGGER_SPDLOG
+#ifdef RF_USE_LOGGER_SPDLOG
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
