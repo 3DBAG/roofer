@@ -29,6 +29,7 @@ set(MISC_LINK_LIBS
     CGAL::CGAL
     CGAL::CGAL_Core # Eigen3::Eigen
     GEOS::geos_c
+    PROJ::proj
 )
 if(USE_VAL3DITY)
     list(APPEND MISC_LINK_LIBS val3dity)

@@ -23,4 +23,4 @@ target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
 target_link_libraries("io" PUBLIC 
     GDAL::GDAL 
     LASlib
-    PROJ::proj)
+    )
