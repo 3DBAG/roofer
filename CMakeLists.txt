@@ -15,10 +15,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Options
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
-option(USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
-option(USE_RERUN "Enable features dependent on Rerun" OFF)
-option(USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
-option(BUILD_APPS "Build applications in addition to library" ON)
+option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
+option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
+option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
+option(RF_BUILD_APPS "Build applications in addition to library" ON)
 
 # CMAKE MODULES
 
@@ -44,7 +44,7 @@ else()
   find_package(PROJ 9.0.0 REQUIRED CONFIG)
 endif()
 
-if(USE_LOGGER_SPDLOG)
+if(RF_USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")
   set(SPDLOG_FMT_EXTERNAL ON)
   find_package(spdlog REQUIRED)
@@ -65,11 +65,11 @@ cpmaddpackage(
 )
 set(GIT_IGNORE_UNTRACKED TRUE)
 
-if(USE_VAL3DITY)
+if(RF_USE_VAL3DITY)
   cpmaddpackage("gh:Ylannl/val3dity#gfp")
 endif()
 
-if(USE_RERUN)
+if(RF_USE_RERUN)
   cpmaddpackage(
     NAME rerun_sdk URL
     https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)

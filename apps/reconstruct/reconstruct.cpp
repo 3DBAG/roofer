@@ -5,7 +5,7 @@
 
 #include "argh.h"
 #include "toml.hpp"
-#ifdef USE_RERUN
+#ifdef RF_USE_RERUN
   #include <rerun.hpp>
 #endif
 
@@ -26,7 +26,7 @@
 #include <roofer/reconstruction/MeshTriangulator.hpp>
 #include <roofer/reconstruction/SimplePolygonExtruder.hpp>
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
-#ifdef USE_VAL3DITY
+#ifdef RF_USE_VAL3DITY
   #include <roofer/misc/Val3dator.hpp>
 #endif
 #include <roofer/io/CityJsonWriter.hpp>
@@ -36,7 +36,7 @@
 
 namespace fs = std::filesystem;
 
-#ifdef USE_RERUN
+#ifdef RF_USE_RERUN
   // Adapters so we can log eigen vectors as rerun positions:
   template <>
   struct rerun::CollectionAdapter<rerun::Position3D, roofer::PointCollection> {
@@ -89,7 +89,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     dissolve_step_edges = true,
     extrude_LoD2 = false;
   }
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
   const auto& rec = rerun::RecordingStream::current();
   #endif
   std::string worldname = fmt::format("world/lod{}/", (int)lod);
@@ -107,7 +107,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
   );
   logger.info("Completed ArrangementDissolver");
   logger.info("Roof partition has {} faces", arrangement.number_of_faces());
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
     rec.log(worldname+"ArrangementDissolver", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   #endif
   auto ArrangementSnapper = roofer::detection::createArrangementSnapper();
@@ -115,7 +115,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     arrangement
   );
   logger.info("Completed ArrangementSnapper");
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
   // rec.log(worldname+"ArrangementSnapper", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
   #endif
   
@@ -128,7 +128,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     }
   );
   logger.info("Completed ArrangementExtruder");
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
   rec.log(worldname+"ArrangementExtruder", rerun::LineStrips3D(ArrangementExtruder->faces).with_class_ids(ArrangementExtruder->labels));
   #endif
 
@@ -137,7 +137,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
     ArrangementExtruder->multisolid
   );
   logger.info("Completed MeshTriangulator");
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
   rec.log(worldname+"MeshTriangulator", rerun::Mesh3D(MeshTriangulator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
   #endif
 
@@ -149,11 +149,11 @@ std::unordered_map<int, roofer::Mesh> extrude(
   );
   attr_rmse.push_back(PC2MeshDistCalculator->rms_error);
   logger.info("Completed PC2MeshDistCalculator. RMSE={}", PC2MeshDistCalculator->rms_error);
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
   // rec.log(worldname+"PC2MeshDistCalculator", rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
   #endif
 
-  #ifdef USE_VAL3DITY
+  #ifdef RF_USE_VAL3DITY
     auto Val3dator = roofer::detection::createVal3dator();
     Val3dator->compute(
       ArrangementExtruder->multisolid
@@ -365,7 +365,7 @@ int main(int argc, const char * argv[]) {
   }
   logger.info("{} ground points and {} roof points", points_ground.size(), points_roof.size());
 
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
     // Create a new `RecordingStream` which sends data over TCP to the viewer process.
     const auto rec = rerun::RecordingStream("Roofer rerun test");
     // Try to spawn a new viewer instance.
@@ -373,7 +373,7 @@ int main(int argc, const char * argv[]) {
     rec.set_global();
   #endif
 
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
     rec.log("world/raw_points", 
       rerun::Collection{rerun::components::AnnotationContext{
         rerun::datatypes::AnnotationInfo(6, "BUILDING", rerun::datatypes::Rgba32(255,0,0)),
@@ -418,7 +418,7 @@ int main(int argc, const char * argv[]) {
   PlaneDetector_ground->detect(points_ground);
   logger.info("Completed PlaneDetector (ground), found {} groundplanes", PlaneDetector_ground->pts_per_roofplane.size());
 
-  #ifdef USE_RERUN
+  #ifdef RF_USE_RERUN
     rec.log("world/segmented_points", 
       rerun::Collection{rerun::components::AnnotationContext{
         rerun::datatypes::AnnotationInfo(0, "no plane", rerun::datatypes::Rgba32(30,30,30))
@@ -460,35 +460,35 @@ int main(int argc, const char * argv[]) {
     auto AlphaShaper = roofer::detection::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
     logger.info("Completed AlphaShaper (roof), found {} rings, {} labels", AlphaShaper->alpha_rings.size(), AlphaShaper->roofplane_ids.size());
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/alpha_rings_roof", rerun::LineStrips3D(AlphaShaper->alpha_rings).with_class_ids(AlphaShaper->roofplane_ids));
     #endif
 
     auto AlphaShaper_ground = roofer::detection::createAlphaShaper();
     AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
     logger.info("Completed AlphaShaper (ground), found {} rings, {} labels", AlphaShaper_ground->alpha_rings.size(), AlphaShaper_ground->roofplane_ids.size());
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/alpha_rings_ground", rerun::LineStrips3D(AlphaShaper_ground->alpha_rings).with_class_ids(AlphaShaper_ground->roofplane_ids));
     #endif
 
     auto LineDetector = roofer::detection::createLineDetector();
     LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids, PlaneDetector->pts_per_roofplane);
     logger.info("Completed LineDetector");
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/boundary_lines", rerun::LineStrips3D(LineDetector->edge_segments));
     #endif
 
     auto PlaneIntersector = roofer::detection::createPlaneIntersector();
     PlaneIntersector->compute(PlaneDetector->pts_per_roofplane, PlaneDetector->plane_adjacencies);
     logger.info("Completed PlaneIntersector");
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/intersection_lines", rerun::LineStrips3D(PlaneIntersector->segments));
     #endif
 
     auto LineRegulariser = roofer::detection::createLineRegulariser();
     LineRegulariser->compute(LineDetector->edge_segments, PlaneIntersector->segments);
     logger.info("Completed LineRegulariser");
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/regularised_lines", rerun::LineStrips3D(LineRegulariser->regularised_edges));
     #endif
 
@@ -501,7 +501,7 @@ int main(int argc, const char * argv[]) {
     
     auto heightfield_copy = SegmentRasteriser->heightfield;
     heightfield_copy.set_nodata(0);
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/heightfield", rerun::DepthImage(
         {
           heightfield_copy.dimy_, 
@@ -520,7 +520,7 @@ int main(int argc, const char * argv[]) {
     );
     logger.info("Completed ArrangementBuilder");
     logger.info("Roof partition has {} faces", arrangement.number_of_faces());
-    #ifdef USE_RERUN
+    #ifdef RF_USE_RERUN
       rec.log("world/initial_partition", rerun::LineStrips3D( roofer::detection::arr2polygons(arrangement) ));
     #endif
 

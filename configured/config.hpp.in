@@ -3,6 +3,6 @@
 #include <cstdint>
 #include <string_view>
 
-#cmakedefine USE_LOGGER_SPDLOG
-#cmakedefine USE_RERUN
-#cmakedefine USE_VAL3DITY
+#cmakedefine RF_USE_LOGGER_SPDLOG
+#cmakedefine RF_USE_RERUN
+#cmakedefine RF_USE_VAL3DITY

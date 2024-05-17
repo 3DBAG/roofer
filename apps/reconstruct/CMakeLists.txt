@@ -8,7 +8,7 @@ set(RECONSTRUCT_LINK_LIBS
   roofer-extra
   cmake_git_version_tracking
 )
-if(USE_RERUN)
+if(RF_USE_RERUN)
     list(APPEND RECONSTRUCT_LINK_LIBS rerun_sdk)
 endif()
 
