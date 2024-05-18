@@ -9,10 +9,11 @@ CMakeUserPresets.json
 .run
 
 # Test dirs
-!tests/data/*
-tests/data/README.md
-!tests/output/*
-tests/output/README.md
+tests/data/*
+!tests/data/README.md
+!tests/data/*.md5
+tests/output/*
+!tests/output/README.md
 
 # Misc
 build-deps-balazs.sh

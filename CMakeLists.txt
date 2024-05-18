@@ -86,6 +86,7 @@ add_subdirectory(configured)
 add_subdirectory(src)
 if(RF_ENABLE_TESTING)
   include(CTest)
+  include(FetchContent)
   enable_testing()
   # We use the apps in the integration tests, so we need to build them here
   add_subdirectory(apps)

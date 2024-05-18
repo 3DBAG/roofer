@@ -58,3 +58,12 @@ cd test-data
 ../build/apps/crop -c crop_config.toml
 ../build/apps/reconstruct --verbose
 ```
+
+## Development
+
+### Adding test data
+
+```shell
+md5sum wippolder.zip > wippolder.zip.md5
+cat wippolder.zip.md5
+```
