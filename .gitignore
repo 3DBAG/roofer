@@ -15,5 +15,8 @@ tests/data/*
 tests/output/*
 !tests/output/README.md
 
+# Documentation
+docs/html
+
 # Misc
 build-deps-balazs.sh
