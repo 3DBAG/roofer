@@ -24,6 +24,7 @@ option(RF_BUILD_APPS "Build applications in addition to library" ON)
 
 # CMake modules, like the documentation module, go in here
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
+include(Docs)
 
 # EXTERNAL LIBRARIES
 
