@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['n_561',['N',['../classlinedect_1_1LineDetector.html#ad5e8908a2c17ae147b84976ce6fddb7d',1,'linedect::LineDetector']]],
+  ['n_5fiterations_562',['n_iterations',['../structroofer_1_1detection_1_1ArrangementOptimiserConfig.html#a8cc0b3c7892a4ecbc41c8d10bafac57e',1,'roofer::detection::ArrangementOptimiserConfig']]],
+  ['n_5frefit_563',['n_refit',['../structroofer_1_1detection_1_1PlaneDetectorConfig.html#a372a0c7e08766b55a26ee2b5072d1bf5',1,'roofer::detection::PlaneDetectorConfig::n_refit()'],['../classplanedect_1_1DistAndNormalTester.html#af484a191c2a57720e622913f92bad449',1,'planedect::DistAndNormalTester::n_refit()']]],
+  ['name_564',['name',['../structroofer_1_1CandidatePointCloud.html#ae7454be3097cf152a71bf68e31e1f041',1,'roofer::CandidatePointCloud']]],
+  ['neighbor_5fsearch_565',['Neighbor_search',['../structAdjacencyFinder.html#a7e9b59d71e7719bf455d1e7e8bc66834',1,'AdjacencyFinder::Neighbor_search()'],['../classregiongrower_1_1CGAL__RegionGrowerDS.html#a20a5e4de50e9526d7534f74d9b989d4d',1,'regiongrower::CGAL_RegionGrowerDS::Neighbor_search()'],['../namespaceroofer_1_1detection.html#a262176c14dc98c741d6b71588b13ee4f',1,'roofer::detection::Neighbor_search()']]],
+  ['neighbours_566',['neighbours',['../classregiongrower_1_1CGAL__RegionGrowerDS.html#a1c0631bbcf548d793c004a27b3c2e803',1,'regiongrower::CGAL_RegionGrowerDS']]],
+  ['neighbourvec_567',['NeighbourVec',['../namespacelinedect.html#a409aaee51c0a23c9a4bbfe46de76e0ad',1,'linedect']]],
+  ['nesting_5flevel_568',['nesting_level',['../structtri__util_1_1FaceInfo.html#aa77e997b9d775b0a1388bf0f05a8b34f',1,'tri_util::FaceInfo']]],
+  ['nodata_5felevation_569',['nodata_elevation',['../structroofer_1_1detection_1_1ArrangementExtruderConfig.html#a0a99a706675ddf38756a376301bd6253',1,'roofer::detection::ArrangementExtruderConfig']]],
+  ['nodata_5ffraction_570',['nodata_fraction',['../structroofer_1_1CandidatePointCloud.html#af954fb487f7cd29a1bb9c9d1afb1026f',1,'roofer::CandidatePointCloud']]],
+  ['nodata_5fradius_571',['nodata_radius',['../structroofer_1_1CandidatePointCloud.html#a0b88d98656e1ae7f2d099b2423a6592c',1,'roofer::CandidatePointCloud']]],
+  ['nodatacirclecomputer_2ecpp_572',['NodataCircleComputer.cpp',['../NodataCircleComputer_8cpp.html',1,'']]],
+  ['nodatacirclecomputer_2ehpp_573',['NodataCircleComputer.hpp',['../NodataCircleComputer_8hpp.html',1,'']]],
+  ['nodataval_574',['nodataval',['../structroofer_1_1Image.html#a0d8bac5730b50c85eac49f74aff596dd',1,'roofer::Image']]],
+  ['nodataval_5f_575',['noDataVal_',['../classRasterTools_1_1Raster.html#a9a7aa029433bb5782f92468a95feddf2',1,'RasterTools::Raster']]],
+  ['none_576',['NONE',['../namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a1ff7d7d03103f5f01eddf6ea4bbbceb9',1,'roofer']]],
+  ['normal_5fmap_577',['Normal_map',['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#a078074183ee41c928f4c132a25467640',1,'roofer::detection::PlaneDetectorRANSAC::Normal_map()'],['../PlaneDetector_8cpp.html#a38471a680ff60cd0a691aad53f812be1',1,'Normal_map():&#160;PlaneDetector.cpp']]],
+  ['normal_5fthres_578',['normal_thres',['../classplanedect_1_1DistAndNormalTester.html#a511ba6cf3cb69e7939327a023784a075',1,'planedect::DistAndNormalTester']]],
+  ['normals_579',['normals',['../structroofer_1_1detection_1_1MeshTriangulatorInterface.html#a282a475f7164ee5ff8de12a82c205412',1,'roofer::detection::MeshTriangulatorInterface::normals()'],['../classplanedect_1_1PlaneDS.html#a71301a28fb649f995887f7d40268926d',1,'planedect::PlaneDS::normals()']]],
+  ['num_5fedges_580',['num_edges',['../classFootprintGraph.html#a3d0b4e763f184db6201eb1c31af79c08',1,'FootprintGraph']]],
+  ['num_5fvertices_581',['num_vertices',['../classFootprintGraph.html#a2cbbb0b39ed6c3944085bad4c8379458',1,'FootprintGraph']]]
+];

@@ -1,0 +1,16 @@
+<map id="roofer::Geometry" name="roofer::Geometry">
+<area shape="rect" id="node1" title=" " alt="" coords="5,242,140,269"/>
+<area shape="rect" id="node2" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="188,5,387,47"/>
+<area shape="rect" id="node4" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="188,71,387,112"/>
+<area shape="rect" id="node6" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="188,136,387,177"/>
+<area shape="rect" id="node8" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="188,201,387,243"/>
+<area shape="rect" id="node11" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="188,267,387,308"/>
+<area shape="rect" id="node12" href="$classroofer_1_1LineString.html" title=" " alt="" coords="220,333,355,359"/>
+<area shape="rect" id="node13" href="$classroofer_1_1LinearRing.html" title=" " alt="" coords="218,383,357,410"/>
+<area shape="rect" id="node14" href="$classroofer_1_1Segment.html" title=" " alt="" coords="224,434,351,461"/>
+<area shape="rect" id="node3" href="$classroofer_1_1SegmentCollection.html" title=" " alt="" coords="440,13,632,39"/>
+<area shape="rect" id="node5" href="$classroofer_1_1PointCollection.html" title=" " alt="" coords="453,78,619,105"/>
+<area shape="rect" id="node7" href="$classroofer_1_1TriangleCollection.html" title=" " alt="" coords="443,143,629,170"/>
+<area shape="rect" id="node9" href="$classroofer_1_1LineStringCollection.html" title=" " alt="" coords="437,202,635,229"/>
+<area shape="rect" id="node10" href="$classroofer_1_1LinearRingCollection.html" title=" " alt="" coords="435,253,637,279"/>
+</map>

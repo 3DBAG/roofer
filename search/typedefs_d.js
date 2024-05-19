@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['pedge_1885',['pEdge',['../ptinpoly_8h.html#a6e341f1c52104faaf3e2867b18c45142',1,'ptinpoly.h']]],
+  ['pgridcell_1886',['pGridCell',['../ptinpoly_8h.html#a11a40867353ce13a347675eeb28f55dc',1,'ptinpoly.h']]],
+  ['pgridrec_1887',['pGridRec',['../ptinpoly_8h.html#adc9ba308a4c31f703ae8d37aae4e7915',1,'ptinpoly.h']]],
+  ['pgridset_1888',['pGridSet',['../ptinpoly_8h.html#ac14f390ae4a4d67dc00ec55bae2e9fde',1,'ptinpoly.h']]],
+  ['plane_1889',['Plane',['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#a1860af3fac8cf22d789998aa59d59da1',1,'roofer::detection::PlaneDetectorRANSAC::Plane()'],['../cgal__shared__definitions_8hpp.html#aa0f67249b83f63109c2c331928613ca0',1,'Plane():&#160;cgal_shared_definitions.hpp']]],
+  ['plane_5f3_1890',['Plane_3',['../namespaceroofer_1_1detection.html#a45bb16fdb6b3f9809a10c2ad03d881a7',1,'roofer::detection']]],
+  ['pnl_1891',['PNL',['../PlaneDetector_8cpp.html#a311dd6bccba7a3a7aba368df5b547844',1,'PlaneDetector.cpp']]],
+  ['pnl_5fvector_1892',['PNL_vector',['../PlaneDetector_8cpp.html#ac01eead55a00fa4bee79d3a90b485b13',1,'PlaneDetector.cpp']]],
+  ['point_1893',['Point',['../structroofer_1_1detection_1_1My__triangle__primitive.html#a55b29f973fc836fd2152aec2c8789be8',1,'roofer::detection::My_triangle_primitive::Point()'],['../namespacelinedect.html#ab5b207c931bf21a9e1feda055ee6709d',1,'linedect::Point()'],['../cgal__shared__definitions_8hpp.html#a2cd48a07550d8b6612454d66551be530',1,'Point():&#160;cgal_shared_definitions.hpp'],['../namespaceroofer.html#aafe741300246988f5d3be43f34361f59',1,'roofer::Point()']]],
+  ['point2d_1894',['point2d',['../classRasterTools_1_1Raster.html#ab0850398b0daa0a90e50198d9d24b3ed',1,'RasterTools::Raster']]],
+  ['point3d_1895',['point3d',['../classRasterTools_1_1Raster.html#a32e4620ad7452233cc5638cbf2105bb3',1,'RasterTools::Raster']]],
+  ['point_5f2_1896',['Point_2',['../cgal__shared__definitions_8hpp.html#a272cc50894039a35747b7846620194ee',1,'Point_2():&#160;cgal_shared_definitions.hpp'],['../namespacelinereg.html#a7d5c8d780cadc3c79d365634f8d78aae',1,'linereg::Point_2()']]],
+  ['point_5f3_1897',['Point_3',['../namespacelinereg.html#a18bc45227a1838edeff040779f86e9fa',1,'linereg']]],
+  ['point_5findex_1898',['point_index',['../classregiongrower_1_1CGAL__RegionGrowerDS.html#a366cf2c4da8c30d993506d61d5d78345',1,'regiongrower::CGAL_RegionGrowerDS']]],
+  ['point_5fmap_1899',['Point_map',['../PlaneDetector_8cpp.html#a6164a450e591acd00cdabbbfe20e8d59',1,'Point_map():&#160;PlaneDetector.cpp'],['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#ae0d10e771424b3f1170f4679db856d07',1,'roofer::detection::PlaneDetectorRANSAC::Point_map()']]],
+  ['point_5fwith_5fnormal_1900',['Point_with_normal',['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#a848ab48ba5ed4b9e411a806838c06355',1,'roofer::detection::PlaneDetectorRANSAC']]],
+  ['polygon_1901',['Polygon',['../namespaceroofer.html#a2e518d151bd220f4476c1cac9e25a835',1,'roofer']]],
+  ['polygon_5f2_1902',['Polygon_2',['../namespaceroofer_1_1detection.html#afa4a151c14d255f6e13ebd06b7605d05',1,'roofer::detection::Polygon_2()'],['../ArrangementBase_8hpp.html#a69d11327db85e59db2749d492a832c28',1,'Polygon_2():&#160;ArrangementBase.hpp'],['../namespacelinereg.html#a1a8fc719fd7b36f73cf8eeb6d48aa218',1,'linereg::Polygon_2()']]],
+  ['polygon_5fwith_5fholes_1903',['Polygon_with_holes',['../namespaceroofer.html#ae7933f325f056b07b071cb85ccf5cc22',1,'roofer']]],
+  ['polygon_5fwith_5fholes_5f2_1904',['Polygon_with_holes_2',['../namespacelinereg.html#aacfdfa228e8058dea6a164a2c70186cd',1,'linereg']]],
+  ['ppipoint_1905',['pPipoint',['../ptinpoly_8h.html#a61f8422928a9a9c997f6df22391ba9f2',1,'ptinpoly.h']]],
+  ['pwn_5fvector_1906',['Pwn_vector',['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#a64f2bb053f349e015ba4128e09ea34fa',1,'roofer::detection::PlaneDetectorRANSAC']]]
+];
