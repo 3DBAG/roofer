@@ -1,4 +1,3 @@
 input_footprint='data/wippolder/wippolder.gpkg'
 input_pointcloud='data/wippolder/wippolder.las'
 input_footprint_select_sql='fid=47'
-

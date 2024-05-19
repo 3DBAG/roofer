@@ -16,7 +16,7 @@ Automatic 3D building reconstruction
 Takes a bunch of input las files and footprints and outputs a folder hierarchy with reconstruction inputs for each separate building
 
 ### reconstruct
-Takes a point cloud and footprint for a single building and performs building reconstruction. 
+Takes a point cloud and footprint for a single building and performs building reconstruction.
 
 Currently it is using rerun.io to visualise the result. You need to install the rerun viewer if you want to see the output.
 

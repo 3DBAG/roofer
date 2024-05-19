@@ -18,7 +18,7 @@ Roofer reconstructs one building at a time.
 Efficient operation requires that the point cloud is cropped to the extent of the building polygon.
 
 There are many parameters that configure the input, output and operation of roofer.
-Configuration is passed to roofer in TOML files exclusively. 
+Configuration is passed to roofer in TOML files exclusively.
 The TOML config path is passed with the `-c, --config` command line arguments.
 
 There are two command line applications:
@@ -59,7 +59,7 @@ Input data attribtues that control the operation:
 - low_lod_attribute
 - year_of_construction_attribute
 
-Read vector footprints with VectorReaderOGR::readPolygons (GDAL), including inner rings, attributes and CRS definition. 
+Read vector footprints with VectorReaderOGR::readPolygons (GDAL), including inner rings, attributes and CRS definition.
 
   - Attributes: The `output_fid_` variable controls whether to get the OGR_FID from the data, and store it in the `OGR_FID` attribute.
   - CRS: Get the CRS definition as WKT and init the internal projection of roofer from it, using the projHelperInterface.

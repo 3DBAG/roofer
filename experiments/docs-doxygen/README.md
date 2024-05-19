@@ -12,7 +12,7 @@ Build the library:
 cmake .. && cmake --build .
 ```
 
-The documentation needs to be built separately with the `docs` target. 
+The documentation needs to be built separately with the `docs` target.
 The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
 
 ```shell

@@ -21,7 +21,7 @@ pGridSet build_grid(const roofer::vec3f& ring) {
   int size = ring.size();
   std::vector<pPipoint> pgon;
   for (auto& p : ring) {
-    pgon.push_back(new Pipoint{ p[0],p[1] });
+    pgon.push_back(new Pipoint{p[0], p[1]});
   }
   pGridSet grid_set = new GridSet();
   // skip last point in the ring, ie the repetition of the first vertex
