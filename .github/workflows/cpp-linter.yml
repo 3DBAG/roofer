@@ -3,10 +3,10 @@ name: cpp-linter
 on:
   push:
     branches: [ develop, feature/ci ]
-    paths: ['**.cpp', '**.h', '**.hpp']
+#    paths: ['**.cpp', '**.h', '**.hpp']
   pull_request:
     branches: [ develop ]
-    paths: ['**.cpp', '**.h', '**.hpp']
+#    paths: ['**.cpp', '**.h', '**.hpp']
 
 jobs:
   cpp-linter:
