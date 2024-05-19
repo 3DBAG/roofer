@@ -1,0 +1,36 @@
+name: cpp-linter
+
+on:
+  push:
+    branches: [ develop, feature/ci ]
+    paths: ['**.cpp', '**.h', '**.hpp']
+  pull_request:
+    branches: [ develop ]
+    paths: ['**.cpp', '**.h', '**.hpp']
+
+jobs:
+  cpp-linter:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@main
+        id: linter
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: 'file' # Use .clang-format config file
+          tidy-checks: '' # Use .clang-tidy config file
+          files-changed-only: false
+          thread-comments: false
+
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed != 0
+        run: |
+          echo "some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
+        # for actual deployment
+        # run: exit 1
