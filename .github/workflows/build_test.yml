@@ -4,9 +4,9 @@ name: Build and Test on multiple platforms
 
 on:
   push:
-    branches: [ "feature/ci" ]
+    branches: [ "develop" ]
   pull_request:
-    branches: [ "feature/ci" ]
+    branches: [ "develop" ]
 
 jobs:
   build:
