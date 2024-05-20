@@ -15,8 +15,14 @@ add_test(
   COMMAND $<TARGET_FILE:crop> --config "${TEST_CONFIG_DIR}/crop-wippolder.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
+set_tests_properties("crop-wippolder" PROPERTIES
+  ENVIRONMENT "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal")
+
 add_test(
   NAME "reconstruct-wippolder"
   COMMAND $<TARGET_FILE:reconstruct> --config
           "${CMAKE_CURRENT_SOURCE_DIR}/output/wippolder/objects/503100000030812/config_.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+set_tests_properties("reconstruct-wippolder" PROPERTIES
+  ENVIRONMENT "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal")
