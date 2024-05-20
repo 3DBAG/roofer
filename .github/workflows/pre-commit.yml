@@ -2,7 +2,7 @@ name: Formatting
 
 on:
   push:
-    branches: [ develop, feature/project-tools-refactor, feature/ci ]
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
