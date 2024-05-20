@@ -1,11 +1,11 @@
 #include <memory>
-#include <roofer/common/datastructures.hpp>
 
 #include "cgal_shared_definitions.hpp"
+#include <roofer/common/datastructures.hpp>
 
 namespace roofer::detection {
 
-  struct AlphaShaperConfig {
+  struct AlphaShaperConfig{
     float thres_alpha = 0.25;
     bool extract_polygons = true;
     bool optimal_alpha = true;
@@ -22,9 +22,8 @@ namespace roofer::detection {
     // add_output("segment_ids", typeid(vec1i));
 
     virtual ~AlphaShaperInterface() = default;
-    virtual void compute(const IndexedPlanesWithPoints& pts_per_roofplane,
-                         AlphaShaperConfig config = AlphaShaperConfig()) = 0;
+    virtual void compute(const IndexedPlanesWithPoints& pts_per_roofplane, AlphaShaperConfig config=AlphaShaperConfig()) = 0;
   };
 
   std::unique_ptr<AlphaShaperInterface> createAlphaShaper();
-}  // namespace roofer::detection
+}

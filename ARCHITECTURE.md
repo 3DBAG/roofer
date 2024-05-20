@@ -35,7 +35,7 @@ The goal with roofer is to deliver something that is useful for
 * Coordinate transformation ??
 * geometry validation (only inside reconstruction code for debugging/testing purposes, not for 'production') ??
 
-* assumption: projected coordinates in unit of meters.
+* assumption: projected coordinates in unit of meters. 
 * limitation: flaws in the point cloud (occlusions, low pt density) may lead to issues with reconstruction
 
 ## Overview
@@ -52,7 +52,7 @@ Roofer consists of (1) a software library that also includes an API for develope
 
 * crop - crops point cloud for each building
   * Reads LAS files and list of building footprint vectors
-  * Outputs reconstruct input for each building
+  * Outputs reconstruct input for each building 
 
 * reconstruct - performs reconstruction per single building
   * outputs a CityJSON feature per building
@@ -64,7 +64,7 @@ For processing efficiently large number of buildings.
 
 Input: folder of LAS/LAZ files + vector file with footprints
 
-`crop` should be able to read arbitrarily large inputs without running out of memory. Strategy is to
+`crop` should be able to read arbitrarily large inputs without running out of memory. Strategy is to 
 1. build a spatial of index input files
 2. Stream read the points and accumulate them in the building footprints.
 3. Once all points for a building have been read we can output that building and release the memory it occupied.
@@ -101,3 +101,4 @@ For efficient streaming processing of large number of building features.
 * compatible with CityJSON Sequence spec
 * store many features in one large binary file
 * should be possible to add (spatial) indices
+

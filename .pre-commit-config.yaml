@@ -11,8 +11,4 @@ repos:
     rev: 'v18.1.2'
     hooks:
       - id: clang-format
-        name: "clang-format on source files"
-        types: ["c++", "file", "non-executable", "text"]
-      - id: clang-format
-        name: "clang-format on header files"
-        types: ["c", "c++", "file", "header", "non-executable", "text"]
+        types: [c++]

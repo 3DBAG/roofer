@@ -18,8 +18,8 @@ set(LIBRARY_HEADERS
 if(USE_VAL3DITY)
     list(APPEND LIBRARY_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Val3dator.hpp")
 endif()
-set(LIBRARY_INCLUDES
-    "${ROOFER_INCLUDE_DIR}"
+set(LIBRARY_INCLUDES 
+    "${ROOFER_INCLUDE_DIR}" 
     "${CMAKE_BINARY_DIR}/configured_files/include")
 
 add_library("misc" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})

@@ -1,12 +1,12 @@
 #include <memory>
-#include <roofer/common/Raster.hpp>
-#include <roofer/common/datastructures.hpp>
 
+#include <roofer/common/Raster.hpp>
 #include "cgal_shared_definitions.hpp"
+#include <roofer/common/datastructures.hpp>
 
 namespace roofer::detection {
 
-  struct ArrangementOptimiserConfig {
+  struct ArrangementOptimiserConfig{
     float data_multiplier = 8.0;
     float smoothness_multiplier = 1.0;
     bool preset_labels = false;
@@ -19,22 +19,26 @@ namespace roofer::detection {
   };
 
   struct ArrangementOptimiserInterface {
-    // add_input("arrangement", typeid(Arrangement_2));
-    // add_input("heightfield", typeid(RasterTools::Raster));
-    // add_input("pts_per_roofplane", typeid(IndexedPlanesWithPoints ));
-    // add_input("ground_pts_per_roofplane", typeid(IndexedPlanesWithPoints ));
-    // add_output("arrangement", typeid(Arrangement_2));
-    // add_vector_output("groundparts", typeid(LinearRing));
+    
+      // add_input("arrangement", typeid(Arrangement_2));
+      // add_input("heightfield", typeid(RasterTools::Raster));
+      // add_input("pts_per_roofplane", typeid(IndexedPlanesWithPoints ));
+      // add_input("ground_pts_per_roofplane", typeid(IndexedPlanesWithPoints ));
+      // add_output("arrangement", typeid(Arrangement_2));
+      // add_vector_output("groundparts", typeid(LinearRing));
 
     virtual ~ArrangementOptimiserInterface() = default;
     virtual void compute(
-        Arrangement_2& arrangement, const RasterTools::Raster& heightfield,
-        const IndexedPlanesWithPoints& roof_planes,
-        const IndexedPlanesWithPoints& ground_planes,
-        ArrangementOptimiserConfig config = ArrangementOptimiserConfig()) = 0;
+      Arrangement_2& arrangement,
+      const RasterTools::Raster& heightfield,
+      const IndexedPlanesWithPoints& roof_planes,
+      const IndexedPlanesWithPoints& ground_planes,
+      ArrangementOptimiserConfig config=ArrangementOptimiserConfig()
+    ) = 0;
+    
   };
 
   std::vector<LinearRing> arr2polygons(Arrangement_2& arr);
 
   std::unique_ptr<ArrangementOptimiserInterface> createArrangementOptimiser();
-}  // namespace roofer::detection
+}
