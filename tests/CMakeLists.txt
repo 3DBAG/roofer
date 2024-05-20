@@ -18,5 +18,5 @@ add_test(
 add_test(
   NAME "reconstruct-wippolder"
   COMMAND $<TARGET_FILE:reconstruct> --config
-          "${TEST_CONFIG_DIR}/reconstruct-wippolder.toml"
+          "${CMAKE_CURRENT_SOURCE_DIR}/output/wippolder/objects/503100000030812/config_.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
