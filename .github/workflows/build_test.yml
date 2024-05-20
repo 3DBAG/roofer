@@ -4,9 +4,9 @@ name: Build and Test on multiple platforms
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "develop", "feature/ci" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop", "feature/ci" ]
 
 jobs:
   build:
@@ -100,10 +100,10 @@ jobs:
       - name: Update vcpkg baseline
         run: vcpkg x-update-baseline
 
-      # - if: runner.os == 'macOS'
-      #   name: "Install additional macOS build tools"
-      #   run: |
-      #     brew install autoconf autoconf-archive automake libtool m4
+      - if: runner.os == 'macOS'
+        name: "Install additional macOS build tools"
+        run: |
+          brew install autoconf-archive
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
