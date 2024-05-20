@@ -30,17 +30,3 @@ add_test(
 
 set_tests_properties("reconstruct-wippolder" PROPERTIES ENVIRONMENT
                                                         "${TEST_ENVIRONMENT}")
-
-# Run the installed exes
-
-add_test(
-  NAME "installed-crop-wippolder"
-  COMMAND crop --config "${TEST_CONFIG_DIR}/crop-wippolder.toml"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-add_test(
-  NAME "installed-reconstruct-wippolder"
-  COMMAND
-    reconstruct --config
-    "${CMAKE_CURRENT_SOURCE_DIR}/output/wippolder/objects/503100000030812/config_.toml"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

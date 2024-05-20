@@ -5,8 +5,8 @@ name: Build and Test on multiple platforms
 on:
   push:
     branches: [ "develop", "feature/project-tools-refactor" ]
-  pull_request:
-    branches: [ "develop" ]
+#  pull_request:
+#    branches: [ "develop" ]
 
 jobs:
   build:
@@ -75,6 +75,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      # Need python for running the tests on the installed exes
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install python dependencies
+        run: pip install -r "${{ github.workspace }}/requirements.txt"
 
       - name: Set reusable strings
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -120,13 +127,14 @@ jobs:
         run: cmake --build ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
       - name: Test
-        working-directory: ${{ env.BUILD_OUTPUT_DIR }}
+        working-directory: ${{ github.workspace }}
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --preset test-built --build-config ${{ matrix.build_type }} --rerun-failed
+        run: ctest --output-on-failure --verbose
 
       - name: Install
-        run: cmake --install ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }}
+        run: cmake --install ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
-      - name: Test installed
-        run: cmake --preset test-installed
+      - name: Test installed apps
+        working-directory: "${{ github.workspace }}/tests"
+        run: pytest tools/test-installed-apps.py

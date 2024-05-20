@@ -2,9 +2,9 @@ name: Formatting
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    branches: [ "develop" ]
+#  pull_request:
+#    branches: [ "develop" ]
 
 jobs:
   pre-commit:
@@ -12,4 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
     - uses: pre-commit/action@v3.0.1

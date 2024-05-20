@@ -91,20 +91,9 @@ if(RF_ENABLE_TESTING)
   add_subdirectory(tests)
 endif()
 
-# INSTALL TARGETS
+# EXECUTABLES
 if(BUILD_APPS)
   if(NOT RF_ENABLE_TESTING)
     add_subdirectory(apps)
   endif()
-  install(
-    TARGETS "crop"
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
-
-  install(
-    TARGETS "reconstruct"
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
 endif()

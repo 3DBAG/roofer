@@ -39,25 +39,6 @@
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
-      },
-      "filter": {
-        "exclude": {
-          "name": "^installed-.*"
-        }
-      }
-    },
-    {
-      "name": "test-installed",
-      "description": "Test the installed executables",
-      "configurePreset": "vcpkg-minimal-test",
-      "output": {
-        "outputOnFailure": true,
-        "verbosity": "verbose"
-      },
-      "filter": {
-        "include": {
-          "name": "^installed-.*"
-        }
       }
     }
   ]
