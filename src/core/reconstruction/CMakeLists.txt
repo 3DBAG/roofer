@@ -38,7 +38,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/RegionGrower_DS_CGAL.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/SegmentRasteriser.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/SimplePolygonExtruder.hpp")
-set(LIBRARY_INCLUDES "${ROOFER_INCLUDE_DIR}" "${CMAKE_BINARY_DIR}/configured_files/include")
+set(LIBRARY_INCLUDES "${ROOFER_INCLUDE_DIR}")
 
 add_library("reconstruction" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("reconstruction" PUBLIC ${LIBRARY_INCLUDES})

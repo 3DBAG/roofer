@@ -5,8 +5,8 @@ set(LIBRARY_SOURCES
     "projHelper.cpp"
     "select_pointcloud.cpp"
     "Vector2DOpsGEOS.cpp")
-if(USE_VAL3DITY)
-    list(APPEND LIBRARY_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Val3dator.cpp")
+if(RF_USE_VAL3DITY)
+    list(APPEND LIBRARY_SOURCES "Val3dator.cpp")
 endif()
 set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/misc/NodataCircleComputer.hpp"
@@ -15,12 +15,11 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/misc/projHelper.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/misc/select_pointcloud.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/misc/Vector2DOps.hpp")
-if(USE_VAL3DITY)
-    list(APPEND LIBRARY_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Val3dator.hpp")
+if(RF_USE_VAL3DITY)
+    list(APPEND LIBRARY_HEADERS "${ROOFER_INCLUDE_DIR}/roofer/misc/Val3dator.hpp")
 endif()
 set(LIBRARY_INCLUDES 
-    "${ROOFER_INCLUDE_DIR}" 
-    "${CMAKE_BINARY_DIR}/configured_files/include")
+    "${ROOFER_INCLUDE_DIR}")
 
 add_library("misc" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
@@ -31,7 +30,7 @@ set(MISC_LINK_LIBS
     GEOS::geos_c
     PROJ::proj
 )
-if(USE_VAL3DITY)
+if(RF_USE_VAL3DITY)
     list(APPEND MISC_LINK_LIBS val3dity)
 endif()
 

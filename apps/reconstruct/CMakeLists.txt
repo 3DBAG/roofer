@@ -9,6 +9,10 @@ set(RECONSTRUCT_LINK_LIBS
 )
 if(RF_USE_RERUN)
     list(APPEND RECONSTRUCT_LINK_LIBS rerun_sdk)
+    target_compile_definitions("reconstruct" PRIVATE RF_USE_RERUN)
+endif()
+if(RF_USE_VAL3DITY)
+    target_compile_definitions("reconstruct" PRIVATE RF_USE_VAL3DITY)
 endif()
 
 target_link_libraries(

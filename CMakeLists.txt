@@ -19,7 +19,6 @@ option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
-
 # CMAKE MODULES
 
 # CMake modules, like the documentation module, go in here
@@ -82,7 +81,6 @@ endif()
 # Use configure files to configure compile-time variable for using them runtime,
 # e.g. version numbers and feature flags
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
-add_subdirectory(configured)
 add_subdirectory(src)
 if(RF_ENABLE_TESTING)
   include(CTest)
