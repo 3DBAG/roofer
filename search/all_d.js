@@ -39,7 +39,7 @@ var searchData=
   ['midpoint_536',['midpoint',['../structlinereg_1_1linetype.html#aec0f99324a82e1fee8c7536ad733d100',1,'linereg::linetype']]],
   ['min_537',['MIN',['../namespaceRasterTools.html#a5b7451c237b4d3f99da9ee94569107ddade4959d639c2e8cd53c64f9137ece310',1,'RasterTools']]],
   ['min_538',['min',['../classroofer_1_1Box.html#aea91b1fda6e9bb2d4947cf43df61af1e',1,'roofer::Box']]],
-  ['min_5fcnt_5frange_539',['min_cnt_range',['../structroofer_1_1detection_1_1LineDetectorConfig.html#ac75c5ca315565d16b6cf3b0002891435',1,'roofer::detection::LineDetectorConfig']]],
+  ['min_5fcnt_5frange_539',['min_cnt_range',['../structroofer_1_1detection_1_1LineDetectorConfig.html#a021bc5bd052e5175ace6295ceba8567c',1,'roofer::detection::LineDetectorConfig']]],
   ['min_5fcnt_5frange_5flower_540',['min_cnt_range_lower',['../structroofer_1_1detection_1_1LineDetectorConfig.html#ae3191f3dc8ddc65c7d7df60b019399bf',1,'roofer::detection::LineDetectorConfig']]],
   ['min_5fcnt_5frange_5fupper_541',['min_cnt_range_upper',['../structroofer_1_1detection_1_1LineDetectorConfig.html#a26172946123398df22d3cbdd72dccd4d',1,'roofer::detection::LineDetectorConfig']]],
   ['min_5fdist_5fto_5fline_542',['min_dist_to_line',['../structroofer_1_1detection_1_1PlaneIntersectorConfig.html#aeba3256cb7ba4614036cf6112d87d41f',1,'roofer::detection::PlaneIntersectorConfig']]],

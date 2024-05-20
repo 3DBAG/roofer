@@ -1,14 +1,14 @@
 <map id="/home/runner/work/roofer&#45;dev/roofer&#45;dev/include/roofer/misc/select_pointcloud.hpp" name="/home/runner/work/roofer&#45;dev/roofer&#45;dev/include/roofer/misc/select_pointcloud.hpp">
-<area shape="rect" id="node1" title=" " alt="" coords="29,5,275,61"/>
+<area shape="rect" id="node1" title=" " alt="" coords="54,5,301,61"/>
 <area shape="rect" id="node2" title=" " alt="" coords="5,333,64,360"/>
-<area shape="rect" id="node3" href="$PointcloudRasteriser_8hpp.html" title=" " alt="" coords="157,109,339,136"/>
-<area shape="rect" id="node4" title=" " alt="" coords="133,184,211,211"/>
-<area shape="rect" id="node5" href="$common_8hpp.html" title=" " alt="" coords="193,259,404,285"/>
-<area shape="rect" id="node8" title=" " alt="" coords="530,333,654,360"/>
-<area shape="rect" id="node12" href="$datastructures_8hpp.html" title=" " alt="" coords="285,184,533,211"/>
-<area shape="rect" id="node6" title=" " alt="" coords="88,333,144,360"/>
-<area shape="rect" id="node7" title=" " alt="" coords="168,333,243,360"/>
-<area shape="rect" id="node9" title=" " alt="" coords="267,333,330,360"/>
-<area shape="rect" id="node10" title=" " alt="" coords="355,333,413,360"/>
-<area shape="rect" id="node11" title=" " alt="" coords="438,333,506,360"/>
+<area shape="rect" id="node3" href="$PointcloudRasteriser_8hpp.html" title=" " alt="" coords="223,109,406,136"/>
+<area shape="rect" id="node4" title=" " alt="" coords="463,184,540,211"/>
+<area shape="rect" id="node5" title=" " alt="" coords="531,333,655,360"/>
+<area shape="rect" id="node6" href="$common_8hpp.html" title=" " alt="" coords="204,259,415,285"/>
+<area shape="rect" id="node12" href="$datastructures_8hpp.html" title=" " alt="" coords="191,184,439,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="451,333,507,360"/>
+<area shape="rect" id="node8" title=" " alt="" coords="89,333,151,360"/>
+<area shape="rect" id="node9" title=" " alt="" coords="176,333,251,360"/>
+<area shape="rect" id="node10" title=" " alt="" coords="275,333,343,360"/>
+<area shape="rect" id="node11" title=" " alt="" coords="368,333,427,360"/>
 </map>

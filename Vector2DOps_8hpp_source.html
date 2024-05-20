@@ -72,29 +72,35 @@ $(function() {
 <div class="contents">
 <a href="Vector2DOps_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160; </div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="common_8hpp.html">roofer/common/common.hpp</a>&gt;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="datastructures_8hpp.html">roofer/common/datastructures.hpp</a>&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceroofer.html">roofer</a> {</div>
-<div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html">    7</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structroofer_1_1Vector2DOpsInterface.html">Vector2DOpsInterface</a> {</div>
-<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#a625e305aecc01055a655c78b383047e2">    8</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#a625e305aecc01055a655c78b383047e2">~Vector2DOpsInterface</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="common_8hpp.html">roofer/common/common.hpp</a>&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="datastructures_8hpp.html">roofer/common/datastructures.hpp</a>&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceroofer.html">roofer</a> {</div>
+<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html">    8</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structroofer_1_1Vector2DOpsInterface.html">Vector2DOpsInterface</a> {</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#aed1ebb8de4d325d8839a0c7d260a2534">   10</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#aed1ebb8de4d325d8839a0c7d260a2534">simplify_polygons</a>(std::vector&lt;LinearRing&gt;&amp; polygons,</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;                                   <span class="keywordtype">float</span> tolerance = 0.01,</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;                                   <span class="comment">// bool output_failures = true,</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;                                   <span class="keywordtype">bool</span> orient_after_simplify = <span class="keyword">true</span>) = 0;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#a2bfd95350f42148e8bd8611d110c53c9">   15</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#a2bfd95350f42148e8bd8611d110c53c9">buffer_polygons</a>(std::vector&lt;LinearRing&gt;&amp; polygons,</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                                 <span class="keywordtype">float</span> offset = 4) = 0;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  };</div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#a625e305aecc01055a655c78b383047e2">   10</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#a625e305aecc01055a655c78b383047e2">~Vector2DOpsInterface</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#aed1ebb8de4d325d8839a0c7d260a2534">   12</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#aed1ebb8de4d325d8839a0c7d260a2534">simplify_polygons</a>(</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;      std::vector&lt;LinearRing&gt;&amp; polygons,</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;      <span class="keywordtype">float</span> tolerance = 0.01,</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;      <span class="comment">// bool output_failures = true,</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;      <span class="keywordtype">bool</span> orient_after_simplify = <span class="keyword">true</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    ) = 0;</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  std::unique_ptr&lt;Vector2DOpsInterface&gt; <a class="code" href="namespaceroofer.html#a7529de06a02d939cfc984da80ee03edf">createVector2DOpsGEOS</a>();</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;}  <span class="comment">// namespace roofer</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="structroofer_1_1Vector2DOpsInterface.html#a2bfd95350f42148e8bd8611d110c53c9">   19</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="structroofer_1_1Vector2DOpsInterface.html#a2bfd95350f42148e8bd8611d110c53c9">buffer_polygons</a>(</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;      std::vector&lt;LinearRing&gt;&amp; polygons,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;      <span class="keywordtype">float</span> offset = 4</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    ) = 0;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  };</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  std::unique_ptr&lt;Vector2DOpsInterface&gt; <a class="code" href="namespaceroofer.html#a7529de06a02d939cfc984da80ee03edf">createVector2DOpsGEOS</a>();</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;}</div>
 <div class="ttc" id="acommon_8hpp_html"><div class="ttname"><a href="common_8hpp.html">common.hpp</a></div></div>
 <div class="ttc" id="adatastructures_8hpp_html"><div class="ttname"><a href="datastructures_8hpp.html">datastructures.hpp</a></div></div>
-<div class="ttc" id="anamespaceroofer_html"><div class="ttname"><a href="namespaceroofer.html">roofer</a></div><div class="ttdef"><b>Definition:</b> common.cpp:21</div></div>
+<div class="ttc" id="anamespaceroofer_html"><div class="ttname"><a href="namespaceroofer.html">roofer</a></div><div class="ttdef"><b>Definition:</b> common.cpp:23</div></div>
 <div class="ttc" id="anamespaceroofer_html_a7529de06a02d939cfc984da80ee03edf"><div class="ttname"><a href="namespaceroofer.html#a7529de06a02d939cfc984da80ee03edf">roofer::createVector2DOpsGEOS</a></div><div class="ttdeci">std::unique_ptr&lt; Vector2DOpsInterface &gt; createVector2DOpsGEOS()</div><div class="ttdef"><b>Definition:</b> Vector2DOpsGEOS.cpp:221</div></div>
-<div class="ttc" id="astructroofer_1_1Vector2DOpsInterface_html"><div class="ttname"><a href="structroofer_1_1Vector2DOpsInterface.html">roofer::Vector2DOpsInterface</a></div><div class="ttdef"><b>Definition:</b> Vector2DOps.hpp:7</div></div>
+<div class="ttc" id="astructroofer_1_1Vector2DOpsInterface_html"><div class="ttname"><a href="structroofer_1_1Vector2DOpsInterface.html">roofer::Vector2DOpsInterface</a></div><div class="ttdef"><b>Definition:</b> Vector2DOps.hpp:8</div></div>
 <div class="ttc" id="astructroofer_1_1Vector2DOpsInterface_html_a2bfd95350f42148e8bd8611d110c53c9"><div class="ttname"><a href="structroofer_1_1Vector2DOpsInterface.html#a2bfd95350f42148e8bd8611d110c53c9">roofer::Vector2DOpsInterface::buffer_polygons</a></div><div class="ttdeci">virtual void buffer_polygons(std::vector&lt; LinearRing &gt; &amp;polygons, float offset=4)=0</div></div>
 <div class="ttc" id="astructroofer_1_1Vector2DOpsInterface_html_a625e305aecc01055a655c78b383047e2"><div class="ttname"><a href="structroofer_1_1Vector2DOpsInterface.html#a625e305aecc01055a655c78b383047e2">roofer::Vector2DOpsInterface::~Vector2DOpsInterface</a></div><div class="ttdeci">virtual ~Vector2DOpsInterface()=default</div></div>
 <div class="ttc" id="astructroofer_1_1Vector2DOpsInterface_html_aed1ebb8de4d325d8839a0c7d260a2534"><div class="ttname"><a href="structroofer_1_1Vector2DOpsInterface.html#aed1ebb8de4d325d8839a0c7d260a2534">roofer::Vector2DOpsInterface::simplify_polygons</a></div><div class="ttdeci">virtual void simplify_polygons(std::vector&lt; LinearRing &gt; &amp;polygons, float tolerance=0.01, bool orient_after_simplify=true)=0</div></div>
