@@ -1,11 +1,11 @@
 [input.footprint]
-path = "wippolder.gpkg"
+path = "data/wippolder/wippolder.gpkg"
 id_attribute = "identificatie"
 
 [[input.pointclouds]]
 name = "pointcloud"
 quality = 1
-path = "wippolder.las"
+path = "data/wippolder/wippolder.las"
 
 [parameters]
 cellsize = 0.5

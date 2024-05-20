@@ -3,22 +3,29 @@
 
   "configurePresets": [
     {
-      "name": "vcpkg",
+      "name": "vcpkg-minimal",
+      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "BUILD_SHARED_LIBS": "OFF",
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_ENABLE_TESTING": "OFF",
+        "RF_BUILD_APPS": "ON"
       }
     },
     {
-      "name": "vcpkg-minimal",
-      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
+      "name": "vcpkg-minimal-test",
+      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible for running tests.",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "BUILD_SHARED_LIBS": "OFF",
-        "USE_VAL3DITY": "OFF",
-        "USE_RERUN": "OFF",
-        "USE_LOGGER_SPDLOG": "OFF",
-        "ENABLE_TESTING": "OFF",
-        "BUILD_APPS": "ON"
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_ENABLE_TESTING": "ON",
+        "RF_BUILD_APPS": "ON"
       }
     }
   ]

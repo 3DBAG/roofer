@@ -14,7 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
-option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
+option(RF_ENABLE_TESTING "Enable a Unit Testing build." OFF)
 option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
@@ -52,11 +52,6 @@ else()
   message(STATUS "Logging backend: internal")
 endif()
 
-if(ENABLE_TESTING)
-  find_package(Catch2 REQUIRED)
-  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
-endif()
-
 # We have to use CPM (or FetchContent) even with vcpkg, because of
 # cmake-git-version-tracking, val3dity, rerun
 include(CPM)
@@ -72,7 +67,8 @@ endif()
 if(RF_USE_RERUN)
   cpmaddpackage(
     NAME rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
+  )
 endif()
 
 if(MSVC)
@@ -88,15 +84,20 @@ endif()
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(configured)
 add_subdirectory(src)
-if(ENABLE_TESTING)
+if(RF_ENABLE_TESTING)
   include(CTest)
+  include(FetchContent)
   enable_testing()
+  # We use the apps in the integration tests, so we need to build them here
+  add_subdirectory(apps)
   add_subdirectory(tests)
 endif()
 
 # INSTALL TARGETS
 if(BUILD_APPS)
-  add_subdirectory(apps)
+  if(NOT RF_ENABLE_TESTING)
+    add_subdirectory(apps)
+  endif()
   install(
     TARGETS "crop"
     ARCHIVE DESTINATION lib
