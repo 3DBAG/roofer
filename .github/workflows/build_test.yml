@@ -6,7 +6,7 @@ on:
   push:
     branches: [ "develop", "feature/project-tools-refactor" ]
   pull_request:
-    branches: [ "develop", "feature/project-tools-refactor" ]
+    branches: [ "develop" ]
 
 jobs:
   build:
@@ -123,13 +123,10 @@ jobs:
         working-directory: ${{ env.BUILD_OUTPUT_DIR }}
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --build-config ${{ matrix.build_type }} --verbose --rerun-failed
+        run: ctest --preset test-built --build-config ${{ matrix.build_type }} --rerun-failed
 
       - name: Install
-        run: cmake --install . --config Release
+        run: cmake --install ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }}
 
-      - name: Test installed crop
-        run: crop --version
-
-      - name: Test installed reconstruct
-        run: reconstruct --version
+      - name: Test installed
+        run: cmake --preset test-installed
