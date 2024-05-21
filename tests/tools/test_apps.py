@@ -1,3 +1,4 @@
+"""Test the installed apps"""
 import platform
 import subprocess
 from pathlib import Path

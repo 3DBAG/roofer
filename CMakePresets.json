@@ -1,6 +1,5 @@
 {
   "version": 6,
-
   "configurePresets": [
     {
       "name": "vcpkg-minimal",
@@ -34,11 +33,30 @@
   "testPresets": [
     {
       "name": "test-built",
-      "description": "Test the compiled targets",
+      "description": "Test the compiled targets in their build directory",
       "configurePreset": "vcpkg-minimal-test",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
+      },
+      "filter": {
+        "exclude": {
+          "name": "^installed.*"
+        }
+      }
+    },
+    {
+      "name": "test-installed",
+      "description": "Test the installed artifacts",
+      "configurePreset": "vcpkg-minimal-test",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "filter": {
+        "include": {
+          "name": "^installed.*"
+        }
       }
     }
   ]

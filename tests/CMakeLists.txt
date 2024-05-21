@@ -1,4 +1,4 @@
-set(TEST_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
+set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 set(TEST_ENVIRONMENT
@@ -10,16 +10,14 @@ FetchContent_Declare(
   URL "${DATA_URL_ROOT}/wippolder.zip"
   URL_HASH MD5=cc62bbdd6f4042159587b5906427f872
   SOURCE_DIR "${DATA_DIR}/wippolder")
-
 FetchContent_MakeAvailable(wippolder)
+
+# Integration tests that are run on the built executables, before installation.
 
 add_test(
   NAME "crop-wippolder"
-  COMMAND $<TARGET_FILE:crop> --config "${TEST_CONFIG_DIR}/crop-wippolder.toml"
+  COMMAND $<TARGET_FILE:crop> --config "${CONFIG_DIR}/crop-wippolder.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-set_tests_properties("crop-wippolder" PROPERTIES ENVIRONMENT
-                                                 "${TEST_ENVIRONMENT}")
 
 add_test(
   NAME "reconstruct-wippolder"
@@ -28,5 +26,17 @@ add_test(
     "${CMAKE_CURRENT_SOURCE_DIR}/output/wippolder/objects/503100000030812/config_.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set_tests_properties("reconstruct-wippolder" PROPERTIES ENVIRONMENT
-                                                        "${TEST_ENVIRONMENT}")
+set(tests_built "crop-wippolder;reconstruct-wippolder")
+set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
+                                               "${TEST_ENVIRONMENT}")
+
+# Integration tests that are run on the installed artifacts must be prefixed with
+# "installed-". Note that these tests must be invoked *after* the artifacts were
+# installed.
+# We don't set the TEST_ENVIRONMENT for the installed apps, because the required
+# paths are supposed to be set by the install process.
+
+add_test(
+  NAME "installed-apps"
+  COMMAND pytest test_apps.py
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -16,7 +16,7 @@ Automatic 3D building reconstruction
 Takes a bunch of input las files and footprints and outputs a folder hierarchy with reconstruction inputs for each separate building
 
 ### reconstruct
-Takes a point cloud and footprint for a single building and performs building reconstruction. 
+Takes a point cloud and footprint for a single building and performs building reconstruction.
 
 Currently it is using rerun.io to visualise the result. You need to install the rerun viewer if you want to see the output.
 
@@ -58,31 +58,3 @@ cd test-data
 ../build/apps/crop -c crop_config.toml
 ../build/apps/reconstruct --verbose
 ```
-
-## Development
-
-### Adding test data
-
-The data for tests is stored at [https://data.3dgi.xyz/roofer-test-data](https://data.3dgi.xyz/roofer-test-data). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
-
-See `tests/CMakeLists.txt` how to fetch the data from the server and make it available for the tests. Note that `FetchContent` extracts the zip contents recursively. Thus, specify the directory as for instance `SOURCE_DIR "${DATA_DIR}/wippolder"` to have the contents placed into `data/wippolder`.
-
-### Documentation with Doxygen
-
-Dependencies:
-- [Doxygen](https://www.doxygen.nl/index.html)
-- [graphviz](https://www.graphviz.org) for the graphs (using `dot`)
-
-The documentation needs to be built separately with the `docs` target.
-The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
-
-```shell
-cmake --build . --target docs
-```
-
-#### Documenting the code
-
-This library uses the Javadoc style to document the code.
-That is the comment block starts with two *'s.
-
-Full [Doxygen documentation](https://www.doxygen.nl/manual/docblocks.html#specialblock).
