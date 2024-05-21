@@ -8,7 +8,7 @@
 #include <random>
 
 namespace roofer {
-
+  
   void RasterisePointcloud(
     PointCollection& pointcloud,
     LinearRing& footprint,
@@ -16,7 +16,8 @@ namespace roofer {
     // RasterTools::Raster& heightfield,
     float cellsize
   ) {
-    bool use_footprint = true;
+    //TODO: this is always true?
+    bool use_footprint = true; 
     Box box;
     if (use_footprint) {
       box = footprint.box();
@@ -29,11 +30,15 @@ namespace roofer {
     RasterTools::Raster r_max(cellsize, boxmin[0], boxmax[0], boxmin[1], boxmax[1]);
     r_max.prefill_arrays(RasterTools::MAX);
 
-    RasterTools::Raster r_min(r_max), r_fp(r_max);
+    RasterTools::Raster r_min(r_max), r_fp(r_max), r_grp(r_max), r_ground_points(r_max), r_non_ground_points(r_max);
     r_min.prefill_arrays(RasterTools::MIN);
     r_fp.prefill_arrays(RasterTools::MAX);
+    r_grp.prefill_arrays(RasterTools::ZERO);
+    r_ground_points.prefill_arrays(RasterTools::ZERO);
+    r_non_ground_points.prefill_arrays(RasterTools::ZERO);
 
     std::vector<std::vector<float>> buckets(r_max.dimx_*r_max.dimy_);
+
 
     if (use_footprint) {
       auto exterior = build_grid(footprint);
@@ -41,7 +46,7 @@ namespace roofer {
       for (auto& hole : footprint.interior_rings()) {
         holes.push_back(build_grid(hole));
       }
-      
+
       for (size_t col = 0; col < r_fp.dimx_; ++col) {
         for (size_t row = 0; row < r_fp.dimy_; ++row) {
           auto p = r_fp.getPointFromRasterCoords(col, row);
@@ -64,9 +69,19 @@ namespace roofer {
       delete exterior;
       for (auto& hole: holes) delete hole;
     }
-
-    for(auto& p : pointcloud) {
+    
+    auto classification = pointcloud.attributes.get_if<int>("classification");
+    for(size_t pi=0; pi < pointcloud.size(); ++pi) {
+      auto& p = pointcloud[pi];
+      auto& c = (*classification)[pi];
       if (r_max.check_point(p[0], p[1])) {
+        if (c == 2){
+            r_ground_points.add_value(p[0], p[1], 1);
+        }
+        else if (c == 6){
+          r_non_ground_points.add_value(p[0], p[1], 1);
+        }
+      
         r_max.add_point(p[0], p[1], p[2], RasterTools::MAX);
         r_min.add_point(p[0], p[1], p[2], RasterTools::MIN);
         buckets[ r_max.getLinearCoord(p[0],p[1]) ].push_back(p[2]);
@@ -76,14 +91,7 @@ namespace roofer {
     // PointCollection grid_points;
     // vec1f values;
     // double nodata = r_max.getNoDataVal();
-    image_bundle["fp"] = Image{};
     image_bundle["max"] = Image{};
-    image_bundle["min"] = Image{};
-    image_bundle["cnt"] = Image{};
-    image_bundle["med"] = Image{};
-    image_bundle["avg"] = Image{};
-    image_bundle["var"] = Image{};
-
     image_bundle["max"].dim_x = r_max.dimx_;
     image_bundle["max"].dim_y = r_max.dimy_;
     image_bundle["max"].min_x = r_max.minx_;
@@ -91,13 +99,20 @@ namespace roofer {
     image_bundle["max"].cellsize = r_max.cellSize_;
     image_bundle["max"].nodataval = r_max.noDataVal_;
     image_bundle["max"].array = *r_max.vals_;
+    
     image_bundle["min"] = image_bundle["max"];
     image_bundle["min"].nodataval = r_min.noDataVal_;
     image_bundle["min"].array = *r_min.vals_;
     image_bundle["fp"] = image_bundle["max"];
     image_bundle["fp"].array = *r_fp.vals_;
-    image_bundle["cnt"] = image_bundle["max"], image_bundle["med"] = image_bundle["max"], image_bundle["avg"] = image_bundle["max"], image_bundle["var"] = image_bundle["max"];
-
+    image_bundle["cnt"] = image_bundle["max"], image_bundle["med"] = image_bundle["max"], image_bundle["avg"] = image_bundle["max"], image_bundle["var"] = image_bundle["max"], image_bundle["grp"] = image_bundle["max"];
+    image_bundle["gp"] = image_bundle["max"];
+    image_bundle["gp"].nodataval = r_ground_points.noDataVal_;
+    image_bundle["gp"].array = *r_ground_points.vals_;
+    image_bundle["ngp"] = image_bundle["max"];
+    image_bundle["ngp"].nodataval = r_non_ground_points.noDataVal_;
+    image_bundle["ngp"].array = *r_non_ground_points.vals_;
+  
     for(size_t row=0; row<r_max.dimy_ ; ++row) {
       for(size_t col=0; col<r_max.dimx_ ; ++col) {
         // auto p = r_max.getPointFromRasterCoords(col,row);
@@ -112,11 +127,13 @@ namespace roofer {
           image_bundle["med"].array[lc] = image_bundle["med"].nodataval;
           image_bundle["avg"].array[lc] = image_bundle["avg"].nodataval;
           image_bundle["var"].array[lc] = image_bundle["var"].nodataval;
+          image_bundle["grp"].array[lc] = image_bundle["grp"].nodataval;
         } else {
           std::sort(buck.begin(), buck.end());
           image_bundle["cnt"].array[lc] = buck.size();
           image_bundle["med"].array[lc] = buck[ buck.size()/2 ];
           image_bundle["avg"].array[lc] = std::accumulate(buck.begin(), buck.end(), 0) / buck.size();
+          image_bundle["grp"].array[lc] = abs(image_bundle["gp"].array[lc]-image_bundle["ngp"].array[lc])/(image_bundle["gp"].array[lc]+image_bundle["ngp"].array[lc]);
           int ssum = 0;
           for(auto& z : buck) {
             ssum += std::pow(z-image_bundle["avg"].array[lc], 2);
@@ -125,6 +142,8 @@ namespace roofer {
         }
       }
     }
+    image_bundle.erase("gp");
+    image_bundle.erase("ngp");
   }
 
 
