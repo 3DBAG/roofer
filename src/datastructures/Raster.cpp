@@ -59,8 +59,11 @@ namespace RasterTools {
   void Raster::prefill_arrays(alg a){
   if (a==MIN)
     noDataVal_ = std::numeric_limits<float>::max();
-  else
+  else if (a==MAX)
     noDataVal_ = -std::numeric_limits<float>::max();
+  else {
+    noDataVal_ = 0;
+  }
     
   std::fill(vals_->begin(), vals_->end(), noDataVal_);
   // std::fill(counts_->begin(), counts_->end(), 0);
@@ -74,6 +77,13 @@ namespace RasterTools {
     } else if (a==MAX) {
       max(x,y,z);
     }
+    return first;
+  }
+
+  bool Raster::add_value(double x, double y, double val)
+  {
+    bool first = (*vals_)[getLinearCoord(x,y)]==noDataVal_;
+    add(x,y,val);
     return first;
   }
   bool Raster::check_point(double x, double y)
@@ -103,6 +113,12 @@ namespace RasterTools {
   {
     size_t c = getLinearCoord(x,y);
     if ((*vals_)[c]<val) (*vals_)[c] = val;
+  }
+
+  inline void Raster::add(double &x, double &y, double &val)
+  {
+    size_t c = getLinearCoord(x,y);
+    (*vals_)[c] = (*vals_)[c]+val;
   }
 
   // inline void Raster::cnt(double &x, double &y)
