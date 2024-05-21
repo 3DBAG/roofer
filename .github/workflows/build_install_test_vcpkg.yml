@@ -24,7 +24,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, macos-13, macos-14]
+        os: [ ubuntu-22.04, ubuntu-24.04, windows-2022,vmacos-14 ]
         build_type: [ Release ]
         c_compiler: [ gcc, clang, cl ]
         # Default compilers:
@@ -46,9 +46,6 @@ jobs:
           - os: windows-2022
             c_compiler: cl
             cpp_compiler: cl
-          - os: macos-13
-            c_compiler: clang
-            cpp_compiler: clang++
           - os: macos-14
             c_compiler: clang
             cpp_compiler: clang++
@@ -61,10 +58,6 @@ jobs:
             c_compiler: gcc
           - os: windows-2022
             c_compiler: clang
-          - os: macos-13
-            c_compiler: cl
-          - os: macos-13
-            c_compiler: gcc
           - os: macos-14
             c_compiler: cl
           - os: macos-14
@@ -127,14 +120,21 @@ jobs:
         run: cmake --build ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
       - name: Test
-        working-directory: ${{ env.BUILD_OUTPUT_DIR }}
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --build-config ${{ matrix.build_type }} --preset test-built
+        run: ctest --preset test-built --build-config ${{ matrix.build_type }} --test-dir ${{ env.BUILD_OUTPUT_DIR }}
 
       - name: Install
         run: cmake --install ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
+      - name: Add installed executables to PATH
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo "PATH=/c/Program Files (x86)/roofer/bin:$PATH" >> $GITHUB_ENV
+
+      - if: runner.os == 'Windows'
+        shell: bash
+        run: crop.exe --version
+
       - name: Test installed
-        working-directory: ${{ env.BUILD_OUTPUT_DIR }}
-        run: ctest --build-config ${{ matrix.build_type }} --preset test-installed
+        run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir ${{ env.BUILD_OUTPUT_DIR }}

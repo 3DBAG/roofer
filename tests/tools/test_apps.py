@@ -34,27 +34,22 @@ def reconstruct_exe() -> str:
         return 'reconstruct'
 
 
-def test_crop_version(crop_exe):
-    """Can we print the crop exe version?"""
-    output = subprocess.run([crop_exe, "--version"], capture_output=True)
-    assert output.returncode == 0, print_error_message(output)
+class TestApps:
 
+    def test_crop_version(self, crop_exe):
+        """Can we print the crop exe version?"""
+        subprocess.run([crop_exe, "--version"], capture_output=True, check=True)
 
-def test_crop_wippolder(crop_exe, dir_tests):
-    """Can we run crop on the wippolder data?"""
-    path_config = dir_tests / "config" / "crop-wippolder.toml"
-    output = subprocess.run([crop_exe, "--config", path_config], capture_output=True)
-    assert output.returncode == 0, print_error_message(output)
+    def test_crop_wippolder(self, crop_exe, dir_tests):
+        """Can we run crop on the wippolder data?"""
+        path_config = dir_tests / "config" / "crop-wippolder.toml"
+        subprocess.run([crop_exe, "--config", path_config], capture_output=True, check=True)
 
+    def test_reconstruct_version(self, reconstruct_exe):
+        """Can we print the reconstruct exe version?"""
+        subprocess.run([reconstruct_exe, "--version"], capture_output=True, check=True)
 
-def test_reconstruct_version(reconstruct_exe):
-    """Can we print the reconstruct exe version?"""
-    output = subprocess.run([reconstruct_exe, "--version"], capture_output=True)
-    assert output.returncode == 0, print_error_message(output)
-
-
-def test_reconstruct_wippolder(reconstruct_exe, dir_tests):
-    """Can we run reconstruct on the wippolder data?"""
-    path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
-    output = subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True)
-    assert output.returncode == 0, print_error_message(output)
+    def test_reconstruct_wippolder(self, reconstruct_exe, dir_tests):
+        """Can we run reconstruct on the wippolder data?"""
+        path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
+        subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True, check=True)

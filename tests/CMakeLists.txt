@@ -38,5 +38,5 @@ set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
 
 add_test(
   NAME "installed-apps"
-  COMMAND pytest test_apps.py
+  COMMAND pytest -k TestApps
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

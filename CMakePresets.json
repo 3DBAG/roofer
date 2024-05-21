@@ -28,6 +28,19 @@
         "RF_ENABLE_TESTING": "ON",
         "RF_BUILD_APPS": "ON"
       }
+    },
+    {
+      "name": "system-minimal-test",
+      "description": "Build with system packages without any optional dependencies, in order to get the quickest build possible for running tests.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_SHARED_LIBS": "OFF",
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_ENABLE_TESTING": "ON",
+        "RF_BUILD_APPS": "ON"
+      }
     }
   ],
   "testPresets": [
