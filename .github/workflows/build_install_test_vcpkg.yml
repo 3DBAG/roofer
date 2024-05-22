@@ -24,7 +24,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, windows-2022,vmacos-14 ]
+        os: [ ubuntu-22.04, ubuntu-24.04, windows-2022, macos-14 ]
         build_type: [ Release ]
         c_compiler: [ gcc, clang, cl ]
         # Default compilers:

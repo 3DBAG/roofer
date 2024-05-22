@@ -2,6 +2,10 @@
 # FetchContent-related changes
 cmake_minimum_required(VERSION 3.25)
 
+if(WIN32)
+    set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
+endif()
+
 # TODO: add version number
 project(roofer LANGUAGES C CXX)
 
