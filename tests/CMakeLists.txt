@@ -40,3 +40,7 @@ add_test(
   NAME "installed-apps"
   COMMAND pytest -k TestApps
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+if(WIN32)
+  set_tests_properties("installed-apps" PROPERTIES ENVIRONMENT
+    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal")
+endif()
