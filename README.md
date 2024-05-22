@@ -24,7 +24,10 @@ Currently it is using rerun.io to visualise the result. You need to install the 
 
 ## Installation
 
-clone this repository. Then
+First you need to install:
+CGAL, GDAL, PROJ, GEOS, LASlib, nlohmann-json
+
+Then clone this repository and:
 
 ```sh
 cd roofer-dev
@@ -35,6 +38,7 @@ cmake ..
 cmake --build . --parallel 10
 ```
 
+<<<<<<< HEAD
 ### With VCPKG
 
 Setup vcpkg
@@ -49,6 +53,8 @@ export PATH="/opt/homebrew/opt/m4/bin:$PATH"
 
 
 This assumes you have CGAL, GDAL, PROJ, GEOS, LASlib  preinstalled on your system
+=======
+>>>>>>> develop
 
 ## Run with test-data
 Assuming you build roofer successfully. Unzip the contents of [wippolder.zip](https://data.3dgi.xyz/geoflow-test-data/wippolder.zip) into `test-data`, then
@@ -56,5 +62,10 @@ Assuming you build roofer successfully. Unzip the contents of [wippolder.zip](ht
 ```
 cd test-data
 ../build/apps/crop -c crop_config.toml
+<<<<<<< HEAD
 ../build/apps/reconstruct --verbose
 ```
+=======
+../build/apps/reconstruct --verbose --config output/wippolder/objects/503100000000296/config_.toml
+```
+>>>>>>> develop
