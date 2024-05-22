@@ -42,5 +42,5 @@ add_test(
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 if(WIN32)
   set_tests_properties("installed-apps" PROPERTIES ENVIRONMENT
-    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal;PATH=/c/Program Files (x86)/roofer/bin:$ENV{PATH}")
+    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}")
 endif()
