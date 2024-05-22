@@ -30,7 +30,7 @@
 // #include <cpl_conv.h>
 // #include <ogr_spatialref.h>
 namespace RasterTools {
-    enum alg {MIN,MAX};
+    enum alg {MIN,MAX,ZERO};
     class Raster
     {
     public:
@@ -41,15 +41,53 @@ namespace RasterTools {
         void operator=(const Raster& r);
         Raster(){};
         ~Raster(){};
+        /**
+         * Prefills the raster array based on the specified method.
+         * @param[in] a The method to be used for prefilling the raster arrays: MIN, MAX or ZERO.
+         */
         void prefill_arrays(alg a);
         bool add_point(double x, double y, double z, alg a);
+        /**
+         * Adds a value to the raster at the specified x and y coordinates.
+         * @param[in] x x coordinate of the point
+         * @param[in] y y coordinate of the point
+         * @param[in] val value to be added
+         * @return True if the value was added, false if the point is outside the raster.
+         */
+        bool add_value(double x, double y, double val);
+        /**
+         * Checks if the point is within the raster.
+         * @param[in] x x coordinate of the point
+         * @param[in] y y coordinate of the point
+         * @return True if the point is within the raster, false otherwise.
+         */
         bool check_point(double x, double y);
-        void add_raster(double x, double y, double z, alg a);
+        //void add_raster(double x, double y, double z, alg a); // this seems unused. Should it be removed?
+        
+        /**
+         * Gets the row number for the given x and y coordinates.
+         * @param[in] x x coordinate of the point
+         * @param[in] y y coordinate of the point
+         * @return The row number.
+         */
         size_t getRow(double x, double y) const;
+        /**
+         * Gets the col number for the given x and y coordinates.
+         * @param[in] x x coordinate of the point
+         * @param[in] y y coordinate of the point
+         * @return The col number.
+         */
         size_t getCol(double x, double y) const;
         size_t getLinearCoord(double x, double y) const;
         size_t getLinearCoord(size_t r, size_t c) const;
         std::array<double,2> getColRowCoord(double x, double y) const;
+        /**
+         * Get the 3D point at the center of the input raster cell.
+         *
+         * @param[in] col the column of the cell
+         * @param[in] row the row of the cell
+         * @return the 3D point in the center of the cell
+         */
         point3d getPointFromRasterCoords(size_t col, size_t row) const;
         double getNoDataVal() {return noDataVal_;};
         double sample(double &x, double &y);
@@ -147,6 +185,13 @@ namespace RasterTools {
         void avg(double &x, double &y, double &val);
         void min(double &x, double &y, double &val);
         void max(double &x, double &y, double &val);
+        /**
+         * Adds the input value to the value at the given coordinate of the raster.
+         * @param[in] val value to be added
+         * @param[in] x x coordinate
+         * @param[in] y y coordinate
+        */
+        void add(double &x, double &y, double &val);
         // void cnt(double &x, double &y);
         // OGRSpatialReference oSRS;
     };
