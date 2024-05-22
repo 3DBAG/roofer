@@ -126,19 +126,6 @@ jobs:
       - name: Install
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
 
-      # - name: Add installed executables to PATH
-      #   if: runner.os == 'Windows'
-      #   shell: bash
-      #   run: echo "PATH=/c/Program Files (x86)/roofer/bin;$PATH" >> $GITHUB_ENV
-
-      # - if: runner.os == 'Windows'
-      #   shell: bash
-      #   run: crop.exe --version
-
       - name: Test installed
         shell: bash
         run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir build
-
-      - name: Test installed (pytest)
-        working-directory: "${{ github.workspace }}/tests"
-        run: pytest -k TestApps

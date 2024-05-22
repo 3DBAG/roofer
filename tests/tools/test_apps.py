@@ -51,5 +51,5 @@ class TestApps:
 
     def test_reconstruct_wippolder(self, reconstruct_exe, dir_tests):
         """Can we run reconstruct on the wippolder data?"""
-        path_config = dir_tests / "config" / "reconstruct-wippolder-invalid.toml"
+        path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
         subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True, check=True)
