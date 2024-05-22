@@ -137,4 +137,5 @@ jobs:
         run: crop.exe --version
 
       - name: Test installed
+        shell: bash
         run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir ${{ env.BUILD_OUTPUT_DIR }}
