@@ -73,7 +73,7 @@
       "description": "Preset for github actions CI Windows build",
       "configurePreset": "gh-Windows",
       "jobs": 4,
-      "config": "Release"
+      "configuration": "Release"
       
     }
   ],
