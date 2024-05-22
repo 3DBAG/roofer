@@ -18,15 +18,9 @@
     {
       "name": "vcpkg-minimal-test",
       "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible for running tests.",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "inherits": "vcpkg-minimal",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_SHARED_LIBS": "OFF",
-        "RF_USE_VAL3DITY": "OFF",
-        "RF_USE_RERUN": "OFF",
-        "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_ENABLE_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_ENABLE_TESTING": "ON"        
       }
     },
     {
@@ -40,6 +34,24 @@
         "RF_USE_LOGGER_SPDLOG": "OFF",
         "RF_ENABLE_TESTING": "ON",
         "RF_BUILD_APPS": "ON"
+      }
+    },
+    {
+      "name": "ghactions-Linux",
+      "description": "Preset for github actions CI Linux build",
+      "inherits": "vcpkg-minimal-test"
+    },
+    {
+      "name": "ghactions-macOS",
+      "description": "Preset for github actions CI macOS build",
+      "inherits": "vcpkg-minimal-test"
+    },
+    {
+      "name": "ghactions-Windows",
+      "description": "Preset for github actions CI Windows build",
+      "inherits": "vcpkg-minimal-test",
+      "cacheVariables": {
+        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
     }
   ],

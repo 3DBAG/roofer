@@ -112,7 +112,7 @@ jobs:
           cmake -B ${{ env.BUILD_OUTPUT_DIR }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          --preset vcpkg-minimal-test
+          --preset ghactions-${{ runner.os }}
           -S ${{ github.workspace }}
 
       - name: Build
