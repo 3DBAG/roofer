@@ -37,22 +37,44 @@
       }
     },
     {
-      "name": "ghactions-Linux",
-      "description": "Preset for github actions CI Linux build",
+      "name": "gh-Linux",
+      "description": "Preset for github actions CI Linux configure",
       "inherits": "vcpkg-minimal-test"
     },
     {
-      "name": "ghactions-macOS",
-      "description": "Preset for github actions CI macOS build",
+      "name": "gh-macOS",
+      "description": "Preset for github actions CI macOS configure",
       "inherits": "vcpkg-minimal-test"
     },
     {
-      "name": "ghactions-Windows",
-      "description": "Preset for github actions CI Windows build",
+      "name": "gh-Windows",
+      "description": "Preset for github actions CI Windows configure",
       "inherits": "vcpkg-minimal-test",
       "cacheVariables": {
         "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
+    }
+  ],
+  "buildPresets" : [
+    {
+      "name": "gh-Linux",
+      "description": "Preset for github actions CI Linux build",
+      "configurePreset": "gh-Linux",
+      "jobs": 4
+    },
+    {
+      "name": "gh-macOS",
+      "description": "Preset for github actions CI macOS build",
+      "configurePreset": "gh-macOS",
+      "jobs": 3
+    },
+    {
+      "name": "gh-Windows",
+      "description": "Preset for github actions CI Windows build",
+      "configurePreset": "gh-Windows",
+      "jobs": 4,
+      "config": "Release"
+      
     }
   ],
   "testPresets": [

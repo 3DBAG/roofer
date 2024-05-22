@@ -112,12 +112,12 @@ jobs:
           cmake -B ${{ env.BUILD_OUTPUT_DIR }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          --preset ghactions-${{ runner.os }}
+          --preset gh-${{ runner.os }}
           -S ${{ github.workspace }}
 
       - name: Build
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: cmake --build ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
+        run: cmake --build ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose --preset gh-${{ runner.os }}
 
       - name: Test
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
