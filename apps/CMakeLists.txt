@@ -1,5 +1,9 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
+if(WIN32)
+    set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
+endif()
+
 add_subdirectory(crop)
 add_subdirectory(reconstruct)
 
