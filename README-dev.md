@@ -1,5 +1,25 @@
 # Developing roofer
 
+## Formatting and static analysis with Clang Tools
+
+clang-tidy is part of the Extra Clang Tools, clang-format is part of the Core Clang Tools, see [link](https://clang.llvm.org/docs/ClangTools.html).
+
+The formatting rules are configured with the `.clang-format` file.
+Formatting is enforced in the CI checks.
+Therefore, it is recommended that you automate the code formatting in some way.
+Your code editor might also have a clang-format integration and able to format the code based on the `.clang-format` config file.
+You can also set up a git hook to do the formatting for you on each commit.
+See the `Pre-commit hook` section below.
+
+The linter checks are configured with the `.clang-tidy` file.
+
+## Pre-commit hook for Git (GitHub)
+
+[pre-commit](https://pre-commit.com/) is tool that can install git commit hooks locally and there is also a corresponding GitHub Action.
+The commit hooks are configured in `.pre-commit-config.yaml`.
+
+The `pre-commit` GitHub Action and `.pre-commit-config.yaml` configuration runs checks the changed lines with clang-format and reports if there is anything problematic with the formatting.
+
 ## Testing
 
 Tests are run with `CTest`, which either runs the test executables directly, or delegates testing to `pytest`.
