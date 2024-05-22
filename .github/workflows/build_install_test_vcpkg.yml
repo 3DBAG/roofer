@@ -127,10 +127,10 @@ jobs:
       - name: Install
         run: cmake --install ${{ env.BUILD_OUTPUT_DIR }} --config ${{ matrix.build_type }} --verbose
 
-      - name: Add installed executables to PATH
-        if: runner.os == 'Windows'
-        shell: bash
-        run: echo "PATH=/c/Program Files (x86)/roofer/bin:$PATH" >> $GITHUB_ENV
+      # - name: Add installed executables to PATH
+      #   if: runner.os == 'Windows'
+      #   shell: bash
+      #   run: echo "PATH=/c/Program Files (x86)/roofer/bin:$PATH" >> $GITHUB_ENV
 
       - if: runner.os == 'Windows'
         shell: bash
