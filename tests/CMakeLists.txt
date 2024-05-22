@@ -8,7 +8,7 @@ set(TEST_ENVIRONMENT
 FetchContent_Declare(
   wippolder
   URL "${DATA_URL_ROOT}/wippolder.zip"
-  URL_HASH MD5=cc62bbdd6f4042159587b5906427f872
+  URL_HASH MD5=8d51a7a110810a9e2cbf9b6e83ea3833
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
@@ -23,7 +23,7 @@ add_test(
   NAME "reconstruct-wippolder"
   COMMAND
     $<TARGET_FILE:reconstruct> --config
-    "${CMAKE_CURRENT_SOURCE_DIR}/output/wippolder/objects/503100000030812/config_.toml"
+    "${CONFIG_DIR}/reconstruct-wippolder.toml"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(tests_built "crop-wippolder;reconstruct-wippolder")

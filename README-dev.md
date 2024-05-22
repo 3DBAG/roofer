@@ -2,20 +2,30 @@
 
 ## Testing
 
-Tests are run with `CTest`.
-See the CMake presets for the test configurations.
+Tests are run with `CTest`, which either runs the test executables directly, or delegates testing to `pytest`.
+`pytest` is used for testing the installed artifacts.
 
-```shell
-ctest
-```
+See the CMake presets for the available test configurations.
 
 ### Integration
 
-Integration tests are run with CTest and pytest.
-`CTest` is used for testing the compiled executables, in their build directory.
-`pytest` is used for testing the installed executables, by calling the exe in a subprocess from python.
+- The preset `test-built` tests the compiled executables, in their build directory.
 
-### Adding test data
+    ```ctest --preset test-built```
+
+- The preset `test-installed` tests the installed executables, by calling the exe in a subprocess from python, using pytest.
+
+    ```ctest --preset test-installed```
+
+### Test data
+
+Various test cases are available at https://data.3dgi.xyz/roofer-test-data.
+Each test case is documented in the README.
+
+The test data is downloaded automatically into `tests/data` during the project configuration, provided that you enable the tests with `RF_ENABLE_TESTING`.
+Once available locally, the data is not re-downloaded, unless the files are removed or they change on the server.
+
+#### Adding test data
 
 The data for tests is stored at [https://data.3dgi.xyz/roofer-test-data](https://data.3dgi.xyz/roofer-test-data). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
 
@@ -27,12 +37,14 @@ Dependencies:
 - [Doxygen](https://www.doxygen.nl/index.html)
 - [graphviz](https://www.graphviz.org) for the graphs (using `dot`)
 
-The documentation needs to be built separately with the `docs` target.
-The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
+To build the documentation locally, run doxygen from the `docs` directory.
 
 ```shell
-cmake --build . --target docs
+cd docs
+doxygen
 ```
+
+The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
 
 #### Documenting the code
 
