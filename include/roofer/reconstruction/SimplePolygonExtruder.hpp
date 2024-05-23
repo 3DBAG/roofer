@@ -1,8 +1,9 @@
+#pragma once
 #include <memory>
 
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct SimplePolygonExtruderConfig{
   };

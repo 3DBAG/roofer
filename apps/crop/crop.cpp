@@ -259,14 +259,14 @@ int main(int argc, const char * argv[]) {
     return EXIT_FAILURE;
   }
 
-  auto pj = roofer::createProjHelper();
-  auto VectorReader = roofer::createVectorReaderOGR(*pj);
-  auto VectorWriter = roofer::createVectorWriterOGR(*pj);
+  auto pj = roofer::misc::createProjHelper();
+  auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
+  auto VectorWriter = roofer::io::createVectorWriterOGR(*pj);
   VectorWriter->srs = output_crs;
-  auto RasterWriter = roofer::createRasterWriterGDAL(*pj);
-  auto PointCloudCropper = roofer::createPointCloudCropper(*pj);
-  auto VectorOps = roofer::createVector2DOpsGEOS();
-  auto LASWriter = roofer::createLASWriter(*pj);
+  auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
+  auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
+  auto VectorOps = roofer::misc::createVector2DOpsGEOS();
+  auto LASWriter = roofer::io::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
   logger.info("Reading footprints from {}", path_footprint);
@@ -333,14 +333,14 @@ int main(int argc, const char * argv[]) {
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
     roofer::arr2f nodata_c;
     for(unsigned i=0; i<N_fp; ++i) {
-      roofer::RasterisePointcloud(
+      roofer::misc::RasterisePointcloud(
         ipc.building_clouds[i],
         footprints[i],
         ipc.building_rasters[i],
         cellsize
       );
-      ipc.nodata_fractions[i] = roofer::computeNoDataFraction(ipc.building_rasters[i]);
-      ipc.pt_densities[i] = roofer::computePointDensity(ipc.building_rasters[i]);
+      ipc.nodata_fractions[i] = roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
+      ipc.pt_densities[i] = roofer::misc::computePointDensity(ipc.building_rasters[i]);
 
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];
@@ -352,7 +352,7 @@ int main(int argc, const char * argv[]) {
             low_lod);
       }
 
-      gridthinPointcloud(
+      roofer::misc::gridthinPointcloud(
         ipc.building_clouds[i], 
         ipc.building_rasters[i]["cnt"],
         target_density
@@ -361,7 +361,7 @@ int main(int argc, const char * argv[]) {
       if (low_lod) {
         ipc.nodata_radii[i] = 0;
       } else {
-        roofer::compute_nodata_circle(
+        roofer::misc::compute_nodata_circle(
           ipc.building_clouds[i],
           footprints[i],
           &ipc.nodata_radii[i],
@@ -393,14 +393,14 @@ int main(int argc, const char * argv[]) {
     }
   }
 
-  roofer::selectPointCloudConfig select_pc_cfg;
+  roofer::misc::selectPointCloudConfig select_pc_cfg;
   if (input_pointclouds.size() > 1){
     auto& is_mutated = attributes.insert_vec<bool>(
       "is_mutated_"+input_pointclouds[0].name+"_"+input_pointclouds[1].name
     );
     is_mutated.reserve(N_fp);
     for (unsigned i=0; i<N_fp; ++i) {
-      is_mutated[i] = roofer::isMutated(
+      is_mutated[i] = roofer::misc::isMutated(
         input_pointclouds[0].building_rasters[i], 
         input_pointclouds[1].building_rasters[i], 
         select_pc_cfg.threshold_mutation_fraction, 
@@ -427,13 +427,13 @@ int main(int argc, const char * argv[]) {
     }
     // spdlog::debug("bid={}", bid);
     
-    std::vector<roofer::CandidatePointCloud> candidates;
+    std::vector<roofer::misc::CandidatePointCloud> candidates;
     candidates.reserve(input_pointclouds.size());
-    std::vector<roofer::CandidatePointCloud> candidates_just_for_data;
+    std::vector<roofer::misc::CandidatePointCloud> candidates_just_for_data;
     {
       int j=0;
       for (auto& ipc : input_pointclouds) {
-        auto cpc = roofer::CandidatePointCloud {
+        auto cpc = roofer::misc::CandidatePointCloud {
           ipc.nodata_radii[i],
           ipc.nodata_fractions[i],
           ipc.building_rasters[i],
@@ -453,8 +453,8 @@ int main(int argc, const char * argv[]) {
       jsonl_paths.insert({"", roofer::vec1s{}});
     }
 
-    roofer::PointCloudSelectResult sresult = roofer::selectPointCloud(candidates, select_pc_cfg);
-    const roofer::CandidatePointCloud* selected = sresult.selected_pointcloud;
+    roofer::misc::PointCloudSelectResult sresult = roofer::misc::selectPointCloud(candidates, select_pc_cfg);
+    const roofer::misc::CandidatePointCloud* selected = sresult.selected_pointcloud;
     
     // this is a sanity check and should never happen
     if (!selected) {
@@ -467,7 +467,7 @@ int main(int argc, const char * argv[]) {
     if (yoc != -1 && yoc > selected->date) {
       // force selection of latest pointcloud
       selected = getLatestPointCloud(candidates);
-      sresult.explanation = roofer::PointCloudSelectExplanation::_LATEST;
+      sresult.explanation = roofer::misc::PointCloudSelectExplanation::_LATEST;
       // overrule if there was a more recent pointcloud with select_only_for_date = true
       if (candidates_just_for_data.size()) {
         if ( candidates_just_for_data[0].date > selected->date ) {
@@ -477,15 +477,15 @@ int main(int argc, const char * argv[]) {
       }
     }
 
-    if (sresult.explanation == roofer::PointCloudSelectExplanation::PREFERRED_AND_LATEST )
+    if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::PREFERRED_AND_LATEST )
       pc_select.push_back("PREFERRED_AND_LATEST");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::PREFERRED_NOT_LATEST )
+    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::PREFERRED_NOT_LATEST )
       pc_select.push_back("PREFERRED_NOT_LATEST");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::LATEST_WITH_MUTATION )
+    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::LATEST_WITH_MUTATION )
       pc_select.push_back("LATEST_WITH_MUTATION");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::_HIGHEST_YET_INSUFFICIENT_COVERAGE )
+    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::_HIGHEST_YET_INSUFFICIENT_COVERAGE )
       pc_select.push_back("_HIGHEST_YET_INSUFFICIENT_COVERAGE");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::_LATEST ) {
+    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::_LATEST ) {
       pc_select.push_back("_LATEST");
       // // clear pc
       // ipc[selected->index].building_clouds[i].clear();

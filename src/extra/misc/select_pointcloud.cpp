@@ -5,7 +5,7 @@
 #include <roofer/misc/select_pointcloud.hpp>
 #include <roofer/logger/logger.h>
 
-namespace roofer {
+namespace roofer::misc {
 
   // put the one with lowest quality value (meaning highest quality) on top
   bool compareByQuality(const CandidatePointCloud* a,
@@ -46,7 +46,7 @@ namespace roofer {
       candidates_date.push_back(&cand);
     }
     std::sort(candidates_date.begin(), candidates_date.end(),
-              roofer::compareByDate);
+              compareByDate);
     return candidates_date[0];
   }  
 
@@ -64,18 +64,18 @@ namespace roofer {
       candidates_coverage.push_back(&cand);
     }
     std::sort(candidates_date.begin(), candidates_date.end(),
-              roofer::compareByDate);
+              compareByDate);
     std::sort(candidates_quality.begin(), candidates_quality.end(),
-              roofer::compareByQuality);
+              compareByQuality);
     std::sort(candidates_coverage.begin(), candidates_coverage.end(),
-              roofer::compareByNoDataFraction);
+              compareByNoDataFraction);
 
     // get the highest quality candidate with sufficient coverage
     const CandidatePointCloud* best_suffcient = nullptr;
     // int candidates_quality_idx(-1);
     for (unsigned i = 0; i < candidates_quality.size(); ++i) {
       // spdlog::debug("quality {}={}", candidates_quality[i]->name, candidates_quality[i]->quality);
-      if (roofer::hasEnoughPointCoverage(
+      if (hasEnoughPointCoverage(
               candidates_quality[i], cfg.threshold_nodata, cfg.threshold_maxcircle)) {
         best_suffcient = candidates_quality[i];
         // candidates_quality_idx = i;
@@ -89,7 +89,7 @@ namespace roofer {
       // spdlog::debug("best_suffcient=nullptr");
       result.explanation = PointCloudSelectExplanation::_HIGHEST_YET_INSUFFICIENT_COVERAGE;
       for (unsigned i = 0; i < candidates_coverage.size(); ++i) {
-        if (!roofer::isMutated(
+        if (!isMutated(
           candidates_coverage[i]->image_bundle, 
           candidates_date[0]->image_bundle,
           cfg.threshold_mutation_fraction, 
@@ -110,7 +110,7 @@ namespace roofer {
     const CandidatePointCloud* latest_suffcient = nullptr;
     // int candidates_latest_idx(-1);
     for (unsigned i = 0; i < candidates_date.size(); ++i) {
-      if (roofer::hasEnoughPointCoverage(
+      if (hasEnoughPointCoverage(
               candidates_date[i], cfg.threshold_nodata, cfg.threshold_maxcircle)) {
         latest_suffcient = candidates_date[i];
         // candidates_latest_idx = i;
@@ -126,7 +126,7 @@ namespace roofer {
       return result;
     // else check for mutations
     } else {
-      if (roofer::isMutated(
+      if (isMutated(
         best_suffcient->image_bundle, 
         latest_suffcient->image_bundle, 
         cfg.threshold_mutation_fraction, 

@@ -3,7 +3,7 @@
 #include <roofer/reconstruction/cdt_util.hpp>
 #include <CGAL/Cartesian.h>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   namespace tri = tri_util;
 

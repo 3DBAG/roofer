@@ -24,7 +24,7 @@
 
 #include <roofer/common/datastructures.hpp>
 
-namespace linereg {
+namespace roofer::linereg {
   typedef CGAL::Exact_predicates_exact_constructions_kernel K;
   // typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 

@@ -17,7 +17,7 @@
 #include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct ConstantElevationProvider : public ElevationProvider {
     const float floor_elevation_;

@@ -16,7 +16,7 @@
 #include <roofer/reconstruction/LineRegulariserBase.hpp>
 #include <iterator>
 
-namespace linereg {
+namespace roofer::linereg {
 
   double calc_mean_angle(const std::vector<linetype*>& lines) {
     // length-weighted mean angle

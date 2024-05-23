@@ -1,4 +1,4 @@
-
+#pragma once
 #include <cstddef>
 #include <memory>
 
@@ -26,9 +26,9 @@ namespace roofer::io {
     float scale_y_ = 1.;
     float scale_z_ = 1.;
 
-    projHelperInterface& pjHelper;
+    roofer::misc::projHelperInterface& pjHelper;
 
-    CityJsonWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    CityJsonWriterInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~CityJsonWriterInterface() = default;
 
     // add_poly_input("part_attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
@@ -43,5 +43,5 @@ namespace roofer::io {
       const AttributeVecMap& attributes) = 0;
   };
 
-  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(projHelperInterface& pjh);
+  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(roofer::misc::projHelperInterface& pjh);
 }

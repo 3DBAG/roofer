@@ -15,7 +15,7 @@
 
 static const double PI = 3.141592653589793238462643383279502884;
 
-namespace roofer {
+namespace roofer::misc {
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
   typedef CGAL::Delaunay_triangulation_2<K>   Triangulation;
   typedef Triangulation::Edge_iterator        Edge_iterator;

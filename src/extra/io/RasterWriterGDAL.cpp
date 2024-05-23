@@ -25,9 +25,9 @@
 #include <gdal_priv.h>
 #include <roofer/io/RasterWriter.hpp>
 
-namespace fs = std::filesystem;
+namespace roofer::io {
 
-namespace roofer {
+namespace fs = std::filesystem;
 
 class RasterWriterGDAL : public RasterWriterInterface {
 
@@ -96,7 +96,7 @@ class RasterWriterGDAL : public RasterWriterInterface {
   }
 };
 
-std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(projHelperInterface& pjh) {
+std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(roofer::misc::projHelperInterface& pjh) {
   return std::make_unique<RasterWriterGDAL>(pjh);
 };
 

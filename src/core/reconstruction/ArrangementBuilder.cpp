@@ -4,7 +4,7 @@
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   class ArrangementBuilder : public ArrangementBuilderInterface{
 

@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <roofer/io/CityJsonWriter.hpp>
 
-namespace fs = std::filesystem;
-
 namespace roofer::io {
+
+  namespace fs = std::filesystem;
 
   class CityJsonWriter : public CityJsonWriterInterface {
     template<typename T> void add_vertices_ring(std::map<arr3d, size_t>& vertex_map, std::vector<arr3d>& vertex_vec, std::set<arr3d>& vertex_set, const T& ring, Box& bbox) {
@@ -400,7 +400,7 @@ namespace roofer::io {
     }
   };
 
-  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(projHelperInterface& pjh) {
+  std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(roofer::misc::projHelperInterface& pjh) {
     return std::make_unique<CityJsonWriter>(pjh);
   };
 }

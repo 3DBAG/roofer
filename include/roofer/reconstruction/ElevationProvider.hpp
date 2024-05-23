@@ -15,10 +15,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include "cgal_shared_definitions.hpp"
-#include "cdt_util.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/reconstruction/cdt_util.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct ElevationProvider {
     virtual ~ElevationProvider() = default;

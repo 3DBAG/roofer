@@ -2,6 +2,8 @@
 
 #include <roofer/common/common.hpp>
 
+namespace roofer {
+
 class rooferException: public std::exception
 {
 public:
@@ -15,3 +17,5 @@ public:
 protected:
     std::string msg_;
 };
+
+}

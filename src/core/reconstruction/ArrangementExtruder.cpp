@@ -1,7 +1,7 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   // typedef CGAL::Cartesian<float>           AK;
 

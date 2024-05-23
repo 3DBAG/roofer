@@ -11,7 +11,7 @@
 #include <vector>
 
 
-namespace roofer {
+namespace roofer::reconstruction {
 
   class FootprintGraph {
     public:
@@ -122,18 +122,18 @@ namespace roofer {
 } // namespace roofer
 
 namespace boost {
-  template<> struct graph_traits<roofer::FootprintGraph> {
+  template<> struct graph_traits<roofer::reconstruction::FootprintGraph> {
     typedef typename roofer::Arrangement_2::Face_handle vertex_descriptor;
     typedef typename roofer::Arrangement_2::Halfedge_handle edge_descriptor;
     typedef boost::disallow_parallel_edge_tag edge_parallel_category;
     typedef boost::edge_list_graph_tag traversal_category;
     typedef boost::directed_tag directed_category;
-    typedef roofer::FootprintGraph::vertex_container::size_type vertices_size_type;
-    typedef roofer::FootprintGraph::edge_container::size_type edges_size_type;
+    typedef roofer::reconstruction::FootprintGraph::vertex_container::size_type vertices_size_type;
+    typedef roofer::reconstruction::FootprintGraph::edge_container::size_type edges_size_type;
   };
 }
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   inline double edge_length(const Arrangement_2::Halfedge_handle& e)
   {

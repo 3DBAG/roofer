@@ -114,7 +114,7 @@ float compute_percentile(std::vector<float>& z_vec, float percentile) {
   return z_vec[n];
 }
 
-namespace detection {
+namespace reconstruction {
 
   // Concurrency
   #ifdef CGAL_LINKED_WITH_TBB

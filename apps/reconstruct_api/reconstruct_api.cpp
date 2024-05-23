@@ -61,9 +61,9 @@ int main(int argc, const char * argv[]) {
   // }
 
   // read inputs
-  auto pj = roofer::createProjHelper();
-  auto PointReader = roofer::createPointCloudReaderLASlib(*pj);
-  auto VectorReader = roofer::createVectorReaderOGR(*pj);
+  auto pj = roofer::misc::createProjHelper();
+  auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
+  auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
 
   VectorReader->open(path_footprint);
   std::vector<roofer::LinearRing> footprints;
@@ -133,7 +133,7 @@ int main(int argc, const char * argv[]) {
   int i = 0;
   for (auto& mesh : meshes) {
     // spdlog::info(names[i] + ": converting to CGAL mesh and outputting");
-    CGAL::Surface_mesh<Point_3> cgalmesh = roofer::Mesh2CGALSurfaceMesh<Point_3>(mesh);
+    CGAL::Surface_mesh<Point_3> cgalmesh = roofer::misc::Mesh2CGALSurfaceMesh<Point_3>(mesh);
 
     // spdlog::info("Writing to obj file");
     std::string filename("output_" + names[i++] + ".obj");

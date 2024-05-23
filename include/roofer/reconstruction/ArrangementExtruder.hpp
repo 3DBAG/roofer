@@ -1,11 +1,12 @@
+#pragma once
 #include <memory>
 #include <vector>
 
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/ElevationProvider.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct ArrangementExtruderConfig{
     bool do_walls=true, do_roofs=true, do_floor=true;

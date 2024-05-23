@@ -4,7 +4,7 @@
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::misc {
 
   struct projHelperInterface {
 

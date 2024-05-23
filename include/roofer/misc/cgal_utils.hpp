@@ -24,7 +24,7 @@
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/MeshTriangulator.hpp>
 
-namespace roofer {
+namespace roofer::misc {
 
 template <typename Point>
 CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
@@ -68,7 +68,7 @@ CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
             }
             polygons.push_back(rindices);
         } else {
-            auto poly_triangulator = detection::createMeshTriangulatorLegacy();
+            auto poly_triangulator = roofer::reconstruction::createMeshTriangulatorLegacy();
             std::vector<LinearRing> temp_ring; temp_ring.push_back(ring);
             poly_triangulator->compute(temp_ring);
             for (const auto &tri : poly_triangulator->triangles)

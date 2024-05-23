@@ -1,16 +1,16 @@
-
+#pragma once
 #include <cstddef>
 #include <memory>
 
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::io {
   struct RasterWriterInterface {
 
-    projHelperInterface& pjHelper;
+    roofer::misc::projHelperInterface& pjHelper;
 
-    RasterWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    RasterWriterInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~RasterWriterInterface() = default;
 
     virtual void writeBands(
@@ -18,5 +18,5 @@ namespace roofer {
       ImageMap& bands) = 0;
   };
 
-  std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(projHelperInterface& pjh);
+  std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(roofer::misc::projHelperInterface& pjh);
 }

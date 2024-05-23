@@ -1,15 +1,15 @@
-
+#pragma once
 #include <memory>
 
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::io {
   struct PointCloudReaderInterface {
 
-    projHelperInterface& pjHelper;
+    roofer::misc::projHelperInterface& pjHelper;
 
-    PointCloudReaderInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    PointCloudReaderInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~PointCloudReaderInterface() = default;
 
     virtual void open(const std::string& source) = 0;
@@ -23,5 +23,5 @@ namespace roofer {
     ) = 0;
   };
 
-  std::unique_ptr<PointCloudReaderInterface> createPointCloudReaderLASlib(projHelperInterface& pjh);
+  std::unique_ptr<PointCloudReaderInterface> createPointCloudReaderLASlib(roofer::misc::projHelperInterface& pjh);
 }

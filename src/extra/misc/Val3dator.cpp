@@ -6,7 +6,7 @@
 
 #include <roofer/misc/Val3dator.hpp>
 
-namespace roofer::detection {
+namespace roofer::misc {
 
   class Val3dator : public Val3datorInterface{
 

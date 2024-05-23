@@ -1,7 +1,7 @@
 #include <roofer/reconstruction/LineRegulariser.hpp>
 #include <roofer/reconstruction/LineRegulariserBase.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   class LineRegulariser : public LineRegulariserInterface {
 

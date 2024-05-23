@@ -12,7 +12,7 @@
 #include <CGAL/Search_traits_adapter.h>
 
 #include <roofer/common/common.hpp>
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
 namespace roofer {
 

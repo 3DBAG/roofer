@@ -16,7 +16,7 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <stack>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
 template<typename E, typename P> bool ccb_to_polygon_3(E he, P& polygon, double h=0) {
   auto first = he;

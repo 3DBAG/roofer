@@ -25,9 +25,9 @@
 
 #include <roofer/io/VectorWriter.hpp>
 
-namespace fs = std::filesystem;
+namespace roofer::io {
 
-namespace roofer {
+namespace fs = std::filesystem;
 
 class VectorWriterOGR : public VectorWriterInterface {
   GDALDatasetUniquePtr poDS;
@@ -344,7 +344,7 @@ class VectorWriterOGR : public VectorWriterInterface {
   }
 };
 
-std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(projHelperInterface& pjh) {
+std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(roofer::misc::projHelperInterface& pjh) {
   return std::make_unique<VectorWriterOGR>(pjh);
 };
 

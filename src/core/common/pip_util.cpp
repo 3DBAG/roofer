@@ -15,19 +15,21 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <roofer/common/pip_util.hpp>
 
-pGridSet build_grid(const roofer::vec3f& ring) {
-  int Grid_Resolution = 20;
+namespace roofer {
+  pGridSet build_grid(const roofer::vec3f& ring) {
+    int Grid_Resolution = 20;
 
-  int size = ring.size();
-  std::vector<pPipoint> pgon;
-  for (auto& p : ring) {
-    pgon.push_back(new Pipoint{ p[0],p[1] });
+    int size = ring.size();
+    std::vector<pPipoint> pgon;
+    for (auto& p : ring) {
+      pgon.push_back(new Pipoint{ p[0],p[1] });
+    }
+    pGridSet grid_set = new GridSet();
+    // skip last point in the ring, ie the repetition of the first vertex
+    GridSetup(&pgon[0], pgon.size(), Grid_Resolution, grid_set);
+    for (int i = 0; i < size; i++) {
+      delete pgon[i];
+    }
+    return grid_set;
   }
-  pGridSet grid_set = new GridSet();
-  // skip last point in the ring, ie the repetition of the first vertex
-  GridSetup(&pgon[0], pgon.size(), Grid_Resolution, grid_set);
-  for (int i = 0; i < size; i++) {
-    delete pgon[i];
-  }
-  return grid_set;
 }

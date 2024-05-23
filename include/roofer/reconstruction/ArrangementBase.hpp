@@ -21,10 +21,10 @@
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Polygon_2.h>
 
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
 typedef CGAL::Polygon_2<EPECK>                           Polygon_2;
 

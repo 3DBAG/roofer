@@ -19,6 +19,10 @@
 
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
-#include "ptinpoly.h"
+#include <roofer/common/ptinpoly.h>
+
+namespace roofer {
 
 pGridSet build_grid(const roofer::vec3f& ring);
+
+}

@@ -25,11 +25,11 @@
 #include <CGAL/Search_traits_adapter.h>
 #include <CGAL/Cartesian.h>
 
-typedef CGAL::Cartesian<double> SCK;
-
 #include <roofer/common/datastructures.hpp>
 
-namespace linedect {
+namespace roofer::linedect {
+  typedef CGAL::Cartesian<double> SCK;
+  
   typedef CGAL::Exact_predicates_inexact_constructions_kernel cgal_kernel;
   typedef cgal_kernel::Vector_3 Vector;
   typedef cgal_kernel::Point_3 Point;

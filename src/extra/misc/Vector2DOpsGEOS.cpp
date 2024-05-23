@@ -18,7 +18,7 @@
 #include <roofer/misc/Vector2DOps.hpp>
 #include <roofer/logger/logger.h>
 
-namespace roofer {
+namespace roofer::misc {
 
     GEOSContextHandle_t gc;
 

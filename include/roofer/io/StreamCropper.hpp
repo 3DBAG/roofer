@@ -1,10 +1,10 @@
-
+#pragma once
 #include <memory>
 
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::io {
   struct PointCloudCropperConfig {
     std::string filepaths_ = "";
     float cellsize = 50.0;
@@ -21,9 +21,9 @@ namespace roofer {
   };
   struct PointCloudCropperInterface {
 
-    projHelperInterface& pjHelper;
+    roofer::misc::projHelperInterface& pjHelper;
 
-    PointCloudCropperInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    PointCloudCropperInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~PointCloudCropperInterface() = default;
 
     virtual void process(
@@ -37,5 +37,5 @@ namespace roofer {
     ) = 0;
   };
 
-  std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(projHelperInterface& pjh);
+  std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(roofer::misc::projHelperInterface& pjh);
 }
