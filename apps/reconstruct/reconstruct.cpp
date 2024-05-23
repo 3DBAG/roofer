@@ -73,7 +73,9 @@ enum LOD {LOD12=12, LOD13=13, LOD22=22};
 std::unordered_map<int, roofer::Mesh> extrude(
   roofer::Arrangement_2 arrangement,
   float floor_elevation,
-  std::vector<std::optional<std::string> >& attr_val3dity,
+  #ifdef RF_USE_VAL3DITY
+    std::vector<std::optional<std::string> >& attr_val3dity, 
+  #endif
   std::vector<std::optional<float> >& attr_rmse,
   roofer::detection::SegmentRasteriserInterface* SegmentRasteriser,
   roofer::detection::PlaneDetectorInterface* PlaneDetector,
@@ -224,8 +226,8 @@ int main(int argc, const char * argv[]) {
   }
 
   std::string config_path;
-  std::string path_pointcloud = "output/wippolder/objects/503100000000296/crop/503100000000296_pointcloud.las";
-  std::string path_footprint = "output/wippolder/objects/503100000000296/crop/503100000000296.gpkg";
+  std::string path_pointcloud = "output/wippolder/objects/503100000030812/crop/503100000030812_pointcloud.las";
+  std::string path_footprint = "output/wippolder/objects/503100000030812/crop/503100000030812.gpkg";
   std::string path_output_jsonl = "output/output.city.jsonl";
   std::string crs_process = "EPSG:7415";
   std::string crs_output = "EPSG:7415";
@@ -536,34 +538,46 @@ int main(int argc, const char * argv[]) {
 
     // LoDs
       // attributes to be filled during reconstruction
-    auto& attr_val3dity_lod12 = attributes.insert_vec<std::string>("b3_val3dity_lod12");
+    #ifdef RF_USE_VAL3DITY
+      auto& attr_val3dity_lod12 = attributes.insert_vec<std::string>("b3_val3dity_lod12");
+    #endif
     auto& attr_rmse_lod12 = attributes.insert_vec<float>("b3_rmse_lod12");
     auto multisolids_lod12 = extrude(
       arrangement,
       floor_elevation,
-      attr_val3dity_lod12,
+      #ifdef RF_USE_VAL3DITY
+        attr_val3dity_lod12,
+      #endif
       attr_rmse_lod12,
       SegmentRasteriser.get(),
       PlaneDetector.get(),
       LOD12
     );
-    auto& attr_val3dity_lod13 = attributes.insert_vec<std::string>("b3_val3dity_lod13");
+    #ifdef RF_USE_VAL3DITY
+      auto& attr_val3dity_lod13 = attributes.insert_vec<std::string>("b3_val3dity_lod13");
+    #endif
     auto& attr_rmse_lod13 = attributes.insert_vec<float>("b3_rmse_lod13");
     auto multisolids_lod13 = extrude(
       arrangement,
       floor_elevation,
-      attr_val3dity_lod13,
+      #ifdef RF_USE_VAL3DITY
+        attr_val3dity_lod13,
+      #endif
       attr_rmse_lod13,
       SegmentRasteriser.get(),
       PlaneDetector.get(),
       LOD13
     );
-    auto& attr_val3dity_lod22 = attributes.insert_vec<std::string>("b3_val3dity_lod22");
+    #ifdef RF_USE_VAL3DITY
+      auto& attr_val3dity_lod22 = attributes.insert_vec<std::string>("b3_val3dity_lod22");
+    #endif
     auto& attr_rmse_lod22 = attributes.insert_vec<float>("b3_rmse_lod22");
     auto multisolids_lod22 = extrude(
       arrangement,
       floor_elevation,
-      attr_val3dity_lod22,
+      #ifdef RF_USE_VAL3DITY
+        attr_val3dity_lod22,
+      #endif
       attr_rmse_lod22,
       SegmentRasteriser.get(),
       PlaneDetector.get(),

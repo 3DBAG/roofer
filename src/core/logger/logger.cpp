@@ -5,8 +5,6 @@
  * Uses a separate writer-thread to serialize the messages to the output stream.
  * Message writer thread implementation taken from https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime .
  */
-#include "config.hpp"
-
 #if !defined(USE_LOGGER_SPDLOG)
 
 #include <array>

@@ -59,27 +59,27 @@ namespace roofer::logger {
 
     template <typename... Args>
     void debug(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::debug, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::debug, fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void info(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::info, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::info, fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void warning(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::warning, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::warning, fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void error(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::error, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::error, fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
     template <typename... Args>
     void critical(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::critical, fmt::vformat(fmt.get(), fmt::make_format_args(args...)));
+      log(LogLevel::critical, fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
    private:
