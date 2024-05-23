@@ -1,26 +1,16 @@
-include_directories(../src)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
-# Download the rerun_sdk
-include(FetchContent)
-FetchContent_Declare(rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
-FetchContent_MakeAvailable(rerun_sdk)
+add_subdirectory(crop)
+add_subdirectory(reconstruct)
 
-add_executable(reconstruct reconstruct.cpp)
-set_target_properties(
-  reconstruct PROPERTIES 
-  CXX_STANDARD 20
-)
-target_link_libraries(reconstruct PRIVATE roofer "logger" CGAL::CGAL_Core cmake_git_version_tracking rerun_sdk)
-
-add_executable(crop crop.cpp)
-set_target_properties(
-  crop PROPERTIES 
-  CXX_STANDARD 20
-)
-target_link_libraries(crop PRIVATE roofer "logger" cmake_git_version_tracking)
-
-install(TARGETS crop DESTINATION bin)
+if(WIN32)
+    install (DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj 
+            DESTINATION "share"
+            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal 
+            DESTINATION "share"
+            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
+endif()
 
 # add polyscope
 # if(${RF_BUILD_GUI})
