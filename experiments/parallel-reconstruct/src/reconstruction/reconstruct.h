@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-using pointcloud = std::vector<int>;
-using footprint = std::vector<int>;
+#include "datastructures.h"
 
-std::vector<int> reconstruct(pointcloud& pc, footprint& fp);
+Points reconstruct_one_building(Points &points_one_building);

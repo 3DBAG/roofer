@@ -4,3 +4,4 @@ set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include")
 
 add_library("LibReconstruction" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("LibReconstruction" PUBLIC ${LIBRARY_INCLUDES})
+target_link_libraries("LibReconstruction" PUBLIC "LibDatastructures" spdlog::spdlog)

@@ -39,6 +39,7 @@ else()
   message(STATUS "Using CPM package manager")
   include(CPM)
   cpmaddpackage("gh:nlohmann/json#v3.11.3")
+  cpmaddpackage("gh:gabime/spdlog#v1.14.1")
   if(ENABLE_TESTING)
     cpmaddpackage("gh:catchorg/Catch2#v3.5.3")
     list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
@@ -69,8 +70,3 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
-
-install(
-  TARGETS "LibIo" "LibReconstruction"
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
