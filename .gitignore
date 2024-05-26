@@ -1,16 +1,22 @@
 # Build dirs
 cmake-build-*
 
+# CMake
+CMakeUserPresets.json
+
 # IDE
 .idea
 .run
 
 # Test dirs
-tests/run-all-balazs.sh
+tests/data/*
+!tests/data/README.md
+!tests/data/*.md5
 tests/output/*
 !tests/output/README.md
-!tests/output/label-style.qml
-resources/roofer_data
+
+# Documentation
+docs/html
 
 # Local build scripts
 build-deps-balazs.sh

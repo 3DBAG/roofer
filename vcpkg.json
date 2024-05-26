@@ -1,0 +1,36 @@
+{
+  "name": "roofer",
+  "version-string": "1.0.0",
+  "dependencies": [
+    {
+      "name": "nlohmann-json",
+      "version>=": "3.11.3"
+    },
+    {
+      "name": "catch2",
+      "version>=": "3.5.4"
+    },
+    "boost-geometry",
+    "boost-format",
+    "lastools",
+    "cgal",
+    "eigen3",
+    "proj",
+    "geos",
+    "fmt",
+    {
+      "name": "gdal",
+      "features": [
+        "recommended-features",
+        "postgresql"
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "name": "nlohmann-json",
+      "version": "3.11.3"
+    }
+  ],
+  "builtin-baseline": "9224b3bbd8df24999d85720b1d005dd6f969ade0"
+}

@@ -7,6 +7,9 @@ Fully automatic LoD2 building reconstruction from a classified LiDAR point cloud
 ## History
 Most of the building reconstruction algorithm was initially developed within the wider Geoflow framework. This was good for prototyping and development, but the complexity of the framework made it increasingly harder to run and maintain in practice. Also the code was spread in multiple repositories that made it cumbersome to do version management. Hence the need for a simpler and dedicated software that focuses just on building reconstruction.
 
+### Naming
+Since the name geoflow got (exclusively) known for the building reconstruction algorithm (which was technically just a part of geoflow and did not have a proper name itself), it may be better to keep the name geoflow for the building reconstruction method itself. The name roofer may be more fitting to a building reconstruction algo, but geoflow is preferred for consistency and to avoid confusion to outsiders.
+
 ## Goals/use cases
 The goal with roofer is to deliver something that is useful for
 
