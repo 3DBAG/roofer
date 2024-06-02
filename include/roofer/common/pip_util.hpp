@@ -15,14 +15,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <vector>
+#include <roofer/common/ptinpoly.h>
 
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
-#include <roofer/common/ptinpoly.h>
+#include <vector>
 
 namespace roofer {
 
-pGridSet build_grid(const roofer::vec3f& ring);
+  pGridSet build_grid(const roofer::vec3f& ring);
 
 }

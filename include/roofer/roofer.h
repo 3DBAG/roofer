@@ -21,12 +21,12 @@
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 #include <roofer/reconstruction/ArrangementOptimiser.hpp>
 #include <roofer/reconstruction/ArrangementSnapper.hpp>
+#include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/LineDetector.hpp>
 #include <roofer/reconstruction/LineRegulariser.hpp>
 #include <roofer/reconstruction/PlaneDetector.hpp>
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
-#include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
 
 #include "CGAL/Polygon_with_holes_2.h"
@@ -37,26 +37,25 @@ namespace roofer {
    *
    * //todo doc
    */
-    struct ReconstructionConfig {
-        // control optimisation
-        float lambda = 1./9.;
-        // enable clipping parts off the footprint where ground planes are detected
-        bool clip_ground = true;
-        // requested LoD
-        int lod = 22;
-        // step height used for LoD13 generalisation
-        float lod13_step_height = 3.;
-        // floor elevation
-        float floor_elevation = 0.;
-        // force flat floor
-        bool override_with_floor_elevation = false;
+  struct ReconstructionConfig {
+    // control optimisation
+    float lambda = 1. / 9.;
+    // enable clipping parts off the footprint where ground planes are detected
+    bool clip_ground = true;
+    // requested LoD
+    int lod = 22;
+    // step height used for LoD13 generalisation
+    float lod13_step_height = 3.;
+    // floor elevation
+    float floor_elevation = 0.;
+    // force flat floor
+    bool override_with_floor_elevation = false;
 
-        bool is_valid() {
-            return  (lambda>=0 && lambda <=1.0) &&
-                    lod==12 || lod==13 || lod ==22 &&
-                    lod13_step_height > 0;
-        }
-   };
+    bool is_valid() {
+      return (lambda >= 0 && lambda <= 1.0) && lod == 12 || lod == 13 ||
+             lod == 22 && lod13_step_height > 0;
+    }
+  };
 
   /*
    * @brief Reconstructs a single instance of a building from a point cloud with
@@ -65,11 +64,9 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  Mesh reconstruct_single_instance(const PointCollection& points_roof,
-                                   const PointCollection& points_ground,
-                                   Footprint& footprint,
-                                   ReconstructionConfig cfg=ReconstructionConfig())
-  {
+  Mesh reconstruct_single_instance(
+      const PointCollection& points_roof, const PointCollection& points_ground,
+      Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
       // check if configuration is valid
       if (!cfg.is_valid()) {
@@ -99,14 +96,17 @@ namespace roofer {
         cfg.override_with_floor_elevation = true;
       }
 
-      std::unique_ptr<roofer::reconstruction::ElevationProvider> elevation_provider = nullptr;
+      std::unique_ptr<roofer::reconstruction::ElevationProvider>
+          elevation_provider = nullptr;
       if (!cfg.override_with_floor_elevation) {
         proj_tri_util::DT base_cdt =
             proj_tri_util::cdt_from_linearing(footprint);
         auto base_cdt_ptr = std::make_unique<proj_tri_util::DT>(base_cdt);
-        elevation_provider = roofer::reconstruction::createElevationProvider(*base_cdt_ptr);
+        elevation_provider =
+            roofer::reconstruction::createElevationProvider(*base_cdt_ptr);
       } else {
-        elevation_provider = roofer::reconstruction::createElevationProvider(cfg.floor_elevation);
+        elevation_provider = roofer::reconstruction::createElevationProvider(
+            cfg.floor_elevation);
       }
 
 #ifdef ROOFER_VERBOSE
@@ -159,8 +159,10 @@ namespace roofer {
 #ifdef ROOFER_VERBOSE
       std::cout << "Running segment rasteriser" << std::endl;
 #endif
-      auto SegmentRasteriser = roofer::reconstruction::createSegmentRasteriser();
-      auto SegmentRasterizerCfg = roofer::reconstruction::SegmentRasteriserConfig();
+      auto SegmentRasteriser =
+          roofer::reconstruction::createSegmentRasteriser();
+      auto SegmentRasterizerCfg =
+          roofer::reconstruction::SegmentRasteriserConfig();
       if (points_ground.empty()) {
         SegmentRasterizerCfg.use_ground = false;
         cfg.clip_ground = false;
@@ -173,7 +175,8 @@ namespace roofer {
       std::cout << "Running arrangement builder" << std::endl;
 #endif
       Arrangement_2 arrangement;
-      auto ArrangementBuilder = roofer::reconstruction::createArrangementBuilder();
+      auto ArrangementBuilder =
+          roofer::reconstruction::createArrangementBuilder();
       ArrangementBuilder->compute(arrangement, footprint,
                                   LineRegulariser->exact_regularised_edges);
 
@@ -203,26 +206,28 @@ namespace roofer {
 #ifdef ROOFER_VERBOSE
       std::cout << "Running arrangement snapper" << std::endl;
 #endif
-      auto ArrangementSnapper = roofer::reconstruction::createArrangementSnapper();
+      auto ArrangementSnapper =
+          roofer::reconstruction::createArrangementSnapper();
       ArrangementSnapper->compute(arrangement);
 
 #ifdef ROOFER_VERBOSE
       std::cout << "Running arrangement extruder" << std::endl;
 #endif
-      auto ArrangementExtruder = roofer::reconstruction::createArrangementExtruder();
-      ArrangementExtruder->compute(arrangement,
-                                   *elevation_provider,
+      auto ArrangementExtruder =
+          roofer::reconstruction::createArrangementExtruder();
+      ArrangementExtruder->compute(arrangement, *elevation_provider,
                                    {.LoD2 = cfg.lod == 22});
 
-//      assert(ArrangementExtruder->meshes.size() == 1);
-      //todo temp
+      //      assert(ArrangementExtruder->meshes.size() == 1);
+      // todo temp
       if (ArrangementExtruder->meshes.size() != 1) {
         throw rooferException("More than one output mesh!");
       }
       return ArrangementExtruder->meshes.front();
     } catch (const std::exception& e) {
 #ifdef ROOFER_VERBOSE
-      std::cout << "Reconstruction failed, exception thrown: " << e.what() << std::endl;
+      std::cout << "Reconstruction failed, exception thrown: " << e.what()
+                << std::endl;
 #endif
       throw rooferException(e.what());
     }
@@ -236,12 +241,12 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  Mesh reconstruct_single_instance(const PointCollection& points_roof,
-                                   Footprint& footprint,
-                                   ReconstructionConfig cfg=ReconstructionConfig())
-  {
+  Mesh reconstruct_single_instance(
+      const PointCollection& points_roof, Footprint& footprint,
+      ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof, points_ground, footprint, cfg);
+    return reconstruct_single_instance(points_roof, points_ground, footprint,
+                                       cfg);
   }
 
-} // namespace roofer
+}  // namespace roofer

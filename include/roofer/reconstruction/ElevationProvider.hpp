@@ -15,8 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
 namespace roofer::reconstruction {
 
@@ -26,10 +26,11 @@ namespace roofer::reconstruction {
     virtual float get(const Point_2 pt) const = 0;
 
     virtual float get_percentile(float percentile) const = 0;
-
   };
 
-  std::unique_ptr<ElevationProvider> createElevationProvider(const float floor_elevation);
-  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::DT& base_cdt);
+  std::unique_ptr<ElevationProvider> createElevationProvider(
+      const float floor_elevation);
+  std::unique_ptr<ElevationProvider> createElevationProvider(
+      const proj_tri_util::DT& base_cdt);
 
-} // namespace roofer::detection
+}  // namespace roofer::reconstruction

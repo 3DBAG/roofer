@@ -10,7 +10,6 @@
 #include <spdlog/spdlog.h>
 
 #include <cassert>
-
 #include <iostream>
 
 #include "logger.h"

@@ -85,7 +85,6 @@ namespace Logger {
     std::shared_ptr<logger_impl> impl_;
 
     void log(LogLevel level, std::string_view message);
-
   };
 
 }  // namespace Logger

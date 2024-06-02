@@ -16,9 +16,9 @@
  * */
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <cstdint>
 #include <string_view>
 
 #include "fmt/format.h"
@@ -79,7 +79,8 @@ namespace roofer::logger {
 
     template <typename... Args>
     void critical(fmt::format_string<Args...> fmt, Args &&...args) {
-      log(LogLevel::critical, fmt::vformat(fmt, fmt::make_format_args(args...)));
+      log(LogLevel::critical,
+          fmt::vformat(fmt, fmt::make_format_args(args...)));
     }
 
    private:
@@ -91,7 +92,6 @@ namespace roofer::logger {
     std::shared_ptr<logger_impl> impl_;
 
     void log(LogLevel level, std::string_view message);
-
   };
 
 }  // namespace roofer::logger

@@ -22,7 +22,7 @@ namespace roofer {
     int size = ring.size();
     std::vector<pPipoint> pgon;
     for (auto& p : ring) {
-      pgon.push_back(new Pipoint{ p[0],p[1] });
+      pgon.push_back(new Pipoint{p[0], p[1]});
     }
     pGridSet grid_set = new GridSet();
     // skip last point in the ring, ie the repetition of the first vertex
@@ -32,4 +32,4 @@ namespace roofer {
     }
     return grid_set;
   }
-}
+}  // namespace roofer

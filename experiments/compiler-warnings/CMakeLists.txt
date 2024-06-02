@@ -16,4 +16,3 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_subdirectory(src)
-

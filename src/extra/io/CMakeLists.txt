@@ -14,7 +14,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/io/StreamCropper.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/VectorReader.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/VectorWriter.hpp")
-set(LIBRARY_INCLUDES 
+set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
 
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
