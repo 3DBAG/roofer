@@ -76,25 +76,25 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;array&gt;</code><br />
-<code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;unordered_map&gt;</code><br />
+<code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;ctime&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;variant&gt;</code><br />
-<code>#include &lt;ctime&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for common.hpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8hpp__incl.png" border="0" usemap="#a_2home_2runner_2work_2roofer-dev_2roofer-dev_2include_2roofer_2common_2common_8hpp" alt=""/></div>
 <map name="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2include_2roofer_2common_2common_8hpp" id="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2include_2roofer_2common_2common_8hpp">
-<area shape="rect" title=" " alt="" coords="227,5,442,61"/>
+<area shape="rect" title=" " alt="" coords="257,5,471,61"/>
 <area shape="rect" title=" " alt="" coords="5,109,61,136"/>
-<area shape="rect" title=" " alt="" coords="86,109,149,136"/>
-<area shape="rect" title=" " alt="" coords="173,109,248,136"/>
-<area shape="rect" title=" " alt="" coords="273,109,397,136"/>
-<area shape="rect" title=" " alt="" coords="421,109,480,136"/>
-<area shape="rect" title=" " alt="" coords="505,109,573,136"/>
-<area shape="rect" title=" " alt="" coords="597,109,656,136"/>
+<area shape="rect" title=" " alt="" coords="85,109,160,136"/>
+<area shape="rect" title=" " alt="" coords="185,109,309,136"/>
+<area shape="rect" title=" " alt="" coords="333,109,395,136"/>
+<area shape="rect" title=" " alt="" coords="420,109,479,136"/>
+<area shape="rect" title=" " alt="" coords="503,109,561,136"/>
+<area shape="rect" title=" " alt="" coords="586,109,654,136"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -237,8 +237,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:aa0b5bb40f8df75804e86c4ade3b8840f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a383305cde0447d500187d587bc474455"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; std::optional&lt; std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a383305cde0447d500187d587bc474455">roofer::veco1s</a></td></tr>
 <tr class="separator:a383305cde0447d500187d587bc474455"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a873b51cc8db6b80dab65043a7bb246ce"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_map&lt; std::string, std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a873b51cc8db6b80dab65043a7bb246ce">roofer::StrMap</a></td></tr>
-<tr class="separator:a873b51cc8db6b80dab65043a7bb246ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae92c782906f4ba239dc5878a5bb8d851"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_map&lt; std::string, std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#ae92c782906f4ba239dc5878a5bb8d851">roofer::StrMap</a></td></tr>
+<tr class="separator:ae92c782906f4ba239dc5878a5bb8d851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4846782482db1803e37d14ce0eed9e7"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; std::optional&lt; Date &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#ab4846782482db1803e37d14ce0eed9e7">roofer::veco1D</a></td></tr>
 <tr class="separator:ab4846782482db1803e37d14ce0eed9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a515ae928cc73d9adc8931643f4c7753f"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; std::optional&lt; Time &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a515ae928cc73d9adc8931643f4c7753f">roofer::veco1T</a></td></tr>
@@ -249,8 +249,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:a4c0f3c01654ad74b1adea9ee9f9f4e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab29ce8cfd380bd6862218fa910a9b3fc"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_map&lt; std::string, std::vector&lt; attribute_value &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#ab29ce8cfd380bd6862218fa910a9b3fc">roofer::AttributeMap</a></td></tr>
 <tr class="separator:ab29ce8cfd380bd6862218fa910a9b3fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a835ba2f192e7dcdc9fb59f991440eaa8"><td class="memItemLeft" align="right" valign="top">typedef std::variant&lt; veco1b, veco1i, veco1s, veco1f, veco3f, veco1D, veco1T, veco1DT &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a835ba2f192e7dcdc9fb59f991440eaa8">roofer::attribute_vec</a></td></tr>
-<tr class="separator:a835ba2f192e7dcdc9fb59f991440eaa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e873a9caa8bd07dbbd39216f6f3ab18"><td class="memItemLeft" align="right" valign="top">typedef std::variant&lt; veco1b, veco1i, veco1s, veco1f, veco3f, veco1D, veco1T, veco1DT &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a3e873a9caa8bd07dbbd39216f6f3ab18">roofer::attribute_vec</a></td></tr>
+<tr class="separator:a3e873a9caa8bd07dbbd39216f6f3ab18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a290546dbbca95e983ed638c1fe883af1"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_map&lt; std::string, attribute_vec &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a290546dbbca95e983ed638c1fe883af1">roofer::attribute_vec_map</a></td></tr>
 <tr class="separator:a290546dbbca95e983ed638c1fe883af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b7efdf70715a1851182520f156bf99d"><td class="memItemLeft" align="right" valign="top">typedef std::array&lt; arr3f, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a9b7efdf70715a1851182520f156bf99d">roofer::Triangle</a></td></tr>

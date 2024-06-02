@@ -15,7 +15,7 @@ var searchData=
   ['output_5fattribute_5fnames_613',['output_attribute_names',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#aaf1e4244ea0f552c8e66f76124611346',1,'roofer::io::CityJsonWriterInterface']]],
   ['output_5fmtc_5ffor_5fevery_5finput_614',['output_mtc_for_every_input',['../structroofer_1_1reconstruction_1_1MeshTriangulatorConfig.html#acb985144ce426434c2a4d074d03486f9',1,'roofer::reconstruction::MeshTriangulatorConfig']]],
   ['overlay_5ffunctor_615',['overlay_functor',['../structroofer_1_1reconstruction_1_1overlay__functor.html',1,'roofer::reconstruction']]],
-  ['overlay_5ftraits_616',['Overlay_traits',['../namespaceroofer_1_1reconstruction.html#a4a2dc2ce4dec890040be9af2a5b2661f',1,'roofer::reconstruction']]],
+  ['overlay_5ftraits_616',['Overlay_traits',['../namespaceroofer_1_1reconstruction.html#abc61737f85e9b345cdc8b6e4e375d81d',1,'roofer::reconstruction']]],
   ['override_5fwith_5ffloor_5felevation_617',['override_with_floor_elevation',['../structroofer_1_1ReconstructionConfig.html#a74dc4b2bf3a844e586311fb996ced407',1,'roofer::ReconstructionConfig']]],
   ['overwrite_5ffile_5f_618',['overwrite_file_',['../structroofer_1_1io_1_1VectorWriterInterface.html#a1f18667754f1f8ebee16aaf7744dbcec',1,'roofer::io::VectorWriterInterface']]],
   ['overwrite_5flayer_5f_619',['overwrite_layer_',['../structroofer_1_1io_1_1VectorWriterInterface.html#afc198c175fd54e715ed7381ed2d15911',1,'roofer::io::VectorWriterInterface']]]

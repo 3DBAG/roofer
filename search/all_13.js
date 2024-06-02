@@ -64,6 +64,6 @@ var searchData=
   ['streamcropper_2ecpp_850',['StreamCropper.cpp',['../StreamCropper_8cpp.html',1,'']]],
   ['streamcropper_2ehpp_851',['StreamCropper.hpp',['../StreamCropper_8hpp.html',1,'']]],
   ['string_5ffrom_5flog_5flevel_852',['string_from_log_level',['../namespaceroofer_1_1logger.html#acd6a364fa9dd45d3cb6c922277b26c3f',1,'roofer::logger']]],
-  ['strmap_853',['StrMap',['../namespaceroofer.html#a873b51cc8db6b80dab65043a7bb246ce',1,'roofer']]],
+  ['strmap_853',['StrMap',['../namespaceroofer.html#ae92c782906f4ba239dc5878a5bb8d851',1,'roofer']]],
   ['surface_5ftypes_854',['surface_types',['../structroofer_1_1reconstruction_1_1SimplePolygonExtruderInterface.html#a8e73057ce6ab17f04ca19446a913d12d',1,'roofer::reconstruction::SimplePolygonExtruderInterface']]]
 ];

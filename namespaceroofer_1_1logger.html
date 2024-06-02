@@ -111,8 +111,7 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Internal logging backend implementation. </p>
 <p><a class="el" href="classroofer_1_1logger_1_1Logger.html">Logger</a> library for roofer.</p>
 <p>Logs all messages to stdout.</p>
-<p>Uses a separate writer-thread to serialize the messages to the output stream. Message writer thread implementation taken from <a href="https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime">https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime</a> .</p>
-<p>Implements a generic logger facade that can use different logging backends. The logging backend is selected compile time with the USE_LOGGER_* option. Currently available backends:</p><ul>
+<p>Uses a separate writer-thread to serialize the messages to the output stream. Message writer thread implementation taken from <a href="https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime">https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime</a> Implements a generic logger facade that can use different logging backends. The logging backend is selected compile time with the USE_LOGGER_* option. Currently available backends:</p><ul>
 <li>internal (default)</li>
 <li>spdlog (enable with USE_LOGGER_SPDLOG)</li>
 </ul>

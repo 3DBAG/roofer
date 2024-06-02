@@ -27,7 +27,7 @@ var searchData=
   ['metrics_5fplane_5fnormal_5fthreshold_1719',['metrics_plane_normal_threshold',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a8f6e6783bcf40cf9c826fc4dc4fdb853',1,'roofer::reconstruction::PlaneDetectorConfig']]],
   ['metrics_5fprobability_5fransac_1720',['metrics_probability_ransac',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a833b40bcf05136d9c73293ef25ba0a6e',1,'roofer::reconstruction::PlaneDetectorConfig']]],
   ['midpoint_1721',['midpoint',['../structroofer_1_1linereg_1_1linetype.html#aaf36215943a96ac8f8bb97d357bb914e',1,'roofer::linereg::linetype']]],
-  ['min_5fcnt_5frange_1722',['min_cnt_range',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#af6f0fcf60807c73d7b7cda9644070c9b',1,'roofer::reconstruction::LineDetectorConfig']]],
+  ['min_5fcnt_5frange_1722',['min_cnt_range',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#ac8d3e21b1ada9931d2cafa7831b09789',1,'roofer::reconstruction::LineDetectorConfig']]],
   ['min_5fcnt_5frange_5flower_1723',['min_cnt_range_lower',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#a28752396bdbe5262a089023913e7da8e',1,'roofer::reconstruction::LineDetectorConfig']]],
   ['min_5fcnt_5frange_5fupper_1724',['min_cnt_range_upper',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#a3fe2dc453a83d410ca1b949ab47151a1',1,'roofer::reconstruction::LineDetectorConfig']]],
   ['min_5fdist_5fto_5fline_1725',['min_dist_to_line',['../structroofer_1_1reconstruction_1_1PlaneIntersectorConfig.html#ac065407bb8296199281bc0ced4295a4d',1,'roofer::reconstruction::PlaneIntersectorConfig']]],

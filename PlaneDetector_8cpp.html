@@ -75,66 +75,66 @@ $(function() {
 <div class="title">PlaneDetector.cpp File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;<a class="el" href="PlaneDetectorBase_8hpp_source.html">roofer/reconstruction/PlaneDetectorBase.hpp</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="PlaneDetector_8hpp_source.html">roofer/reconstruction/PlaneDetector.hpp</a>&gt;</code><br />
-<code>#include &lt;CGAL/Shape_detection/Efficient_RANSAC.h&gt;</code><br />
-<code>#include &lt;CGAL/property_map.h&gt;</code><br />
-<code>#include &lt;CGAL/Orthogonal_k_neighbor_search.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;CGAL/Orthogonal_k_neighbor_search.h&gt;</code><br />
 <code>#include &lt;CGAL/Search_traits_3.h&gt;</code><br />
 <code>#include &lt;CGAL/Search_traits_adapter.h&gt;</code><br />
+<code>#include &lt;CGAL/Shape_detection/Efficient_RANSAC.h&gt;</code><br />
 <code>#include &lt;CGAL/Shape_regularization/regularize_planes.h&gt;</code><br />
+<code>#include &lt;CGAL/property_map.h&gt;</code><br />
 <code>#include &lt;boost/container_hash/hash_fwd.hpp&gt;</code><br />
 <code>#include &lt;cstddef&gt;</code><br />
-<code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;functional&gt;</code><br />
-<code>#include &lt;CGAL/pca_estimate_normals.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="PlaneDetector_8hpp_source.html">roofer/reconstruction/PlaneDetector.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="PlaneDetectorBase_8hpp_source.html">roofer/reconstruction/PlaneDetectorBase.hpp</a>&gt;</code><br />
+<code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;CGAL/mst_orient_normals.h&gt;</code><br />
+<code>#include &lt;CGAL/pca_estimate_normals.h&gt;</code><br />
 <code>#include &lt;CGAL/linear_least_squares_fitting_3.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for PlaneDetector.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="PlaneDetector_8cpp__incl.png" border="0" usemap="#a_2home_2runner_2work_2roofer-dev_2roofer-dev_2src_2core_2reconstruction_2PlaneDetector_8cpp" alt=""/></div>
 <map name="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2src_2core_2reconstruction_2PlaneDetector_8cpp" id="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2src_2core_2reconstruction_2PlaneDetector_8cpp">
-<area shape="rect" title=" " alt="" coords="1758,5,1999,61"/>
-<area shape="rect" href="PlaneDetectorBase_8hpp.html" title=" " alt="" coords="496,109,675,151"/>
-<area shape="rect" title=" " alt="" coords="5,199,200,240"/>
-<area shape="rect" title=" " alt="" coords="1149,295,1313,322"/>
-<area shape="rect" title=" " alt="" coords="1571,288,1783,329"/>
-<area shape="rect" title=" " alt="" coords="1808,295,1981,322"/>
-<area shape="rect" title=" " alt="" coords="2005,288,2152,329"/>
-<area shape="rect" href="PlaneDetector_8hpp.html" title=" " alt="" coords="1386,109,1545,151"/>
-<area shape="rect" title=" " alt="" coords="1794,109,1963,151"/>
-<area shape="rect" title=" " alt="" coords="1987,109,2186,151"/>
-<area shape="rect" title=" " alt="" coords="2210,109,2371,151"/>
-<area shape="rect" title=" " alt="" coords="2395,117,2466,143"/>
-<area shape="rect" title=" " alt="" coords="2490,117,2550,143"/>
-<area shape="rect" title=" " alt="" coords="2574,117,2661,143"/>
-<area shape="rect" title=" " alt="" coords="2685,117,2907,143"/>
-<area shape="rect" title=" " alt="" coords="2931,117,3133,143"/>
-<area shape="rect" title=" " alt="" coords="141,377,313,433"/>
-<area shape="rect" title=" " alt="" coords="606,206,730,233"/>
-<area shape="rect" title=" " alt="" coords="471,295,534,322"/>
-<area shape="rect" title=" " alt="" coords="225,206,287,233"/>
-<area shape="rect" href="RegionGrower_8hpp.html" title=" " alt="" coords="423,199,582,240"/>
-<area shape="rect" href="RegionGrower__DS__CGAL_8hpp.html" title=" " alt="" coords="944,199,1157,240"/>
-<area shape="rect" href="cgal__shared__definitions_8hpp.html" title=" " alt="" coords="661,288,867,329"/>
-<area shape="rect" href="datastructures_8hpp.html" title=" " alt="" coords="1268,206,1516,233"/>
-<area shape="rect" title=" " alt="" coords="337,392,461,419"/>
-<area shape="rect" title=" " alt="" coords="355,295,447,322"/>
-<area shape="rect" title=" " alt="" coords="1314,392,1377,419"/>
-<area shape="rect" title=" " alt="" coords="1052,295,1124,322"/>
-<area shape="rect" title=" " alt="" coords="892,295,977,322"/>
-<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="1337,295,1548,322"/>
-<area shape="rect" title=" " alt="" coords="1759,392,1815,419"/>
-<area shape="rect" title=" " alt="" coords="1401,392,1476,419"/>
-<area shape="rect" title=" " alt="" coords="1500,392,1559,419"/>
-<area shape="rect" title=" " alt="" coords="1583,392,1651,419"/>
-<area shape="rect" title=" " alt="" coords="1676,392,1735,419"/>
-<area shape="rect" title=" " alt="" coords="485,377,657,433"/>
-<area shape="rect" title=" " alt="" coords="681,392,855,419"/>
-<area shape="rect" title=" " alt="" coords="879,392,1071,419"/>
-<area shape="rect" title=" " alt="" coords="1095,392,1289,419"/>
-<area shape="rect" title=" " alt="" coords="1540,206,1617,233"/>
+<area shape="rect" title=" " alt="" coords="836,5,1077,61"/>
+<area shape="rect" title=" " alt="" coords="5,288,217,329"/>
+<area shape="rect" title=" " alt="" coords="242,295,415,322"/>
+<area shape="rect" title=" " alt="" coords="439,288,586,329"/>
+<area shape="rect" title=" " alt="" coords="269,109,439,151"/>
+<area shape="rect" title=" " alt="" coords="463,109,661,151"/>
+<area shape="rect" title=" " alt="" coords="611,295,775,322"/>
+<area shape="rect" title=" " alt="" coords="736,109,897,151"/>
+<area shape="rect" title=" " alt="" coords="921,117,992,143"/>
+<area shape="rect" title=" " alt="" coords="1016,117,1103,143"/>
+<area shape="rect" href="PlaneDetector_8hpp.html" title=" " alt="" coords="1127,109,1285,151"/>
+<area shape="rect" href="PlaneDetectorBase_8hpp.html" title=" " alt="" coords="1310,109,1489,151"/>
+<area shape="rect" title=" " alt="" coords="1911,199,2106,240"/>
+<area shape="rect" title=" " alt="" coords="1564,117,1624,143"/>
+<area shape="rect" title=" " alt="" coords="1649,117,1851,143"/>
+<area shape="rect" title=" " alt="" coords="1875,117,2097,143"/>
+<area shape="rect" title=" " alt="" coords="679,206,757,233"/>
+<area shape="rect" href="datastructures_8hpp.html" title=" " alt="" coords="781,206,1029,233"/>
+<area shape="rect" href="cgal__shared__definitions_8hpp.html" title=" " alt="" coords="1530,295,1733,322"/>
+<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="799,295,1010,322"/>
+<area shape="rect" title=" " alt="" coords="943,392,999,419"/>
+<area shape="rect" title=" " alt="" coords="586,392,661,419"/>
+<area shape="rect" title=" " alt="" coords="1111,392,1235,419"/>
+<area shape="rect" title=" " alt="" coords="1024,392,1087,419"/>
+<area shape="rect" title=" " alt="" coords="685,392,743,419"/>
+<area shape="rect" title=" " alt="" coords="767,392,826,419"/>
+<area shape="rect" title=" " alt="" coords="851,392,919,419"/>
+<area shape="rect" title=" " alt="" coords="1850,392,2045,419"/>
+<area shape="rect" title=" " alt="" coords="2069,392,2261,419"/>
+<area shape="rect" title=" " alt="" coords="1455,392,1629,419"/>
+<area shape="rect" title=" " alt="" coords="1653,377,1825,433"/>
+<area shape="rect" title=" " alt="" coords="1259,377,1431,433"/>
+<area shape="rect" title=" " alt="" coords="1443,206,1567,233"/>
+<area shape="rect" title=" " alt="" coords="1392,295,1455,322"/>
+<area shape="rect" title=" " alt="" coords="1591,206,1653,233"/>
+<area shape="rect" href="RegionGrower_8hpp.html" title=" " alt="" coords="1677,199,1836,240"/>
+<area shape="rect" href="RegionGrower__DS__CGAL_8hpp.html" title=" " alt="" coords="1053,199,1266,240"/>
+<area shape="rect" title=" " alt="" coords="1757,295,1849,322"/>
+<area shape="rect" title=" " alt="" coords="1231,295,1317,322"/>
+<area shape="rect" title=" " alt="" coords="1085,295,1157,322"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -188,14 +188,14 @@ Typedefs</h2></td></tr>
 <tr class="separator:a74f60d6c5087df16cfeac0a6eba0dc04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70451eeae14f850f4b89186ae7baec5a"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Search_traits_3&lt; EPICK &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a70451eeae14f850f4b89186ae7baec5a">roofer::reconstruction::Traits_base</a></td></tr>
 <tr class="separator:a70451eeae14f850f4b89186ae7baec5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1aaa84197181b64838b0976e8c955ad"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Search_traits_adapter&lt; PNL, CGAL::Nth_of_tuple_property_map&lt; 0, PNL &gt;, Traits_base &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#ab1aaa84197181b64838b0976e8c955ad">roofer::reconstruction::TreeTraits</a></td></tr>
-<tr class="separator:ab1aaa84197181b64838b0976e8c955ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bfe24af1048cc463811025f16ac3a50"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Search_traits_adapter&lt; PNL, CGAL::Nth_of_tuple_property_map&lt; 0, PNL &gt;, Traits_base &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a5bfe24af1048cc463811025f16ac3a50">roofer::reconstruction::TreeTraits</a></td></tr>
+<tr class="separator:a5bfe24af1048cc463811025f16ac3a50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a163c6bd9e2261a15bf77532ae4e5412d"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Orthogonal_k_neighbor_search&lt; TreeTraits &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a163c6bd9e2261a15bf77532ae4e5412d">roofer::reconstruction::Neighbor_search</a></td></tr>
 <tr class="separator:a163c6bd9e2261a15bf77532ae4e5412d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5311ac39ef199e14fd33b7683c6150b5"><td class="memItemLeft" align="right" valign="top">typedef Neighbor_search::Tree&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a5311ac39ef199e14fd33b7683c6150b5">roofer::reconstruction::Tree</a></td></tr>
 <tr class="separator:a5311ac39ef199e14fd33b7683c6150b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7add00dfef2bdf35137a3688f1c1db1"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Shape_detection::Efficient_RANSAC_traits&lt; EPICK, PNL_vector, Point_map, Normal_map &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#af7add00dfef2bdf35137a3688f1c1db1">roofer::reconstruction::Traits</a></td></tr>
-<tr class="separator:af7add00dfef2bdf35137a3688f1c1db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadf92725c618fb0de54b33840fabf507"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Shape_detection::Efficient_RANSAC_traits&lt; EPICK, PNL_vector, Point_map, Normal_map &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#aadf92725c618fb0de54b33840fabf507">roofer::reconstruction::Traits</a></td></tr>
+<tr class="separator:aadf92725c618fb0de54b33840fabf507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67b02ecef5eb5e2aaa562324c7155868"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Shape_detection::Efficient_RANSAC&lt; Traits &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a67b02ecef5eb5e2aaa562324c7155868">roofer::reconstruction::Efficient_ransac</a></td></tr>
 <tr class="separator:a67b02ecef5eb5e2aaa562324c7155868"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06b490d06e97447d1287be0e5559b472"><td class="memItemLeft" align="right" valign="top">typedef CGAL::Shape_detection::Plane&lt; Traits &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1reconstruction.html#a06b490d06e97447d1287be0e5559b472">roofer::reconstruction::RansacPlane</a></td></tr>
