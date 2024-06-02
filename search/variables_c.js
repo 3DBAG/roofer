@@ -1,16 +1,16 @@
 var searchData=
 [
-  ['n_1681',['N',['../classlinedect_1_1LineDetector.html#ad5e8908a2c17ae147b84976ce6fddb7d',1,'linedect::LineDetector']]],
-  ['n_5fiterations_1682',['n_iterations',['../structroofer_1_1detection_1_1ArrangementOptimiserConfig.html#a8cc0b3c7892a4ecbc41c8d10bafac57e',1,'roofer::detection::ArrangementOptimiserConfig']]],
-  ['n_5frefit_1683',['n_refit',['../structroofer_1_1detection_1_1PlaneDetectorConfig.html#a372a0c7e08766b55a26ee2b5072d1bf5',1,'roofer::detection::PlaneDetectorConfig::n_refit()'],['../classplanedect_1_1DistAndNormalTester.html#af484a191c2a57720e622913f92bad449',1,'planedect::DistAndNormalTester::n_refit()']]],
-  ['name_1684',['name',['../structroofer_1_1CandidatePointCloud.html#ae7454be3097cf152a71bf68e31e1f041',1,'roofer::CandidatePointCloud']]],
-  ['neighbours_1685',['neighbours',['../classregiongrower_1_1CGAL__RegionGrowerDS.html#a1c0631bbcf548d793c004a27b3c2e803',1,'regiongrower::CGAL_RegionGrowerDS']]],
-  ['nesting_5flevel_1686',['nesting_level',['../structtri__util_1_1FaceInfo.html#aa77e997b9d775b0a1388bf0f05a8b34f',1,'tri_util::FaceInfo']]],
-  ['nodata_5felevation_1687',['nodata_elevation',['../structroofer_1_1detection_1_1ArrangementExtruderConfig.html#a0a99a706675ddf38756a376301bd6253',1,'roofer::detection::ArrangementExtruderConfig']]],
-  ['nodata_5ffraction_1688',['nodata_fraction',['../structroofer_1_1CandidatePointCloud.html#af954fb487f7cd29a1bb9c9d1afb1026f',1,'roofer::CandidatePointCloud']]],
-  ['nodata_5fradius_1689',['nodata_radius',['../structroofer_1_1CandidatePointCloud.html#a0b88d98656e1ae7f2d099b2423a6592c',1,'roofer::CandidatePointCloud']]],
-  ['nodataval_1690',['nodataval',['../structroofer_1_1Image.html#a0d8bac5730b50c85eac49f74aff596dd',1,'roofer::Image']]],
-  ['nodataval_5f_1691',['noDataVal_',['../classRasterTools_1_1Raster.html#a9a7aa029433bb5782f92468a95feddf2',1,'RasterTools::Raster']]],
-  ['normal_5fthres_1692',['normal_thres',['../classplanedect_1_1DistAndNormalTester.html#a511ba6cf3cb69e7939327a023784a075',1,'planedect::DistAndNormalTester']]],
-  ['normals_1693',['normals',['../structroofer_1_1detection_1_1MeshTriangulatorInterface.html#a282a475f7164ee5ff8de12a82c205412',1,'roofer::detection::MeshTriangulatorInterface::normals()'],['../classplanedect_1_1PlaneDS.html#a71301a28fb649f995887f7d40268926d',1,'planedect::PlaneDS::normals()']]]
+  ['n_1741',['N',['../classroofer_1_1linedect_1_1LineDetector.html#a1e280a2ce8cd88b6624f7bab3d62d200',1,'roofer::linedect::LineDetector']]],
+  ['n_5fiterations_1742',['n_iterations',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a833747462eb1173a5ce16ac53a43b414',1,'roofer::reconstruction::ArrangementOptimiserConfig']]],
+  ['n_5frefit_1743',['n_refit',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#ab08f171e093ce272f016085b27f44fb7',1,'roofer::reconstruction::PlaneDetectorConfig::n_refit()'],['../classroofer_1_1planedect_1_1DistAndNormalTester.html#ab9168eac1f7ee86d89f7f4d30fb653ec',1,'roofer::planedect::DistAndNormalTester::n_refit()']]],
+  ['name_1744',['name',['../structroofer_1_1misc_1_1CandidatePointCloud.html#aca1c2731d7db3bcd55fd8488bb165a36',1,'roofer::misc::CandidatePointCloud']]],
+  ['neighbours_1745',['neighbours',['../classroofer_1_1regiongrower_1_1CGAL__RegionGrowerDS.html#aa3887384dcf2585268381d67c4ee2029',1,'roofer::regiongrower::CGAL_RegionGrowerDS']]],
+  ['nesting_5flevel_1746',['nesting_level',['../structroofer_1_1tri__util_1_1FaceInfo.html#aa62fbb8c05990ec9008ca3025f934d75',1,'roofer::tri_util::FaceInfo']]],
+  ['nodata_5felevation_1747',['nodata_elevation',['../structroofer_1_1reconstruction_1_1ArrangementExtruderConfig.html#a5c51e0e3b3c169b8a9635002abb8ceed',1,'roofer::reconstruction::ArrangementExtruderConfig']]],
+  ['nodata_5ffraction_1748',['nodata_fraction',['../structroofer_1_1misc_1_1CandidatePointCloud.html#af95a74c442e8d556d1752d65e521dd6d',1,'roofer::misc::CandidatePointCloud']]],
+  ['nodata_5fradius_1749',['nodata_radius',['../structroofer_1_1misc_1_1CandidatePointCloud.html#ab7a833b229e59566ba97c53713286d3d',1,'roofer::misc::CandidatePointCloud']]],
+  ['nodataval_1750',['nodataval',['../structroofer_1_1Image.html#a0d8bac5730b50c85eac49f74aff596dd',1,'roofer::Image']]],
+  ['nodataval_5f_1751',['noDataVal_',['../classroofer_1_1RasterTools_1_1Raster.html#ab494de85e403891e9f49a16b766a2642',1,'roofer::RasterTools::Raster']]],
+  ['normal_5fthres_1752',['normal_thres',['../classroofer_1_1planedect_1_1DistAndNormalTester.html#a7b8c1d16e9104d5b50b6c701e59848cf',1,'roofer::planedect::DistAndNormalTester']]],
+  ['normals_1753',['normals',['../structroofer_1_1reconstruction_1_1MeshTriangulatorInterface.html#a79cb0112228359ba938c33a93fa1bd65',1,'roofer::reconstruction::MeshTriangulatorInterface::normals()'],['../classroofer_1_1planedect_1_1PlaneDS.html#abe02225e17ada76284b2058730e58679',1,'roofer::planedect::PlaneDS::normals()']]]
 ];

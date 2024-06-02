@@ -1,17 +1,17 @@
 var searchData=
 [
-  ['edge_5fsegments_1568',['edge_segments',['../structroofer_1_1detection_1_1LineDetectorInterface.html#a32afa5ff7c1ed623395a6352cae7edb2',1,'roofer::detection::LineDetectorInterface']]],
-  ['edge_5fweight_1569',['edge_weight',['../structEdgeInfo.html#aec07e41949534276433011d5ac418c5f',1,'EdgeInfo']]],
-  ['elevation_5f50p_1570',['elevation_50p',['../structFaceInfo.html#ad71d44431e218893834cadd188ae1bf0',1,'FaceInfo']]],
-  ['elevation_5f70p_1571',['elevation_70p',['../structFaceInfo.html#a4c0a8ee5eb71aa8c6f59860d2e0782c3',1,'FaceInfo']]],
-  ['elevation_5f97p_1572',['elevation_97p',['../structFaceInfo.html#a0b832de704ba68e885a603d7d36ef4c8',1,'FaceInfo']]],
-  ['elevation_5fmax_1573',['elevation_max',['../structFaceInfo.html#a6224141fb1a2ead5c1fefe0f145865c3',1,'FaceInfo']]],
-  ['elevation_5fmin_1574',['elevation_min',['../structFaceInfo.html#a2851dec04f03071151d54cae2bcca473',1,'FaceInfo']]],
-  ['error_5ffaces_1575',['error_faces',['../structroofer_1_1detection_1_1Val3datorInterface.html#a8020f00e3b551bc7c15c09cfa0f73758',1,'roofer::detection::Val3datorInterface']]],
-  ['error_5flocations_1576',['error_locations',['../structroofer_1_1detection_1_1Val3datorInterface.html#ade3367947a6bf754afcc807059e4510b',1,'roofer::detection::Val3datorInterface']]],
-  ['errors_1577',['errors',['../structroofer_1_1detection_1_1Val3datorInterface.html#a6a7314e88d7765ec46c89e3a1c6f0b5d',1,'roofer::detection::Val3datorInterface']]],
-  ['exact_5fregularised_5fedges_1578',['exact_regularised_edges',['../structroofer_1_1detection_1_1LineRegulariserInterface.html#a799e813d9d16c4147848f142f953c292',1,'roofer::detection::LineRegulariserInterface']]],
-  ['explanation_1579',['explanation',['../structroofer_1_1PointCloudSelectResult.html#ad4b749cb8e861fe36f7024895844b879',1,'roofer::PointCloudSelectResult']]],
-  ['extension_1580',['extension',['../structroofer_1_1detection_1_1LineRegulariserConfig.html#ab336d77c743d22bf9cadd2450cac85c6',1,'roofer::detection::LineRegulariserConfig']]],
-  ['extract_5fpolygons_1581',['extract_polygons',['../structroofer_1_1detection_1_1AlphaShaperConfig.html#afac9295e62201885b9d0dea66f95d437',1,'roofer::detection::AlphaShaperConfig']]]
+  ['edge_5fsegments_1623',['edge_segments',['../structroofer_1_1reconstruction_1_1LineDetectorInterface.html#a8f6030dfbab2f7825ac32965394f574b',1,'roofer::reconstruction::LineDetectorInterface']]],
+  ['edge_5fweight_1624',['edge_weight',['../structroofer_1_1EdgeInfo.html#ae4ca86315e77293daf265295688ab734',1,'roofer::EdgeInfo']]],
+  ['elevation_5f50p_1625',['elevation_50p',['../structroofer_1_1FaceInfo.html#a676ac845c2216c1619a43761ca36c890',1,'roofer::FaceInfo']]],
+  ['elevation_5f70p_1626',['elevation_70p',['../structroofer_1_1FaceInfo.html#a1e7f23145d9d0e88cc1adc3535b25b30',1,'roofer::FaceInfo']]],
+  ['elevation_5f97p_1627',['elevation_97p',['../structroofer_1_1FaceInfo.html#ab2698b6a24d12599ce4b5b2dc49e83b7',1,'roofer::FaceInfo']]],
+  ['elevation_5fmax_1628',['elevation_max',['../structroofer_1_1FaceInfo.html#a080e76b5b3c74610ddf8176fcd525e24',1,'roofer::FaceInfo']]],
+  ['elevation_5fmin_1629',['elevation_min',['../structroofer_1_1FaceInfo.html#a2bf491e7590afc22150d1cb8b93ad224',1,'roofer::FaceInfo']]],
+  ['error_5ffaces_1630',['error_faces',['../structroofer_1_1misc_1_1Val3datorInterface.html#ae9f7e5a0ed27a46da8144aa33641c626',1,'roofer::misc::Val3datorInterface']]],
+  ['error_5flocations_1631',['error_locations',['../structroofer_1_1misc_1_1Val3datorInterface.html#a51e4bd4610ba6ae04c34368fe4d79010',1,'roofer::misc::Val3datorInterface']]],
+  ['errors_1632',['errors',['../structroofer_1_1misc_1_1Val3datorInterface.html#ae6e4d4252b66bc5e85b8f6d7ab4928ff',1,'roofer::misc::Val3datorInterface']]],
+  ['exact_5fregularised_5fedges_1633',['exact_regularised_edges',['../structroofer_1_1reconstruction_1_1LineRegulariserInterface.html#a9d0844eb4740b6f5fbbae434ea28e9ec',1,'roofer::reconstruction::LineRegulariserInterface']]],
+  ['explanation_1634',['explanation',['../structroofer_1_1misc_1_1PointCloudSelectResult.html#a6e5dbb0549f578d377edf237fb93d793',1,'roofer::misc::PointCloudSelectResult']]],
+  ['extension_1635',['extension',['../structroofer_1_1reconstruction_1_1LineRegulariserConfig.html#ab66fc6f3e2a2a6961a8f6ebf06f868cc',1,'roofer::reconstruction::LineRegulariserConfig']]],
+  ['extract_5fpolygons_1636',['extract_polygons',['../structroofer_1_1reconstruction_1_1AlphaShaperConfig.html#abe31d43dff1d270d698b41701afbf52b',1,'roofer::reconstruction::AlphaShaperConfig']]]
 ];

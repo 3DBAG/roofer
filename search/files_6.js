@@ -1,22 +1,5 @@
 var searchData=
 [
-  ['pc2meshdistcalculator_2ecpp_1175',['PC2MeshDistCalculator.cpp',['../PC2MeshDistCalculator_8cpp.html',1,'']]],
-  ['pc2meshdistcalculator_2ehpp_1176',['PC2MeshDistCalculator.hpp',['../PC2MeshDistCalculator_8hpp.html',1,'']]],
-  ['pip_5futil_2ecpp_1177',['pip_util.cpp',['../pip__util_8cpp.html',1,'']]],
-  ['pip_5futil_2ehpp_1178',['pip_util.hpp',['../pip__util_8hpp.html',1,'']]],
-  ['planedetector_2ecpp_1179',['PlaneDetector.cpp',['../PlaneDetector_8cpp.html',1,'']]],
-  ['planedetector_2ehpp_1180',['PlaneDetector.hpp',['../PlaneDetector_8hpp.html',1,'']]],
-  ['planedetectorbase_2ehpp_1181',['PlaneDetectorBase.hpp',['../PlaneDetectorBase_8hpp.html',1,'']]],
-  ['planedetectorransac_2ecpp_1182',['PlaneDetectorRANSAC.cpp',['../PlaneDetectorRANSAC_8cpp.html',1,'']]],
-  ['planeintersector_2ecpp_1183',['PlaneIntersector.cpp',['../PlaneIntersector_8cpp.html',1,'']]],
-  ['planeintersector_2ehpp_1184',['PlaneIntersector.hpp',['../PlaneIntersector_8hpp.html',1,'']]],
-  ['pointcloudrasteriser_2ecpp_1185',['PointcloudRasteriser.cpp',['../PointcloudRasteriser_8cpp.html',1,'']]],
-  ['pointcloudrasteriser_2ehpp_1186',['PointcloudRasteriser.hpp',['../PointcloudRasteriser_8hpp.html',1,'']]],
-  ['pointcloudreader_2ehpp_1187',['PointCloudReader.hpp',['../PointCloudReader_8hpp.html',1,'']]],
-  ['pointcloudreaderlaslib_2ecpp_1188',['PointCloudReaderLASlib.cpp',['../PointCloudReaderLASlib_8cpp.html',1,'']]],
-  ['pointcloudwriter_2ehpp_1189',['PointCloudWriter.hpp',['../PointCloudWriter_8hpp.html',1,'']]],
-  ['pointcloudwriterlaslib_2ecpp_1190',['PointCloudWriterLASlib.cpp',['../PointCloudWriterLASlib_8cpp.html',1,'']]],
-  ['projhelper_2ecpp_1191',['projHelper.cpp',['../projHelper_8cpp.html',1,'']]],
-  ['projhelper_2ehpp_1192',['projHelper.hpp',['../projHelper_8hpp.html',1,'']]],
-  ['ptinpoly_2eh_1193',['ptinpoly.h',['../ptinpoly_8h.html',1,'']]]
+  ['nodatacirclecomputer_2ecpp_1212',['NodataCircleComputer.cpp',['../NodataCircleComputer_8cpp.html',1,'']]],
+  ['nodatacirclecomputer_2ehpp_1213',['NodataCircleComputer.hpp',['../NodataCircleComputer_8hpp.html',1,'']]]
 ];

@@ -1,16 +1,16 @@
 var searchData=
 [
-  ['active_1511',['active',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#ab4332fcd6599187e7865183ce8f03746',1,'roofer::logger::Logger::logger_impl']]],
-  ['adjacencies_1512',['adjacencies',['../structAdjacencyFinder.html#ad9e41e834952517f2e35ca1bbeeee991',1,'AdjacencyFinder::adjacencies()'],['../classregiongrower_1_1RegionGrower.html#ad04a62017544562b6c51ba33cdab09ff',1,'regiongrower::RegionGrower::adjacencies()']]],
-  ['alpha_5frings_1513',['alpha_rings',['../structroofer_1_1detection_1_1AlphaShaperInterface.html#a36204bbb1f523c6fe7c42ba34d4dad62',1,'roofer::detection::AlphaShaperInterface']]],
-  ['alpha_5ftriangles_1514',['alpha_triangles',['../structroofer_1_1detection_1_1AlphaShaperInterface.html#a6f083d2c2743d32fa8501d72b60c0cea',1,'roofer::detection::AlphaShaperInterface']]],
-  ['angle_1515',['angle',['../structlinereg_1_1linetype.html#ab530530f844b6e00b31cbf34fd9ebd95',1,'linereg::linetype']]],
-  ['angle_5fcluster_1516',['angle_cluster',['../structlinereg_1_1linetype.html#a31d4c2dfd98574173b1dfc028ab7e762',1,'linereg::linetype']]],
-  ['angle_5fcluster_5fid_1517',['angle_cluster_id',['../structlinereg_1_1linetype.html#a70ca8049fd8eec8489562ee3caebf629',1,'linereg::linetype']]],
-  ['angle_5fclusters_1518',['angle_clusters',['../classlinereg_1_1LineRegulariser.html#a65f513e226a3581fc77f04fd7fa09c63',1,'linereg::LineRegulariser']]],
-  ['angle_5fthreshold_1519',['angle_threshold',['../structroofer_1_1detection_1_1LineRegulariserConfig.html#a24a106a6f37bc4764dcbc025d361a1fb',1,'roofer::detection::LineRegulariserConfig::angle_threshold()'],['../classlinereg_1_1LineRegulariser.html#a18f279900711ed6ff57791ef9caabf13',1,'linereg::LineRegulariser::angle_threshold()']]],
-  ['array_1520',['array',['../structroofer_1_1Image.html#a99cde67688bb595c729e425e690654ff',1,'roofer::Image']]],
-  ['attributes_1521',['attributes',['../classroofer_1_1SegmentCollection.html#af52e95f485e03ffd2577288e7663d8fe',1,'roofer::SegmentCollection::attributes()'],['../classroofer_1_1PointCollection.html#a4cfbf53de3b28e949ae930dfca5982c3',1,'roofer::PointCollection::attributes()']]],
-  ['ax_1522',['ax',['../structGridRec.html#abd313b1c6e48b5e8c680efd31f90032f',1,'GridRec']]],
-  ['ay_1523',['ay',['../structGridRec.html#aee108779d011e2c9a2bb4dfb2a07be4f',1,'GridRec']]]
+  ['active_1564',['active',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#ab4332fcd6599187e7865183ce8f03746',1,'roofer::logger::Logger::logger_impl']]],
+  ['adjacencies_1565',['adjacencies',['../structroofer_1_1AdjacencyFinder.html#a168dfaed8a22157792c04bf7a827dbf1',1,'roofer::AdjacencyFinder::adjacencies()'],['../classroofer_1_1regiongrower_1_1RegionGrower.html#a893879863ad215c1ffd3c4cfe3750c4d',1,'roofer::regiongrower::RegionGrower::adjacencies()']]],
+  ['alpha_5frings_1566',['alpha_rings',['../structroofer_1_1reconstruction_1_1AlphaShaperInterface.html#a51776c40cc12d68005db9d290ebe68a2',1,'roofer::reconstruction::AlphaShaperInterface']]],
+  ['alpha_5ftriangles_1567',['alpha_triangles',['../structroofer_1_1reconstruction_1_1AlphaShaperInterface.html#a382602386fc3c6c3757beda3fd27b64d',1,'roofer::reconstruction::AlphaShaperInterface']]],
+  ['angle_1568',['angle',['../structroofer_1_1linereg_1_1linetype.html#a2e80901c3601a90c06672b70b05d8586',1,'roofer::linereg::linetype']]],
+  ['angle_5fcluster_1569',['angle_cluster',['../structroofer_1_1linereg_1_1linetype.html#ae70e6a7eb32629525f9f769a3907c2ff',1,'roofer::linereg::linetype']]],
+  ['angle_5fcluster_5fid_1570',['angle_cluster_id',['../structroofer_1_1linereg_1_1linetype.html#a59ccc97302db507a6bfea20941ff0f37',1,'roofer::linereg::linetype']]],
+  ['angle_5fclusters_1571',['angle_clusters',['../classroofer_1_1linereg_1_1LineRegulariser.html#acab55c5d722f397d23f6d6a640acbf6a',1,'roofer::linereg::LineRegulariser']]],
+  ['angle_5fthreshold_1572',['angle_threshold',['../structroofer_1_1reconstruction_1_1LineRegulariserConfig.html#a8ace3006c849bd257e365054fd7a3856',1,'roofer::reconstruction::LineRegulariserConfig::angle_threshold()'],['../classroofer_1_1linereg_1_1LineRegulariser.html#a914704eb455478bd4a3f90abdbaaed4d',1,'roofer::linereg::LineRegulariser::angle_threshold()']]],
+  ['array_1573',['array',['../structroofer_1_1Image.html#a99cde67688bb595c729e425e690654ff',1,'roofer::Image']]],
+  ['attributes_1574',['attributes',['../classroofer_1_1SegmentCollection.html#af52e95f485e03ffd2577288e7663d8fe',1,'roofer::SegmentCollection::attributes()'],['../classroofer_1_1PointCollection.html#a4cfbf53de3b28e949ae930dfca5982c3',1,'roofer::PointCollection::attributes()']]],
+  ['ax_1575',['ax',['../structGridRec.html#abd313b1c6e48b5e8c680efd31f90032f',1,'GridRec']]],
+  ['ay_1576',['ay',['../structGridRec.html#aee108779d011e2c9a2bb4dfb2a07be4f',1,'GridRec']]]
 ];

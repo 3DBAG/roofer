@@ -1,12 +1,12 @@
 <map id="/home/runner/work/roofer&#45;dev/roofer&#45;dev/src/core/reconstruction/ArrangementBuilder.cpp" name="/home/runner/work/roofer&#45;dev/roofer&#45;dev/src/core/reconstruction/ArrangementBuilder.cpp">
-<area shape="rect" id="node1" title=" " alt="" coords="1175,5,1455,61"/>
-<area shape="rect" id="node2" href="$ArrangementBuilder_8hpp.html" title=" " alt="" coords="828,109,1012,151"/>
-<area shape="rect" id="node4" href="$cgal__shared__definitions_8hpp.html" title=" " alt="" coords="523,206,725,233"/>
-<area shape="rect" id="node19" href="$ArrangementBase_8hpp.html" title=" " alt="" coords="1229,109,1400,151"/>
-<area shape="rect" id="node24" title=" " alt="" coords="1938,206,2078,233"/>
-<area shape="rect" id="node25" title=" " alt="" coords="1475,117,1693,143"/>
-<area shape="rect" id="node3" title=" " alt="" coords="749,206,827,233"/>
-<area shape="rect" id="node10" href="$datastructures_8hpp.html" title=" " alt="" coords="851,206,1099,233"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1177,5,1457,61"/>
+<area shape="rect" id="node2" href="$ArrangementBuilder_8hpp.html" title=" " alt="" coords="829,109,1013,151"/>
+<area shape="rect" id="node4" href="$cgal__shared__definitions_8hpp.html" title=" " alt="" coords="521,199,727,240"/>
+<area shape="rect" id="node19" href="$ArrangementBase_8hpp.html" title=" " alt="" coords="1232,109,1403,151"/>
+<area shape="rect" id="node24" title=" " alt="" coords="1941,206,2081,233"/>
+<area shape="rect" id="node25" title=" " alt="" coords="1478,117,1695,143"/>
+<area shape="rect" id="node3" title=" " alt="" coords="752,206,829,233"/>
+<area shape="rect" id="node10" href="$datastructures_8hpp.html" title=" " alt="" coords="853,206,1101,233"/>
 <area shape="rect" id="node5" title=" " alt="" coords="441,288,613,344"/>
 <area shape="rect" id="node6" title=" " alt="" coords="637,288,809,344"/>
 <area shape="rect" id="node7" title=" " alt="" coords="833,303,1007,329"/>
@@ -20,8 +20,8 @@
 <area shape="rect" id="node16" title=" " alt="" coords="1223,392,1281,419"/>
 <area shape="rect" id="node17" title=" " alt="" coords="1306,392,1374,419"/>
 <area shape="rect" id="node18" title=" " alt="" coords="1399,392,1457,419"/>
-<area shape="rect" id="node20" title=" " alt="" coords="1123,199,1312,240"/>
-<area shape="rect" id="node21" title=" " alt="" coords="1336,206,1491,233"/>
-<area shape="rect" id="node22" title=" " alt="" coords="1515,206,1677,233"/>
-<area shape="rect" id="node23" title=" " alt="" coords="1702,206,1914,233"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1125,199,1315,240"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1339,206,1493,233"/>
+<area shape="rect" id="node22" title=" " alt="" coords="1517,206,1680,233"/>
+<area shape="rect" id="node23" title=" " alt="" coords="1705,206,1917,233"/>
 </map>

@@ -1,15 +1,15 @@
 var searchData=
 [
-  ['edge_1836',['Edge',['../namespaceroofer_1_1detection.html#a07eb9c08e5854e4edf3f5eefe9f1f1a3',1,'roofer::detection']]],
-  ['edge_5fcirculator_1837',['Edge_circulator',['../namespaceroofer_1_1detection.html#a16c18386406fe445929da4fb5284e338',1,'roofer::detection']]],
-  ['edge_5fcontainer_1838',['edge_container',['../classFootprintGraph.html#a9bd482e3e26313b9f453406cb67044c2',1,'FootprintGraph']]],
-  ['edge_5fdescriptor_1839',['edge_descriptor',['../classFootprintGraph.html#aabb77f03f46e5f3ee172e2d29c00de6d',1,'FootprintGraph::edge_descriptor()'],['../structboost_1_1graph__traits_3_01FootprintGraph_01_4.html#acf74d55a8011903d480f030f2a26bdea',1,'boost::graph_traits&lt; FootprintGraph &gt;::edge_descriptor()']]],
-  ['edge_5fiterator_1840',['edge_iterator',['../classFootprintGraph.html#a780bf5fd2d688f94b052336e023c5fc5',1,'FootprintGraph']]],
-  ['edge_5fiterator_1841',['Edge_iterator',['../namespaceroofer.html#aad4cfe1c6bf6919e582b02e99efbc33b',1,'roofer']]],
-  ['edge_5fparallel_5fcategory_1842',['edge_parallel_category',['../structboost_1_1graph__traits_3_01FootprintGraph_01_4.html#ae9b606e6dcca9a89bd3f56f3d069b9b7',1,'boost::graph_traits&lt; FootprintGraph &gt;']]],
-  ['edges_5fsize_5ftype_1843',['edges_size_type',['../structboost_1_1graph__traits_3_01FootprintGraph_01_4.html#afb5169365169828c0b01f5f31634d770',1,'boost::graph_traits&lt; FootprintGraph &gt;']]],
-  ['efficient_5fransac_1844',['Efficient_ransac',['../structroofer_1_1detection_1_1PlaneDetectorRANSAC.html#a30570c2226d2f211229526beba8bb8f4',1,'roofer::detection::PlaneDetectorRANSAC::Efficient_ransac()'],['../namespaceroofer_1_1detection.html#a91a66564fe5894b121bfe9729f1fe1ca',1,'roofer::detection::Efficient_ransac()']]],
-  ['epeck_1845',['EPECK',['../cgal__shared__definitions_8hpp.html#a298c67eca91a42631b33c5e91c355ad4',1,'cgal_shared_definitions.hpp']]],
-  ['epeck_1846',['Epeck',['../namespaceroofer_1_1detection.html#ab9a482f663cbf446fe436cbd122c663f',1,'roofer::detection::Epeck()'],['../namespacetri__util.html#a6fbe67ac884a3c6e6d98c29711e38beb',1,'tri_util::Epeck()']]],
-  ['epick_1847',['EPICK',['../cgal__shared__definitions_8hpp.html#a24ad54f429d3b5dd821e55b5bc3acae2',1,'cgal_shared_definitions.hpp']]]
+  ['edge_1898',['Edge',['../namespaceroofer_1_1reconstruction.html#afbdca3021eb60525d47846e0ffb2e3fe',1,'roofer::reconstruction::Edge()'],['../namespaceroofer_1_1reconstruction_1_1arragementsnapper.html#a48a153236410de5b5b8186002d3f252b',1,'roofer::reconstruction::arragementsnapper::Edge()']]],
+  ['edge_5fcirculator_1899',['Edge_circulator',['../namespaceroofer_1_1reconstruction.html#a1f97dcd276453a55ffe97b7b7eca8c39',1,'roofer::reconstruction::Edge_circulator()'],['../namespaceroofer_1_1reconstruction_1_1arragementsnapper.html#a4404934315a498655e7c47aaadc49653',1,'roofer::reconstruction::arragementsnapper::Edge_circulator()']]],
+  ['edge_5fcontainer_1900',['edge_container',['../classroofer_1_1reconstruction_1_1FootprintGraph.html#a307856005f09ee7e0a042bdaaf186fbc',1,'roofer::reconstruction::FootprintGraph']]],
+  ['edge_5fdescriptor_1901',['edge_descriptor',['../classroofer_1_1reconstruction_1_1FootprintGraph.html#a54aaae372d93a5492f09f1c006cc51df',1,'roofer::reconstruction::FootprintGraph::edge_descriptor()'],['../structboost_1_1graph__traits_3_01roofer_1_1reconstruction_1_1FootprintGraph_01_4.html#a47fa4b7cdc7a32d7008ef2860055e110',1,'boost::graph_traits&lt; roofer::reconstruction::FootprintGraph &gt;::edge_descriptor()']]],
+  ['edge_5fiterator_1902',['edge_iterator',['../classroofer_1_1reconstruction_1_1FootprintGraph.html#a834b07d3344152911b4815f2ac946b99',1,'roofer::reconstruction::FootprintGraph']]],
+  ['edge_5fiterator_1903',['Edge_iterator',['../namespaceroofer_1_1misc.html#abf2dcdbf18bb396509446af6584f8da6',1,'roofer::misc']]],
+  ['edge_5fparallel_5fcategory_1904',['edge_parallel_category',['../structboost_1_1graph__traits_3_01roofer_1_1reconstruction_1_1FootprintGraph_01_4.html#a333b621fbd512c0135788f53a04db58c',1,'boost::graph_traits&lt; roofer::reconstruction::FootprintGraph &gt;']]],
+  ['edges_5fsize_5ftype_1905',['edges_size_type',['../structboost_1_1graph__traits_3_01roofer_1_1reconstruction_1_1FootprintGraph_01_4.html#aed0eb1875617aa693df813639ca6469d',1,'boost::graph_traits&lt; roofer::reconstruction::FootprintGraph &gt;']]],
+  ['efficient_5fransac_1906',['Efficient_ransac',['../structroofer_1_1reconstruction_1_1PlaneDetectorRANSAC.html#a27668eee0b3c75ad4350a5813b7164d9',1,'roofer::reconstruction::PlaneDetectorRANSAC::Efficient_ransac()'],['../namespaceroofer_1_1reconstruction.html#a67b02ecef5eb5e2aaa562324c7155868',1,'roofer::reconstruction::Efficient_ransac()']]],
+  ['epeck_1907',['EPECK',['../namespaceroofer.html#aed262427c495537b4dc7a50514da0097',1,'roofer']]],
+  ['epeck_1908',['Epeck',['../namespaceroofer_1_1reconstruction_1_1arragementsnapper.html#a3b87d5ff21fdb2287ec1e9274ccae49e',1,'roofer::reconstruction::arragementsnapper']]],
+  ['epick_1909',['EPICK',['../namespaceroofer.html#a6ef8e624aaa4648d6a625723ace5e1ff',1,'roofer']]]
 ];

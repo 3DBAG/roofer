@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['laswriterinterface_1389',['LASWriterInterface',['../structroofer_1_1LASWriterInterface.html#a2b635a698f1a1090b6da21b91a7e5838',1,'roofer::LASWriterInterface::LASWriterInterface()'],['../structroofer_1_1LASWriter.html#a2b635a698f1a1090b6da21b91a7e5838',1,'roofer::LASWriter::LASWriterInterface()']]],
-  ['linedetector_1390',['LineDetector',['../classlinedect_1_1LineDetector.html#afc7ec0c797f9347d4417efeef8be6207',1,'linedect::LineDetector::LineDetector(vector&lt; Point &gt; &amp;points)'],['../classlinedect_1_1LineDetector.html#a224179282620d0642c718dd51a43bb1e',1,'linedect::LineDetector::LineDetector(vector&lt; Point &gt; &amp;points, vector&lt; vector&lt; size_t &gt;&gt; neighbours)']]],
-  ['lineregulariser_1391',['LineRegulariser',['../classlinereg_1_1LineRegulariser.html#a307262df546d10f3ed1baf6f3b53a5ea',1,'linereg::LineRegulariser']]],
-  ['linetype_1392',['linetype',['../structlinereg_1_1linetype.html#a0866a275153d31af3828f12651c8fa0f',1,'linereg::linetype']]],
-  ['logger_1393',['Logger',['../classroofer_1_1logger_1_1Logger.html#a0b5993c51c2eb81e3d91bdb977c9406b',1,'roofer::logger::Logger::Logger(const Logger &amp;)=default'],['../classroofer_1_1logger_1_1Logger.html#a4ebb11106c4f4539624c902f35363ab4',1,'roofer::logger::Logger::Logger(Logger &amp;&amp;) noexcept=delete']]],
-  ['logger_5fimpl_1394',['logger_impl',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#a8963269194a6c8259e5a1d615c382a28',1,'roofer::logger::Logger::logger_impl']]]
+  ['laswriterinterface_1437',['LASWriterInterface',['../structroofer_1_1io_1_1LASWriterInterface.html#ab0a910d6aa32477cb54756423e13a660',1,'roofer::io::LASWriterInterface::LASWriterInterface()'],['../structroofer_1_1io_1_1LASWriter.html#ab0a910d6aa32477cb54756423e13a660',1,'roofer::io::LASWriter::LASWriterInterface()']]],
+  ['linedetector_1438',['LineDetector',['../classroofer_1_1linedect_1_1LineDetector.html#a403a85ba4d1b1ffe7a8a721c4df44a11',1,'roofer::linedect::LineDetector::LineDetector(vector&lt; Point &gt; &amp;points)'],['../classroofer_1_1linedect_1_1LineDetector.html#a94aa1d066b9260686625ccb83c0e73ba',1,'roofer::linedect::LineDetector::LineDetector(vector&lt; Point &gt; &amp;points, vector&lt; vector&lt; size_t &gt;&gt; neighbours)']]],
+  ['lineregulariser_1439',['LineRegulariser',['../classroofer_1_1linereg_1_1LineRegulariser.html#a55eeb176e91807c638dda4b937c1f23b',1,'roofer::linereg::LineRegulariser']]],
+  ['linetype_1440',['linetype',['../structroofer_1_1linereg_1_1linetype.html#a5492826decc79fbde2ac99965278f3b7',1,'roofer::linereg::linetype']]],
+  ['logger_1441',['Logger',['../classroofer_1_1logger_1_1Logger.html#a0b5993c51c2eb81e3d91bdb977c9406b',1,'roofer::logger::Logger::Logger(const Logger &amp;)=default'],['../classroofer_1_1logger_1_1Logger.html#a4ebb11106c4f4539624c902f35363ab4',1,'roofer::logger::Logger::Logger(Logger &amp;&amp;) noexcept=delete']]],
+  ['logger_5fimpl_1442',['logger_impl',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#a8963269194a6c8259e5a1d615c382a28',1,'roofer::logger::Logger::logger_impl']]]
 ];

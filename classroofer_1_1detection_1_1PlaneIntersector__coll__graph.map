@@ -1,9 +1,0 @@
-<map id="roofer::detection::PlaneIntersector" name="roofer::detection::PlaneIntersector">
-<area shape="rect" id="node1" title=" " alt="" coords="197,380,335,421"/>
-<area shape="rect" id="node2" href="$structroofer_1_1detection_1_1PlaneIntersectorInterface.html" title=" " alt="" coords="173,289,359,331"/>
-<area shape="rect" id="node3" href="$classroofer_1_1SegmentCollection.html" title=" " alt="" coords="170,200,362,227"/>
-<area shape="rect" id="node4" href="$classroofer_1_1GeometryCollection.html" title=" " alt="" coords="61,96,260,137"/>
-<area shape="rect" id="node5" href="$classroofer_1_1Geometry.html" title=" " alt="" coords="5,13,140,39"/>
-<area shape="rect" id="node6" title=" " alt="" coords="165,5,333,47"/>
-<area shape="rect" id="node7" href="$classroofer_1_1AttributeVecMap.html" title=" " alt="" coords="284,103,461,130"/>
-</map>

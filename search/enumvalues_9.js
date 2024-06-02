@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['preferred_5fand_5flatest_1976',['PREFERRED_AND_LATEST',['../namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a6f6cb68c0300a96bba8d02e5ea54f17c',1,'roofer']]],
-  ['preferred_5fnot_5flatest_1977',['PREFERRED_NOT_LATEST',['../namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981ab5bc8ac0c91545ae25efc80527c5a798',1,'roofer']]]
+  ['preferred_5fand_5flatest_2040',['PREFERRED_AND_LATEST',['../namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda185c153575907cf41d86b0f98990c97b',1,'roofer::misc']]],
+  ['preferred_5fnot_5flatest_2041',['PREFERRED_NOT_LATEST',['../namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda0f7e46a42675426df83fd5db5bce11d4',1,'roofer::misc']]]
 ];

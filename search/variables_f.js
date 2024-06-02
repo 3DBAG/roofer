@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quality_1722',['quality',['../structroofer_1_1CandidatePointCloud.html#ad7ab7009bd0c79ff1a963c98d869c03d',1,'roofer::CandidatePointCloud']]]
+  ['quality_1783',['quality',['../structroofer_1_1misc_1_1CandidatePointCloud.html#a3acf58f304c250fed9e5843192c8b009',1,'roofer::misc::CandidatePointCloud']]]
 ];

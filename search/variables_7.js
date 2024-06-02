@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['handle_5foverlap_5fpoints_1599',['handle_overlap_points',['../structroofer_1_1PointCloudCropperConfig.html#ad0928670fcb221a4048a836bb6254deb',1,'roofer::PointCloudCropperConfig']]],
-  ['handlehash_1600',['HandleHash',['../ArrangementBase_8cpp.html#a14e43f78a9c06688b6c1f4157bf32387',1,'ArrangementBase.cpp']]],
-  ['has_5fintersection_5fline_1601',['has_intersection_line',['../structlinereg_1_1Cluster.html#af737f19d0b52bfd4849b0dea47f71129',1,'linereg::Cluster']]],
-  ['haspoint_1602',['hasPoint',['../structtri__util_1_1VertexInfo.html#a67a52ccf5ddafed2259c10bfab3ef582',1,'tri_util::VertexInfo']]],
-  ['heightfield_1603',['heightfield',['../structroofer_1_1detection_1_1SegmentRasteriserInterface.html#aeb49c2d19966ffd41e80d30c1ec4378e',1,'roofer::detection::SegmentRasteriserInterface']]],
-  ['horiz_5fmin_5fcount_1604',['horiz_min_count',['../structroofer_1_1detection_1_1PlaneDetectorConfig.html#a35bb5fdf27a9a470486c73699dfca064',1,'roofer::detection::PlaneDetectorConfig']]],
-  ['horiz_5fpt_5fcnt_1605',['horiz_pt_cnt',['../structroofer_1_1detection_1_1PlaneDetectorInterface.html#a9541b90815cc6cdf8df92dd0d58b3fd6',1,'roofer::detection::PlaneDetectorInterface']]],
-  ['horiz_5froofplane_5fcnt_1606',['horiz_roofplane_cnt',['../structroofer_1_1detection_1_1PlaneDetectorInterface.html#ad677108a833607ebaa50db6249573536',1,'roofer::detection::PlaneDetectorInterface']]],
-  ['hour_1607',['hour',['../structroofer_1_1Time.html#a17ce7b3c38ea53445392c753c3a91e9b',1,'roofer::Time']]]
+  ['handle_5foverlap_5fpoints_1656',['handle_overlap_points',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a420b6bd6b28d835b391449ec21ea204b',1,'roofer::io::PointCloudCropperConfig']]],
+  ['handlehash_1657',['HandleHash',['../namespaceroofer_1_1reconstruction.html#a2fafbf0ac7189bdec1d65612aa9f8551',1,'roofer::reconstruction']]],
+  ['has_5fintersection_5fline_1658',['has_intersection_line',['../structroofer_1_1linereg_1_1Cluster.html#a562229cd9a56dba8bb38941ddf7a63b7',1,'roofer::linereg::Cluster']]],
+  ['haspoint_1659',['hasPoint',['../structroofer_1_1tri__util_1_1VertexInfo.html#ad955ed8fdd57a1be839256dfc9982ca2',1,'roofer::tri_util::VertexInfo']]],
+  ['heightfield_1660',['heightfield',['../structroofer_1_1reconstruction_1_1SegmentRasteriserInterface.html#a390f9118b6dd24f2edcb563ab665778f',1,'roofer::reconstruction::SegmentRasteriserInterface']]],
+  ['horiz_5fmin_5fcount_1661',['horiz_min_count',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a86c2d4d1b97696755e557c5aae5fc51b',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['horiz_5fpt_5fcnt_1662',['horiz_pt_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#aac50102f51c2d01c1ef58d692a411250',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['horiz_5froofplane_5fcnt_1663',['horiz_roofplane_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a5dbaee3cdc3e2c8d22c2cdc82a4ca038',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['hour_1664',['hour',['../structroofer_1_1Time.html#a17ce7b3c38ea53445392c753c3a91e9b',1,'roofer::Time']]]
 ];

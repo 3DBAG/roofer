@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gt_1859',['Gt',['../namespaceroofer_1_1detection.html#a3483d1b6150d5c8996345851592db5db',1,'roofer::detection']]]
+  ['gt_1921',['Gt',['../namespaceroofer_1_1reconstruction.html#ac54f77052bba5728301164d8eef949e3',1,'roofer::reconstruction']]]
 ];

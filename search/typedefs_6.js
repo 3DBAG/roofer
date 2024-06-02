@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['halfedge_5fconst_5fhandle_1860',['Halfedge_const_handle',['../ArrangementBase_8hpp.html#a6db56f837247db256f463165f690abe8',1,'ArrangementBase.hpp']]],
-  ['halfedge_5fhandle_1861',['Halfedge_handle',['../classEdge__weight__property__map.html#a53fc517973d83b731fa17017de92f2be',1,'Edge_weight_property_map::Halfedge_handle()'],['../ArrangementBase_8hpp.html#a28dc2d7814ead5c992f93857b25cd9be',1,'Halfedge_handle():&#160;ArrangementBase.hpp']]],
-  ['heap_5fhandle_1862',['heap_handle',['../structlinereg_1_1DistanceTable.html#a1316c4a2beb9441cddfee89bfb9adc19',1,'linereg::DistanceTable']]],
-  ['hf_5fpair_1863',['hf_pair',['../namespaceroofer_1_1detection.html#a3e0f89dbb6435119ab25e130259e8dc0',1,'roofer::detection']]]
+  ['halfedge_5fconst_5fhandle_1922',['Halfedge_const_handle',['../namespaceroofer_1_1reconstruction.html#a13055fccacefc52af12583716abcb330',1,'roofer::reconstruction']]],
+  ['halfedge_5fhandle_1923',['Halfedge_handle',['../classroofer_1_1reconstruction_1_1Edge__weight__property__map.html#a9d6c2c4ecdf64198ece602899b10c369',1,'roofer::reconstruction::Edge_weight_property_map::Halfedge_handle()'],['../namespaceroofer_1_1reconstruction.html#ab80c9caf8ccbf93b83259c093678e36d',1,'roofer::reconstruction::Halfedge_handle()']]],
+  ['heap_5fhandle_1924',['heap_handle',['../structroofer_1_1linereg_1_1DistanceTable.html#ac2c2379cf6a21ce3124ecd15025b9f1f',1,'roofer::linereg::DistanceTable']]],
+  ['hf_5fpair_1925',['hf_pair',['../namespaceroofer_1_1reconstruction.html#aed700198ce5bd0a1983425943dc6d973',1,'roofer::reconstruction']]]
 ];

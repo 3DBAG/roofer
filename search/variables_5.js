@@ -1,11 +1,13 @@
 var searchData=
 [
-  ['face_5ferrors_1582',['face_errors',['../structroofer_1_1detection_1_1PC2MeshDistCalculatorInterface.html#a953270b69b65910bccf631258cdc358b',1,'roofer::detection::PC2MeshDistCalculatorInterface']]],
-  ['faces_1583',['faces',['../structroofer_1_1detection_1_1ArrangementExtruderInterface.html#a78608d9e942ae456cd9f004338636efe',1,'roofer::detection::ArrangementExtruderInterface']]],
-  ['filepath_5f_1584',['filepath_',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#ac4081c8f9aaa0a45774402a560c9134c',1,'roofer::io::CityJsonWriterInterface']]],
-  ['filepaths_5f_1585',['filepaths_',['../structroofer_1_1PointCloudCropperConfig.html#ac2a3217b57f0e74da5e0e7e008bdbbc5',1,'roofer::PointCloudCropperConfig']]],
-  ['fill_5fnodata_5f_1586',['fill_nodata_',['../structroofer_1_1detection_1_1SegmentRasteriserConfig.html#a36c16e140a66c077028829a1f35acefc',1,'roofer::detection::SegmentRasteriserConfig']]],
-  ['fill_5fnodata_5fwindow_5fsize_5f_1587',['fill_nodata_window_size_',['../structroofer_1_1detection_1_1SegmentRasteriserConfig.html#a4959b99f929a1543d494565ebde7aa96',1,'roofer::detection::SegmentRasteriserConfig']]],
-  ['fp_5fextension_1588',['fp_extension',['../structroofer_1_1detection_1_1ArrangementBuilderConfig.html#af80b8f52ef9999813f9c75bb021e429f',1,'roofer::detection::ArrangementBuilderConfig']]],
-  ['full_5fcross_1589',['full_cross',['../structEdge.html#a404ecf4239148143783fa6db7222023d',1,'Edge']]]
+  ['face_5ferrors_1637',['face_errors',['../structroofer_1_1misc_1_1PC2MeshDistCalculatorInterface.html#a52fff082d28a4f7d21fb0d29983465c6',1,'roofer::misc::PC2MeshDistCalculatorInterface']]],
+  ['faces_1638',['faces',['../structroofer_1_1reconstruction_1_1ArrangementExtruderInterface.html#a3c851c4b82abffbce324f0ac7c8348f1',1,'roofer::reconstruction::ArrangementExtruderInterface']]],
+  ['filepath_5f_1639',['filepath_',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#ac4081c8f9aaa0a45774402a560c9134c',1,'roofer::io::CityJsonWriterInterface']]],
+  ['filepaths_5f_1640',['filepaths_',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#ada8802697d660cbb8715f65835ac3d05',1,'roofer::io::PointCloudCropperConfig']]],
+  ['fill_5fnodata_5f_1641',['fill_nodata_',['../structroofer_1_1reconstruction_1_1SegmentRasteriserConfig.html#a0ded8a049e241b222ae26d4ba9b0036b',1,'roofer::reconstruction::SegmentRasteriserConfig']]],
+  ['fill_5fnodata_5fwindow_5fsize_5f_1642',['fill_nodata_window_size_',['../structroofer_1_1reconstruction_1_1SegmentRasteriserConfig.html#af1f2d240d4fa1da10f4ac434537354de',1,'roofer::reconstruction::SegmentRasteriserConfig']]],
+  ['floor_5felevation_1643',['floor_elevation',['../structroofer_1_1ReconstructionConfig.html#ac20eac964eb0ac45af1497baec49c9bd',1,'roofer::ReconstructionConfig']]],
+  ['floor_5felevation_5f_1644',['floor_elevation_',['../structroofer_1_1reconstruction_1_1ConstantElevationProvider.html#a88641a904590efa6c5954b868f3e2531',1,'roofer::reconstruction::ConstantElevationProvider']]],
+  ['fp_5fextension_1645',['fp_extension',['../structroofer_1_1reconstruction_1_1ArrangementBuilderConfig.html#a7fcb8823b27fdeb9094cd9892af04742',1,'roofer::reconstruction::ArrangementBuilderConfig']]],
+  ['full_5fcross_1646',['full_cross',['../structEdge.html#a404ecf4239148143783fa6db7222023d',1,'Edge']]]
 ];

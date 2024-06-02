@@ -74,24 +74,29 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="common_8hpp.html">roofer/common/common.hpp</a>&gt;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
-<div class="line"><a name="l00005"></a><span class="lineno"><a class="line" href="classrooferException.html">    5</a></span>&#160;<span class="keyword">class </span><a class="code" href="classrooferException.html">rooferException</a>: <span class="keyword">public</span> std::exception</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;{</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="classrooferException.html#ad57842fc88340a8c662381e595a7282a">    8</a></span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classrooferException.html#ad57842fc88340a8c662381e595a7282a">rooferException</a>(<span class="keyword">const</span> std::string&amp; message):</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;    <a class="code" href="classrooferException.html#ab1819186f84c2367df50c98c99fa1957">msg_</a>(<span class="stringliteral">&quot;Error: &quot;</span> + message)</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    {}</div>
-<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classrooferException.html#a8d9e5f54e64e85baf86f15748c6a3b18">   11</a></span>&#160;  <span class="keyword">virtual</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code" href="classrooferException.html#a8d9e5f54e64e85baf86f15748c6a3b18">what</a>() <span class="keyword">const</span> throw (){</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classrooferException.html#ab1819186f84c2367df50c98c99fa1957">msg_</a>.c_str();</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  }</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classrooferException.html#ab1819186f84c2367df50c98c99fa1957">   16</a></span>&#160;    std::string <a class="code" href="classrooferException.html#ab1819186f84c2367df50c98c99fa1957">msg_</a>;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;};</div>
-<div class="ttc" id="aclassrooferException_html"><div class="ttname"><a href="classrooferException.html">rooferException</a></div><div class="ttdef"><b>Definition:</b> datastructures.hpp:6</div></div>
-<div class="ttc" id="aclassrooferException_html_a8d9e5f54e64e85baf86f15748c6a3b18"><div class="ttname"><a href="classrooferException.html#a8d9e5f54e64e85baf86f15748c6a3b18">rooferException::what</a></div><div class="ttdeci">virtual const char * what() const</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:11</div></div>
-<div class="ttc" id="aclassrooferException_html_ab1819186f84c2367df50c98c99fa1957"><div class="ttname"><a href="classrooferException.html#ab1819186f84c2367df50c98c99fa1957">rooferException::msg_</a></div><div class="ttdeci">std::string msg_</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:16</div></div>
-<div class="ttc" id="aclassrooferException_html_ad57842fc88340a8c662381e595a7282a"><div class="ttname"><a href="classrooferException.html#ad57842fc88340a8c662381e595a7282a">rooferException::rooferException</a></div><div class="ttdeci">rooferException(const std::string &amp;message)</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:8</div></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceroofer.html">roofer</a> {</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
+<div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="classroofer_1_1rooferException.html">    7</a></span>&#160;<span class="keyword">class </span><a class="code" href="classroofer_1_1rooferException.html">rooferException</a>: <span class="keyword">public</span> std::exception</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;{</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classroofer_1_1rooferException.html#a0a0750a431cb65fa4defa909d68fdbea">   10</a></span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classroofer_1_1rooferException.html#a0a0750a431cb65fa4defa909d68fdbea">rooferException</a>(<span class="keyword">const</span> std::string&amp; message):</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <a class="code" href="classroofer_1_1rooferException.html#a68141676242eb648d5561fb55c02e79d">msg_</a>(<span class="stringliteral">&quot;Error: &quot;</span> + message)</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    {}</div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="classroofer_1_1rooferException.html#ac88eec92fde363f0517e2cfae62f38b6">   13</a></span>&#160;  <span class="keyword">virtual</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code" href="classroofer_1_1rooferException.html#ac88eec92fde363f0517e2cfae62f38b6">what</a>() <span class="keyword">const</span> throw (){</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classroofer_1_1rooferException.html#a68141676242eb648d5561fb55c02e79d">msg_</a>.c_str();</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  }</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classroofer_1_1rooferException.html#a68141676242eb648d5561fb55c02e79d">   18</a></span>&#160;    std::string <a class="code" href="classroofer_1_1rooferException.html#a68141676242eb648d5561fb55c02e79d">msg_</a>;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;};</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;}</div>
+<div class="ttc" id="aclassroofer_1_1rooferException_html"><div class="ttname"><a href="classroofer_1_1rooferException.html">roofer::rooferException</a></div><div class="ttdef"><b>Definition:</b> datastructures.hpp:8</div></div>
+<div class="ttc" id="aclassroofer_1_1rooferException_html_a0a0750a431cb65fa4defa909d68fdbea"><div class="ttname"><a href="classroofer_1_1rooferException.html#a0a0750a431cb65fa4defa909d68fdbea">roofer::rooferException::rooferException</a></div><div class="ttdeci">rooferException(const std::string &amp;message)</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:10</div></div>
+<div class="ttc" id="aclassroofer_1_1rooferException_html_a68141676242eb648d5561fb55c02e79d"><div class="ttname"><a href="classroofer_1_1rooferException.html#a68141676242eb648d5561fb55c02e79d">roofer::rooferException::msg_</a></div><div class="ttdeci">std::string msg_</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:18</div></div>
+<div class="ttc" id="aclassroofer_1_1rooferException_html_ac88eec92fde363f0517e2cfae62f38b6"><div class="ttname"><a href="classroofer_1_1rooferException.html#ac88eec92fde363f0517e2cfae62f38b6">roofer::rooferException::what</a></div><div class="ttdeci">virtual const char * what() const</div><div class="ttdef"><b>Definition:</b> datastructures.hpp:13</div></div>
 <div class="ttc" id="acommon_8hpp_html"><div class="ttname"><a href="common_8hpp.html">common.hpp</a></div></div>
+<div class="ttc" id="anamespaceroofer_html"><div class="ttname"><a href="namespaceroofer.html">roofer</a></div><div class="ttdef"><b>Definition:</b> common.cpp:23</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

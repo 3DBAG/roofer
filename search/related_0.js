@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['edges_1980',['edges',['../classFootprintGraph.html#a9709d9b6961a56769e2003f39635ea62',1,'FootprintGraph']]]
+  ['edges_2044',['edges',['../classroofer_1_1reconstruction_1_1FootprintGraph.html#a9709d9b6961a56769e2003f39635ea62',1,'roofer::reconstruction::FootprintGraph']]]
 ];

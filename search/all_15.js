@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['unsegmented_5fpt_5fcnt_869',['unsegmented_pt_cnt',['../structroofer_1_1detection_1_1PlaneDetectorInterface.html#aca84edca6a67dd523138c78bfad0243a',1,'roofer::detection::PlaneDetectorInterface']]],
-  ['use_5facquisition_5fyear_870',['use_acquisition_year',['../structroofer_1_1PointCloudCropperConfig.html#a2ae75617faa034fec8966b8ea93c2495',1,'roofer::PointCloudCropperConfig']]],
-  ['use_5fground_871',['use_ground',['../structroofer_1_1detection_1_1ArrangementOptimiserConfig.html#a5372b897d931d292fb4171eba315f782',1,'roofer::detection::ArrangementOptimiserConfig::use_ground()'],['../structroofer_1_1detection_1_1SegmentRasteriserConfig.html#a269712ebef481fe9e91941255ab2090e',1,'roofer::detection::SegmentRasteriserConfig::use_ground()']]],
-  ['use_5fransac_872',['use_ransac',['../structroofer_1_1detection_1_1PlaneDetectorConfig.html#af99cf1f28da3cf27b18f9a48c2e81393',1,'roofer::detection::PlaneDetectorConfig']]],
-  ['usefilecreationyear_873',['useFileCreationYear',['../namespaceroofer.html#a47325405ef694ca01eef6114836bc3f9',1,'roofer']]]
+  ['unsegmented_5fpt_5fcnt_896',['unsegmented_pt_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#abe2363b3a6fcefb3e168e8e99ec285e5',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['use_5facquisition_5fyear_897',['use_acquisition_year',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#af3678f6d00487a75dca43334590eede2',1,'roofer::io::PointCloudCropperConfig']]],
+  ['use_5fground_898',['use_ground',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a0816fb56ac1f1e29b8216bc8a4cc4fbe',1,'roofer::reconstruction::ArrangementOptimiserConfig::use_ground()'],['../structroofer_1_1reconstruction_1_1SegmentRasteriserConfig.html#a3509416c92099b89da44b35d66d77ac8',1,'roofer::reconstruction::SegmentRasteriserConfig::use_ground()']]],
+  ['use_5fransac_899',['use_ransac',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a9ac5edaf738daa6e6fafeb3575c33972',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['usefilecreationyear_900',['useFileCreationYear',['../namespaceroofer_1_1io.html#a70b1ee7226a1c49b571a96a17923ca2b',1,'roofer::io']]]
 ];

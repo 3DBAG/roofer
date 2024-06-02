@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['z_5fpercentile_1807',['z_percentile',['../structroofer_1_1detection_1_1ArrangementOptimiserConfig.html#ab43be88be8b9ed6de1d68e0cccfe7b0a',1,'roofer::detection::ArrangementOptimiserConfig']]]
+  ['z_5fpercentile_1868',['z_percentile',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a0aac7d73e40bb19bcebe78a1772a3f05',1,'roofer::reconstruction::ArrangementOptimiserConfig']]]
 ];

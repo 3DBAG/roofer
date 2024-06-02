@@ -76,7 +76,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;string&gt;</code><br />
-<code>#include &quot;<a class="el" href="PointcloudRasteriser_8hpp_source.html">PointcloudRasteriser.hpp</a>&quot;</code><br />
+<code>#include &lt;<a class="el" href="PointcloudRasteriser_8hpp_source.html">roofer/misc/PointcloudRasteriser.hpp</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for select_pointcloud.hpp:</div>
 <div class="dyncontent">
@@ -84,7 +84,7 @@ Include dependency graph for select_pointcloud.hpp:</div>
 <map name="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2include_2roofer_2misc_2select__pointcloud_8hpp" id="a_2home_2runner_2work_2roofer-dev_2roofer-dev_2include_2roofer_2misc_2select__pointcloud_8hpp">
 <area shape="rect" title=" " alt="" coords="54,5,301,61"/>
 <area shape="rect" title=" " alt="" coords="5,333,64,360"/>
-<area shape="rect" href="PointcloudRasteriser_8hpp.html" title=" " alt="" coords="223,109,406,136"/>
+<area shape="rect" href="PointcloudRasteriser_8hpp.html" title=" " alt="" coords="184,109,445,136"/>
 <area shape="rect" title=" " alt="" coords="463,184,540,211"/>
 <area shape="rect" title=" " alt="" coords="531,333,655,360"/>
 <area shape="rect" href="common_8hpp.html" title=" " alt="" coords="204,259,415,285"/>
@@ -110,38 +110,40 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1CandidatePointCloud.html">roofer::CandidatePointCloud</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1CandidatePointCloud.html">roofer::misc::CandidatePointCloud</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1PointCloudSelectResult.html">roofer::PointCloudSelectResult</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1PointCloudSelectResult.html">roofer::misc::PointCloudSelectResult</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1selectPointCloudConfig.html">roofer::selectPointCloudConfig</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1selectPointCloudConfig.html">roofer::misc::selectPointCloudConfig</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespaceroofer"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html">roofer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:namespaceroofer_1_1misc"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html">roofer::misc</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:acb2adac361dbd063d995bd0957bc8981"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981">roofer::PointCloudSelectExplanation</a> { <br />
-&#160;&#160;<a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a1ff7d7d03103f5f01eddf6ea4bbbceb9">roofer::NONE</a>
-, <a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a6f6cb68c0300a96bba8d02e5ea54f17c">roofer::PREFERRED_AND_LATEST</a>
-, <a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981ab5bc8ac0c91545ae25efc80527c5a798">roofer::PREFERRED_NOT_LATEST</a>
-, <a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a382c4fa95ee67be36aeaee2f9a1e5c75">roofer::LATEST_WITH_MUTATION</a>
+<tr class="memitem:a009f9f0d51a744d5a57a39b4a56370ed"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370ed">roofer::misc::PointCloudSelectExplanation</a> { <br />
+&#160;&#160;<a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda8acd584e6d3fc945ec17b80326abf722">roofer::misc::NONE</a>
+, <a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda185c153575907cf41d86b0f98990c97b">roofer::misc::PREFERRED_AND_LATEST</a>
+, <a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda0f7e46a42675426df83fd5db5bce11d4">roofer::misc::PREFERRED_NOT_LATEST</a>
+, <a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda86962d7b99292db7b190763683575d56">roofer::misc::LATEST_WITH_MUTATION</a>
 , <br />
-&#160;&#160;<a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981ac82c59104eed3346685d273811af1d2a">roofer::_HIGHEST_YET_INSUFFICIENT_COVERAGE</a>
-, <a class="el" href="namespaceroofer.html#acb2adac361dbd063d995bd0957bc8981a669d2ecadcdabbcf590b4212fa63c731">roofer::_LATEST</a>
+&#160;&#160;<a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda0fd478f1f5180fe2dff6d650820a6fa2">roofer::misc::_HIGHEST_YET_INSUFFICIENT_COVERAGE</a>
+, <a class="el" href="namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda1b9a10b2703683d8bd7996f18de00160">roofer::misc::_LATEST</a>
 <br />
  }</td></tr>
-<tr class="separator:acb2adac361dbd063d995bd0957bc8981"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a009f9f0d51a744d5a57a39b4a56370ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aab4c94a7d4d7e3e727c7da7f88ec4c49"><td class="memItemLeft" align="right" valign="top">const CandidatePointCloud *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#aab4c94a7d4d7e3e727c7da7f88ec4c49">roofer::getLatestPointCloud</a> (const std::vector&lt; CandidatePointCloud &gt; &amp;candidates)</td></tr>
-<tr class="separator:aab4c94a7d4d7e3e727c7da7f88ec4c49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a214015a4c5710081e5edc6785eaaf051"><td class="memItemLeft" align="right" valign="top">const PointCloudSelectResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a214015a4c5710081e5edc6785eaaf051">roofer::selectPointCloud</a> (const std::vector&lt; CandidatePointCloud &gt; &amp;candidates, const selectPointCloudConfig cfg)</td></tr>
-<tr class="separator:a214015a4c5710081e5edc6785eaaf051"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a121623950ec0b0c285589a59ef79ecfb"><td class="memItemLeft" align="right" valign="top">const CandidatePointCloud *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a121623950ec0b0c285589a59ef79ecfb">roofer::misc::getLatestPointCloud</a> (const std::vector&lt; CandidatePointCloud &gt; &amp;candidates)</td></tr>
+<tr class="separator:a121623950ec0b0c285589a59ef79ecfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dc5511461f592b3120ec2dcb1537371"><td class="memItemLeft" align="right" valign="top">const PointCloudSelectResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a4dc5511461f592b3120ec2dcb1537371">roofer::misc::selectPointCloud</a> (const std::vector&lt; CandidatePointCloud &gt; &amp;candidates, const selectPointCloudConfig cfg)</td></tr>
+<tr class="separator:a4dc5511461f592b3120ec2dcb1537371"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

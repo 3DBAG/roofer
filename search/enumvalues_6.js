@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['max_1972',['MAX',['../namespaceRasterTools.html#a5b7451c237b4d3f99da9ee94569107ddadad2d9fd16ae2433061e98ea6f795ba5',1,'RasterTools']]],
-  ['min_1973',['MIN',['../namespaceRasterTools.html#a5b7451c237b4d3f99da9ee94569107ddade4959d639c2e8cd53c64f9137ece310',1,'RasterTools']]]
+  ['max_2036',['MAX',['../namespaceroofer_1_1RasterTools.html#aef217d5aeb584c553c60b1a19f4cad1ea0b8f1b01a5b82cd6529c82b5472e8f9d',1,'roofer::RasterTools']]],
+  ['min_2037',['MIN',['../namespaceroofer_1_1RasterTools.html#aef217d5aeb584c553c60b1a19f4cad1eaaba38d40daeee4310973a2101901006b',1,'roofer::RasterTools']]]
 ];

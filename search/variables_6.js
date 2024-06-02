@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['gc_1590',['gc',['../structGridSet.html#abd8deae5b260e9354fa4ab3ea5d2224d',1,'GridSet::gc()'],['../namespaceroofer.html#ad025d694417abbe4b6e122b6e6647e1b',1,'roofer::gc()']]],
-  ['gc_5fflags_1591',['gc_flags',['../structGridCell.html#ae0948e2ccac2c5ca5fed632c21cb65a1',1,'GridCell']]],
-  ['gdaldriver_5f_1592',['gdaldriver_',['../structroofer_1_1VectorWriterInterface.html#a1bc15919626543ae9f4f0e3024cf8426',1,'roofer::VectorWriterInterface']]],
-  ['glx_1593',['glx',['../structGridSet.html#a420e1dab9b2d5850b616c9b1bc0031aa',1,'GridSet']]],
-  ['gly_1594',['gly',['../structGridSet.html#a8c138c390f4561615c27bc483a57a9b0',1,'GridSet']]],
-  ['gr_1595',['gr',['../structGridCell.html#a3bc0da053a884e4da0abdf68f492fe86',1,'GridCell']]],
-  ['graph_5fcut_5fimpl_1596',['graph_cut_impl',['../structroofer_1_1detection_1_1ArrangementOptimiserConfig.html#a6353670a441f8b61d3de7156a467dc64',1,'roofer::detection::ArrangementOptimiserConfig']]],
-  ['ground_5fclass_1597',['ground_class',['../structroofer_1_1PointCloudCropperConfig.html#a198cbac051c28862e82c01ca46c8cea7',1,'roofer::PointCloudCropperConfig']]],
-  ['ground_5fpercentile_1598',['ground_percentile',['../structroofer_1_1PointCloudCropperConfig.html#af443a6863832aac5d2d79f108a4765f5',1,'roofer::PointCloudCropperConfig']]]
+  ['gc_1647',['gc',['../structGridSet.html#abd8deae5b260e9354fa4ab3ea5d2224d',1,'GridSet::gc()'],['../namespaceroofer_1_1misc.html#af1eae69bbebd48b77c7a8bfaa4b25d2b',1,'roofer::misc::gc()']]],
+  ['gc_5fflags_1648',['gc_flags',['../structGridCell.html#ae0948e2ccac2c5ca5fed632c21cb65a1',1,'GridCell']]],
+  ['gdaldriver_5f_1649',['gdaldriver_',['../structroofer_1_1io_1_1VectorWriterInterface.html#a80a3cd4cc72f595ad81b25ed7e0438ad',1,'roofer::io::VectorWriterInterface']]],
+  ['glx_1650',['glx',['../structGridSet.html#a420e1dab9b2d5850b616c9b1bc0031aa',1,'GridSet']]],
+  ['gly_1651',['gly',['../structGridSet.html#a8c138c390f4561615c27bc483a57a9b0',1,'GridSet']]],
+  ['gr_1652',['gr',['../structGridCell.html#a3bc0da053a884e4da0abdf68f492fe86',1,'GridCell']]],
+  ['graph_5fcut_5fimpl_1653',['graph_cut_impl',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a18cc4df5b365fdb0650f034e743b7476',1,'roofer::reconstruction::ArrangementOptimiserConfig']]],
+  ['ground_5fclass_1654',['ground_class',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a148f62e41acd0b99a24db751a827667a',1,'roofer::io::PointCloudCropperConfig']]],
+  ['ground_5fpercentile_1655',['ground_percentile',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a36061e659d784fa0b26651d82733a2a0',1,'roofer::io::PointCloudCropperConfig']]]
 ];

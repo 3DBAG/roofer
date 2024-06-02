@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['category_1821',['category',['../classVertex__label__cost__property__map.html#ae5e4d9d45fdb18583163b894a37c00a4',1,'Vertex_label_cost_property_map::category()'],['../classVertex__label__property__map.html#add76dd4ca56a98f45fac213c0df105af',1,'Vertex_label_property_map::category()'],['../classVertex__index__map.html#af3024ed8ef0057f4ec3cb700f0e8f390',1,'Vertex_index_map::category()'],['../classEdge__weight__property__map.html#ae18cb850fc1b971d898e840c82f94566',1,'Edge_weight_property_map::category()'],['../structroofer_1_1detection_1_1Custom__plane__map.html#a030463f0b4eca575b8f40726baa323ad',1,'roofer::detection::Custom_plane_map::category()'],['../structroofer_1_1detection_1_1Custom__plane__index__map.html#af93d251e6775a96eb3fc81bbe4e2e122',1,'roofer::detection::Custom_plane_index_map::category()']]],
-  ['ccb_5fhalfedge_5fcirculator_1822',['Ccb_halfedge_circulator',['../ArrangementBase_8hpp.html#ac9ab53be2831b43af9f79e7687f1ee59',1,'ArrangementBase.hpp']]],
-  ['cdt_1823',['CDT',['../namespacetri__util.html#a1dca1bb17b300a5548a7cdda572f2034',1,'tri_util']]],
-  ['cgal_5fkernel_1824',['cgal_kernel',['../namespacelinedect.html#a67149ae61f26b0b950f4a8482a75d43f',1,'linedect']]],
-  ['cluster2distpairmap_1825',['Cluster2DistPairMap',['../structlinereg_1_1DistanceTable.html#aa5eb3d99934ecc57b805ad078f415148',1,'linereg::DistanceTable']]],
-  ['clusterpair_1826',['ClusterPair',['../structlinereg_1_1DistanceTable.html#a5e9134e4b2072d769922535a2a0c4eaf',1,'linereg::DistanceTable']]],
-  ['concurrency_5ftag_1827',['Concurrency_tag',['../namespaceroofer_1_1detection.html#a4f75ea3a6a836a48efe7cababe5545ec',1,'roofer::detection']]],
-  ['const_5fiterator_1828',['const_iterator',['../classroofer_1_1AttributeVecMap.html#a9a01f22671873cffa48b8c7868bb0ce0',1,'roofer::AttributeVecMap']]],
-  ['constraintmap_1829',['ConstraintMap',['../namespaceroofer_1_1detection.html#a8ccf37b591e255143ce6eccb7a05718e',1,'roofer::detection']]]
+  ['category_1882',['category',['../classroofer_1_1reconstruction_1_1Vertex__label__cost__property__map.html#a03115b5a3fe4210bff0a9d14a60ca050',1,'roofer::reconstruction::Vertex_label_cost_property_map::category()'],['../classroofer_1_1reconstruction_1_1Vertex__label__property__map.html#a24e905c39bdf125de24c98e72100038f',1,'roofer::reconstruction::Vertex_label_property_map::category()'],['../classroofer_1_1reconstruction_1_1Vertex__index__map.html#a3312db8dc156893c50a04c50d82c6f5e',1,'roofer::reconstruction::Vertex_index_map::category()'],['../classroofer_1_1reconstruction_1_1Edge__weight__property__map.html#a37f296dc29fc50bdd6a15ea47ffa1a3c',1,'roofer::reconstruction::Edge_weight_property_map::category()'],['../structroofer_1_1reconstruction_1_1Custom__plane__map.html#a8ac77fb45cd5dc708a35083a2c300bc0',1,'roofer::reconstruction::Custom_plane_map::category()'],['../structroofer_1_1reconstruction_1_1Custom__plane__index__map.html#a38faf30babd849063320de2e4973ddc9',1,'roofer::reconstruction::Custom_plane_index_map::category()']]],
+  ['ccb_5fhalfedge_5fcirculator_1883',['Ccb_halfedge_circulator',['../namespaceroofer_1_1reconstruction.html#a55d97d791dc9565c6f306191c5186afe',1,'roofer::reconstruction']]],
+  ['cdt_1884',['CDT',['../namespaceroofer_1_1tri__util.html#a3a3da2c9bee7e5cb41ddc964a84c7a1d',1,'roofer::tri_util']]],
+  ['cgal_5fkernel_1885',['cgal_kernel',['../namespaceroofer_1_1linedect.html#a46c969f5d5bbb62f45ee69ae0fa221a9',1,'roofer::linedect']]],
+  ['cluster2distpairmap_1886',['Cluster2DistPairMap',['../structroofer_1_1linereg_1_1DistanceTable.html#a052a082b799e26eba61b0fd0697466a7',1,'roofer::linereg::DistanceTable']]],
+  ['clusterpair_1887',['ClusterPair',['../structroofer_1_1linereg_1_1DistanceTable.html#a990f16f64b80f2fa8020fc444ddc9ba8',1,'roofer::linereg::DistanceTable']]],
+  ['concurrency_5ftag_1888',['Concurrency_tag',['../namespaceroofer_1_1reconstruction.html#a74f60d6c5087df16cfeac0a6eba0dc04',1,'roofer::reconstruction']]],
+  ['const_5fiterator_1889',['const_iterator',['../classroofer_1_1AttributeVecMap.html#a9a01f22671873cffa48b8c7868bb0ce0',1,'roofer::AttributeVecMap']]],
+  ['constraintmap_1890',['ConstraintMap',['../namespaceroofer_1_1reconstruction_1_1arragementsnapper.html#a60641b9490d33e97300b49708f31826a',1,'roofer::reconstruction::arragementsnapper']]]
 ];
