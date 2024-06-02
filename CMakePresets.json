@@ -11,7 +11,7 @@
         "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_ENABLE_TESTING": "OFF",
+        "BUILD_TESTING": "OFF",
         "RF_BUILD_APPS": "ON"
       }
     },
@@ -20,7 +20,8 @@
       "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible for running tests.",
       "inherits": "vcpkg-minimal",
       "cacheVariables": {
-        "RF_ENABLE_TESTING": "ON"        
+        "BUILD_TESTING": "ON",
+        "RF_BUILD_APPS": "ON"
       }
     },
     {
@@ -32,7 +33,7 @@
         "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_ENABLE_TESTING": "ON",
+        "BUILD_TESTING": "ON",
         "RF_BUILD_APPS": "ON"
       }
     },
