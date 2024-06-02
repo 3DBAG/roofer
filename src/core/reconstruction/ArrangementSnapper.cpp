@@ -26,7 +26,9 @@
 #include <CGAL/Arr_walk_along_line_point_location.h>
 
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
+
+namespace arragementsnapper {
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
   typedef CGAL::Exact_predicates_inexact_constructions_kernel Epeck;
@@ -517,8 +519,10 @@ namespace roofer::detection {
     }
   };
 
+} // namespace arragementsnapper
+
   std::unique_ptr<ArrangementSnapperInterface> createArrangementSnapper() {
-    return std::make_unique<ArrangementSnapper>();
+    return std::make_unique<arragementsnapper::ArrangementSnapper>();
   }
 
-}
+} // namespace roofer::detection

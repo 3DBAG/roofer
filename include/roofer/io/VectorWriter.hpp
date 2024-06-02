@@ -1,11 +1,11 @@
-
+#pragma once
 #include <cstddef>
 #include <memory>
 
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::io {
   struct VectorWriterInterface {
 
     std::string srs = "";// "EPSG:7415";
@@ -18,9 +18,9 @@ namespace roofer {
     bool do_transactions_ = false;
     int transaction_batch_size_ = 1000;
 
-    projHelperInterface& pjHelper;
+    roofer::misc::projHelperInterface& pjHelper;
 
-    VectorWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    VectorWriterInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
     virtual ~VectorWriterInterface() = default;
 
     virtual void writePolygons(
@@ -38,5 +38,5 @@ namespace roofer {
     };
   };
 
-  std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(projHelperInterface& pjh);
+  std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(roofer::misc::projHelperInterface& pjh);
 }

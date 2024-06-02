@@ -2,7 +2,7 @@
 
 #include <map>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
   
   class PlaneIntersector : public PlaneIntersectorInterface {
 

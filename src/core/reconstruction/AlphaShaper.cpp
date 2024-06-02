@@ -8,7 +8,7 @@
 #include <CGAL/Alpha_shape_face_base_2.h>
 #include <CGAL/Projection_traits_xy_3.h>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
   static const int EXTERIOR=-1, NEVER_VISITED=-2, HOLE=-3;
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;

@@ -1,7 +1,7 @@
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
 // #include "spdlog/spdlog.h"
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
   
   class SegmentRasteriser : public SegmentRasteriserInterface {
 

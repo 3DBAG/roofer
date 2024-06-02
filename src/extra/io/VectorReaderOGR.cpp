@@ -27,9 +27,9 @@
 #include <roofer/io/VectorReader.hpp>
 #include <roofer/logger/logger.h>
 
-namespace fs = std::filesystem;
+namespace roofer::io {
 
-namespace roofer {
+namespace fs = std::filesystem;
 
 class VectorReaderOGR : public VectorReaderInterface {
   GDALDatasetUniquePtr poDS;
@@ -346,7 +346,7 @@ class VectorReaderOGR : public VectorReaderInterface {
   }
 };
 
-std::unique_ptr<VectorReaderInterface> createVectorReaderOGR(projHelperInterface& pjh) {
+std::unique_ptr<VectorReaderInterface> createVectorReaderOGR(roofer::misc::projHelperInterface& pjh) {
   return std::make_unique<VectorReaderOGR>(pjh);
 };
 

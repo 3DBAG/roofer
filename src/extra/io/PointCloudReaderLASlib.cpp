@@ -5,7 +5,7 @@
 #include <roofer/io/PointCloudReader.hpp>
 #include <roofer/logger/logger.h>
 
-namespace roofer {
+namespace roofer::io {
 
 class PointCloudReaderLASlib : public PointCloudReaderInterface {
 
@@ -120,7 +120,7 @@ class PointCloudReaderLASlib : public PointCloudReaderInterface {
     }
 };
 
-std::unique_ptr<PointCloudReaderInterface> createPointCloudReaderLASlib(projHelperInterface& pjh) {
+std::unique_ptr<PointCloudReaderInterface> createPointCloudReaderLASlib(roofer::misc::projHelperInterface& pjh) {
   return std::make_unique<PointCloudReaderLASlib>(pjh);
 };
 

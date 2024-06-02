@@ -1,10 +1,12 @@
+#pragma once
 #include <memory>
 #include <vector>
 
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/reconstruction/ElevationProvider.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct ArrangementExtruderConfig{
     bool do_walls=true, do_roofs=true, do_floor=true;
@@ -30,12 +32,19 @@ namespace roofer::detection {
   // add_output("multisolid", typeid(std::unordered_map<int, Mesh>));
 
     virtual ~ArrangementExtruderInterface() = default;
+
     virtual void compute(
-      Arrangement_2& arrangement,
-      const float floor_elevation,
-      ArrangementExtruderConfig config=ArrangementExtruderConfig()
+        Arrangement_2& arrangement,
+        const ElevationProvider& elevation_provider,
+        ArrangementExtruderConfig config=ArrangementExtruderConfig()
     ) = 0;
-    
+
+    virtual void compute(
+        Arrangement_2& arrangement,
+        const float base_elevation,
+        ArrangementExtruderConfig config=ArrangementExtruderConfig()
+    ) = 0;
+
   };
 
   std::unique_ptr<ArrangementExtruderInterface> createArrangementExtruder();

@@ -1,14 +1,13 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_traits.h>
-
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include <list>
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
 
-namespace roofer::detection {
+namespace roofer::misc {
 
   typedef CGAL::Simple_cartesian<double> SCK;
 

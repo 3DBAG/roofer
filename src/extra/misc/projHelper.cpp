@@ -4,7 +4,7 @@
 
 #include <roofer/misc/projHelper.hpp>
 
-namespace roofer {
+namespace roofer::misc {
   static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};
 
   struct projHelper : public projHelperInterface {

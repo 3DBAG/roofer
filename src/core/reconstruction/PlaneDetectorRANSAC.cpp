@@ -13,7 +13,7 @@
 #include <CGAL/pca_estimate_normals.h>
 #include <CGAL/tags.h>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
 struct PlaneDetectorRANSAC : public ShapeDetectorInterface {
   int metrics_normal_k = 5;

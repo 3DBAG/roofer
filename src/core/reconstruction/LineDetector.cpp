@@ -3,7 +3,7 @@
 #include <roofer/reconstruction/LineDetectorBase.hpp>
 #include <roofer/reconstruction/LineRegulariserBase.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   typedef std::pair<size_t,size_t> IDPair;
   struct Cmp {
@@ -13,7 +13,7 @@ namespace roofer::detection {
   };
   // typedef std::map<IDPair, size_t, Cmp> RingSegMap;
 
-  inline size_t detect_lines_ring(linedect::LineDetector& LD, const Plane& plane, SegmentCollection& segments_out, roofer::detection::LineDetectorConfig& cfg) {
+  inline size_t detect_lines_ring(linedect::LineDetector& LD, const Plane& plane, SegmentCollection& segments_out, roofer::reconstruction::LineDetectorConfig& cfg) {
     LD.dist_thres = cfg.dist_thres * cfg.dist_thres;
     LD.N = cfg.k;
     auto& c_upper = cfg.min_cnt_range.second;
@@ -94,7 +94,7 @@ namespace roofer::detection {
         }
       }
       if (cfg.perform_chaining) {
-        std::vector<SCK::Segment_3> prechain_segments;
+        std::vector<linedect::SCK::Segment_3> prechain_segments;
         std::vector<size_t> idx; size_t idcnt=0;
         for (auto& [i0,i1] : sorted_segments) {
           // segments_out.push_back( LD.project(i0, i1) );
@@ -103,7 +103,7 @@ namespace roofer::detection {
         }
         // TODO: chain the ring? for better regularisation results
         SegmentCollection new_ring;
-        auto chained_ring_pts = linereg::chain_ring<SCK>(idx, SCK::Plane_3(plane.a(), plane.b(), plane.c(), plane.d()), prechain_segments, cfg.snap_threshold, cfg.line_extend);
+        auto chained_ring_pts = linereg::chain_ring<linedect::SCK>(idx, linedect::SCK::Plane_3(plane.a(), plane.b(), plane.c(), plane.d()), prechain_segments, cfg.snap_threshold, cfg.line_extend);
 
         if (chained_ring_pts.size() > 2) {
           auto first = chained_ring_pts.begin();

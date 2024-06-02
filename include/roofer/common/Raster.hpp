@@ -29,7 +29,8 @@
 // #include <cpl_string.h>
 // #include <cpl_conv.h>
 // #include <ogr_spatialref.h>
-namespace RasterTools {
+namespace roofer {
+  namespace RasterTools {
     enum alg {MIN,MAX,ZERO};
     class Raster
     {
@@ -195,4 +196,5 @@ namespace RasterTools {
         // void cnt(double &x, double &y);
         // OGRSpatialReference oSRS;
     };
+  }
 }

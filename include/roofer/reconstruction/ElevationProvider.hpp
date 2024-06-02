@@ -15,14 +15,21 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <vector>
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/reconstruction/cdt_util.hpp>
 
-#include <roofer/common/common.hpp>
-#include <roofer/common/datastructures.hpp>
-#include <roofer/common/ptinpoly.h>
+namespace roofer::reconstruction {
 
-namespace roofer {
+  struct ElevationProvider {
+    virtual ~ElevationProvider() = default;
 
-pGridSet build_grid(const roofer::vec3f& ring);
+    virtual float get(const Point_2 pt) const = 0;
 
-}
+    virtual float get_percentile(float percentile) const = 0;
+
+  };
+
+  std::unique_ptr<ElevationProvider> createElevationProvider(const float floor_elevation);
+  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::DT& base_cdt);
+
+} // namespace roofer::detection

@@ -1,7 +1,8 @@
+#pragma once
 #include <string>
-#include "PointcloudRasteriser.hpp"
+#include <roofer/misc/PointcloudRasteriser.hpp>
 
-namespace roofer {
+namespace roofer::misc {
 
   struct CandidatePointCloud {
     float nodata_radius;  // radius of the incribed circle in the largest gap

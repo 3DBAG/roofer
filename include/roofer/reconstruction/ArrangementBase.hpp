@@ -21,8 +21,10 @@
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Polygon_2.h>
 
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
+
+namespace roofer::reconstruction {
 
 typedef CGAL::Polygon_2<EPECK>                           Polygon_2;
 
@@ -44,7 +46,7 @@ typedef CGAL::Arr_accessor<Arrangement_2>             Arr_accessor;
 typedef Arr_accessor::Dcel_vertex                     DVertex;
 typedef Arrangement_2::Face                           Face;
 struct overlay_functor {
-  FaceInfo operator()(const FaceInfo a, const FaceInfo b) const { 
+  FaceInfo operator()(const FaceInfo a, const FaceInfo b) const {
     auto r = FaceInfo();
     r.segid=0;
     // if (a.is_finite && b.is_finite)
@@ -66,7 +68,7 @@ struct overlay_functor {
       r.in_footprint = true;
     }
 
-    return r; 
+    return r;
   }
 };
 typedef CGAL::Arr_face_overlay_traits<Arrangement_2,
@@ -152,7 +154,7 @@ public:
   }
 };
 class Face_merge_observer : public CGAL::Arr_observer<Arrangement_2>
-{ 
+{
   public:
   Face_merge_observer (Arrangement_2& arr) :
     CGAL::Arr_observer<Arrangement_2> (arr) {};
@@ -166,13 +168,13 @@ class Face_merge_observer : public CGAL::Arr_observer<Arrangement_2>
     if (sum_count!=0){
       auto w1 = (count1/sum_count);
       auto w2 = (count2/sum_count);
-      remaining_face->data().elevation_50p = 
+      remaining_face->data().elevation_50p =
         remaining_face->data().elevation_50p * w1 + discarded_face->data().elevation_50p * w2;
-      remaining_face->data().elevation_70p = 
+      remaining_face->data().elevation_70p =
         remaining_face->data().elevation_70p * w1 + discarded_face->data().elevation_70p * w2;
-      remaining_face->data().elevation_97p = 
+      remaining_face->data().elevation_97p =
         std::max(remaining_face->data().elevation_97p, discarded_face->data().elevation_97p);
-      remaining_face->data().data_coverage = 
+      remaining_face->data().data_coverage =
         remaining_face->data().data_coverage * w1 + discarded_face->data().data_coverage * w2;
       // and sum the counts
       remaining_face->data().pixel_count = sum_count;
@@ -189,7 +191,7 @@ class Face_merge_observer : public CGAL::Arr_observer<Arrangement_2>
 };
 
 class Snap_observer : public CGAL::Arr_observer<Arrangement_2>
-{ 
+{
   public:
   Snap_observer (Arrangement_2& arr) :
     CGAL::Arr_observer<Arrangement_2> (arr) {};
@@ -219,3 +221,5 @@ void arr_dissolve_step_edges(Arrangement_2& arr, float step_height_threshold);
 void arr_dissolve_fp(Arrangement_2& arr, bool inside, bool outside);
 void arr_snap_duplicates(Arrangement_2& arr, double dupe_threshold);
 void arr_label_buildingparts(Arrangement_2& arr);
+
+} // namespace roofer

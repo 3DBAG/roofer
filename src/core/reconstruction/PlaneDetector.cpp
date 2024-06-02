@@ -43,6 +43,8 @@
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/linear_least_squares_fitting_3.h>
 
+namespace roofer {
+
 // Point with normal vector stored in a std::pair.
 typedef boost::tuple<Point, Vector, int, bool, double, int, bool, double, int, bool> PNL;
 typedef CGAL::Nth_of_tuple_property_map<0, PNL> Point_map;
@@ -112,7 +114,7 @@ float compute_percentile(std::vector<float>& z_vec, float percentile) {
   return z_vec[n];
 }
 
-namespace roofer::detection {
+namespace reconstruction {
 
   // Concurrency
   #ifdef CGAL_LINKED_WITH_TBB
@@ -488,4 +490,6 @@ std::unique_ptr<PlaneDetectorInterface> createPlaneDetector() {
   return std::make_unique<PlaneDetector>();
 };
 
-}
+} // namespace detection
+
+} // namespace roofer

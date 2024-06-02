@@ -11,6 +11,8 @@
 #include <vector>
 
 
+namespace roofer::reconstruction {
+
   class FootprintGraph {
     public:
     typedef typename Arrangement_2::Face_handle vertex_descriptor;
@@ -48,18 +50,6 @@
     };
   };
 
-  namespace boost {
-    template<> struct graph_traits<FootprintGraph> {
-      typedef typename Arrangement_2::Face_handle vertex_descriptor;
-      typedef typename Arrangement_2::Halfedge_handle edge_descriptor;
-      typedef boost::disallow_parallel_edge_tag edge_parallel_category;
-      typedef boost::edge_list_graph_tag traversal_category;
-      typedef boost::directed_tag directed_category;
-      typedef FootprintGraph::vertex_container::size_type vertices_size_type;
-      typedef FootprintGraph::edge_container::size_type edges_size_type;
-    };
-  }
-
   // A property map that reads/writes the information to/from the extended 
   // face.
   class Vertex_label_cost_property_map {
@@ -78,7 +68,7 @@
                     key_type key, value_type val)
     { key->data().vertex_label_cost=val; }
   };
-  // A property map that reads/writes the information to/from the extended 
+  // A property map that reads/writes the information to/from the extended
   // face.
   class Vertex_label_property_map {
   public:
@@ -96,7 +86,7 @@
                     key_type key, value_type val)
     { key->data().label=val; }
   };
-  // A property map that reads/writes the information to/from the extended 
+  // A property map that reads/writes the information to/from the extended
   // face.
   class Vertex_index_map {
   public:
@@ -110,7 +100,7 @@
     friend reference get(const Vertex_index_map&, key_type key)
     { return key->data().v_index; }
   };
-  // A property map that reads/writes the information to/from the extended 
+  // A property map that reads/writes the information to/from the extended
   // edge.
   class Edge_weight_property_map {
   public:
@@ -129,8 +119,21 @@
     { key->data().edge_weight = val; }
   };
 
+} // namespace roofer
 
-namespace roofer::detection {
+namespace boost {
+  template<> struct graph_traits<roofer::reconstruction::FootprintGraph> {
+    typedef typename roofer::Arrangement_2::Face_handle vertex_descriptor;
+    typedef typename roofer::Arrangement_2::Halfedge_handle edge_descriptor;
+    typedef boost::disallow_parallel_edge_tag edge_parallel_category;
+    typedef boost::edge_list_graph_tag traversal_category;
+    typedef boost::directed_tag directed_category;
+    typedef roofer::reconstruction::FootprintGraph::vertex_container::size_type vertices_size_type;
+    typedef roofer::reconstruction::FootprintGraph::edge_container::size_type edges_size_type;
+  };
+}
+
+namespace roofer::reconstruction {
 
   inline double edge_length(const Arrangement_2::Halfedge_handle& e)
   {

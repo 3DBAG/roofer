@@ -13,17 +13,27 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#pragma once
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Projection_traits_xy_3.h>
+#include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_face_base_with_info_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Triangulation_vertex_base_with_id_2.h>
 
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
+
+namespace roofer {
 
 namespace tri_util {
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-  typedef CGAL::Exact_predicates_inexact_constructions_kernel Epeck;
   typedef CGAL::Exact_predicates_tag Tag;
   struct VertexInfo {
     bool hasPoint = false;
@@ -61,4 +71,22 @@ namespace tri_util {
   void insert_ring(roofer::vec3f& ring, CDT& cdt);
 
   CDT create_from_polygon(roofer::LinearRing& poly);
-}
+
+} // namespace tri_util
+
+// utils for triangulation with projection traits
+namespace proj_tri_util {
+  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+  typedef CGAL::Projection_traits_xy_3<K> Projection_traits;
+  typedef CGAL::Delaunay_triangulation_2<Projection_traits> DT;
+
+  DT cdt_from_linearing(const roofer::LinearRing& poly);
+
+  float interpolate_from_cdt(const Point_2& p, const DT& cdt);
+
+  //todo temp for testing
+  void write_cdt_to_obj(const DT& cdt, const std::string& filename);
+
+} // namespace proj_tri_util
+
+} // namespace roofer

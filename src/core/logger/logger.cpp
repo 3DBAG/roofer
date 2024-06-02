@@ -20,7 +20,7 @@
 #include <roofer/logger/logger.h>
 #include <fmt/chrono.h>
 
-namespace {
+namespace roofer::logger {
   /** @brief Convert the log level into string */
   std::string string_from_log_level(roofer::logger::LogLevel level) {
     std::array<std::string, 6> names = {"OFF",     "DEBUG", "INFO",
@@ -35,9 +35,7 @@ namespace {
     auto now = system_clock::now();
     return fmt::format("{:%F %T}", now);
   }
-}  // namespace
 
-namespace roofer::logger {
   struct Logger::logger_impl {
     LogLevel level = LogLevel::default_level;
 

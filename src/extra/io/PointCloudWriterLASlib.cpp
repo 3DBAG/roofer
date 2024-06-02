@@ -6,9 +6,10 @@
 #include <roofer/io/PointCloudWriter.hpp>
 #include <roofer/logger/logger.h>
 
-namespace fs = std::filesystem;
+namespace roofer::io {
+  
+  namespace fs = std::filesystem;
 
-namespace roofer {
   struct LASWriter : public LASWriterInterface {
     using LASWriterInterface::LASWriterInterface;
     
@@ -115,7 +116,7 @@ namespace roofer {
     }
   };
 
-  std::unique_ptr<LASWriterInterface> createLASWriter(projHelperInterface& pjh) {
+  std::unique_ptr<LASWriterInterface> createLASWriter(roofer::misc::projHelperInterface& pjh) {
     return std::make_unique<LASWriter>(pjh);
   };
 }

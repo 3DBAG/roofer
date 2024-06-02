@@ -2,6 +2,11 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Arrangement_2.h>
+#include <CGAL/Arr_linear_traits_2.h>
+#include <CGAL/Arr_extended_dcel.h>
+
+namespace roofer {
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel EPECK;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel EPICK;
@@ -14,10 +19,6 @@ typedef EPICK::Line_3 Line;
 typedef std::unordered_map<int, std::pair<Plane, std::vector<Point>>> IndexedPlanesWithPoints;
 
 // Arrangment definitions
-
-#include <CGAL/Arrangement_2.h>
-#include <CGAL/Arr_linear_traits_2.h>
-#include <CGAL/Arr_extended_dcel.h>
 
 typedef CGAL::Arr_linear_traits_2<EPECK>              Traits_2;
 typedef Traits_2::Segment_2                           Segment_2;
@@ -55,3 +56,5 @@ struct EdgeInfo {
 };
 typedef CGAL::Arr_extended_dcel<Traits_2, bool, EdgeInfo, FaceInfo>   Dcel;
 typedef CGAL::Arrangement_2<Traits_2, Dcel>           Arrangement_2;
+
+} // namespace roofer

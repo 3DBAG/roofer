@@ -9,9 +9,9 @@
 #include <roofer/common/Raster.hpp>
 #include <roofer/logger/logger.h>
 
-namespace fs = std::filesystem;
+namespace roofer::io {
 
-namespace roofer {
+namespace fs = std::filesystem;
 
 class PointsInPolygonsCollector  {
   std::vector<LinearRing>& polygons;
@@ -610,7 +610,7 @@ struct PointCloudCropper : public PointCloudCropperInterface {
   }
 };
 
-std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(projHelperInterface& pjh) {
+std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(roofer::misc::projHelperInterface& pjh) {
   return std::make_unique<PointCloudCropper>(pjh);
 };
 

@@ -1,7 +1,7 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   // typedef CGAL::Cartesian<float>           AK;
 
@@ -89,19 +89,18 @@ namespace roofer::detection {
 
     public:
     void compute(
-      Arrangement_2& arr,
-      const float floor_elevation,
-      ArrangementExtruderConfig cfg
+        Arrangement_2& arr,
+        const ElevationProvider& elevation_provider,
+        ArrangementExtruderConfig cfg
     ) override {
-
       typedef Arrangement_2::Traits_2 AT;
       float snap_tolerance = std::pow(10,-cfg.snap_tolerance_exp);
 
       // assume we have only one unbounded faces that just has the building footprint as a hole
 
       auto unbounded_face = arr.unbounded_face();
-      unbounded_face->data().elevation_70p=floor_elevation;
-      unbounded_face->data().elevation_97p=floor_elevation;
+      unbounded_face->data().elevation_70p=elevation_provider.get_percentile(0.7);
+      unbounded_face->data().elevation_97p=elevation_provider.get_percentile(0.97);
 
       // floor
       if (cfg.do_floor) {
@@ -112,8 +111,10 @@ namespace roofer::detection {
           auto he = *floorpart_;
           auto first = he;
           do {
-            if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance)
-              floor.push_back(v2p(he->source(), floor_elevation));
+            if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance) {
+              float pt_elevation = elevation_provider.get(he->source()->point());
+              floor.push_back(v2p(he->source(), pt_elevation));
+            }
             he = he->next();
           } while(he!=first);
 
@@ -133,8 +134,10 @@ namespace roofer::detection {
             auto he = face->outer_ccb();
             auto first = he;
             do {
-              if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance)
-                hole.push_back(v2p(he->source(), floor_elevation));
+              if(CGAL::squared_distance(he->source()->point(), he->target()->point()) > snap_tolerance) {
+                float pt_elevation = elevation_provider.get(he->source()->point());
+                hole.push_back(v2p(he->source(), pt_elevation));
+              }
               he = he->next();
             } while(he!=first);
 
@@ -157,7 +160,7 @@ namespace roofer::detection {
           return;
         }
       }
-      
+
 
       // compute all heights for each vertex
       std::unordered_map<Vertex_handle, std::vector<hf_pair>> vertex_columns;
@@ -176,13 +179,13 @@ namespace roofer::detection {
             } else {
               if (cfg.lod1_extrude_to_max_)
                 h = f->data().elevation_97p;
-              else 
+              else
                 h = f->data().elevation_70p;
             }
           } else if (f->data().in_footprint) {
             h = cfg.nodata_elevation;
           } else {
-            h = floor_elevation;
+            h = elevation_provider.get(p);
           }
           heights.push_back(std::make_pair(h, f));
         } while (++he!=first);
@@ -240,10 +243,12 @@ namespace roofer::detection {
           // // set base (ground) elevation to vertices adjacent to a face oustide the building fp
           int part_id;
           if (fp_a && !fp_b) {
-            h1b=h2b=floor_elevation;
+            h1b = elevation_provider.get(p1);
+            h2b = elevation_provider.get(p2);
             part_id = f_a->data().part_id;
           } else if (!fp_a && fp_b) {
-            h1a=h2a=floor_elevation;
+            h1a = elevation_provider.get(p1);
+            h2a = elevation_provider.get(p2);
             part_id = f_b->data().part_id;
           } else{ // both sides have the same part_id
             part_id = f_b->data().part_id; 
@@ -296,7 +301,7 @@ namespace roofer::detection {
             // EPECK::Point_2 px_2d(px->x(),px->y());
             // arr.split_edge(edge, AT::Segment_2(p1,px_2d), AT::Segment_2(px_2d,p2));
             // if (result) {
-              // auto px = )
+            // auto px = )
             // }
 
             wall_face_1.push_back(v2p(v1,h1b));
@@ -320,7 +325,7 @@ namespace roofer::detection {
             labels.push_back(wall_label);
             mesh.push_polygon(wall_face_2, wall_label);
             // mesh.push_attribute("surface_type", wall_label);
-          } else 
+          } else
           if ((h1a>h1b) and (h2a<h2b)) {
             // compute vx and hx
             auto l_a = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1a), EPECK::Point_3(p2.x(), p2.y(), h2a));
@@ -380,7 +385,7 @@ namespace roofer::detection {
             labels.push_back(wall_label);
             mesh.push_polygon(wall_face_1, wall_label);
             // mesh.push_attribute("surface_type", wall_label);
-          } else 
+          } else
           if ((h2b>h2a) and (h1a==h1b)) {
             wall_face_1.push_back(v2p(v2,h2a));
             // v2_other asc
@@ -441,6 +446,19 @@ namespace roofer::detection {
       }
       
     }
+
+    /*
+     * Convenience overload when base_elevation is passed
+     */
+    void compute(
+        Arrangement_2& arr,
+        float base_elevation,
+        ArrangementExtruderConfig cfg
+    ) override {
+      auto const_elevation_provider_ptr = createElevationProvider(base_elevation);
+      compute(arr, *const_elevation_provider_ptr, cfg);
+    }
+
   };
 
   std::unique_ptr<ArrangementExtruderInterface> createArrangementExtruder() {

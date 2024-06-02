@@ -1,7 +1,7 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
   
   class ArrangementDissolver : public ArrangementDissolverInterface{
 

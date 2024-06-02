@@ -1,10 +1,10 @@
-
+#pragma once
 #include <memory>
 
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::misc {
 
   void draw_circle(
     LinearRing& polygon, 

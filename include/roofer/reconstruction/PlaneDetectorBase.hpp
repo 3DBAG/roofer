@@ -22,10 +22,12 @@
 #include <deque>
 #include <queue>
 
-#include "RegionGrower.hpp"
-#include "RegionGrower_DS_CGAL.hpp"
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/RegionGrower.hpp>
+#include <roofer/reconstruction/RegionGrower_DS_CGAL.hpp>
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
+
+namespace roofer {
 
 namespace planedect {
 
@@ -105,4 +107,7 @@ class DistAndNormalTester {
     return valid;
   }
 };
-};
+
+} // namespace planedect
+
+} // namespace roofer

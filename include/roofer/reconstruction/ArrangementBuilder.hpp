@@ -1,9 +1,10 @@
+#pragma once
 #include <memory>
 
-#include "cgal_shared_definitions.hpp"
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
 
   struct ArrangementBuilderConfig{
     int max_arr_complexity = 400;

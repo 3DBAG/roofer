@@ -6,7 +6,7 @@
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
 
-namespace roofer {
+namespace roofer::misc {
 
   void RasterisePointcloud(
     PointCollection& pointcloud,

@@ -4,6 +4,8 @@
 #include <deque>
 #include <type_traits>
 
+namespace roofer {
+
 namespace regiongrower {
 
   using namespace std;
@@ -12,13 +14,13 @@ namespace regiongrower {
     size_t region_id;
     public:
     Region(size_t region_id) : region_id(region_id) {};
-    
+
     size_t get_region_id() {
       return region_id;
     }
   };
 
-// typename std::enable_if<std::is_base_of<Implementation, T>::value, bool>::type 
+// typename std::enable_if<std::is_base_of<Implementation, T>::value, bool>::type
   template <typename candidateDS, typename regionType> class RegionGrower {
     size_t cur_region_id=1;
     public:
@@ -83,4 +85,7 @@ namespace regiongrower {
       }
     };
   };
-}
+
+} // namespace regiongrower
+
+} // namespace roofer

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace roofer::detection {
+namespace roofer::reconstruction {
   
   class SimplePolygonExtruder : public SimplePolygonExtruderInterface{
 

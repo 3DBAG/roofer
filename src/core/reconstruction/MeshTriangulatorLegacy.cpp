@@ -3,12 +3,12 @@
 #include <roofer/reconstruction/cdt_util.hpp>
 #include <CGAL/Cartesian.h>
 
-namespace roofer::detection {
-  
+namespace roofer::reconstruction {
+
   namespace tri = tri_util;
-  
+
   typedef CGAL::Cartesian<float> AK;
-  typedef CGAL::Polygon_2<tri::K> Polygon_2;
+  typedef CGAL::Polygon_2<tri::K> iPolygon_2;
   typedef CGAL::Plane_3<tri::K> Plane_3;
 
   AK::Vector_3 calculate_normal(const LinearRing& ring)
@@ -36,8 +36,8 @@ namespace roofer::detection {
     return sum/6;
   }
 
-  Polygon_2 project(roofer::vec3f& ring, Plane_3& plane) {
-    Polygon_2 poly_2d;
+  iPolygon_2 project(roofer::vec3f& ring, Plane_3& plane) {
+    iPolygon_2 poly_2d;
     for (auto& p : ring) {
       poly_2d.push_back(plane.to_2d(tri::K::Point_3(p[0], p[1], p[2])));
     }
@@ -63,10 +63,10 @@ namespace roofer::detection {
   class MeshTriangulatorLegacy : public MeshTriangulatorInterface{
 
     void triangulate_polygon(
-      const LinearRing& poly_, 
-      vec3f& normals, 
-      TriangleCollection& triangles, 
-      size_t& ring_id, 
+      const LinearRing& poly_,
+      vec3f& normals,
+      TriangleCollection& triangles,
+      size_t& ring_id,
       vec1i& ring_ids,
       const MeshTriangulatorConfig& cfg
     ) {
@@ -89,7 +89,7 @@ namespace roofer::detection {
       }
       auto& p0 = poly[0];
       Plane_3 plane(tri::K::Point_3(p0[0], p0[1], p0[2]), tri::K::Vector_3(normal.x(), normal.y(), normal.z()));
-      
+
       // project and triangulate
       tri::CDT triangulation;
       // Polygon_2 poly_2d = project(poly, plane);
@@ -128,8 +128,8 @@ namespace roofer::detection {
 
         Triangle triangle;
         triangle = {
-          fit->vertex(0)->info().point, 
-          fit->vertex(1)->info().point, 
+          fit->vertex(0)->info().point,
+          fit->vertex(1)->info().point,
           fit->vertex(2)->info().point
         };
         for (size_t j = 0; j < 3; ++j)
@@ -146,13 +146,13 @@ namespace roofer::detection {
     public:
 
     void compute(
-      const std::vector<Mesh>& meshes, 
+      const std::vector<Mesh>& meshes,
       MeshTriangulatorConfig cfg
     ) override {
       typedef uint32_t N;
 
       roofer::MultiTriangleCollection multitranglecol;
-      
+
       for (size_t mi = 0; mi < meshes.size(); ++mi) {
         auto mesh = meshes[mi];
         TriangleCollection mesh_triangles;
@@ -176,7 +176,7 @@ namespace roofer::detection {
 
     }
     void compute(
-      const std::vector<LinearRing>& polygons, 
+      const std::vector<LinearRing>& polygons,
       MeshTriangulatorConfig cfg
     ) override {
       // const auto &values_in = input("valuesf").get<vec1f>();
@@ -193,7 +193,7 @@ namespace roofer::detection {
     }
 
     void compute(
-      const std::unordered_map<int, Mesh>& multisolid, 
+      const std::unordered_map<int, Mesh>& multisolid,
       MeshTriangulatorConfig cfg
     ) override {
       // const auto &values_in = input("valuesf").get<vec1f>();
@@ -241,7 +241,7 @@ namespace roofer::detection {
     //       lr.push_back(triangle[2]);
     //       mesh.push_polygon( lr, std::get<int>( attrmap[i]["labels"][j++] ) );
     //     }
-        
+
     //     meshmap[mtc.building_part_ids_[i++]] = mesh;
     //   }
     //   output("meshmap").set(meshmap);
@@ -252,4 +252,5 @@ namespace roofer::detection {
   std::unique_ptr<MeshTriangulatorInterface> createMeshTriangulatorLegacy() {
     return std::make_unique<MeshTriangulatorLegacy>();
   }
-} // namespace roofer::nodes::stepedge
+
+} // namespace roofer::detection
