@@ -9,7 +9,6 @@
 #include <spdlog/spdlog.h>
 
 #include <cassert>
-
 #include <roofer/logger/logger.h">
 
 namespace roofer::logger {

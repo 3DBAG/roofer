@@ -1,14 +1,12 @@
 #pragma once
 #include <cstddef>
 #include <memory>
-
-#include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
   struct VectorWriterInterface {
-
-    std::string srs = "";// "EPSG:7415";
+    std::string srs = "";  // "EPSG:7415";
     std::string conn_string_ = "out";
     std::string gdaldriver_ = "GPKG";
     std::string layername_ = "geom";
@@ -20,23 +18,22 @@ namespace roofer::io {
 
     roofer::misc::projHelperInterface& pjHelper;
 
-    VectorWriterInterface(roofer::misc::projHelperInterface& pjh) : pjHelper(pjh) {};
+    VectorWriterInterface(roofer::misc::projHelperInterface& pjh)
+        : pjHelper(pjh){};
     virtual ~VectorWriterInterface() = default;
 
-    virtual void writePolygons(
-      const std::string& source, 
-      const std::vector<LinearRing>& polygons, 
-      const AttributeVecMap& attributes,
-      size_t begin,
-      size_t end) = 0;
+    virtual void writePolygons(const std::string& source,
+                               const std::vector<LinearRing>& polygons,
+                               const AttributeVecMap& attributes, size_t begin,
+                               size_t end) = 0;
 
-    void writePolygons(
-      const std::string& source, 
-      const std::vector<LinearRing>& polygons, 
-      const AttributeVecMap& attributes) {
+    void writePolygons(const std::string& source,
+                       const std::vector<LinearRing>& polygons,
+                       const AttributeVecMap& attributes) {
       writePolygons(source, polygons, attributes, 0, polygons.size());
     };
   };
 
-  std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(roofer::misc::projHelperInterface& pjh);
-}
+  std::unique_ptr<VectorWriterInterface> createVectorWriterOGR(
+      roofer::misc::projHelperInterface& pjh);
+}  // namespace roofer::io

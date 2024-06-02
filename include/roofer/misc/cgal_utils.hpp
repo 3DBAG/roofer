@@ -15,26 +15,27 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/manifoldness.h>
+#include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
-#include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#include <CGAL/Surface_mesh.h>
+
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/MeshTriangulator.hpp>
 
 namespace roofer::misc {
 
-template <typename Point>
-CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
-  typedef typename CGAL::Surface_mesh<Point> SurfaceMesh;
-  typedef typename SurfaceMesh::Vertex_index VertexIndex;
-  typedef typename Point::FT FT;
-  namespace PMP = CGAL::Polygon_mesh_processing;
+  template <typename Point>
+  CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh &gfmesh) {
+    typedef typename CGAL::Surface_mesh<Point> SurfaceMesh;
+    typedef typename SurfaceMesh::Vertex_index VertexIndex;
+    typedef typename Point::FT FT;
+    namespace PMP = CGAL::Polygon_mesh_processing;
 
-  SurfaceMesh smesh;
-  typename std::vector<Point> points;
+    SurfaceMesh smesh;
+    typename std::vector<Point> points;
 
     // method of triangulating everything
     /*
@@ -48,8 +49,8 @@ CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
         std::vector<std::size_t> rindices; rindices.reserve(3);
         for (auto &v : tri)
         {
-            points.push_back(CGAL::make_array<typename Point::FT>(v[0], v[1], v[2]));
-            rindices.push_back(points.size() - 1);
+            points.push_back(CGAL::make_array<typename Point::FT>(v[0], v[1],
+    v[2])); rindices.push_back(points.size() - 1);
         }
         polygons.push_back(rindices);
     }
@@ -57,45 +58,44 @@ CGAL::Surface_mesh<Point> Mesh2CGALSurfaceMesh(const roofer::Mesh& gfmesh) {
 
     // method of triangulating polygons that have holes
     std::vector<std::vector<std::size_t>> polygons;
-    for (const auto &ring : gfmesh.get_polygons())
-    {
-        if (ring.interior_rings().empty()) {
-            std::vector<std::size_t> rindices;
-            rindices.reserve(ring.vertex_count());
-            for (auto& v: ring) {
-                points.push_back(Point(v[0], v[1], v[2]));
-                rindices.push_back(points.size() - 1);
-            }
-            polygons.push_back(rindices);
-        } else {
-            auto poly_triangulator = roofer::reconstruction::createMeshTriangulatorLegacy();
-            std::vector<LinearRing> temp_ring; temp_ring.push_back(ring);
-            poly_triangulator->compute(temp_ring);
-            for (const auto &tri : poly_triangulator->triangles)
-            {
-                std::vector<std::size_t> rindices; rindices.reserve(3);
-                for (auto &v : tri)
-                {
-                    points.push_back(Point(v[0], v[1], v[2]));
-                    rindices.push_back(points.size() - 1);
-                }
-                polygons.push_back(rindices);
-            }
+    for (const auto &ring : gfmesh.get_polygons()) {
+      if (ring.interior_rings().empty()) {
+        std::vector<std::size_t> rindices;
+        rindices.reserve(ring.vertex_count());
+        for (auto &v : ring) {
+          points.push_back(Point(v[0], v[1], v[2]));
+          rindices.push_back(points.size() - 1);
         }
+        polygons.push_back(rindices);
+      } else {
+        auto poly_triangulator =
+            roofer::reconstruction::createMeshTriangulatorLegacy();
+        std::vector<LinearRing> temp_ring;
+        temp_ring.push_back(ring);
+        poly_triangulator->compute(temp_ring);
+        for (const auto &tri : poly_triangulator->triangles) {
+          std::vector<std::size_t> rindices;
+          rindices.reserve(3);
+          for (auto &v : tri) {
+            points.push_back(Point(v[0], v[1], v[2]));
+            rindices.push_back(points.size() - 1);
+          }
+          polygons.push_back(rindices);
+        }
+      }
     }
 
+    // turn polygon soup into polygon mesh
+    PMP::repair_polygon_soup(points, polygons);
+    PMP::orient_polygon_soup(points, polygons);
+    PMP::duplicate_non_manifold_edges_in_polygon_soup(points, polygons);
+    PMP::polygon_soup_to_polygon_mesh(points, polygons, smesh);
 
-  // turn polygon soup into polygon mesh
-  PMP::repair_polygon_soup(points, polygons);
-  PMP::orient_polygon_soup(points, polygons);
-  PMP::duplicate_non_manifold_edges_in_polygon_soup(points, polygons);
-  PMP::polygon_soup_to_polygon_mesh(points, polygons, smesh);
+    if (!CGAL::is_triangle_mesh(smesh)) PMP::triangulate_faces(smesh);
 
-  if(!CGAL::is_triangle_mesh(smesh)) PMP::triangulate_faces(smesh);
+    PMP::duplicate_non_manifold_vertices(smesh);
 
-  PMP::duplicate_non_manifold_vertices(smesh);
+    return smesh;
+  }
 
-  return smesh;
-}
-
-} // namespace roofer
+}  // namespace roofer::misc

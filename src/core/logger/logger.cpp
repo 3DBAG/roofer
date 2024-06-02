@@ -3,9 +3,14 @@
  * Logs all messages to stdout.
  *
  * Uses a separate writer-thread to serialize the messages to the output stream.
- * Message writer thread implementation taken from https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime .
+ * Message writer thread implementation taken from
+ * https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime
+ * .
  */
 #if !defined(USE_LOGGER_SPDLOG)
+
+#include <fmt/chrono.h>
+#include <roofer/logger/logger.h>
 
 #include <array>
 #include <cassert>
@@ -14,11 +19,8 @@
 #include <iostream>
 #include <mutex>
 #include <queue>
-#include <thread>
 #include <sstream>
-
-#include <roofer/logger/logger.h>
-#include <fmt/chrono.h>
+#include <thread>
 
 namespace roofer::logger {
   /** @brief Convert the log level into string */

@@ -40,7 +40,8 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-minimal-test"
+      "inherits": "vcpkg-minimal-test",
+      "generator": "Ninja"
     },
     {
       "name": "gh-macOS",
@@ -75,7 +76,7 @@
       "configurePreset": "gh-Windows",
       "jobs": 4,
       "configuration": "Release"
-      
+
     }
   ],
   "testPresets": [

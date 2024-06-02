@@ -23,7 +23,7 @@ namespace roofer::reconstruction {
     const float floor_elevation_;
 
     ConstantElevationProvider(const float floor_elevation)
-        : floor_elevation_(floor_elevation) {};
+        : floor_elevation_(floor_elevation){};
 
     virtual float get(const Point_2 /* pt */) const override {
       return floor_elevation_;
@@ -32,14 +32,13 @@ namespace roofer::reconstruction {
     virtual float get_percentile(float /* percentile */) const override {
       return floor_elevation_;
     }
-
   };
 
   struct InterpolatedElevationProvider : public ElevationProvider {
     std::shared_ptr<const proj_tri_util::DT> base_cdt_ptr_;
 
     InterpolatedElevationProvider(const proj_tri_util::DT& base_cdt)
-        : base_cdt_ptr_(std::make_shared<const proj_tri_util::DT>(base_cdt)) {};
+        : base_cdt_ptr_(std::make_shared<const proj_tri_util::DT>(base_cdt)){};
 
     virtual float get(const Point_2 pt) const override {
       return proj_tri_util::interpolate_from_cdt(pt, *base_cdt_ptr_);
@@ -54,29 +53,30 @@ namespace roofer::reconstruction {
         elevations.insert(position, elevation);
       };
       // iterate over all vertices and insert elevation
-      for (auto& pt : base_cdt_ptr_->points())
-        insertSorted(pt.z());
+      for (auto& pt : base_cdt_ptr_->points()) insertSorted(pt.z());
       // return percentile
       return compute_percentile(elevations, percentile);
     }
 
-    private:
-      float compute_percentile(std::vector<float>& z_vec, float percentile) const {
-        assert(percentile<=1.);
-        assert(percentile>=0.);
-        size_t n = (z_vec.size()-1) * percentile;
-        std::nth_element(z_vec.begin(), z_vec.begin()+n, z_vec.end());
-        return z_vec[n];
-      }
-
+   private:
+    float compute_percentile(std::vector<float>& z_vec,
+                             float percentile) const {
+      assert(percentile <= 1.);
+      assert(percentile >= 0.);
+      size_t n = (z_vec.size() - 1) * percentile;
+      std::nth_element(z_vec.begin(), z_vec.begin() + n, z_vec.end());
+      return z_vec[n];
+    }
   };
 
-  std::unique_ptr<ElevationProvider> createElevationProvider(const float floor_elevation) {
+  std::unique_ptr<ElevationProvider> createElevationProvider(
+      const float floor_elevation) {
     return std::make_unique<ConstantElevationProvider>(floor_elevation);
   }
 
-  std::unique_ptr<ElevationProvider> createElevationProvider(const proj_tri_util::DT& base_cdt) {
+  std::unique_ptr<ElevationProvider> createElevationProvider(
+      const proj_tri_util::DT& base_cdt) {
     return std::make_unique<InterpolatedElevationProvider>(base_cdt);
   }
 
-} // namespace roofer::detection
+}  // namespace roofer::reconstruction
