@@ -39,7 +39,7 @@ namespace roofer {
    */
   struct ReconstructionConfig {
     // control optimisation
-    float lambda = 1. / 9.;
+    float lambda = 0.7;
     // enable clipping parts off the footprint where ground planes are detected
     bool clip_ground = true;
     // requested LoD
@@ -64,7 +64,7 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  Mesh reconstruct_single_instance(
+  std::vector<Mesh> reconstruct_single_instance(
       const PointCollection& points_roof, const PointCollection& points_ground,
       Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
@@ -218,12 +218,8 @@ namespace roofer {
       ArrangementExtruder->compute(arrangement, *elevation_provider,
                                    {.LoD2 = cfg.lod == 22});
 
-      //      assert(ArrangementExtruder->meshes.size() == 1);
-      // todo temp
-      if (ArrangementExtruder->meshes.size() != 1) {
-        throw rooferException("More than one output mesh!");
-      }
-      return ArrangementExtruder->meshes.front();
+      return ArrangementExtruder->meshes;
+
     } catch (const std::exception& e) {
 #ifdef ROOFER_VERBOSE
       std::cout << "Reconstruction failed, exception thrown: " << e.what()
@@ -241,7 +237,7 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  Mesh reconstruct_single_instance(
+  std::vector<Mesh> reconstruct_single_instance(
       const PointCollection& points_roof, Footprint& footprint,
       ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();

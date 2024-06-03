@@ -132,7 +132,7 @@ int main(int argc, const char* argv[]) {
 
   //  std::vector<roofer::Mesh> meshes = {mesh_lod22, mesh_lod13, mesh_lod12};
   std::vector<roofer::Mesh> meshes = {mesh_lod22};
-  std::vector<std::string> names = {"lod22", "lod13", "lod12"};
+  std::vector<std::string> names = {"lod22"};
 
   // spdlog::info("Outputting to OBJ files");
   // spdlog::info("Converting to CGAL mesh");
