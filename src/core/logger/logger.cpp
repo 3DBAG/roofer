@@ -13,6 +13,7 @@
 #include <roofer/logger/logger.h>
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
