@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
+#include <roofer/logger/logger.h>
 #include <roofer/reconstruction/AlphaShaper.hpp>
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
@@ -28,7 +29,6 @@
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
-#include <roofer/logger/logger.h>
 
 #include "CGAL/Polygon_with_holes_2.h"
 
@@ -71,7 +71,7 @@ namespace roofer {
       const PointCollection& points_roof, const PointCollection& points_ground,
       Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
-      auto &logger = roofer::logger::Logger::get_logger();
+      auto& logger = roofer::logger::Logger::get_logger();
 
       if (cfg.verbose) {
         logger.set_level(roofer::logger::LogLevel::info);
