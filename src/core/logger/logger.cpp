@@ -21,6 +21,7 @@
 #include <queue>
 #include <sstream>
 #include <thread>
+#include <atomic>
 
 namespace roofer::logger {
   /** @brief Convert the log level into string */
