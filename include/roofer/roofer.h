@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <roofer/logger/logger.h>
 #include <roofer/reconstruction/AlphaShaper.hpp>
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
@@ -71,14 +70,6 @@ namespace roofer {
       const PointCollection& points_roof, const PointCollection& points_ground,
       Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
-      auto& logger = roofer::logger::Logger::get_logger();
-
-      if (cfg.verbose) {
-        logger.set_level(roofer::logger::LogLevel::info);
-      } else {
-        logger.set_level(roofer::logger::LogLevel::warning);
-      }
-
       // check if configuration is valid
       if (!cfg.is_valid()) {
         throw rooferException("Invalid roofer configuration.");
@@ -120,8 +111,6 @@ namespace roofer {
             cfg.floor_elevation);
       }
 
-      logger.info("Reconstructing single instance");
-      logger.info("Running plane detectors");
       auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
       PlaneDetector->detect(points_roof);
       if (PlaneDetector->roof_type == "no points" ||
@@ -132,7 +121,6 @@ namespace roofer {
       auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
       PlaneDetector_ground->detect(points_ground);
 
-      logger.info("Computing alpha shapes");
       auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
       AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
       if (AlphaShaper->alpha_rings.size() == 0) {
@@ -142,22 +130,18 @@ namespace roofer {
       auto AlphaShaper_ground = roofer::reconstruction::createAlphaShaper();
       AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
 
-      logger.info("Running line detector");
       auto LineDetector = roofer::reconstruction::createLineDetector();
       LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
                            PlaneDetector->pts_per_roofplane);
 
-      logger.info("Running plane intersector");
       auto PlaneIntersector = roofer::reconstruction::createPlaneIntersector();
       PlaneIntersector->compute(PlaneDetector->pts_per_roofplane,
                                 PlaneDetector->plane_adjacencies);
 
-      logger.info("Running line regulariser");
       auto LineRegulariser = roofer::reconstruction::createLineRegulariser();
       LineRegulariser->compute(LineDetector->edge_segments,
                                PlaneIntersector->segments);
 
-      logger.info("Running segment rasteriser");
       auto SegmentRasteriser =
           roofer::reconstruction::createSegmentRasteriser();
       auto SegmentRasterizerCfg =
@@ -170,14 +154,12 @@ namespace roofer {
                                  AlphaShaper_ground->alpha_triangles,
                                  SegmentRasterizerCfg);
 
-      logger.info("Running arrangement builder");
       Arrangement_2 arrangement;
       auto ArrangementBuilder =
           roofer::reconstruction::createArrangementBuilder();
       ArrangementBuilder->compute(arrangement, footprint,
                                   LineRegulariser->exact_regularised_edges);
 
-      logger.info("Running arrangement optimiser");
       auto ArrangementOptimiser =
           roofer::reconstruction::createArrangementOptimiser();
       ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
@@ -187,7 +169,6 @@ namespace roofer {
                                      .smoothness_multiplier = (1 - cfg.lambda),
                                      .use_ground = cfg.clip_ground});
 
-      logger.info("Running arrangement dissolver");
       auto ArrangementDissolver =
           roofer::reconstruction::createArrangementDissolver();
       ArrangementDissolver->compute(
@@ -196,12 +177,10 @@ namespace roofer {
            .dissolve_all_interior = cfg.lod == 12,
            .step_height_threshold = cfg.lod13_step_height});
 
-      logger.info("Running arrangement snapper");
       auto ArrangementSnapper =
           roofer::reconstruction::createArrangementSnapper();
       ArrangementSnapper->compute(arrangement);
 
-      logger.info("Running arrangement extruder");
       auto ArrangementExtruder =
           roofer::reconstruction::createArrangementExtruder();
       ArrangementExtruder->compute(arrangement, *elevation_provider,
