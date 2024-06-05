@@ -110,7 +110,7 @@ namespace roofer::io {
    public:
     using VectorReaderInterface::VectorReaderInterface;
 
-    void open(const std::string& source) {
+    void open(const std::string& source) override {
       if (GDALGetDriverCount() == 0) GDALAllRegister();
       poDS = GDALDatasetUniquePtr(
           GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
@@ -162,31 +162,6 @@ namespace roofer::io {
       logger.info("Layer count: {}", layer_count);
       OGRLayer* poLayer;
 
-<<<<<<< HEAD
-
-    poLayer->ResetReading();
-    if (this->region_of_interest.has_value()) {
-      auto& roi = *this->region_of_interest;;
-      poLayer->SetSpatialFilterRect(roi[0], roi[1], roi[2], roi[3]);
-    }
-
-    
-    // if ((poLayer->GetFeatureCount()) < feature_select || feature_select < 0)
-    //   throw rooferException("Illegal feature_select value");
-
-    char *pszWKT = NULL;
-    OGRSpatialReference* layerSRS = poLayer->GetSpatialRef();
-    layerSRS->exportToWkt( &pszWKT );
-    // printf( "Layer SRS: \n %s\n", pszWKT );
-    pjHelper.set_fwd_crs_transform(pszWKT);
-    CPLFree(pszWKT);
-
-    if (attribute_filter_.size()) {
-      auto attribute_filter = attribute_filter_;
-      auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
-      if (OGRERR_NONE != error_code) {
-        throw(rooferException("Invalid attribute filter: OGRErr="+std::to_string(error_code)+", filter="+attribute_filter));
-=======
       poLayer = poDS->GetLayerByName(layer_name_.c_str());
       if (poLayer == nullptr) {
         if (layer_id >= layer_count) {
@@ -199,7 +174,6 @@ namespace roofer::io {
         poLayer = poDS->GetLayer(layer_id);
         // throw(rooferException("Could not get the selected layer by name=" +
         // layer_name));
->>>>>>> @{-1}
       }
       if (poLayer == nullptr)
         throw(rooferException("Could not get the selected layer "));
@@ -253,6 +227,10 @@ namespace roofer::io {
       }
 
       poLayer->ResetReading();
+      if (this->region_of_interest.has_value()) {
+        auto& roi = *this->region_of_interest;;
+        poLayer->SetSpatialFilterRect(roi[0], roi[1], roi[2], roi[3]);
+      }
 
       // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <
       // 0)

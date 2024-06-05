@@ -213,7 +213,6 @@ int main(int argc, const char* argv[]) {
     if (cellsize_.has_value()) cellsize = *cellsize_;
 
     auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
-<<<<<<< HEAD
     if(low_lod_area_.has_value())
       low_lod_area = *low_lod_area_;
     
@@ -230,10 +229,7 @@ int main(int argc, const char* argv[]) {
         logger.error("Failed to read parameter.region_of_interest");
       }
     }
-    logger.info("Region of interest: {}", fmt::format("{}", region_of_interest));
-=======
-    if (low_lod_area_.has_value()) low_lod_area = *low_lod_area_;
->>>>>>> @{-1}
+    // logger.info("Region of interest: {}", fmt::format("{}", region_of_interest));
 
     auto building_toml_file_spec_ =
         config["output"]["building_toml_file"].value<std::string>();
