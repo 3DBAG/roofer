@@ -2,8 +2,6 @@
  * spdlog logging backend implementation.
  * Logs messages to stdout, stderr, file.
  */
-#include "config.hpp"
-
 #ifdef RF_USE_LOGGER_SPDLOG
 
 #include <spdlog/sinks/basic_file_sink.h>
@@ -11,7 +9,6 @@
 #include <spdlog/spdlog.h>
 
 #include <cassert>
-
 #include <roofer/logger/logger.h">
 
 namespace roofer::logger {

@@ -1,24 +1,111 @@
 {
   "version": 6,
-
   "configurePresets": [
-    {
-      "name": "vcpkg",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      }
-    },
     {
       "name": "vcpkg-minimal",
       "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release",
         "BUILD_SHARED_LIBS": "OFF",
-        "USE_VAL3DITY": "OFF",
-        "USE_RERUN": "OFF",
-        "USE_LOGGER_SPDLOG": "OFF",
-        "ENABLE_TESTING": "OFF",
-        "BUILD_APPS": "ON"
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_BUILD_TESTING": "OFF",
+        "RF_BUILD_APPS": "ON"
+      }
+    },
+    {
+      "name": "vcpkg-minimal-test",
+      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible for running tests.",
+      "inherits": "vcpkg-minimal",
+      "cacheVariables": {
+        "RF_BUILD_TESTING": "ON",
+        "RF_BUILD_APPS": "ON"
+      }
+    },
+    {
+      "name": "system-minimal-test",
+      "description": "Build with system packages without any optional dependencies, in order to get the quickest build possible for running tests.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_SHARED_LIBS": "OFF",
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_BUILD_TESTING": "ON",
+        "RF_BUILD_APPS": "ON"
+      }
+    },
+    {
+      "name": "gh-Linux",
+      "description": "Preset for github actions CI Linux configure",
+      "inherits": "vcpkg-minimal-test",
+      "generator": "Ninja"
+    },
+    {
+      "name": "gh-macOS",
+      "description": "Preset for github actions CI macOS configure",
+      "inherits": "vcpkg-minimal-test"
+    },
+    {
+      "name": "gh-Windows",
+      "description": "Preset for github actions CI Windows configure",
+      "inherits": "vcpkg-minimal-test",
+      "cacheVariables": {
+        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
+      }
+    }
+  ],
+  "buildPresets" : [
+    {
+      "name": "gh-Linux",
+      "description": "Preset for github actions CI Linux build",
+      "configurePreset": "gh-Linux",
+      "jobs": 4
+    },
+    {
+      "name": "gh-macOS",
+      "description": "Preset for github actions CI macOS build",
+      "configurePreset": "gh-macOS",
+      "jobs": 3
+    },
+    {
+      "name": "gh-Windows",
+      "description": "Preset for github actions CI Windows build",
+      "configurePreset": "gh-Windows",
+      "jobs": 4,
+      "configuration": "Release"
+
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-built",
+      "description": "Test the compiled targets in their build directory",
+      "configurePreset": "vcpkg-minimal-test",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "filter": {
+        "exclude": {
+          "name": "^installed.*"
+        }
+      }
+    },
+    {
+      "name": "test-installed",
+      "description": "Test the installed artifacts",
+      "configurePreset": "vcpkg-minimal-test",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "filter": {
+        "include": {
+          "name": "^installed.*"
+        }
       }
     }
   ]

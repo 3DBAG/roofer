@@ -30,7 +30,7 @@ int main() {
 
   std::cout << "setting log level to info" << "\n";
   logger.set_level(Logger::LogLevel::INFO);
-    logger.debug("debug message");
+  logger.debug("debug message");
   logger2.info("Hello from Logger::info");
   logger.warning("warning message");
   logger3.error("error message");

@@ -1,22 +1,20 @@
-
+#pragma once
 #include <cstddef>
 #include <memory>
-
-#include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/misc/projHelper.hpp>
 
-namespace roofer {
+namespace roofer::io {
   struct RasterWriterInterface {
+    roofer::misc::projHelperInterface& pjHelper;
 
-    projHelperInterface& pjHelper;
-
-    RasterWriterInterface(projHelperInterface& pjh) : pjHelper(pjh) {};
+    RasterWriterInterface(roofer::misc::projHelperInterface& pjh)
+        : pjHelper(pjh){};
     virtual ~RasterWriterInterface() = default;
 
-    virtual void writeBands(
-      const std::string& source, 
-      ImageMap& bands) = 0;
+    virtual void writeBands(const std::string& source, ImageMap& bands) = 0;
   };
 
-  std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(projHelperInterface& pjh);
-}
+  std::unique_ptr<RasterWriterInterface> createRasterWriterGDAL(
+      roofer::misc::projHelperInterface& pjh);
+}  // namespace roofer::io

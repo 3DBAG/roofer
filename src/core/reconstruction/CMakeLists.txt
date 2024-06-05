@@ -6,6 +6,7 @@ set(LIBRARY_SOURCES
     "ArrangementExtruder.cpp"
     "ArrangementOptimiser.cpp"
     "ArrangementSnapper.cpp"
+    "ElevationProvider.cpp"
     "cdt_util.cpp"
     "LineDetector.cpp"
     "LineDetectorBase.cpp"
@@ -24,6 +25,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/ArrangementExtruder.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/ArrangementOptimiser.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/ArrangementSnapper.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/ElevationProvider.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/cdt_util.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/cgal_shared_definitions.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/LineDetector.hpp"
@@ -38,7 +40,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/RegionGrower_DS_CGAL.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/SegmentRasteriser.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/reconstruction/SimplePolygonExtruder.hpp")
-set(LIBRARY_INCLUDES "${ROOFER_INCLUDE_DIR}" "${CMAKE_BINARY_DIR}/configured_files/include")
+set(LIBRARY_INCLUDES "${ROOFER_INCLUDE_DIR}")
 
 add_library("reconstruction" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("reconstruction" PUBLIC ${LIBRARY_INCLUDES})

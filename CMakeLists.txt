@@ -5,20 +5,20 @@ cmake_minimum_required(VERSION 3.25)
 # TODO: add version number
 project(roofer LANGUAGES C CXX)
 
+# Options
+option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
+option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
+option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
+option(RF_BUILD_APPS "Build applications in addition to library" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
+option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
+
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use extensions, because they might affect compiler compatibility
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Options
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
-option(ENABLE_TESTING "Enable a Unit Testing build." OFF)
-option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
-option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
-option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
-option(RF_BUILD_APPS "Build applications in addition to library" ON)
 
 # CMAKE MODULES
 
@@ -52,11 +52,6 @@ else()
   message(STATUS "Logging backend: internal")
 endif()
 
-if(ENABLE_TESTING)
-  find_package(Catch2 REQUIRED)
-  list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
-endif()
-
 # We have to use CPM (or FetchContent) even with vcpkg, because of
 # cmake-git-version-tracking, val3dity, rerun
 include(CPM)
@@ -72,7 +67,8 @@ endif()
 if(RF_USE_RERUN)
   cpmaddpackage(
     NAME rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
+  )
 endif()
 
 if(MSVC)
@@ -86,26 +82,16 @@ endif()
 # Use configure files to configure compile-time variable for using them runtime,
 # e.g. version numbers and feature flags
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
-add_subdirectory(configured)
 add_subdirectory(src)
-if(ENABLE_TESTING)
-  include(CTest)
+if(RF_BUILD_TESTING)
+  include(FetchContent)
   enable_testing()
+  # We use the apps in the integration tests, so we need to build them here
+  # add_subdirectory(apps)
   add_subdirectory(tests)
 endif()
 
-# INSTALL TARGETS
-if(BUILD_APPS)
+# EXECUTABLES
+if(RF_BUILD_APPS)
   add_subdirectory(apps)
-  install(
-    TARGETS "crop"
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
-
-  install(
-    TARGETS "reconstruct"
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
 endif()

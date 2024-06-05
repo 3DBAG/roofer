@@ -1,28 +1,28 @@
 [input.footprint]
-path = 'resources/roofer_data/all-ahn.gpkg'
+path = 'resources/roofer_data/yoc-2019-completely-new.gpkg'
 bid = "identificatie"
 
 [[input.pointclouds]]
 name = "AHN3"
 quality = 1
-path = 'resources/roofer_data/all-ahn-ahn3.laz'
+path = 'resources/roofer_data/yoc-2019-completely-new-ahn3.laz'
 
 [[input.pointclouds]]
 name = "AHN4"
 quality = 0
-path = 'resources/roofer_data/all-ahn-ahn4.laz'
+path = 'resources/roofer_data/yoc-2019-completely-new-ahn4.laz'
 
 [[input.pointclouds]]
 name = "Kadaster"
 date = 2020
 quality = 2
-path = 'resources/roofer_data/all-ahn-kadaster.laz'
+path = 'resources/roofer_data/yoc-2019-completely-new-kadaster.laz'
 
 [parameters]
 cellsize = 0.5
 
 [output]
-path = 'tests/output/all-ahn'
+path = 'tests/output/yoc-2019-completely-new'
 
 # {{bid}} will be replaced by building identifier
 # {{pc_name}} will be replaced by input pointcloud name

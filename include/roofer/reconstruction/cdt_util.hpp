@@ -13,52 +13,78 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#pragma once
+
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Projection_traits_xy_3.h>
 #include <CGAL/Triangulation_face_base_with_info_2.h>
+#include <CGAL/Triangulation_vertex_base_with_id_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 #include <roofer/common/datastructures.hpp>
+#include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
-namespace tri_util {
+namespace roofer {
 
-  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-  typedef CGAL::Exact_predicates_inexact_constructions_kernel Epeck;
-  typedef CGAL::Exact_predicates_tag Tag;
-  struct VertexInfo {
-    bool hasPoint = false;
-    roofer::arr3f point;
-    VertexInfo() : hasPoint(){};
-    void set_point(roofer::arr3f& p) {
-      hasPoint=true;
-      point = p;
+  namespace tri_util {
+
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+    typedef CGAL::Exact_predicates_tag Tag;
+    struct VertexInfo {
+      bool hasPoint = false;
+      roofer::arr3f point;
+      VertexInfo() : hasPoint(){};
+      void set_point(roofer::arr3f& p) {
+        hasPoint = true;
+        point = p;
+      };
     };
-  };
-  struct FaceInfo {
-    bool interior = false, visited = false;
-    int nesting_level = -1;
-    void set_interior(bool is_interior) {
-      visited = true;
-      interior = is_interior;
-    }
-    bool in_domain() {
-      return nesting_level % 2 == 1;
-    }
-  };
-  typedef CGAL::Triangulation_vertex_base_with_info_2<VertexInfo, K> VertexBase;
-  typedef CGAL::Constrained_triangulation_face_base_2<K> FaceBase;
-  typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo, K, FaceBase> FaceBaseWithInfo;
-  typedef CGAL::Triangulation_data_structure_2<VertexBase, FaceBaseWithInfo> TriangulationDataStructure;
-  typedef CGAL::Constrained_Delaunay_triangulation_2<K, TriangulationDataStructure, Tag> CDT;
+    struct FaceInfo {
+      bool interior = false, visited = false;
+      int nesting_level = -1;
+      void set_interior(bool is_interior) {
+        visited = true;
+        interior = is_interior;
+      }
+      bool in_domain() { return nesting_level % 2 == 1; }
+    };
+    typedef CGAL::Triangulation_vertex_base_with_info_2<VertexInfo, K>
+        VertexBase;
+    typedef CGAL::Constrained_triangulation_face_base_2<K> FaceBase;
+    typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo, K, FaceBase>
+        FaceBaseWithInfo;
+    typedef CGAL::Triangulation_data_structure_2<VertexBase, FaceBaseWithInfo>
+        TriangulationDataStructure;
+    typedef CGAL::Constrained_Delaunay_triangulation_2<
+        K, TriangulationDataStructure, Tag>
+        CDT;
 
-  void mark_domains(CDT& ct,
-    CDT::Face_handle start,
-    int index,
-    std::list<CDT::Edge>& border);
+    void mark_domains(CDT& ct, CDT::Face_handle start, int index,
+                      std::list<CDT::Edge>& border);
 
-  void mark_domains(CDT& cdt);
+    void mark_domains(CDT& cdt);
 
-  void insert_ring(roofer::vec3f& ring, CDT& cdt);
+    void insert_ring(roofer::vec3f& ring, CDT& cdt);
 
-  CDT create_from_polygon(roofer::LinearRing& poly);
-}
+    CDT create_from_polygon(roofer::LinearRing& poly);
+
+  }  // namespace tri_util
+
+  // utils for triangulation with projection traits
+  namespace proj_tri_util {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+    typedef CGAL::Projection_traits_xy_3<K> Projection_traits;
+    typedef CGAL::Delaunay_triangulation_2<Projection_traits> DT;
+
+    DT cdt_from_linearing(const roofer::LinearRing& poly);
+
+    float interpolate_from_cdt(const Point_2& p, const DT& cdt);
+
+    // todo temp for testing
+    void write_cdt_to_obj(const DT& cdt, const std::string& filename);
+
+  }  // namespace proj_tri_util
+
+}  // namespace roofer

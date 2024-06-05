@@ -1,19 +1,32 @@
 [input.footprint]
-path = "wippolder.gpkg"
-id_attribute = "identificatie"
+path = 'resources/roofer_data/all-ahn.gpkg'
+bid = "identificatie"
 
 [[input.pointclouds]]
-name = "pointcloud"
+name = "AHN3"
 quality = 1
-path = "wippolder.las"
+path = 'resources/roofer_data/all-ahn-ahn3.laz'
+
+[[input.pointclouds]]
+name = "AHN4"
+quality = 0
+path = 'resources/roofer_data/all-ahn-ahn4.laz'
+
+[[input.pointclouds]]
+name = "Kadaster"
+date = 2020
+quality = 2
+path = 'resources/roofer_data/all-ahn-kadaster.laz'
 
 [parameters]
 cellsize = 0.5
-region_of_interest = [ 0, 0, 100, 100 ]
 
 [output]
-path = 'output/wippolder'
+path = 'tests/output/all-ahn'
 
+# {{bid}} will be replaced by building identifier
+# {{pc_name}} will be replaced by input pointcloud name
+# {{path}} will be replaced by path
 building_toml_file = '{path}/objects/{bid}/config_{pc_name}.toml'
 building_las_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.las'
 building_raster_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.tif'
@@ -24,9 +37,13 @@ metadata_json_file = '{path}/metadata.json'
 jsonl_list_file = '{path}/features.txt'
 index_file = '{path}/index.gpkg'
 
-crs = "EPSG:7415"
-
 # these get passed through to the geoflow config files that are generated for each building
 [output.reconstruction_parameters]
 GF_PROCESS_CRS="EPSG:7415"
-GF_OUTPUT_CRS="EPSG:7415"
+OUTPUT_CRS="EPSG:7415"
+CITYJSON_TRANSLATE_X=171800.0
+CITYJSON_TRANSLATE_Y=472700.0
+CITYJSON_TRANSLATE_Z=0.0
+CITYJSON_SCALE_X=0.001
+CITYJSON_SCALE_Y=0.001
+CITYJSON_SCALE_Z=0.001

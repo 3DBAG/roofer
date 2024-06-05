@@ -16,45 +16,40 @@ Automatic 3D building reconstruction
 Takes a bunch of input las files and footprints and outputs a folder hierarchy with reconstruction inputs for each separate building
 
 ### reconstruct
-Takes a point cloud and footprint for a single building and performs building reconstruction. 
+Takes a point cloud and footprint for a single building and performs building reconstruction.
 
 Currently it is using rerun.io to visualise the result. You need to install the rerun viewer if you want to see the output.
 
 ![reconstruct output visualised with Rerun](rerun.png)
 
-## Installation
+## Compile from source
 
-clone this repository. Then
+Building *roofer* requires [vcpkg](https://vcpkg.io).
+Follow the [vcpkg instructions](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd) to set it up.
+After *vcpkg* is set up, set the `VCPKG_ROOT` environment variable to point to the directory where vcpkg is installed.
 
-```sh
-cd roofer-dev
-git submodule update --init --recursive
-mkdir build
-cd build
-cmake ..
-cmake --build . --parallel 10
+On *macOS* you need to install additional build tools:
+
+```shell
+brew install autoconf autoconf-archive automake libtool
 ```
-
-### With VCPKG
-
-Setup vcpkg
-```sh
-git clone https://github.com/microsoft/vcpkg.git
-cd vcpkg && ./bootstrap-vcpkg.sh
-```
-
-brew install autoconf automake libtool m4
 
 export PATH="/opt/homebrew/opt/m4/bin:$PATH"
 
+Clone this repository and use one of the CMake presets to build the roofer.
 
-This assumes you have CGAL, GDAL, PROJ, GEOS, LASlib  preinstalled on your system
-
-## Run with test-data
-Assuming you build roofer successfully. Unzip the contents of [wippolder.zip](https://data.3dgi.xyz/geoflow-test-data/wippolder.zip) into `test-data`, then
-
+```sh
+cd roofer-dev
+mkdir build
+cmake --preset vcpkg-minimal -S . -B build
+cmake --build build
+# Optionally, install roofer
+cmake --install build
 ```
-cd test-data
-../build/apps/crop -c crop_config.toml
-../build/apps/reconstruct --verbose
+
+You can list all available presets:
+
+```shell
+cd roofer-dev
+cmake --list-presets
 ```

@@ -9,8 +9,14 @@ CMakeUserPresets.json
 .run
 
 # Test dirs
-tests/run-all-balazs.sh
+tests/data/*
+!tests/data/README.md
+!tests/data/*.md5
 tests/output/*
 !tests/output/README.md
-!tests/output/label-style.qml
-resources/roofer_data
+
+# Documentation
+docs/html
+
+# Misc
+build-deps-balazs.sh
