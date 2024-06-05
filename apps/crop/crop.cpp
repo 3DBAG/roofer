@@ -1,30 +1,29 @@
+#include <roofer/logger/logger.h>
+
 #include <cstddef>
 #include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <roofer/io/PointCloudWriter.hpp>
+#include <roofer/io/RasterWriter.hpp>
+#include <roofer/io/StreamCropper.hpp>
+#include <roofer/io/VectorReader.hpp>
+#include <roofer/io/VectorWriter.hpp>
+#include <roofer/misc/NodataCircleComputer.hpp>
+#include <roofer/misc/PointcloudRasteriser.hpp>
+#include <roofer/misc/Vector2DOps.hpp>
+#include <roofer/misc/projHelper.hpp>
+#include <roofer/misc/select_pointcloud.hpp>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "argh.h"
-#include "toml.hpp"
 #include "fmt/format.h"
-
-#include <roofer/misc/projHelper.hpp>
-#include <roofer/io/VectorReader.hpp>
-#include <roofer/io/VectorWriter.hpp>
-#include <roofer/io/RasterWriter.hpp>
-#include <roofer/io/StreamCropper.hpp>
-#include <roofer/io/PointCloudWriter.hpp>
-#include <roofer/misc/Vector2DOps.hpp>
-#include <roofer/misc/NodataCircleComputer.hpp>
-#include <roofer/misc/PointcloudRasteriser.hpp>
-#include <roofer/misc/select_pointcloud.hpp>
-#include <roofer/logger/logger.h>
-
 #include "git.h"
+#include "toml.hpp"
 
 namespace fs = std::filesystem;
 
@@ -39,19 +38,23 @@ void print_help(std::string program_name) {
   std::cout << "   -V, --version                Show version" << "\n";
   std::cout << "   -v, --verbose                Be more verbose" << "\n";
   std::cout << "   -c <file>, --config <file>   Config file" << "\n";
-  std::cout << "   -r, --rasters                Output rasterised building pointclouds" << "\n";
-  std::cout << "   -m, --metadata               Output metadata.json file" << "\n";
+  std::cout << "   -r, --rasters                Output rasterised building "
+               "pointclouds"
+            << "\n";
+  std::cout << "   -m, --metadata               Output metadata.json file"
+            << "\n";
   std::cout << "   -i, --index                  Output index.gpkg file" << "\n";
-  std::cout << "   -a, --all                    Output files for each candidate point cloud instead of only the optimal candidate" << "\n";
+  std::cout << "   -a, --all                    Output files for each "
+               "candidate point cloud instead of only the optimal candidate"
+            << "\n";
 }
 
 void print_version() {
-  std::cout << fmt::format("roofer {} ({}{}{})\n",
-    git_Describe(), 
-    std::strcmp(git_Branch(), "main") ? "" : fmt::format("{}, ", git_Branch()),
-    git_AnyUncommittedChanges() ? "dirty, " : "", 
-    git_CommitDate()
-  );
+  std::cout << fmt::format(
+      "roofer {} ({}{}{})\n", git_Describe(),
+      std::strcmp(git_Branch(), "main") ? ""
+                                        : fmt::format("{}, ", git_Branch()),
+      git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
 }
 
 struct InputPointcloud {
@@ -74,15 +77,16 @@ struct InputPointcloud {
   roofer::vec1i acquisition_years;
 };
 
-int main(int argc, const char * argv[]) {
-
+int main(int argc, const char* argv[]) {
   // auto cmdl = argh::parser({ "-f", "--footprint", "-p", "--pointcloud" });
-  auto cmdl = argh::parser({ "-c", "--config" });
+  auto cmdl = argh::parser({"-c", "--config"});
 
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
 
-  std::string path_footprint; // = "/mnt/Data/LocalData/Kadaster/true_ortho_experimenten/2021_LAZ_Leiden_Almere/DenHaag/bag_83000_455000.gpkg";
+  std::string
+      path_footprint;  // =
+                       // "/mnt/Data/LocalData/Kadaster/true_ortho_experimenten/2021_LAZ_Leiden_Almere/DenHaag/bag_83000_455000.gpkg";
 
   bool output_all = cmdl[{"-a", "--all"}];
   bool write_rasters = cmdl[{"-r", "--rasters"}];
@@ -100,7 +104,7 @@ int main(int argc, const char * argv[]) {
     return EXIT_SUCCESS;
   }
 
-  auto &logger = roofer::logger::Logger::get_logger();
+  auto& logger = roofer::logger::Logger::get_logger();
 
   if (verbose) {
     logger.set_level(roofer::logger::LogLevel::debug);
@@ -139,152 +143,156 @@ int main(int argc, const char * argv[]) {
     }
     logger.info("Reading configuration from file {}", config_path);
     try {
-      config = toml::parse_file( config_path );
+      config = toml::parse_file(config_path);
     } catch (const std::exception& e) {
-      logger.error("Unable to parse config file {}.\n{}", config_path, e.what());
+      logger.error("Unable to parse config file {}.\n{}", config_path,
+                   e.what());
       return EXIT_FAILURE;
     }
 
-    auto tml_path_footprint = config["input"]["footprint"]["path"].value<std::string>();
-    if(tml_path_footprint.has_value())
-      path_footprint = *tml_path_footprint;
+    auto tml_path_footprint =
+        config["input"]["footprint"]["path"].value<std::string>();
+    if (tml_path_footprint.has_value()) path_footprint = *tml_path_footprint;
 
-    auto id_attribute_ = config["input"]["footprint"]["id_attribute"].value<std::string>();
-    if(id_attribute_.has_value())
-      building_bid_attribute = *id_attribute_;
-    auto low_lod_attribute_ = config["input"]["low_lod_attribute"].value<std::string>();
-    if(low_lod_attribute_.has_value())
-      low_lod_attribute = *low_lod_attribute_;
-    auto year_of_construction_attribute_ = config["input"]["year_of_construction_attribute"].value<std::string>();
-    if(year_of_construction_attribute_.has_value())
+    auto id_attribute_ =
+        config["input"]["footprint"]["id_attribute"].value<std::string>();
+    if (id_attribute_.has_value()) building_bid_attribute = *id_attribute_;
+    auto low_lod_attribute_ =
+        config["input"]["low_lod_attribute"].value<std::string>();
+    if (low_lod_attribute_.has_value()) low_lod_attribute = *low_lod_attribute_;
+    auto year_of_construction_attribute_ =
+        config["input"]["year_of_construction_attribute"].value<std::string>();
+    if (year_of_construction_attribute_.has_value())
       year_of_construction_attribute = *year_of_construction_attribute_;
 
     auto tml_pointclouds = config["input"]["pointclouds"];
-    if (toml::array* arr = tml_pointclouds.as_array())
-    {
+    if (toml::array* arr = tml_pointclouds.as_array()) {
       // visitation with for_each() helps deal with heterogeneous data
-      for(auto& el : *arr)
-      {
-        toml::table * tb = el.as_table();
+      for (auto& el : *arr) {
+        toml::table* tb = el.as_table();
         InputPointcloud pc;
-        
-        if( auto n = (*tb)["name"].value<std::string>(); n.has_value() ){
-            pc.name = *n;
+
+        if (auto n = (*tb)["name"].value<std::string>(); n.has_value()) {
+          pc.name = *n;
         }
-        if( auto n = (*tb)["quality"].value<int>(); n.has_value() ){
-            pc.quality = *n;
+        if (auto n = (*tb)["quality"].value<int>(); n.has_value()) {
+          pc.quality = *n;
         }
-        if( auto n = (*tb)["date"].value<int>(); n.has_value() ){
-            pc.date = *n;
+        if (auto n = (*tb)["date"].value<int>(); n.has_value()) {
+          pc.date = *n;
         }
-        if( auto n = (*tb)["force_low_lod"].value<bool>(); n.has_value() ){
-            pc.force_low_lod = *n;
+        if (auto n = (*tb)["force_low_lod"].value<bool>(); n.has_value()) {
+          pc.force_low_lod = *n;
         }
-        if( auto n = (*tb)["select_only_for_date"].value<bool>(); n.has_value() ){
-            pc.select_only_for_date = *n;
+        if (auto n = (*tb)["select_only_for_date"].value<bool>();
+            n.has_value()) {
+          pc.select_only_for_date = *n;
         }
 
-        if( auto n = (*tb)["building_class"].value<int>(); n.has_value() ){
-            pc.bld_class = *n;
+        if (auto n = (*tb)["building_class"].value<int>(); n.has_value()) {
+          pc.bld_class = *n;
         }
-        if( auto n = (*tb)["ground_class"].value<int>(); n.has_value() ){
-            pc.grnd_class = *n;
+        if (auto n = (*tb)["ground_class"].value<int>(); n.has_value()) {
+          pc.grnd_class = *n;
         }
 
         auto tml_path = (*tb)["path"].value<std::string>();
         if (tml_path.has_value()) {
           pc.path = *tml_path;
-          
         }
-        input_pointclouds.push_back( pc );
+        input_pointclouds.push_back(pc);
       };
     }
 
-    auto max_point_density_ = config["parameters"]["max_point_density"].value<float>();
-    if(max_point_density_.has_value())
-      max_point_density = *max_point_density_;
+    auto max_point_density_ =
+        config["parameters"]["max_point_density"].value<float>();
+    if (max_point_density_.has_value()) max_point_density = *max_point_density_;
 
     auto cellsize_ = config["parameters"]["cellsize"].value<float>();
-    if(cellsize_.has_value())
-      cellsize = *cellsize_;
+    if (cellsize_.has_value()) cellsize = *cellsize_;
 
     auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
-    if(low_lod_area_.has_value())
-      low_lod_area = *low_lod_area_;
+    if (low_lod_area_.has_value()) low_lod_area = *low_lod_area_;
 
-    auto building_toml_file_spec_ = config["output"]["building_toml_file"].value<std::string>();
-    if(building_toml_file_spec_.has_value())
+    auto building_toml_file_spec_ =
+        config["output"]["building_toml_file"].value<std::string>();
+    if (building_toml_file_spec_.has_value())
       building_toml_file_spec = *building_toml_file_spec_;
 
-    auto building_las_file_spec_ = config["output"]["building_las_file"].value<std::string>();
-    if(building_las_file_spec_.has_value())
+    auto building_las_file_spec_ =
+        config["output"]["building_las_file"].value<std::string>();
+    if (building_las_file_spec_.has_value())
       building_las_file_spec = *building_las_file_spec_;
-    
-    auto building_gpkg_file_spec_ = config["output"]["building_gpkg_file"].value<std::string>();
-    if(building_gpkg_file_spec_.has_value())
+
+    auto building_gpkg_file_spec_ =
+        config["output"]["building_gpkg_file"].value<std::string>();
+    if (building_gpkg_file_spec_.has_value())
       building_gpkg_file_spec = *building_gpkg_file_spec_;
 
-    auto building_raster_file_spec_ = config["output"]["building_raster_file"].value<std::string>();
-    if(building_raster_file_spec_.has_value())
+    auto building_raster_file_spec_ =
+        config["output"]["building_raster_file"].value<std::string>();
+    if (building_raster_file_spec_.has_value())
       building_raster_file_spec = *building_raster_file_spec_;
 
     if (write_metadata) {
-      auto metadata_json_file_spec_ = config["output"]["metadata_json_file"].value<std::string>();
-      if(metadata_json_file_spec_.has_value())
+      auto metadata_json_file_spec_ =
+          config["output"]["metadata_json_file"].value<std::string>();
+      if (metadata_json_file_spec_.has_value())
         metadata_json_file_spec = *metadata_json_file_spec_;
     }
 
-    auto building_jsonl_file_spec_ = config["output"]["building_jsonl_file"].value<std::string>();
-    if(building_jsonl_file_spec_.has_value())
+    auto building_jsonl_file_spec_ =
+        config["output"]["building_jsonl_file"].value<std::string>();
+    if (building_jsonl_file_spec_.has_value())
       building_jsonl_file_spec = *building_jsonl_file_spec_;
 
     auto index_file_spec_ = config["output"]["index_file"].value<std::string>();
-    if(index_file_spec_.has_value())
-      index_file_spec = *index_file_spec_;
-      
-    auto jsonl_list_file_spec_ = config["output"]["jsonl_list_file"].value<std::string>();
-    if(jsonl_list_file_spec_.has_value())
+    if (index_file_spec_.has_value()) index_file_spec = *index_file_spec_;
+
+    auto jsonl_list_file_spec_ =
+        config["output"]["jsonl_list_file"].value<std::string>();
+    if (jsonl_list_file_spec_.has_value())
       jsonl_list_file_spec = *jsonl_list_file_spec_;
 
     auto output_path_ = config["output"]["path"].value<std::string>();
-    if(output_path_.has_value())
-      output_path = *output_path_;
+    if (output_path_.has_value()) output_path = *output_path_;
 
     auto output_crs_ = config["output"]["crs"].value<std::string>();
-    if(output_crs_.has_value())
-      output_crs = *output_crs_;
+    if (output_crs_.has_value()) output_crs = *output_crs_;
 
   } else {
     logger.error("No config file specified");
     return EXIT_FAILURE;
   }
 
-  auto pj = roofer::createProjHelper();
-  auto VectorReader = roofer::createVectorReaderOGR(*pj);
-  auto VectorWriter = roofer::createVectorWriterOGR(*pj);
+  auto pj = roofer::misc::createProjHelper();
+  auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
+  auto VectorWriter = roofer::io::createVectorWriterOGR(*pj);
   VectorWriter->srs = output_crs;
-  auto RasterWriter = roofer::createRasterWriterGDAL(*pj);
-  auto PointCloudCropper = roofer::createPointCloudCropper(*pj);
-  auto VectorOps = roofer::createVector2DOpsGEOS();
-  auto LASWriter = roofer::createLASWriter(*pj);
+  auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
+  auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
+  auto VectorOps = roofer::misc::createVector2DOpsGEOS();
+  auto LASWriter = roofer::io::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
   logger.info("Reading footprints from {}", path_footprint);
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   VectorReader->readPolygons(footprints, &attributes);
-  
+
   const unsigned N_fp = footprints.size();
 
   // check if low_lod_attribute exists, if not then create it
-  if(!attributes.get_if<bool>(low_lod_attribute)) {
+  if (!attributes.get_if<bool>(low_lod_attribute)) {
     auto& vec = attributes.insert_vec<bool>(low_lod_attribute);
     vec.resize(N_fp, false);
   }
   auto low_lod_vec = attributes.get_if<bool>(low_lod_attribute);
-  for (size_t i=0; i<N_fp; ++i) {
-    // need dereference operator here for dereferencing pointer and getting std::option value
-    (*low_lod_vec)[i] = *(*low_lod_vec)[i] || std::fabs(footprints[i].signed_area()) > low_lod_area;
+  for (size_t i = 0; i < N_fp; ++i) {
+    // need dereference operator here for dereferencing pointer and getting
+    // std::option value
+    (*low_lod_vec)[i] = *(*low_lod_vec)[i] ||
+                        std::fabs(footprints[i].signed_area()) > low_lod_area;
   }
 
   // get yoc attribute vector (nullptr if it does not exist)
@@ -308,10 +316,12 @@ int main(int argc, const char * argv[]) {
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
-    PointCloudCropper->process(
-        ipc.path, footprints, buffered_footprints, ipc.building_clouds,
-        ipc.ground_elevations, ipc.acquisition_years,
-        {.ground_class = ipc.grnd_class, .building_class = ipc.bld_class, .use_acquisition_year = use_acquisition_year});
+    PointCloudCropper->process(ipc.path, footprints, buffered_footprints,
+                               ipc.building_clouds, ipc.ground_elevations,
+                               ipc.acquisition_years,
+                               {.ground_class = ipc.grnd_class,
+                                .building_class = ipc.bld_class,
+                                .use_acquisition_year = use_acquisition_year});
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
@@ -332,15 +342,13 @@ int main(int argc, const char * argv[]) {
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
     roofer::arr2f nodata_c;
-    for(unsigned i=0; i<N_fp; ++i) {
-      roofer::RasterisePointcloud(
-        ipc.building_clouds[i],
-        footprints[i],
-        ipc.building_rasters[i],
-        cellsize
-      );
-      ipc.nodata_fractions[i] = roofer::computeNoDataFraction(ipc.building_rasters[i]);
-      ipc.pt_densities[i] = roofer::computePointDensity(ipc.building_rasters[i]);
+    for (unsigned i = 0; i < N_fp; ++i) {
+      roofer::misc::RasterisePointcloud(ipc.building_clouds[i], footprints[i],
+                                        ipc.building_rasters[i], cellsize);
+      ipc.nodata_fractions[i] =
+          roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
+      ipc.pt_densities[i] =
+          roofer::misc::computePointDensity(ipc.building_rasters[i]);
 
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];
@@ -352,21 +360,16 @@ int main(int argc, const char * argv[]) {
             low_lod);
       }
 
-      gridthinPointcloud(
-        ipc.building_clouds[i], 
-        ipc.building_rasters[i]["cnt"],
-        target_density
-      );
+      roofer::misc::gridthinPointcloud(ipc.building_clouds[i],
+                                       ipc.building_rasters[i]["cnt"],
+                                       target_density);
 
       if (low_lod) {
         ipc.nodata_radii[i] = 0;
       } else {
-        roofer::compute_nodata_circle(
-          ipc.building_clouds[i],
-          footprints[i],
-          &ipc.nodata_radii[i],
-          &nodata_c
-        );
+        roofer::misc::compute_nodata_circle(ipc.building_clouds[i],
+                                            footprints[i], &ipc.nodata_radii[i],
+                                            &nodata_c);
         // if (write_index) {
         //   roofer::draw_circle(
         //     ipc.nodata_circles[i],
@@ -380,35 +383,34 @@ int main(int argc, const char * argv[]) {
 
   // add raster stats attributes to footprints
   for (auto& ipc : input_pointclouds) {
-    auto& nodata_r = attributes.insert_vec<float>("nodata_r_"+ipc.name);
-    auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_"+ipc.name);
-    auto& pt_density = attributes.insert_vec<float>("pt_density_"+ipc.name);
+    auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
+    auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
+    auto& pt_density = attributes.insert_vec<float>("pt_density_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
-    for (unsigned i=0; i<N_fp; ++i) {
+    for (unsigned i = 0; i < N_fp; ++i) {
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
     }
   }
 
-  roofer::selectPointCloudConfig select_pc_cfg;
-  if (input_pointclouds.size() > 1){
-    auto& is_mutated = attributes.insert_vec<bool>(
-      "is_mutated_"+input_pointclouds[0].name+"_"+input_pointclouds[1].name
-    );
+  roofer::misc::selectPointCloudConfig select_pc_cfg;
+  if (input_pointclouds.size() > 1) {
+    auto& is_mutated =
+        attributes.insert_vec<bool>("is_mutated_" + input_pointclouds[0].name +
+                                    "_" + input_pointclouds[1].name);
     is_mutated.reserve(N_fp);
-    for (unsigned i=0; i<N_fp; ++i) {
-      is_mutated[i] = roofer::isMutated(
-        input_pointclouds[0].building_rasters[i], 
-        input_pointclouds[1].building_rasters[i], 
-        select_pc_cfg.threshold_mutation_fraction, 
-        select_pc_cfg.threshold_mutation_difference
-      );
+    for (unsigned i = 0; i < N_fp; ++i) {
+      is_mutated[i] =
+          roofer::misc::isMutated(input_pointclouds[0].building_rasters[i],
+                                  input_pointclouds[1].building_rasters[i],
+                                  select_pc_cfg.threshold_mutation_fraction,
+                                  select_pc_cfg.threshold_mutation_difference);
     }
   }
-  
+
   // write out geoflow config + pointcloud / fp for each building
   logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(building_bid_attribute);
@@ -418,116 +420,128 @@ int main(int argc, const char * argv[]) {
   std::unordered_map<std::string, roofer::vec1s> jsonl_paths;
   std::string bid;
   bool only_write_selected = !output_all;
-  for (unsigned i=0; i<N_fp; ++i) {
-
+  for (unsigned i = 0; i < N_fp; ++i) {
     if (bid_vec) {
       bid = (*bid_vec)[i].value();
     } else {
       bid = std::to_string(i);
     }
     // spdlog::debug("bid={}", bid);
-    
-    std::vector<roofer::CandidatePointCloud> candidates;
+
+    std::vector<roofer::misc::CandidatePointCloud> candidates;
     candidates.reserve(input_pointclouds.size());
-    std::vector<roofer::CandidatePointCloud> candidates_just_for_data;
+    std::vector<roofer::misc::CandidatePointCloud> candidates_just_for_data;
     {
-      int j=0;
+      int j = 0;
       for (auto& ipc : input_pointclouds) {
-        auto cpc = roofer::CandidatePointCloud {
-          ipc.nodata_radii[i],
-          ipc.nodata_fractions[i],
-          ipc.building_rasters[i],
-          yoc_vec ? (*yoc_vec)[i].value_or(-1) : -1,
-          ipc.name,
-          ipc.quality,
-          ipc.acquisition_years[i],
-          j++
-        };
-        if( ipc.select_only_for_date ) {
-          candidates_just_for_data.push_back( cpc );
+        auto cpc = roofer::misc::CandidatePointCloud{
+            ipc.nodata_radii[i],
+            ipc.nodata_fractions[i],
+            ipc.building_rasters[i],
+            yoc_vec ? (*yoc_vec)[i].value_or(-1) : -1,
+            ipc.name,
+            ipc.quality,
+            ipc.acquisition_years[i],
+            j++};
+        if (ipc.select_only_for_date) {
+          candidates_just_for_data.push_back(cpc);
         } else {
-          candidates.push_back( cpc );
+          candidates.push_back(cpc);
         }
         jsonl_paths.insert({ipc.name, roofer::vec1s{}});
       }
       jsonl_paths.insert({"", roofer::vec1s{}});
     }
 
-    roofer::PointCloudSelectResult sresult = roofer::selectPointCloud(candidates, select_pc_cfg);
-    const roofer::CandidatePointCloud* selected = sresult.selected_pointcloud;
-    
+    roofer::misc::PointCloudSelectResult sresult =
+        roofer::misc::selectPointCloud(candidates, select_pc_cfg);
+    const roofer::misc::CandidatePointCloud* selected =
+        sresult.selected_pointcloud;
+
     // this is a sanity check and should never happen
     if (!selected) {
       logger.error("Unable to select pointcloud");
       exit(1);
     }
 
-    // check if yoc_attribute indicates this building to be built after selected PC
+    // check if yoc_attribute indicates this building to be built after selected
+    // PC
     int yoc = yoc_vec ? (*yoc_vec)[i].value_or(-1) : -1;
     if (yoc != -1 && yoc > selected->date) {
       // force selection of latest pointcloud
       selected = getLatestPointCloud(candidates);
-      sresult.explanation = roofer::PointCloudSelectExplanation::_LATEST;
-      // overrule if there was a more recent pointcloud with select_only_for_date = true
+      sresult.explanation = roofer::misc::PointCloudSelectExplanation::_LATEST;
+      // overrule if there was a more recent pointcloud with
+      // select_only_for_date = true
       if (candidates_just_for_data.size()) {
-        if ( candidates_just_for_data[0].date > selected->date ) {
-          selected = & candidates_just_for_data[0];
+        if (candidates_just_for_data[0].date > selected->date) {
+          selected = &candidates_just_for_data[0];
           // sresult.explanation = roofer::PointCloudSelectExplanation::_LATEST;
         }
       }
     }
 
-    if (sresult.explanation == roofer::PointCloudSelectExplanation::PREFERRED_AND_LATEST )
+    if (sresult.explanation ==
+        roofer::misc::PointCloudSelectExplanation::PREFERRED_AND_LATEST)
       pc_select.push_back("PREFERRED_AND_LATEST");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::PREFERRED_NOT_LATEST )
+    else if (sresult.explanation ==
+             roofer::misc::PointCloudSelectExplanation::PREFERRED_NOT_LATEST)
       pc_select.push_back("PREFERRED_NOT_LATEST");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::LATEST_WITH_MUTATION )
+    else if (sresult.explanation ==
+             roofer::misc::PointCloudSelectExplanation::LATEST_WITH_MUTATION)
       pc_select.push_back("LATEST_WITH_MUTATION");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::_HIGHEST_YET_INSUFFICIENT_COVERAGE )
+    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::
+                                        _HIGHEST_YET_INSUFFICIENT_COVERAGE)
       pc_select.push_back("_HIGHEST_YET_INSUFFICIENT_COVERAGE");
-    else if (sresult.explanation == roofer::PointCloudSelectExplanation::_LATEST ) {
+    else if (sresult.explanation ==
+             roofer::misc::PointCloudSelectExplanation::_LATEST) {
       pc_select.push_back("_LATEST");
       // // clear pc
       // ipc[selected->index].building_clouds[i].clear();
-    } else pc_select.push_back("NONE");
+    } else
+      pc_select.push_back("NONE");
 
     pc_source.push_back(selected->name);
     pc_year.push_back(selected->date);
-    if( input_pointclouds[selected->index].force_low_lod ) {
+    if (input_pointclouds[selected->index].force_low_lod) {
       (*low_lod_vec)[i] = true;
     }
     {
       // fs::create_directories(fs::path(fname).parent_path());
-      std::string fp_path = fmt::format(fmt::runtime(building_gpkg_file_spec), fmt::arg("bid", bid), fmt::arg("path", output_path));
-      VectorWriter->writePolygons(fp_path, footprints, attributes, i, i+1);
+      std::string fp_path =
+          fmt::format(fmt::runtime(building_gpkg_file_spec),
+                      fmt::arg("bid", bid), fmt::arg("path", output_path));
+      VectorWriter->writePolygons(fp_path, footprints, attributes, i, i + 1);
 
-      size_t j=0;
+      size_t j = 0;
       for (auto& ipc : input_pointclouds) {
-        if((selected->index != j) && (only_write_selected)) {
+        if ((selected->index != j) && (only_write_selected)) {
           ++j;
           continue;
         };
 
-        std::string pc_path = fmt::format(fmt::runtime(building_las_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string raster_path = fmt::format(fmt::runtime(building_raster_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
-        
+        std::string pc_path = fmt::format(
+            fmt::runtime(building_las_file_spec), fmt::arg("bid", bid),
+            fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string raster_path = fmt::format(
+            fmt::runtime(building_raster_file_spec), fmt::arg("bid", bid),
+            fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+        std::string jsonl_path = fmt::format(
+            fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid),
+            fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+
         if (write_rasters) {
-          RasterWriter->writeBands(
-            raster_path,
-            ipc.building_rasters[i]
-          );
+          RasterWriter->writeBands(raster_path, ipc.building_rasters[i]);
         }
 
-        LASWriter->write_pointcloud(
-          input_pointclouds[j].building_clouds[i],
-          pc_path
-        );
-        
-        // Correct ground height for offset, NB this ignores crs transformation
-        double h_ground = input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
+        LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
+                                    pc_path);
 
-        auto gf_config = toml::table {
+        // Correct ground height for offset, NB this ignores crs transformation
+        double h_ground =
+            input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
+
+        auto gf_config = toml::table{
             {"INPUT_FOOTPRINT", fp_path},
             // {"INPUT_POINTCLOUD", sresult.explanation ==
             // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? "" :
@@ -546,35 +560,42 @@ int main(int argc, const char * argv[]) {
         };
 
         if (write_metadata) {
-            // gf_config.insert("GF_PROCESS_OFFSET_OVERRIDE", true);
-            gf_config.insert("CITYJSON_TRANSLATE_X", (*pj->data_offset)[0]);
-            gf_config.insert("CITYJSON_TRANSLATE_Y", (*pj->data_offset)[1]);
-            gf_config.insert("CITYJSON_TRANSLATE_Z", (*pj->data_offset)[2]);
-            gf_config.insert("CITYJSON_SCALE_X", 0.001);
-            gf_config.insert("CITYJSON_SCALE_Y", 0.001);
-            gf_config.insert("CITYJSON_SCALE_Z", 0.001);
+          // gf_config.insert("GF_PROCESS_OFFSET_OVERRIDE", true);
+          gf_config.insert("CITYJSON_TRANSLATE_X", (*pj->data_offset)[0]);
+          gf_config.insert("CITYJSON_TRANSLATE_Y", (*pj->data_offset)[1]);
+          gf_config.insert("CITYJSON_TRANSLATE_Z", (*pj->data_offset)[2]);
+          gf_config.insert("CITYJSON_SCALE_X", 0.001);
+          gf_config.insert("CITYJSON_SCALE_Y", 0.001);
+          gf_config.insert("CITYJSON_SCALE_Z", 0.001);
         }
-        auto tbl_gfparams = config["output"]["reconstruction_parameters"].as_table();
+        auto tbl_gfparams =
+            config["output"]["reconstruction_parameters"].as_table();
         gf_config.insert(tbl_gfparams->begin(), tbl_gfparams->end());
 
-        if(!only_write_selected) {
+        if (!only_write_selected) {
           std::ofstream ofs;
-          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(
+              fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ipc.name), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
 
-          jsonl_paths[ipc.name].push_back( jsonl_path );
+          jsonl_paths[ipc.name].push_back(jsonl_path);
         }
-        if(selected->index == j) {
+        if (selected->index == j) {
           // set optimal jsonl path
-          std::string jsonl_path = fmt::format(fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string jsonl_path = fmt::format(
+              fmt::runtime(building_jsonl_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
-          jsonl_paths[""].push_back( jsonl_path );
+          jsonl_paths[""].push_back(jsonl_path);
 
           // write optimal config
           std::ofstream ofs;
-          std::string config_path = fmt::format(fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid), fmt::arg("pc_name", ""), fmt::arg("path", output_path));
+          std::string config_path = fmt::format(
+              fmt::runtime(building_toml_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ""), fmt::arg("path", output_path));
           ofs.open(config_path);
           ofs << gf_config;
           ofs.close();
@@ -587,24 +608,28 @@ int main(int argc, const char * argv[]) {
 
   // Write index output
   if (write_index) {
-    std::string index_file = fmt::format(fmt::runtime(index_file_spec), fmt::arg("path", output_path));
+    std::string index_file = fmt::format(fmt::runtime(index_file_spec),
+                                         fmt::arg("path", output_path));
     VectorWriter->writePolygons(index_file, footprints, attributes);
-    
+
     // write nodata circles
     // for (auto& ipc : input_pointclouds) {
-    //   VectorWriter->writePolygons(index_file+"_"+ipc.name+"_nodatacircle.gpkg", ipc.nodata_circles, attributes);
+    //   VectorWriter->writePolygons(index_file+"_"+ipc.name+"_nodatacircle.gpkg",
+    //   ipc.nodata_circles, attributes);
     // }
   }
 
-  // write the txt containing paths to all jsonl features to be written by reconstruct
+  // write the txt containing paths to all jsonl features to be written by
+  // reconstruct
   {
-    
-    for(auto& [name, pathsvec] : jsonl_paths) {
-      if(pathsvec.size()!=0) {
-        std::string jsonl_list_file = fmt::format(fmt::runtime(jsonl_list_file_spec), fmt::arg("path", output_path), fmt::arg("pc_name", name));
+    for (auto& [name, pathsvec] : jsonl_paths) {
+      if (pathsvec.size() != 0) {
+        std::string jsonl_list_file = fmt::format(
+            fmt::runtime(jsonl_list_file_spec), fmt::arg("path", output_path),
+            fmt::arg("pc_name", name));
         std::ofstream ofs;
         ofs.open(jsonl_list_file);
-        for(auto& jsonl_p : pathsvec) {
+        for (auto& jsonl_p : pathsvec) {
           ofs << jsonl_p << "\n";
         }
         ofs.close();
@@ -612,8 +637,8 @@ int main(int argc, const char * argv[]) {
     }
   }
 
-  // Write metadata.json for json features 
-  if (write_metadata) {  
+  // Write metadata.json for json features
+  if (write_metadata) {
     auto md_scale = roofer::arr3d{0.001, 0.001, 0.001};
     auto md_trans = *pj->data_offset;
 
@@ -631,11 +656,12 @@ int main(int argc, const char * argv[]) {
          toml::table{{"referenceSystem",
                       "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
     // serializing as JSON using toml::json_formatter:
-    std::string metadata_json_file = fmt::format(fmt::runtime(metadata_json_file_spec), fmt::arg("path", output_path));
-    
+    std::string metadata_json_file = fmt::format(
+        fmt::runtime(metadata_json_file_spec), fmt::arg("path", output_path));
+
     // minimize json
     std::stringstream ss;
-    ss << toml::json_formatter{ metadatajson };
+    ss << toml::json_formatter{metadatajson};
     auto s = ss.str();
     s.erase(std::remove(s.begin(), s.end(), '\n'), s.cend());
     s.erase(std::remove(s.begin(), s.end(), ' '), s.cend());
@@ -645,5 +671,6 @@ int main(int argc, const char * argv[]) {
     ofs << s;
     ofs.close();
   }
-  return EXIT_SUCCESS;;
+  return EXIT_SUCCESS;
+  ;
 }

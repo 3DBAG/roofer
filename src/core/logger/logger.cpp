@@ -3,24 +3,27 @@
  * Logs all messages to stdout.
  *
  * Uses a separate writer-thread to serialize the messages to the output stream.
- * Message writer thread implementation taken from https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime .
+ * Message writer thread implementation taken from
+ * https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime
+ * .
  */
 #if !defined(USE_LOGGER_SPDLOG)
 
+#include <fmt/chrono.h>
+#include <roofer/logger/logger.h>
+
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <queue>
-#include <thread>
 #include <sstream>
+#include <thread>
 
-#include <roofer/logger/logger.h>
-#include <fmt/chrono.h>
-
-namespace {
+namespace roofer::logger {
   /** @brief Convert the log level into string */
   std::string string_from_log_level(roofer::logger::LogLevel level) {
     std::array<std::string, 6> names = {"OFF",     "DEBUG", "INFO",
@@ -35,9 +38,7 @@ namespace {
     auto now = system_clock::now();
     return fmt::format("{:%F %T}", now);
   }
-}  // namespace
 
-namespace roofer::logger {
   struct Logger::logger_impl {
     LogLevel level = LogLevel::default_level;
 
