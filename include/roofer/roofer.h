@@ -77,14 +77,14 @@ namespace roofer {
 
       // prepare footprint data type
       // template deduction will fail if not convertible to LinearRing
+      roofer::LinearRing linear_ring;
       if constexpr (std::is_same_v<Footprint,
                                    CGAL::Polygon_with_holes_2<EPICK>>) {
         // convert 2D footprint to LinearRing
-        roofer::LinearRing linearRing;
         for (auto& p : footprint.outer_boundary()) {
           float x = p.x();
           float y = p.y();
-          linearRing.push_back({x, y, 0.});
+          linear_ring.push_back({x, y, 0.});
         }
         for (auto& hole : footprint.holes()) {
           vec3f iring;
@@ -93,16 +93,19 @@ namespace roofer {
             float y = p.y();
             iring.push_back({x, y, 0.});
           }
-          linearRing.interior_rings().push_back(iring);
+          linear_ring.interior_rings().push_back(iring);
         }
         cfg.override_with_floor_elevation = true;
+      } else {
+        // Footprint is already a LinearRing
+        linear_ring = footprint;
       }
 
       std::unique_ptr<roofer::reconstruction::ElevationProvider>
           elevation_provider = nullptr;
       if (!cfg.override_with_floor_elevation) {
         proj_tri_util::DT base_cdt =
-            proj_tri_util::cdt_from_linearing(footprint);
+            proj_tri_util::cdt_from_linearing(linear_ring);
         auto base_cdt_ptr = std::make_unique<proj_tri_util::DT>(base_cdt);
         elevation_provider =
             roofer::reconstruction::createElevationProvider(*base_cdt_ptr);
@@ -157,7 +160,7 @@ namespace roofer {
       Arrangement_2 arrangement;
       auto ArrangementBuilder =
           roofer::reconstruction::createArrangementBuilder();
-      ArrangementBuilder->compute(arrangement, footprint,
+      ArrangementBuilder->compute(arrangement, linear_ring,
                                   LineRegulariser->exact_regularised_edges);
 
       auto ArrangementOptimiser =
