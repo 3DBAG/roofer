@@ -14,7 +14,7 @@ def read_las_from_file(file_path, x_offset=0, y_offset=0):
     with laspy.open(file_path) as las:
         # Read the points
         points = las.read()
- 
+
         # Access point data
         x = points['x']
         y = points['y']
@@ -28,15 +28,11 @@ def read_las_from_file(file_path, x_offset=0, y_offset=0):
     building_points = np.column_stack((x[building_mask], y[building_mask], z[building_mask]))
     ground_points = np.column_stack((x[ground_mask], y[ground_mask], z[ground_mask]))
 
-    # Convert the numpy arrays to lists of 3-element arrays
-    building_points_list = [point.tolist() for point in building_points]
-    ground_points_list = [point.tolist() for point in ground_points]
-
     # Apply offset
-    building_points_list = apply_offset(building_points_list, x_offset, y_offset)
-    ground_points_list = apply_offset(ground_points_list, x_offset, y_offset)
+    building_points = apply_offset(building_points, x_offset, y_offset)
+    ground_points = apply_offset(ground_points, x_offset, y_offset)
 
-    return building_points_list, ground_points_list
+    return building_points, ground_points
 
 def read_wkt_from_file(file_path):
     with open(file_path, 'r') as file:
@@ -72,13 +68,11 @@ y_offset = -446846
 
 # Load building points and ground points
 print("Reading .LAZ...")
-#building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
-building_pts, ground_pts = read_las_from_file('./example_data/2/input.las', x_offset, y_offset)
+building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
 
 print("Reading the WKT polygon...")
 # Load polygon points
-#footprint_str = read_wkt_from_file('./example_data/2/input.txt')
-footprint_str = read_wkt_from_file('./example_data/2/input.txt')
+footprint_str = read_wkt_from_file('./example_data/input.txt')
 footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
 
 # Set the reconstruction configuration
@@ -87,14 +81,10 @@ roofer_config.complexity_factor = 0.7
 
 # Reconstruct
 print("Reconstructing building...")
-#roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
-roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, footprint, roofer_config)
-#roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, footprint)
+roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
 
 print("Triangulating mesh")
 vertices, faces = rooferpy.triangulate_mesh(roofer_meshes[0])
-tri_mesh = trimesh.Trimesh(vertices, faces)
-
 
 # Show the results in rerun
 rr.init("Reconstruction results", spawn=True)

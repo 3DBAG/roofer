@@ -10,7 +10,7 @@ option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
-option(RF_BUILD_BINDINGS "Build python bindings with pybind" ON) #temp
+option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(BUILD_TESTING "Enable tests" OFF)
 include(CTest)

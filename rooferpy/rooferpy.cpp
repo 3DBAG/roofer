@@ -7,6 +7,7 @@ namespace py = pybind11;
 typedef std::vector<std::array<float, 3>> PyPointCollection;
 typedef std::vector<std::vector<std::array<float, 3>>> PyLinearRing;
 typedef std::vector<PyLinearRing> PyMesh;
+typedef std::vector<std::array<size_t, 3>> PyFaceCollection;
 
 namespace roofer {
   void convert_to_linear_ring(const PyLinearRing& footprint,
@@ -108,16 +109,15 @@ namespace roofer {
     return convert_meshes_to_py_meshes(meshes);
   }
 
-  //todo output vertex-face data structs by default?
-  std::tuple<std::vector<std::array<float, 3>>, std::vector<std::array<size_t, 3>>>
+  //todo move vertex-face data struct to cpp api?
+  std::tuple<PyPointCollection, PyFaceCollection>
   py_triangulate_mesh(const PyMesh& mesh) {
-    std::vector<std::array<float, 3>> vertices;
-    std::vector<std::array<size_t, 3>> faces;
-
     Mesh roofer_mesh = convert_py_mesh_to_mesh(mesh);
     auto tri_mesh = triangulate_mesh(roofer_mesh);
 
     std::map<arr3f, size_t> vertex_map;
+    PyPointCollection vertices;
+    PyFaceCollection faces;
     for (const auto& triangle : tri_mesh) {
       for (const auto& vertex : triangle) {
         if (vertex_map.find(vertex) == vertex_map.end()) {
