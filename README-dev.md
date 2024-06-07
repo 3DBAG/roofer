@@ -23,7 +23,7 @@ The `pre-commit` GitHub Action and `.pre-commit-config.yaml` configuration runs 
 To run pre-commit manually:
 
 ```
-pip install -e requirements.txt
+pip install -r requirements.txt
 pre-commit run -a
 ```
 
