@@ -36,7 +36,6 @@ namespace roofer {
   /*
    * @brief Configuration parameters for single instance building reconstruction
    *
-   * //todo doc
    */
   struct ReconstructionConfig {
     // control optimisation
@@ -61,7 +60,10 @@ namespace roofer {
   /*
    * @brief Reconstructs a single instance of a building from a point cloud
    *
-   * //todo doc
+   * @param points_roof Point cloud representing the roof points
+   * @param points_ground Point cloud representing the ground points
+   * @param footprint Footprint of the building
+   * @param cfg Configuration parameters
    */
   template <typename Footprint>
   std::vector<Mesh> reconstruct_single_instance(
