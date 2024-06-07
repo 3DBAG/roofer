@@ -2,6 +2,7 @@ import rooferpy
 import laspy
 import numpy as np
 from shapely import wkt
+import rerun as rr
 
 def apply_offset(points, x_offset, y_offset):
     for point in points:
@@ -65,47 +66,38 @@ def wkt_polygon_to_rings(wkt_str, x_offset=0, y_offset=0):
     
     return all_rings
 
+# Define offsets to avoid truncation errors
+x_offset = -85205.20
+y_offset = -446846
+
+# Load building points and ground points
+print("Reading .LAZ...")
+#building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
+building_pts, ground_pts = read_las_from_file('./example_data/2/input.las', x_offset, y_offset)
+
+print("Reading the WKT polygon...")
+# Load polygon points
+#footprint_str = read_wkt_from_file('./example_data/2/input.txt')
+footprint_str = read_wkt_from_file('./example_data/2/input.txt')
+footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
+
 # Set the reconstruction configuration
 roofer_config = rooferpy.ReconstructionConfig()
 roofer_config.complexity_factor = 0.7
 
-# Define offsets to avoid truncation errors
-x_offset = 0
-y_offset = 0
-
-# Load building points and ground points
-print("Reading .LAZ...")
-building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
-"""
-building_pts = [
-       [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0., 0., 1.], [0.1, 0.1, 1.], [0.2, 0.2, 1.], [0.1, 0.2, 1.], [0.2, 0.1, 1.], [0.3, 0.3, 1.], [0.4, 0.4, 1.], [0.5, 0.5, 1.], [0.6, 0.6, 1.],
-       [0.7, 0.7, 1.], [0.8, 0.8, 1.], [0.9, 0.9, 1.], [1., 1., 1.],
-       [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0., 0., 1.], [0.1, 0.1, 1.], [0.2, 0.2, 1.], [0.1, 0.2, 1.], [0.2, 0.1, 1.], [0.3, 0.3, 1.], [0.4, 0.4, 1.], [0.5, 0.5, 1.], [0.6, 0.6, 1.],
-       [0.7, 0.7, 1.], [0.8, 0.8, 1.], [0.9, 0.9, 1.], [1., 1., 1.],
-       [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0., 0., 1.], [0.1, 0.1, 1.], [0.2, 0.2, 1.], [0.1, 0.2, 1.], [0.2, 0.1, 1.], [0.3, 0.3, 1.], [0.4, 0.4, 1.], [0.5, 0.5, 1.], [0.6, 0.6, 1.],
-       [0.7, 0.7, 1.], [0.8, 0.8, 1.], [0.9, 0.9, 1.], [1., 1., 1.],
-       [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0., 0., 1.], [0.1, 0.1, 1.], [0.2, 0.2, 1.], [0.1, 0.2, 1.], [0.2, 0.1, 1.], [0.3, 0.3, 1.], [0.4, 0.4, 1.], [0.5, 0.5, 1.], [0.6, 0.6, 1.],
-       [0.7, 0.7, 1.], [0.8, 0.8, 1.], [0.9, 0.9, 1.], [1., 1., 1.]
-]
-
-ground_pts = [
-    [0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.]
-]
-"""
-
-print("Reading the WKT polygon...")
-# Load polygon points
-footprint_str = read_wkt_from_file('./example_data/input.txt')
-footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
-"""
-footprint = [
-    [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.]]
-]
-"""
-
 # Reconstruct
 print("Reconstructing building...")
-roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
+#roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
+roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, footprint, roofer_config)
+#roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, footprint)
 
-# Output reconstruct todo 
-#print(roofer_meshes)
+print("Triangulating mesh")
+vertices, faces = rooferpy.triangulate_mesh(roofer_meshes[0])
+tri_mesh = trimesh.Trimesh(vertices, faces)
+
+
+# Show the results in rerun
+rr.init("Reconstruction results", spawn=True)
+rr.connect()  # Connect to a remote viewer
+rr.log("mesh faces", rr.Mesh3D(vertex_positions=vertices,
+                               triangle_indices=faces))

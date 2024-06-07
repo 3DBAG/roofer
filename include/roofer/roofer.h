@@ -24,6 +24,7 @@
 #include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/LineDetector.hpp>
 #include <roofer/reconstruction/LineRegulariser.hpp>
+#include <roofer/reconstruction/MeshTriangulator.hpp>
 #include <roofer/reconstruction/PlaneDetector.hpp>
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
@@ -50,8 +51,6 @@ namespace roofer {
     float floor_elevation = 0.;
     // force flat floor
     bool override_with_floor_elevation = false;
-    // verbose output
-    bool verbose = false;
 
     bool is_valid() {
       return (lambda >= 0 && lambda <= 1.0) && lod == 12 || lod == 13 ||
@@ -60,15 +59,15 @@ namespace roofer {
   };
 
   /*
-   * @brief Reconstructs a single instance of a building from a point cloud with
-   * one floor elevation
+   * @brief Reconstructs a single instance of a building from a point cloud
    *
    * //todo doc
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(
-      const PointCollection& points_roof, const PointCollection& points_ground,
-      Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<Mesh> reconstruct_single_instance(const PointCollection& points_roof,
+                                                const PointCollection& points_ground,
+                                                Footprint& footprint,
+                                                ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
       // check if configuration is valid
       if (!cfg.is_valid()) {
@@ -100,6 +99,7 @@ namespace roofer {
         // Footprint is already a LinearRing
         linear_ring = footprint;
       }
+      pop_back_if_equal_to_front(linear_ring);
 
       std::unique_ptr<roofer::reconstruction::ElevationProvider>
           elevation_provider = nullptr;
@@ -122,7 +122,9 @@ namespace roofer {
             "Pointcloud insufficient; unable to detect planes");
       }
       auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-      PlaneDetector_ground->detect(points_ground);
+      if (!points_ground.empty()) {
+          PlaneDetector_ground->detect(points_ground);
+      }
 
       auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
       AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
@@ -201,19 +203,28 @@ namespace roofer {
   }
 
   /*
-   * @brief Reconstructs a single instance of a building from a point cloud with
-   * one floor elevation
+   * @brief Reconstructs a single instance of a building from a point cloud
    *
    * Overload for when the ground points are not available
    * //todo doc
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(
-      const PointCollection& points_roof, Footprint& footprint,
-      ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<Mesh> reconstruct_single_instance(const PointCollection& points_roof,
+                                                Footprint& footprint,
+                                                ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof, points_ground, footprint,
+    return reconstruct_single_instance(points_roof,
+                                       points_ground,
+                                       footprint,
                                        cfg);
+  }
+
+  //todo maybe move to another location
+  TriangleCollection triangulate_mesh(const Mesh& mesh) {
+    auto MeshTriangulator = roofer::reconstruction::createMeshTriangulatorLegacy();
+    MeshTriangulator->compute({mesh});
+
+    return MeshTriangulator->triangles;
   }
 
 }  // namespace roofer
