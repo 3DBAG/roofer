@@ -20,6 +20,13 @@ The commit hooks are configured in `.pre-commit-config.yaml`.
 
 The `pre-commit` GitHub Action and `.pre-commit-config.yaml` configuration runs checks the changed lines with clang-format and reports if there is anything problematic with the formatting.
 
+To run pre-commit manually:
+
+```
+pip install -e requirements.txt
+pre-commit run -a
+```
+
 ## Testing
 
 Tests are run with `CTest`, which either runs the test executables directly, or delegates testing to `pytest`.
