@@ -483,8 +483,7 @@ namespace roofer {
   void pop_back_if_equal_to_front(LinearRing& poly) {
     auto it = poly.end();
     --it;
-    if((*poly.begin()) == *it)
-      poly.erase(it);
+    if ((*poly.begin()) == *it) poly.erase(it);
   }
 
   std::time_t Date::to_time_t() {

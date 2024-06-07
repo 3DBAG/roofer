@@ -64,10 +64,9 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(const PointCollection& points_roof,
-                                                const PointCollection& points_ground,
-                                                Footprint& footprint,
-                                                ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<Mesh> reconstruct_single_instance(
+      const PointCollection& points_roof, const PointCollection& points_ground,
+      Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
       // check if configuration is valid
       if (!cfg.is_valid()) {
@@ -123,7 +122,7 @@ namespace roofer {
       }
       auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
       if (!points_ground.empty()) {
-          PlaneDetector_ground->detect(points_ground);
+        PlaneDetector_ground->detect(points_ground);
       }
 
       auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
@@ -209,19 +208,18 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(const PointCollection& points_roof,
-                                                Footprint& footprint,
-                                                ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<Mesh> reconstruct_single_instance(
+      const PointCollection& points_roof, Footprint& footprint,
+      ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof,
-                                       points_ground,
-                                       footprint,
+    return reconstruct_single_instance(points_roof, points_ground, footprint,
                                        cfg);
   }
 
-  //todo maybe move to another location
+  // todo maybe move to another location
   TriangleCollection triangulate_mesh(const Mesh& mesh) {
-    auto MeshTriangulator = roofer::reconstruction::createMeshTriangulatorLegacy();
+    auto MeshTriangulator =
+        roofer::reconstruction::createMeshTriangulatorLegacy();
     MeshTriangulator->compute({mesh});
 
     return MeshTriangulator->triangles;

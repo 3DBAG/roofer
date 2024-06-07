@@ -42,24 +42,24 @@ def read_wkt_from_file(file_path):
 def wkt_polygon_to_rings(wkt_str, x_offset=0, y_offset=0):
     # Parse WKT string to a shapely geometry object
     geom = wkt.loads(wkt_str)
-    
+
     # Ensure the geometry is a Polygon
     if geom.geom_type != 'Polygon':
         raise ValueError("The WKT geometry is not a Polygon, it is a {0}".format(geom.geom_type))
-    
+
     # Function to convert coordinates to list of lists of 3-element arrays
     def coords_to_ring(coords):
         return [[float(coord[0]) + x_offset, float(coord[1]) + y_offset, float(coord[2]) if len(coord) == 3 else 0.0] for coord in coords]
-    
+
     # Extract exterior ring
     exterior_ring = coords_to_ring(geom.exterior.coords)
-    
+
     # Extract interior rings (if any)
     interior_rings = [coords_to_ring(interior.coords) for interior in geom.interiors]
-    
+
     # Combine exterior and interior rings into a single list
     all_rings = [exterior_ring] + interior_rings
-    
+
     return all_rings
 
 # Define offsets to avoid truncation errors

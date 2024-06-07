@@ -30,7 +30,8 @@ namespace roofer {
     }
   }
 
-  std::vector<PyMesh> convert_meshes_to_py_meshes(const std::vector<Mesh>& meshes) {
+  std::vector<PyMesh> convert_meshes_to_py_meshes(
+      const std::vector<Mesh>& meshes) {
     std::vector<PyMesh> py_meshes;
     for (const auto& roofer_mesh : meshes) {
       PyMesh py_mesh;
@@ -77,11 +78,10 @@ namespace roofer {
     return mesh;
   }
 
-  std::vector<PyMesh>
-  py_reconstruct_single_instance(const PyPointCollection& points_roof,
-                                 const PyPointCollection & points_ground,
-                                 const PyLinearRing& footprint,
-                                 ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<PyMesh> py_reconstruct_single_instance(
+      const PyPointCollection& points_roof,
+      const PyPointCollection& points_ground, const PyLinearRing& footprint,
+      ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_roof_pc, points_ground_pc;
     for (const auto& pt : points_roof) {
       points_roof_pc.push_back({pt[0], pt[1], pt[2]});
@@ -91,14 +91,14 @@ namespace roofer {
     }
     roofer::LinearRing linear_ring;
     convert_to_linear_ring(footprint, linear_ring);
-    auto meshes = reconstruct_single_instance(points_roof_pc, points_ground_pc, linear_ring, cfg);
+    auto meshes = reconstruct_single_instance(points_roof_pc, points_ground_pc,
+                                              linear_ring, cfg);
     return convert_meshes_to_py_meshes(meshes);
   }
 
-  std::vector<PyMesh>
-  py_reconstruct_single_instance(const PyPointCollection & points_roof,
-                                 const PyLinearRing& footprint,
-                                 ReconstructionConfig cfg = ReconstructionConfig()) {
+  std::vector<PyMesh> py_reconstruct_single_instance(
+      const PyPointCollection& points_roof, const PyLinearRing& footprint,
+      ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_roof_pc;
     for (const auto& pt : points_roof) {
       points_roof_pc.push_back({pt[0], pt[1], pt[2]});
@@ -109,9 +109,9 @@ namespace roofer {
     return convert_meshes_to_py_meshes(meshes);
   }
 
-  //todo move vertex-face data struct to cpp api?
-  std::tuple<PyPointCollection, PyFaceCollection>
-  py_triangulate_mesh(const PyMesh& mesh) {
+  // todo move vertex-face data struct to cpp api?
+  std::tuple<PyPointCollection, PyFaceCollection> py_triangulate_mesh(
+      const PyMesh& mesh) {
     Mesh roofer_mesh = convert_py_mesh_to_mesh(mesh);
     auto tri_mesh = triangulate_mesh(roofer_mesh);
 
@@ -125,12 +125,13 @@ namespace roofer {
           vertices.push_back(vertex);
         }
       }
-      faces.push_back({vertex_map[triangle[0]], vertex_map[triangle[1]], vertex_map[triangle[2]]});
+      faces.push_back({vertex_map[triangle[0]], vertex_map[triangle[1]],
+                       vertex_map[triangle[2]]});
     }
     return std::make_tuple(vertices, faces);
   }
 
-} // namespace roofer
+}  // namespace roofer
 
 PYBIND11_MODULE(rooferpy, m) {
   py::class_<roofer::ReconstructionConfig>(m, "ReconstructionConfig")
@@ -138,28 +139,33 @@ PYBIND11_MODULE(rooferpy, m) {
       .def_readwrite("complexity_factor", &roofer::ReconstructionConfig::lambda)
       .def_readwrite("clip_ground", &roofer::ReconstructionConfig::clip_ground)
       .def_readwrite("lod", &roofer::ReconstructionConfig::lod)
-      .def_readwrite("lod13_step_height", &roofer::ReconstructionConfig::lod13_step_height)
-      .def_readwrite("floor_elevation", &roofer::ReconstructionConfig::floor_elevation)
-      .def_readwrite("override_with_floor_elevation", &roofer::ReconstructionConfig::override_with_floor_elevation)
+      .def_readwrite("lod13_step_height",
+                     &roofer::ReconstructionConfig::lod13_step_height)
+      .def_readwrite("floor_elevation",
+                     &roofer::ReconstructionConfig::floor_elevation)
+      .def_readwrite(
+          "override_with_floor_elevation",
+          &roofer::ReconstructionConfig::override_with_floor_elevation)
       .def("is_valid", &roofer::ReconstructionConfig::is_valid);
 
   m.def("reconstruct_single_instance",
-        py::overload_cast<const PyPointCollection&,
-            const PyPointCollection&,
-            const PyLinearRing&,
-            roofer::ReconstructionConfig>(&roofer::py_reconstruct_single_instance),
-        "Reconstruct a single instance of a building from a point cloud with ground points",
-        py::arg("points_roof"), py::arg("points_ground"), py::arg("footprint"), py::arg("cfg") = roofer::ReconstructionConfig());
+        py::overload_cast<const PyPointCollection&, const PyPointCollection&,
+                          const PyLinearRing&, roofer::ReconstructionConfig>(
+            &roofer::py_reconstruct_single_instance),
+        "Reconstruct a single instance of a building from a point cloud with "
+        "ground points",
+        py::arg("points_roof"), py::arg("points_ground"), py::arg("footprint"),
+        py::arg("cfg") = roofer::ReconstructionConfig());
 
   m.def("reconstruct_single_instance",
-        py::overload_cast<const PyPointCollection&,
-            const PyLinearRing&,
-            roofer::ReconstructionConfig>(&roofer::py_reconstruct_single_instance),
-        "Reconstruct a single instance of a building from a point cloud without ground points",
-        py::arg("points_roof"), py::arg("footprint"), py::arg("cfg") = roofer::ReconstructionConfig());
+        py::overload_cast<const PyPointCollection&, const PyLinearRing&,
+                          roofer::ReconstructionConfig>(
+            &roofer::py_reconstruct_single_instance),
+        "Reconstruct a single instance of a building from a point cloud "
+        "without ground points",
+        py::arg("points_roof"), py::arg("footprint"),
+        py::arg("cfg") = roofer::ReconstructionConfig());
 
-  m.def("triangulate_mesh",
-        &roofer::py_triangulate_mesh,
-        "Triangulate a mesh",
+  m.def("triangulate_mesh", &roofer::py_triangulate_mesh, "Triangulate a mesh",
         py::arg("mesh"));
 }
