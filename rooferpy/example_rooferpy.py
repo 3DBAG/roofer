@@ -70,8 +70,8 @@ y_offset = -446846
 print("Reading .LAZ...")
 building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
 
-print("Reading the WKT polygon...")
 # Load polygon points
+print("Reading the WKT polygon...")
 footprint_str = read_wkt_from_file('./example_data/input.txt')
 footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
 
@@ -83,6 +83,7 @@ roofer_config.complexity_factor = 0.7
 print("Reconstructing building...")
 roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
 
+# Triangulate the mesh
 print("Triangulating mesh")
 vertices, faces = rooferpy.triangulate_mesh(roofer_meshes[0])
 
