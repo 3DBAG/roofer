@@ -12,8 +12,7 @@ option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
 option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
-option(BUILD_TESTING "Enable tests" OFF)
-include(CTest)
+option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang
@@ -88,9 +87,9 @@ endif()
 # e.g. version numbers and feature flags
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(src)
-if(BUILD_TESTING)
+if(RF_BUILD_TESTING)
   include(FetchContent)
-  # enable_testing()
+  enable_testing()
   # We use the apps in the integration tests, so we need to build them here
   # add_subdirectory(apps)
   add_subdirectory(tests)
