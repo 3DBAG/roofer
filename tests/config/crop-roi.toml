@@ -5,10 +5,12 @@ id_attribute = "identificatie"
 [[input.pointclouds]]
 name = "pointcloud"
 quality = 1
+# path = "/data/pointcloud/AHN4/as_downloaded/LAZ"
 path = "data/wippolder/wippolder.las"
 
 [parameters]
 cellsize = 0.5
+region_of_interest = [ 85286.590, 447048.932, 85396.039, 447129.592 ]
 
 [output]
 path = 'output/wippolder'

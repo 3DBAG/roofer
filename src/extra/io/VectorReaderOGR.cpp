@@ -228,7 +228,8 @@ namespace roofer::io {
 
       poLayer->ResetReading();
       if (this->region_of_interest.has_value()) {
-        auto& roi = *this->region_of_interest;;
+        logger.info("Setting spatial filter");
+        auto& roi = *this->region_of_interest;
         poLayer->SetSpatialFilterRect(roi[0], roi[1], roi[2], roi[3]);
       }
 
