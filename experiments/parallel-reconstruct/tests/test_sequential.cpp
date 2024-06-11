@@ -33,7 +33,7 @@ int main() {
   // Crop
   std::queue<Points> queue_cropped_buildings;
   uint nr_laz_files = 3;
-  uint nr_points_per_laz = 50000;
+  uint nr_points_per_laz = 10000;
   crop(nr_points_per_laz, nr_laz_files, queue_cropped_buildings);
 
   // Reconstruct

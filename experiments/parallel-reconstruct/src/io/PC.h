@@ -29,29 +29,28 @@ struct ReturnPoints::promise_type {
   Points _valueOut{};
 
   void unhandled_exception() noexcept {
-    spdlog::get("read_pc")->debug(
+    spdlog::get("coro")->debug(
         "ReturnPoints::promise_type::unhandled_exception");
   }
 
   ReturnPoints get_return_object() { return ReturnPoints{this}; }
 
   std::suspend_never initial_suspend() noexcept {
-    spdlog::get("read_pc")->debug(
-        "ReturnPoints::promise_type::initial_suspend");
+    spdlog::get("coro")->debug("ReturnPoints::promise_type::initial_suspend");
     return {};
   }
 
-  auto return_value(Points value) noexcept {
-    spdlog::get("read_pc")->debug("ReturnPoints::promise_type::return_value");
+  void return_value(Points value) noexcept {
+    spdlog::get("coro")->debug("ReturnPoints::promise_type::return_value");
     _valueOut = std::move(value);
   }
 
   std::suspend_always final_suspend() noexcept {
-    spdlog::get("read_pc")->debug("ReturnPoints::promise_type::final_suspend");
+    spdlog::get("coro")->debug("ReturnPoints::promise_type::final_suspend");
     return {};
   }
 };
 
-ReturnPoints read_pointcloud_coro(uint nr_points = 0);
+ReturnPoints read_pointcloud_coro(uint nr_laz, uint nr_points_per_laz = 0);
 
-Points read_pointcloud(uint nr_points = 0);
+Points read_pointcloud(uint nr_laz, uint nr_points_per_laz = 0);
