@@ -9,6 +9,10 @@
         {
             "name": "catch2",
             "version>=": "3.5.4"
+        },
+        {
+            "name": "libfork",
+            "version>=": "3.8.0"
         }
     ],
     "overrides": [

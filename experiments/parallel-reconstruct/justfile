@@ -22,4 +22,13 @@ sequential_coro:
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
-run: sequential sequential_coro
+parallel_reconstruct:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target parallel_reconstruct -j 6
+  rm {{source_dir}}/tests/logs/parallel_reconstruct/*.json || true
+  rm {{source_dir}}/tests/output/parallel_reconstruct/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^parallel_reconstruct$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+run: sequential sequential_coro parallel_reconstruct

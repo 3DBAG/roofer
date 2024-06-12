@@ -31,11 +31,18 @@ if(USE_VCPKG)
   message(STATUS "Using VCPKG package manager")
   include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
   find_package(nlohmann_json REQUIRED)
+  find_package(libfork CONFIG REQUIRED)
 else()
   message(STATUS "Using CPM package manager")
   include(CPM)
   cpmaddpackage("gh:nlohmann/json#v3.11.3")
   cpmaddpackage("gh:gabime/spdlog#v1.14.1")
+  cpmaddpackage(
+          NAME libfork
+          VERSION 3.8.0
+          GITHUB_REPOSITORY "ConorWilliams/libfork"
+          GIT_SHALLOW TRUE
+  )
 endif()
 
 # Use configure files to configure compile-time variable for using them runtime,
