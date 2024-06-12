@@ -2,6 +2,8 @@
 
 #include <thread>
 
+const auto SLEEP_PER_FILE = std::chrono::milliseconds(5);
+
 void JsonWriter::write(Points& models, const std::filesystem::path& path) {
   std::ofstream o(path);
 
@@ -16,5 +18,5 @@ void JsonWriter::write(Points& models, const std::filesystem::path& path) {
   o << data << '\n';
 
   // Simulate slow writes
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  std::this_thread::sleep_for(SLEEP_PER_FILE);
 }

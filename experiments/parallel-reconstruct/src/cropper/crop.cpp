@@ -8,6 +8,8 @@
 #include "spdlog/spdlog.h"
 
 const uint NR_PTS_PER_BUILDING = 100;
+const uint EMIT_TRACE_AT = 10;
+const auto SLEEP_PER_POINT = std::chrono::milliseconds(1);
 
 GenerateCroppedPoints crop_coro(uint nr_points_per_laz, uint nr_laz) {
   auto logger_crop = spdlog::get("crop");
@@ -25,7 +27,7 @@ GenerateCroppedPoints crop_coro(uint nr_points_per_laz, uint nr_laz) {
     Points pts{};
     for (float i : pointcloud.x) {
       // Here is the point-in-polygon test
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(SLEEP_PER_POINT);
       // After the pip test with push the point to the polygon
       pts.x.push_back(i);
       pts.y.push_back(i);
@@ -34,7 +36,7 @@ GenerateCroppedPoints crop_coro(uint nr_points_per_laz, uint nr_laz) {
       part_count++;
       if (part_count == NR_PTS_PER_BUILDING) {
         part_count = 0;
-        if (total_building_count % 10 == 0) {
+        if (total_building_count % EMIT_TRACE_AT == 0) {
           logger_crop->trace(total_building_count);
         }
         total_building_count++;
@@ -57,14 +59,12 @@ void crop(uint nr_points_per_laz, uint nr_laz,
   uint total_building_count = 0;
   for (auto laz = 0; laz < nr_laz; laz++) {
     auto pointcloud = read_pointcloud(laz, nr_points_per_laz);
-    // I/O time
-    std::this_thread::sleep_for(std::chrono::seconds(5));
 
     uint part_count = 0;
     Points pts;
     for (float i : pointcloud.x) {
       // Here is the point-in-polygon test
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(SLEEP_PER_POINT);
       // After the pip test with push the point to the polygon
       pts.x.push_back(i);
       pts.y.push_back(i);
@@ -74,7 +74,7 @@ void crop(uint nr_points_per_laz, uint nr_laz,
       if (part_count == NR_PTS_PER_BUILDING) {
         part_count = 0;
         queue_cropped.push(pts);
-        if (total_building_count % 100 == 0) {
+        if (total_building_count % EMIT_TRACE_AT == 0) {
           logger_crop->trace(total_building_count);
         }
         total_building_count++;

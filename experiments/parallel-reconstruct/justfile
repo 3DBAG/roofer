@@ -1,0 +1,25 @@
+#!/usr/bin/env just --justfile
+
+source_dir := "/home/balazs/Development/roofer-dev/experiments/parallel-reconstruct"
+build_dir := "/home/balazs/.build-cmake/ParallelReconstruct/release"
+python := "/home/balazs/.virtualenvs/parallel-reconstruct/bin/python"
+
+sequential:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target sequential -j 6
+  rm {{source_dir}}/tests/logs/sequential/*.json || true
+  rm {{source_dir}}/tests/output/sequential/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^sequential$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+sequential_coro:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target sequential_coro -j 6
+  rm {{source_dir}}/tests/logs/sequential_coro/*.json || true
+  rm {{source_dir}}/tests/output/sequential_coro/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^sequential_coro$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+run: sequential sequential_coro

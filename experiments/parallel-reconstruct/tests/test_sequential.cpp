@@ -10,7 +10,15 @@
 
 using json = nlohmann::json;
 
-int main() {
+const uint EMIT_TRACE_AT = 10;
+
+int main(int argc, char* argv[]) {
+  auto args = std::span(argv, size_t(argc));
+  uint nr_laz_files = 3;
+  nr_laz_files = std::stoi(args[1]);
+  uint nr_points_per_laz = 2000;
+  nr_points_per_laz = std::stoi(args[2]);
+
   std::string jsonpattern = {
       "{\"time\": \"%Y-%m-%dT%H:%M:%S.%f%z\", \"name\": \"%n\", \"process\": "
       "%P, "
@@ -32,8 +40,6 @@ int main() {
 
   // Crop
   std::queue<Points> queue_cropped_buildings;
-  uint nr_laz_files = 3;
-  uint nr_points_per_laz = 10000;
   crop(nr_points_per_laz, nr_laz_files, queue_cropped_buildings);
 
   // Reconstruct
@@ -44,25 +50,27 @@ int main() {
     auto model = reconstruct_one_building(queue_cropped_buildings.front());
     queue_reconstructed_buildings.push(model);
     count_buildings++;
-    if (count_buildings % 100 == 0) {
+    if (count_buildings % EMIT_TRACE_AT == 0) {
       logger_reconstruct->trace(count_buildings);
     }
   }
+  logger_reconstruct->trace(count_buildings);
 
   // Output
   auto count_written = 0;
-  logger_write->trace(count_written);
   auto json_writer = JsonWriter();
+  logger_write->trace(count_written);
   for (; !queue_reconstructed_buildings.empty();
        queue_reconstructed_buildings.pop()) {
     auto model = queue_reconstructed_buildings.front();
     json_writer.write(model,
                       std::format("output/sequential/{}.json", count_written));
     count_written++;
-    if (count_written % 100 == 0) {
+    if (count_written % EMIT_TRACE_AT == 0) {
       logger_write->trace(count_written);
     }
   }
+  logger_write->trace(count_written);
 
   return 0;
 }

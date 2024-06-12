@@ -14,29 +14,15 @@
 
 using json = nlohmann::json;
 
-// struct reconstruct_all_result {
-//   struct promise_type {
-//     void unhandled_exception() noexcept {}
-//
-//     reconstruct_all_result get_return_object() { return {}; }
-//
-//     std::suspend_never initial_suspend() noexcept { return {}; }
-//
-//     std::suspend_never final_suspend() noexcept { return {}; }
-//   };
-// };
+const uint EMIT_TRACE_AT = 10;
 
-// reconstruct_all_result reconstruct_all(uint nr_points_per_laz, uint
-// nr_laz_files) {
-//   auto cropped_generator = crop_coro(nr_points_per_laz, nr_laz_files);
-//   while (auto cropped_buildings_one_laz = co_await
-//   crop_coro(nr_points_per_laz, nr_laz_files)) {
-//     auto models = lf::fork[reconstruct_one](cropped_buildings_one_laz);
-//     serialize(models);
-//   }
-// }
+int main(int argc, char* argv[]) {
+  auto args = std::span(argv, size_t(argc));
+  uint nr_laz_files = 3;
+  nr_laz_files = std::stoi(args[1]);
+  uint nr_points_per_laz = 2000;
+  nr_points_per_laz = std::stoi(args[2]);
 
-int main() {
   std::string jsonpattern = {
       "{\"time\": \"%Y-%m-%dT%H:%M:%S.%f%z\", \"name\": \"%n\", \"process\": "
       "%P, "
@@ -61,8 +47,6 @@ int main() {
 
   // Crop
   std::queue<Points> queue_cropped_buildings;
-  uint nr_laz_files = 3;
-  uint nr_points_per_laz = 2000;
   auto cropped_generator = crop_coro(nr_points_per_laz, nr_laz_files);
   uint count_buildings = 0;
   auto json_writer = JsonWriter();
@@ -76,13 +60,13 @@ int main() {
     auto pts = cropped_generator.mCoroHdl.promise()._valueOut;
 
     auto model = reconstruct_one_building(pts);
-    if (count_buildings % 10 == 0) {
+    if (count_buildings % EMIT_TRACE_AT == 0) {
       logger_reconstruct->trace(count_buildings);
     }
 
     json_writer.write(
         model, std::format("output/sequential_coro/{}.json", count_buildings));
-    if (count_buildings % 10 == 0) {
+    if (count_buildings % EMIT_TRACE_AT == 0) {
       logger_write->trace(count_buildings);
     }
 

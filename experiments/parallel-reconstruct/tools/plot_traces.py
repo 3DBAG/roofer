@@ -31,7 +31,7 @@ if __name__ == "__main__":
                 process_df.loc[:, "duration"] = process_df["time"].apply(lambda t: (t - start_time).total_seconds())
                 plt.plot(process_df["duration"], process_df["count"], label=name)
 
-        plt.xlabel("Duration [s]")
+        plt.xlabel("Duration of complete program [s]")
         plt.ylabel("Nr. objects produced")
         plt.title(case)
         plt.legend()
