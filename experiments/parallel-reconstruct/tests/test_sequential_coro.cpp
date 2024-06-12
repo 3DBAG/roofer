@@ -3,6 +3,7 @@
 
 #include <coroutine>
 #include <format>
+#include <future>
 #include <nlohmann/json.hpp>
 #include <queue>
 #include <stdexcept>
@@ -12,6 +13,28 @@
 #include "reconstruct.h"
 
 using json = nlohmann::json;
+
+// struct reconstruct_all_result {
+//   struct promise_type {
+//     void unhandled_exception() noexcept {}
+//
+//     reconstruct_all_result get_return_object() { return {}; }
+//
+//     std::suspend_never initial_suspend() noexcept { return {}; }
+//
+//     std::suspend_never final_suspend() noexcept { return {}; }
+//   };
+// };
+
+// reconstruct_all_result reconstruct_all(uint nr_points_per_laz, uint
+// nr_laz_files) {
+//   auto cropped_generator = crop_coro(nr_points_per_laz, nr_laz_files);
+//   while (auto cropped_buildings_one_laz = co_await
+//   crop_coro(nr_points_per_laz, nr_laz_files)) {
+//     auto models = lf::fork[reconstruct_one](cropped_buildings_one_laz);
+//     serialize(models);
+//   }
+// }
 
 int main() {
   std::string jsonpattern = {
@@ -23,7 +46,7 @@ int main() {
   spdlog::set_level(spdlog::level::trace);
 
   // Init loggers
-  auto logs_dir = "logs/async_coro";
+  auto logs_dir = "logs/sequential_coro";
   auto logger_read_pc = spdlog::basic_logger_mt(
       "read_pc", std::format("{}/log_read_pc.json", logs_dir));
   auto logger_crop = spdlog::basic_logger_mt(
@@ -40,24 +63,35 @@ int main() {
   std::queue<Points> queue_cropped_buildings;
   uint nr_laz_files = 3;
   uint nr_points_per_laz = 2000;
-  std::vector<Points> cropped_points{};
   auto cropped_generator = crop_coro(nr_points_per_laz, nr_laz_files);
-  uint counter = 0;
+  uint count_buildings = 0;
+  auto json_writer = JsonWriter();
   while (!cropped_generator.mCoroHdl.done()) {
-    if (counter > nr_laz_files * nr_points_per_laz) {
+    if (count_buildings > nr_laz_files * nr_points_per_laz) {
       logger_coro->critical(
           "cropped_generator loop passed the expected amount of points");
       throw std::runtime_error(
           "cropped_generator loop passed the expected amount of points");
     }
     auto pts = cropped_generator.mCoroHdl.promise()._valueOut;
-    cropped_points.emplace_back(pts);
-    //    logger_coro->debug("cropped_points counter {}, first {} last {} size
-    //    {}", counter, pts.x.front(), pts.x.back(), pts.x.size());
-    counter++;
+
+    auto model = reconstruct_one_building(pts);
+    if (count_buildings % 10 == 0) {
+      logger_reconstruct->trace(count_buildings);
+    }
+
+    json_writer.write(
+        model, std::format("output/sequential_coro/{}.json", count_buildings));
+    if (count_buildings % 10 == 0) {
+      logger_write->trace(count_buildings);
+    }
+
+    count_buildings++;
     cropped_generator.mCoroHdl.resume();
   }
-  logger_coro->debug("cropped_points length {}", cropped_points.size());
+  logger_crop->trace(count_buildings);
+  logger_reconstruct->trace(count_buildings);
+  logger_write->trace(count_buildings);
 
   return 0;
 }

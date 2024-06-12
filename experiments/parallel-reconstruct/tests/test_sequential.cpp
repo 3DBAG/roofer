@@ -55,19 +55,9 @@ int main() {
   auto json_writer = JsonWriter();
   for (; !queue_reconstructed_buildings.empty();
        queue_reconstructed_buildings.pop()) {
-    auto points = queue_reconstructed_buildings.front();
-    auto data = json::array();
-    for (auto coordinate : points.x) {
-      auto pt = json::array();
-      pt.push_back(coordinate);
-      pt.push_back(coordinate);
-      pt.push_back(coordinate);
-      data.push_back(pt);
-    }
-    json_writer.write(data,
+    auto model = queue_reconstructed_buildings.front();
+    json_writer.write(model,
                       std::format("output/sequential/{}.json", count_written));
-    // Simulate slow writes
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     count_written++;
     if (count_written % 100 == 0) {
       logger_write->trace(count_written);

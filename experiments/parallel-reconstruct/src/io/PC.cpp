@@ -11,6 +11,9 @@ ReturnPoints read_pointcloud_coro(uint nr_laz, uint nr_points_per_laz) {
     spdlog::info("Defaulting to {} point cloud points", default_nr_points);
     nr_points_per_laz = default_nr_points;
   };
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
   Points pointcloud;
   for (auto i = 0; i < nr_points_per_laz; i++) {
     // Imitate slow I/O
@@ -24,6 +27,7 @@ ReturnPoints read_pointcloud_coro(uint nr_laz, uint nr_points_per_laz) {
       logger->trace(i);
     }
   }
+  logger->trace(nr_points_per_laz);
   co_return pointcloud;
 }
 
@@ -47,5 +51,6 @@ Points read_pointcloud(uint nr_laz, uint nr_points_per_laz) {
       logger->trace(i);
     }
   }
+  logger->trace(nr_points_per_laz);
   return pointcloud;
 }
