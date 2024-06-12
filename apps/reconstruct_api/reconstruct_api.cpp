@@ -1,13 +1,13 @@
 #include <CGAL/IO/OBJ.h>
+#include <roofer/logger/logger.h>
 #include <roofer/roofer.h>
 
 #include <roofer/io/PointCloudReader.hpp>
 #include <roofer/io/VectorReader.hpp>
 #include <roofer/misc/cgal_utils.hpp>
-#include <roofer/logger/logger.h>
 
-#include "fmt/format.h"
 #include "argh.h"
+#include "fmt/format.h"
 #include "git.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -89,43 +89,29 @@ int main(int argc, const char* argv[]) {
     }
   }
   logger.info("{} ground points and {} roof points", points_ground.size(),
-  points_roof.size());
+              points_roof.size());
 
   // reconstruct
   logger.info("Reconstructing LoD2.2");
   auto mesh_lod22 = roofer::reconstruct_single_instance(
-      points_roof,
-      points_ground,
-      footprints.front(),
-      {
-          .floor_elevation =
-          floor_elevation,
-          .override_with_floor_elevation
-          = true
-      });
+      points_roof, points_ground, footprints.front(),
+      {.floor_elevation = floor_elevation,
+       .override_with_floor_elevation = true});
 
   logger.info("Reconstructing LoD1.3");
   auto mesh_lod13 = roofer::reconstruct_single_instance(
-      points_roof,
-      points_ground,
-      footprints.front(),
-      {
-          .lod = 13,
-          .lod13_step_height = 2,
-          .floor_elevation = floor_elevation,
-          .override_with_floor_elevation = true
-      });
+      points_roof, points_ground, footprints.front(),
+      {.lod = 13,
+       .lod13_step_height = 2,
+       .floor_elevation = floor_elevation,
+       .override_with_floor_elevation = true});
 
   logger.info("Reconstructing LoD1.2");
   auto mesh_lod12 = roofer::reconstruct_single_instance(
-      points_roof,
-      points_ground,
-      footprints.front(),
-      {
-          .lod = 12,
-          .floor_elevation = floor_elevation,
-          .override_with_floor_elevation = true
-      });
+      points_roof, points_ground, footprints.front(),
+      {.lod = 12,
+       .floor_elevation = floor_elevation,
+       .override_with_floor_elevation = true});
 
   logger.info("Outputting to OBJ files");
   // lod22
@@ -154,7 +140,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  //lod12
+  // lod12
   {
     int i = 0;
     for (auto& mesh : mesh_lod12) {
