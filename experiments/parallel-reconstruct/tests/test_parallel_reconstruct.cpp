@@ -6,15 +6,36 @@
 #include <future>
 #include <nlohmann/json.hpp>
 #include <queue>
+#include <span>
 #include <stdexcept>
 
 #include "JsonWriter.h"
 #include "crop.h"
+#include "libfork/core.hpp"
+#include "libfork/schedule.hpp"
 #include "reconstruct.h"
 
 using json = nlohmann::json;
 
 const uint EMIT_TRACE_AT = 10;
+
+// Ref:
+// https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
+inline constexpr auto reconstruct_parallel =
+    [](auto reconstruct_parallel,
+       std::span<Points> cropped_buildings) -> lf::task<std::span<Points>> {
+  // Allocate space for results, outputs is a std::span<Points>
+  auto [outputs] = co_await lf::co_new<Points>(cropped_buildings.size());
+
+  for (std::size_t i = 0; i < cropped_buildings.size(); ++i) {
+    co_await lf::fork[&outputs[i], reconstruct_one_building_libfork](
+        cropped_buildings[i]);
+  }
+
+  co_await lf::join;  // Wait for all tasks to complete.
+
+  co_return outputs;
+};
 
 int main(int argc, char* argv[]) {
   auto args = std::span(argv, size_t(argc));
@@ -48,17 +69,35 @@ int main(int argc, char* argv[]) {
   // Crop
   std::queue<Points> queue_cropped_buildings;
   crop(nr_points_per_laz, nr_laz_files, queue_cropped_buildings);
+  // hack
+  std::vector<Points> vec_cropped_buildings;
+  vec_cropped_buildings.reserve(queue_cropped_buildings.size());
+  for (; !queue_cropped_buildings.empty(); queue_cropped_buildings.pop()) {
+    vec_cropped_buildings.push_back(queue_cropped_buildings.front());
+  }
 
   // Reconstruct
   std::queue<Points> queue_reconstructed_buildings;
   auto count_buildings = 0;
   logger_reconstruct->trace(count_buildings);
 
-  auto json_writer = JsonWriter();
+  lf::lazy_pool pool(4);  // 4 worker threads
+  auto reconstructed_buildings =
+      lf::sync_wait(pool, reconstruct_parallel, vec_cropped_buildings);
+  logger_reconstruct->trace(reconstructed_buildings.size());
 
-  logger_crop->trace(count_buildings);
-  logger_reconstruct->trace(count_buildings);
-  logger_write->trace(count_buildings);
+  // Write
+  auto count_written = 0;
+  auto json_writer = JsonWriter();
+  for (auto model : reconstructed_buildings) {
+    json_writer.write(model, std::format("output/parallel_reconstruct/{}.json",
+                                         count_buildings));
+    if (count_written % EMIT_TRACE_AT == 0) {
+      logger_write->trace(count_written);
+    }
+    count_written++;
+  }
+  logger_write->trace(count_written);
 
   return 0;
 }

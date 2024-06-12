@@ -2,9 +2,7 @@
 
 #include <thread>
 
-const auto SLEEP_PER_BUILDING = std::chrono::milliseconds(60);
-
-GenerateModels reconstruct_one_building_coro(Points& points_one_building) {
+GenerateModels reconstruct_one_building_coro(Points points_one_building) {
   Points building_model;
   for (const auto& p : points_one_building.x) {
     building_model.x.push_back(p * (float)42.0);
