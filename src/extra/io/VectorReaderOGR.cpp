@@ -178,7 +178,7 @@ namespace roofer::io {
       if (poLayer == nullptr)
         throw(rooferException("Could not get the selected layer "));
 
-      logger.info("Layer '{}' feature count: {}", poLayer->GetName(),
+      logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
                   poLayer->GetFeatureCount());
       auto geometry_type = poLayer->GetGeomType();
       auto geometry_type_name = OGRGeometryTypeToName(geometry_type);

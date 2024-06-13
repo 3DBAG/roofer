@@ -5,7 +5,6 @@ id_attribute = "identificatie"
 [[input.pointclouds]]
 name = "pointcloud"
 quality = 1
-# path = "/data/pointcloud/AHN4/as_downloaded/LAZ"
 path = "data/wippolder/wippolder.las"
 
 [parameters]
