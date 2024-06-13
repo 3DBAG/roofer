@@ -64,4 +64,4 @@ class TestApps:
 
     def test_reconstruct_api_wippolder(self, reconstruct_api_exe, dir_tests):
         """Can we run reconstruct api on the wippolder data?"""
-        subprocess.run([reconstruct_api_exe], capture_output=True, check=True)
+        subprocess.run(reconstruct_api_exe, capture_output=True, check=True)

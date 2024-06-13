@@ -5,6 +5,7 @@ name: Build and Test (vcpkg)
 on:
   pull_request:
     branches: [ "develop"]
+
   workflow_dispatch:  
     
 
