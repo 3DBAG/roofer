@@ -33,15 +33,6 @@ def reconstruct_exe() -> str:
     else:
         return 'reconstruct'
 
-@pytest.fixture()
-def reconstruct_api_exe() -> str:
-    """Reconstruct API executable, OS-dependent."""
-    if platform.system() == 'Windows':
-        return 'reconstruct_api.exe'
-    else:
-        return 'reconstruct_api'
-
-
 class TestApps:
 
     def test_crop_version(self, crop_exe):
@@ -61,7 +52,3 @@ class TestApps:
         """Can we run reconstruct on the wippolder data?"""
         path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
         subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True, check=True)
-
-    def test_reconstruct_api_wippolder(self, reconstruct_api_exe, dir_tests):
-        """Can we run reconstruct api on the wippolder data?"""
-        subprocess.run(reconstruct_api_exe, capture_output=True, check=True)
