@@ -6,10 +6,6 @@
       "name": "nlohmann-json",
       "version>=": "3.11.3"
     },
-    {
-      "name": "catch2",
-      "version>=": "3.5.4"
-    },
     "boost-geometry",
     "boost-format",
     "lastools",
@@ -30,6 +26,14 @@
     {
       "name": "nlohmann-json",
       "version": "3.11.3"
+    },
+    {
+        "name": "boost-geometry",
+        "version": "1.84.0"
+    },
+    {
+        "name": "boost-format",
+        "version": "1.84.0"
     }
   ],
   "builtin-baseline": "9224b3bbd8df24999d85720b1d005dd6f969ade0"
