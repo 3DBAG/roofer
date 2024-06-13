@@ -91,8 +91,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a174723cb2438bbfe982d504a075a5884"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classroofer_1_1io_1_1PointsInPolygonsCollector.html#a174723cb2438bbfe982d504a075a5884">~PointsInPolygonsCollector</a> ()</td></tr>
 <tr class="separator:a174723cb2438bbfe982d504a075a5884"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec717388f087bfb20ad515607ceed272"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classroofer_1_1io_1_1PointsInPolygonsCollector.html#aec717388f087bfb20ad515607ceed272">add_point</a> (<a class="el" href="namespaceroofer.html#ac8ea5477fe9d8dd8dddf5d22b8eb9652">arr3f</a> point, int point_class, int acqusition_year)</td></tr>
+<tr class="memdesc:aec717388f087bfb20ad515607ceed272"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find polygon that intersects point and add the point to the corresponding building point cloud.  <a href="classroofer_1_1io_1_1PointsInPolygonsCollector.html#aec717388f087bfb20ad515607ceed272">More...</a><br /></td></tr>
 <tr class="separator:aec717388f087bfb20ad515607ceed272"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c6e35610341c6bf3273d26be77e4191"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classroofer_1_1io_1_1PointsInPolygonsCollector.html#a2c6e35610341c6bf3273d26be77e4191">do_post_process</a> (float &amp;ground_percentile, float &amp;max_density_delta, float &amp;coverage_threshold, bool &amp;clear_if_insufficient, <a class="el" href="namespaceroofer.html#af0a809851ca865198d4dd8e37d06396f">vec1f</a> &amp;poly_areas, <a class="el" href="namespaceroofer.html#acc243334f5554a08afa06a8b2f620535">vec1i</a> &amp;poly_pt_counts_bld, <a class="el" href="namespaceroofer.html#acc243334f5554a08afa06a8b2f620535">vec1i</a> &amp;poly_pt_counts_grd, <a class="el" href="namespaceroofer.html#a719bb118a406351d8dbbbbf9533cb074">vec1s</a> &amp;poly_ptcoverage_class, <a class="el" href="namespaceroofer.html#af0a809851ca865198d4dd8e37d06396f">vec1f</a> &amp;poly_densities)</td></tr>
+<tr class="memdesc:a2c6e35610341c6bf3273d26be77e4191"><td class="mdescLeft">&#160;</td><td class="mdescRight">Post processes building objects after adding all points.  <a href="classroofer_1_1io_1_1PointsInPolygonsCollector.html#a2c6e35610341c6bf3273d26be77e4191">More...</a><br /></td></tr>
 <tr class="separator:a2c6e35610341c6bf3273d26be77e4191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -253,6 +255,8 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Find polygon that intersects point and add the point to the corresponding building point cloud. </p>
+
 </div>
 </div>
 <a id="a2c6e35610341c6bf3273d26be77e4191"></a>
@@ -331,6 +335,15 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Post processes building objects after adding all points. </p>
+<ul>
+<li>compute building polygon area</li>
+<li>compute building elevation value for building</li>
+<li>compute point counts for ground and building classification</li>
+<li>compute ground elevation value for building</li>
+<li>clear point clouds with very low coverage (ie. underground footprints) cov_thres = mean_density - coverage_threshold * std_dev_density </li>
+</ul>
+
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
@@ -363,7 +376,7 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/runner/work/roofer-dev/roofer-dev/src/extra/io/<a class="el" href="StreamCropper_8cpp.html">StreamCropper.cpp</a></li>
+<li>/home/runner/work/geoflow-roofer/geoflow-roofer/src/extra/io/<a class="el" href="StreamCropper_8cpp.html">StreamCropper.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
