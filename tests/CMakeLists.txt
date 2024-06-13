@@ -29,7 +29,7 @@ if(RF_BUILD_APPS)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_test(
-    NAME "reconstruct_api-wippolder"
+    NAME "reconstruct-api-wippolder"
     COMMAND
       $<TARGET_FILE:reconstruct_api>
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
