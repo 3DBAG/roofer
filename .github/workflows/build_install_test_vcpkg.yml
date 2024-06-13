@@ -78,6 +78,7 @@ jobs:
         shell: bash
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          echo "pybind11_ROOT=$(python -m pybind11 --cmakedir)" >> $GITHUB_ENV
 
       - uses: actions/github-script@v7
         with:
