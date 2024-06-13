@@ -5,8 +5,6 @@ name: Build and Test (vcpkg)
 on:
   pull_request:
     branches: [ "develop"]
-  push:
-      branches: ["test-pybind-workflow"]  
   workflow_dispatch:  
     
 
