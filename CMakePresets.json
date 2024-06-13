@@ -49,7 +49,6 @@
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
       "inherits": "vcpkg-minimal-test",
-      "generator": "Ninja",
       "cacheVariables": {
         "RF_BUILD_BINDINGS": "ON"
       }
