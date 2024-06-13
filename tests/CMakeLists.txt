@@ -29,12 +29,12 @@ if(RF_BUILD_APPS)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_test(
-    NAME "reconstruct-api-wippolder"
+    NAME "reconstruct_api-wippolder"
     COMMAND
-      $<TARGET_FILE:reconstruct_api> 
+      $<TARGET_FILE:reconstruct_api>
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "crop-wippolder;reconstruct-wippolder")
+  set(tests_built "crop-wippolder;reconstruct-wippolder;reconstruct-api-wippolder")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                 "${TEST_ENVIRONMENT}")
 

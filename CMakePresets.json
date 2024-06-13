@@ -21,7 +21,8 @@
       "inherits": "vcpkg-minimal",
       "cacheVariables": {
         "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
@@ -34,7 +35,8 @@
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
         "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
@@ -48,26 +50,19 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-minimal-test",
-      "cacheVariables": {
-        "RF_BUILD_BINDINGS": "ON"
-      }
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS configure",
-      "inherits": "vcpkg-minimal-test",
-      "cacheVariables": {
-        "RF_BUILD_BINDINGS": "ON"
-      }
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows configure",
       "inherits": "vcpkg-minimal-test",
       "cacheVariables": {
-        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON",
-        "RF_BUILD_BINDINGS": "ON"
+        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
     }
   ],
