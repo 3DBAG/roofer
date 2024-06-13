@@ -4,4 +4,4 @@ set(LIBRARY_INCLUDES "./" "${CMAKE_BINARY_DIR}/configured_files/include" "LibDat
 
 add_library("LibCropper" STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("LibCropper" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("LibCropper" PUBLIC "LibDatastructures" "LibIo")
+target_link_libraries("LibCropper" PUBLIC "LibDatastructures" "LibIo" libfork::libfork)

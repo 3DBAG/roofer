@@ -84,3 +84,37 @@ void crop(uint nr_points_per_laz, uint nr_laz,
     logger_crop->trace(total_building_count);
   }
 }
+
+void crop(uint nr_points_per_laz, uint nr_laz,
+          lf::deque<DequePoints>& queue_cropped) {
+  auto logger_crop = spdlog::get("crop");
+  std::vector<Points> pointcloud_per_building;
+  uint total_building_count = 0;
+  for (auto laz = 0; laz < nr_laz; laz++) {
+    auto pointcloud = read_pointcloud(laz, nr_points_per_laz);
+
+    uint part_count = 0;
+    DequePoints pts{};
+    for (float i : pointcloud.x) {
+      // Here is the point-in-polygon test
+      std::this_thread::sleep_for(SLEEP_PER_POINT);
+      // After the pip test with push the point to the polygon
+      //      pts.x.push_back(i);
+      //      pts.y.push_back(i);
+      //      pts.z.push_back(i);
+      pts = DequePoints{i};
+      // Add a the cropped building points to the collection
+      part_count++;
+      if (part_count == NR_PTS_PER_BUILDING) {
+        part_count = 0;
+        queue_cropped.push(pts);
+        if (total_building_count % EMIT_TRACE_AT == 0) {
+          logger_crop->trace(total_building_count);
+        }
+        total_building_count++;
+        pts = DequePoints{};
+      }
+    }
+    logger_crop->trace(total_building_count);
+  }
+}
