@@ -31,4 +31,16 @@ parallel_reconstruct:
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
-run: sequential sequential_coro parallel_reconstruct
+async:
+  mkdir -P {{source_dir}}/tests/logs/async || true
+  mkdir -P {{source_dir}}/tests/output/async || true
+  mkdir -P {{source_dir}}/tests/plots/async || true
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target async -j 6
+  rm -rf {{source_dir}}/tests/logs/async || true
+  rm -rf {{source_dir}}/tests/output/async || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^async$"
+  cd {{source_dir}}
+#  {{python}} tools/plot_traces.py
+
+run: sequential sequential_coro parallel_reconstruct async

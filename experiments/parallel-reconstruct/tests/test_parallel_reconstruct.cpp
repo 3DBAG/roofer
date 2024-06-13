@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
   auto json_writer = JsonWriter();
   for (auto model : reconstructed_buildings) {
     json_writer.write(model, std::format("output/parallel_reconstruct/{}.json",
-                                         count_buildings));
+                                         count_written));
     if (count_written % EMIT_TRACE_AT == 0) {
       logger_write->trace(count_written);
     }
