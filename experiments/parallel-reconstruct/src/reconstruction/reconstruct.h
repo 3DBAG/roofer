@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <coroutine>
+#include <span>
 #include <vector>
 
 #include "datastructures.h"
@@ -9,6 +10,55 @@
 #include "spdlog/spdlog.h"
 
 const auto SLEEP_PER_BUILDING = std::chrono::milliseconds(60);
+
+struct GenerateModelsBatch {
+  struct promise_type;
+
+  using Handle = std::coroutine_handle<promise_type>;
+  Handle mCoroHdl{};
+
+  explicit GenerateModelsBatch(promise_type* p)
+      : mCoroHdl{Handle::from_promise(*p)} {}
+  GenerateModelsBatch(GenerateModelsBatch&& rhs) noexcept
+      : mCoroHdl{std::exchange(rhs.mCoroHdl, nullptr)} {}
+
+  ~GenerateModelsBatch() {
+    if (mCoroHdl) {
+      mCoroHdl.destroy();
+    }
+  }
+};
+
+struct GenerateModelsBatch::promise_type {
+  std::vector<Points> _valueOut{};
+
+  void unhandled_exception() noexcept {
+    spdlog::get("coro")->debug(
+        "GenerateModelsBatch::promise_type::unhandled_exception");
+  }
+
+  GenerateModelsBatch get_return_object() { return GenerateModelsBatch{this}; }
+
+  std::suspend_never initial_suspend() noexcept {
+    spdlog::get("coro")->debug(
+        "GenerateModelsBatch::promise_type::initial_suspend");
+    return {};
+  }
+
+  void return_value(std::vector<Points> value) noexcept {
+    spdlog::get("coro")->debug(
+        "GenerateModelsBatch::promise_type::return_value");
+    _valueOut = std::move(value);
+  }
+
+  std::suspend_always final_suspend() noexcept {
+    spdlog::get("coro")->debug(
+        "GenerateModelsBatch::promise_type::final_suspend");
+    return {};
+  }
+};
+
+GenerateModelsBatch reconstruct_batch(std::span<Points> points_one_batch);
 
 struct GenerateModels {
   struct promise_type;

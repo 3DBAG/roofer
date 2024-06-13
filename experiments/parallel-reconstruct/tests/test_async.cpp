@@ -52,21 +52,33 @@ int main(int argc, char* argv[]) {
       cropped_generator.mCoroHdl.resume();
     }
   });
+  // When crop yields the data of one laz, it suspends, add the data to the
+  // queue When crop is finished, it needs to signal somehow that it's finished
+  // Reconstruct_batch is initially suspended
+  // There needs to be a container/buffer between crop and reconstruct so that
+  // the two can operate at different speeds.
+  // When data is available in the queue, resume reconstruct_batch
+  // When reconstruct_batch finished, it suspends
 
   // Reconstruct
   std::deque<Points> queue_reconstructed_buildings;
   std::atomic<uint> count_buildings{0};
   logger_reconstruct->trace(count_buildings.load());
   std::thread reconstructor([&]() {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    for (; !queue_cropped_laz.empty(); queue_cropped_laz.pop_front()) {
-      logger_coro->debug("popped one item from queue_cropped_laz");
-      for (auto pts_one_building : queue_cropped_laz.front()) {
-        auto model = reconstruct_one_building(pts_one_building);
-        queue_reconstructed_buildings.push_back(model);
-        count_buildings++;
-        if (count_buildings % EMIT_TRACE_AT == 0) {
-          logger_reconstruct->trace(count_buildings.load());
+    while (!cropped_generator.mCoroHdl.done()) {
+      if (!queue_cropped_laz.empty()) {
+        for (; !queue_cropped_laz.empty(); queue_cropped_laz.pop_front()) {
+          logger_coro->debug("popped one item from queue_cropped_laz");
+          auto reconstructed_one_laz =
+              reconstruct_batch(queue_cropped_laz.front());
+          for (const auto& model :
+               reconstructed_one_laz.mCoroHdl.promise()._valueOut) {
+            queue_reconstructed_buildings.push_back(model);
+            count_buildings++;
+            if (count_buildings % EMIT_TRACE_AT == 0) {
+              logger_reconstruct->trace(count_buildings.load());
+            }
+          }
         }
       }
     }
