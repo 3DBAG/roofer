@@ -57,10 +57,10 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::warning);
   }
   std::string path_pointcloud =
-      "output/wippolder/objects/503100000030812/crop/"
+      "data/wippolder/objects/503100000030812/crop/"
       "503100000030812_pointcloud.las";
   std::string path_footprint =
-      "output/wippolder/objects/503100000030812/crop/503100000030812.gpkg";
+      "data/wippolder/objects/503100000030812/crop/503100000030812.gpkg";
   float floor_elevation = -0.16899998486042023;
 
   // read inputs
