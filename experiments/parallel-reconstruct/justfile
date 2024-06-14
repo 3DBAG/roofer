@@ -43,4 +43,4 @@ async:
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
-run: sequential sequential_coro parallel_reconstruct async
+run: parallel_reconstruct async

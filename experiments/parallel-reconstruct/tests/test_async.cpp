@@ -11,9 +11,32 @@
 
 #include "JsonWriter.h"
 #include "crop.h"
+#include "libfork/core.hpp"
+#include "libfork/schedule.hpp"
 #include "reconstruct.h"
 
 const uint EMIT_TRACE_AT = 10;
+
+// Ref:
+// https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
+inline constexpr auto reconstruct_parallel =
+    [](auto reconstruct_parallel,
+       std::span<Points> cropped_buildings) -> lf::task<std::vector<Points>> {
+  // Allocate space for results, outputs is a std::span<Points>
+  auto [outputs] = co_await lf::co_new<Points>(cropped_buildings.size());
+
+  for (std::size_t i = 0; i < cropped_buildings.size(); ++i) {
+    co_await lf::fork[&outputs[i], reconstruct_one_building_libfork](
+        cropped_buildings[i]);
+  }
+
+  co_await lf::join;  // Wait for all tasks to complete.
+
+  std::vector<Points> o{};
+  o.assign(outputs.begin(), outputs.end());
+
+  co_return o;
+};
 
 int main(int argc, char* argv[]) {
   auto args = std::span(argv, size_t(argc));
@@ -41,6 +64,12 @@ int main(int argc, char* argv[]) {
   auto logger_write = spdlog::basic_logger_mt(
       "write", std::format("{}/log_write.json", logs_dir));
   auto logger_coro = spdlog::stderr_color_mt("coro");
+
+  // This should be something like:
+  // unsigned int nthreads = std::thread::hardware_concurrency();
+  // lf::lazy_pool pool(nthreads - 3);
+  // -3, because we need one thread for loops of crop, reconstruct, serialize
+  lf::lazy_pool pool(4);  // 4 worker threads
 
   // Yields the cropped points per laz file.
   std::deque<std::vector<Points>> deque_cropped_laz;
@@ -70,12 +99,10 @@ int main(int argc, char* argv[]) {
       if (!deque_cropped_laz.empty()) {
         for (; !deque_cropped_laz.empty(); deque_cropped_laz.pop_front()) {
           logger_coro->debug("popped one item from deque_cropped_laz");
-          auto reconstructed_one_laz =
-              reconstruct_batch(deque_cropped_laz.front());
-          auto models_one_laz =
-              reconstructed_one_laz.mCoroHdl.promise()._valueOut;
-          deque_reconstructed_buildings.push_back(models_one_laz);
-          for (auto i = 0; i < models_one_laz.size(); i++) {
+          auto reconstructed_one_laz = lf::sync_wait(pool, reconstruct_parallel,
+                                                     deque_cropped_laz.front());
+          deque_reconstructed_buildings.push_back(reconstructed_one_laz);
+          for (auto i = 0; i < reconstructed_one_laz.size(); i++) {
             count_buildings++;
             if (count_buildings % EMIT_TRACE_AT == 0) {
               logger_reconstruct->trace(count_buildings.load());

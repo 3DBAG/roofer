@@ -1,5 +1,5 @@
-set("NrLAZ" 3)
-set("NrPointsPerLAZ" 2000)
+set("NrLAZ" 5)
+set("NrPointsPerLAZ" 10000)
 
 add_executable("sequential" "${CMAKE_CURRENT_SOURCE_DIR}/test_sequential.cpp")
 target_link_libraries("sequential" PRIVATE "LibIo" "LibCropper" "LibReconstruction")
