@@ -43,12 +43,12 @@ int main(int argc, char* argv[]) {
   auto logger_coro = spdlog::stderr_color_mt("coro");
 
   // Yields the cropped points per laz file.
-  std::deque<std::vector<Points>> queue_cropped_laz;
+  std::deque<std::vector<Points>> deque_cropped_laz;
   auto cropped_generator = crop_coro_batch(nr_points_per_laz, nr_laz_files);
   std::thread cropper([&]() {
     while (!cropped_generator.mCoroHdl.done()) {
       auto cropped_per_laz = cropped_generator.mCoroHdl.promise()._valueOut;
-      queue_cropped_laz.push_back(cropped_per_laz);
+      deque_cropped_laz.push_back(cropped_per_laz);
       cropped_generator.mCoroHdl.resume();
     }
   });
@@ -61,19 +61,21 @@ int main(int argc, char* argv[]) {
   // When reconstruct_batch finished, it suspends
 
   // Reconstruct
-  std::deque<Points> queue_reconstructed_buildings;
+  std::deque<std::vector<Points>> deque_reconstructed_buildings;
+  std::atomic<bool> reconstruction_running{true};
   std::atomic<uint> count_buildings{0};
   logger_reconstruct->trace(count_buildings.load());
   std::thread reconstructor([&]() {
     while (!cropped_generator.mCoroHdl.done()) {
-      if (!queue_cropped_laz.empty()) {
-        for (; !queue_cropped_laz.empty(); queue_cropped_laz.pop_front()) {
-          logger_coro->debug("popped one item from queue_cropped_laz");
+      if (!deque_cropped_laz.empty()) {
+        for (; !deque_cropped_laz.empty(); deque_cropped_laz.pop_front()) {
+          logger_coro->debug("popped one item from deque_cropped_laz");
           auto reconstructed_one_laz =
-              reconstruct_batch(queue_cropped_laz.front());
-          for (const auto& model :
-               reconstructed_one_laz.mCoroHdl.promise()._valueOut) {
-            queue_reconstructed_buildings.push_back(model);
+              reconstruct_batch(deque_cropped_laz.front());
+          auto models_one_laz =
+              reconstructed_one_laz.mCoroHdl.promise()._valueOut;
+          deque_reconstructed_buildings.push_back(models_one_laz);
+          for (auto i = 0; i < models_one_laz.size(); i++) {
             count_buildings++;
             if (count_buildings % EMIT_TRACE_AT == 0) {
               logger_reconstruct->trace(count_buildings.load());
@@ -82,6 +84,7 @@ int main(int argc, char* argv[]) {
         }
       }
     }
+    reconstruction_running.store(false);
   });
 
   // Serialize
@@ -89,14 +92,20 @@ int main(int argc, char* argv[]) {
   auto json_writer = JsonWriter();
   logger_write->trace(count_written.load());
   std::thread serializer([&]() {
-    for (; !queue_reconstructed_buildings.empty();
-         queue_reconstructed_buildings.pop_front()) {
-      auto model = queue_reconstructed_buildings.front();
-      json_writer.write(
-          model, std::format("output/async/{}.json", count_written.load()));
-      count_written++;
-      if (count_written % EMIT_TRACE_AT == 0) {
-        logger_write->trace(count_written.load());
+    while (reconstruction_running.load()) {
+      if (!deque_reconstructed_buildings.empty()) {
+        for (; !deque_reconstructed_buildings.empty();
+             deque_reconstructed_buildings.pop_front()) {
+          auto models_one_laz = deque_reconstructed_buildings.front();
+          for (auto model : models_one_laz) {
+            json_writer.write(model, std::format("output/async/{}.json",
+                                                 count_written.load()));
+            count_written++;
+            if (count_written % EMIT_TRACE_AT == 0) {
+              logger_write->trace(count_written.load());
+            }
+          }
+        }
       }
     }
   });

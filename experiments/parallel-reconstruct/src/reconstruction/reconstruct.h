@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <coroutine>
+#include <deque>
 #include <span>
 #include <vector>
 
@@ -45,6 +46,13 @@ struct GenerateModelsBatch::promise_type {
     return {};
   }
 
+  std::suspend_always yield_value(std::vector<Points> value) noexcept {
+    spdlog::get("coro")->debug(
+        "GenerateModelsBatch::promise_type::yield_value");
+    _valueOut = std::move(value);
+    return {};
+  }
+
   void return_value(std::vector<Points> value) noexcept {
     spdlog::get("coro")->debug(
         "GenerateModelsBatch::promise_type::return_value");
@@ -59,6 +67,9 @@ struct GenerateModelsBatch::promise_type {
 };
 
 GenerateModelsBatch reconstruct_batch(std::span<Points> points_one_batch);
+
+GenerateModelsBatch reconstruct(
+    std::deque<std::vector<Points>>& deque_cropped_laz);
 
 struct GenerateModels {
   struct promise_type;
