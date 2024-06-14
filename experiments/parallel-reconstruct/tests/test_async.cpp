@@ -65,19 +65,36 @@ int main(int argc, char* argv[]) {
       "write", std::format("{}/log_write.json", logs_dir));
   auto logger_coro = spdlog::stderr_color_mt("coro");
 
+  // -- Multithreading setup
+
   // This should be something like:
   // unsigned int nthreads = std::thread::hardware_concurrency();
   // lf::lazy_pool pool(nthreads - 3);
   // -3, because we need one thread for loops of crop, reconstruct, serialize
   lf::lazy_pool pool(4);  // 4 worker threads
 
-  // Yields the cropped points per laz file.
+  std::mutex cropped_mutex;  // protects the cropped queue
   std::deque<std::vector<Points>> deque_cropped_laz;
+  std::condition_variable cropped_pending;
+
+  std::mutex reconstructed_mutex;  // protects the reconstructed queue
+  std::deque<std::vector<Points>> deque_reconstructed_buildings;
+  std::condition_variable reconstructed_pending;
+
+  std::atomic<bool> reconstruction_running{true};
+
+  // end setup --
+
+  // Yields the cropped points per laz file.
   auto cropped_generator = crop_coro_batch(nr_points_per_laz, nr_laz_files);
   std::thread cropper([&]() {
     while (!cropped_generator.mCoroHdl.done()) {
       auto cropped_per_laz = cropped_generator.mCoroHdl.promise()._valueOut;
-      deque_cropped_laz.push_back(cropped_per_laz);
+      {
+        std::scoped_lock lock{cropped_mutex};
+        deque_cropped_laz.push_back(cropped_per_laz);
+      }
+      cropped_pending.notify_one();
       cropped_generator.mCoroHdl.resume();
     }
   });
@@ -90,23 +107,34 @@ int main(int argc, char* argv[]) {
   // When reconstruct_batch finished, it suspends
 
   // Reconstruct
-  std::deque<std::vector<Points>> deque_reconstructed_buildings;
-  std::atomic<bool> reconstruction_running{true};
   std::atomic<uint> count_buildings{0};
   logger_reconstruct->trace(count_buildings.load());
   std::thread reconstructor([&]() {
     while (!cropped_generator.mCoroHdl.done()) {
-      if (!deque_cropped_laz.empty()) {
-        for (; !deque_cropped_laz.empty(); deque_cropped_laz.pop_front()) {
-          logger_coro->debug("popped one item from deque_cropped_laz");
-          auto reconstructed_one_laz = lf::sync_wait(pool, reconstruct_parallel,
-                                                     deque_cropped_laz.front());
+      std::unique_lock lock{cropped_mutex};
+      cropped_pending.wait(lock);
+      if (deque_cropped_laz.empty()) continue;
+      // Temporary queue so we can quickly move off items of the producer queue
+      // and process them independently.
+      auto pending_cropped{std::move(deque_cropped_laz)};
+      lock.unlock();
+
+      while (!pending_cropped.empty()) {
+        logger_coro->debug("popped one item from deque_cropped_laz");
+        auto reconstructed_one_laz =
+            lf::sync_wait(pool, reconstruct_parallel, pending_cropped.front());
+        {
+          std::scoped_lock lock_reconstructed{reconstructed_mutex};
           deque_reconstructed_buildings.push_back(reconstructed_one_laz);
-          for (auto i = 0; i < reconstructed_one_laz.size(); i++) {
-            count_buildings++;
-            if (count_buildings % EMIT_TRACE_AT == 0) {
-              logger_reconstruct->trace(count_buildings.load());
-            }
+        }
+        reconstructed_pending.notify_one();
+        pending_cropped.pop_front();
+
+        // just for tracing
+        for (auto i = 0; i < reconstructed_one_laz.size(); i++) {
+          count_buildings++;
+          if (count_buildings % EMIT_TRACE_AT == 0) {
+            logger_reconstruct->trace(count_buildings.load());
           }
         }
       }
@@ -120,19 +148,24 @@ int main(int argc, char* argv[]) {
   logger_write->trace(count_written.load());
   std::thread serializer([&]() {
     while (reconstruction_running.load()) {
-      if (!deque_reconstructed_buildings.empty()) {
-        for (; !deque_reconstructed_buildings.empty();
-             deque_reconstructed_buildings.pop_front()) {
-          auto models_one_laz = deque_reconstructed_buildings.front();
-          for (auto model : models_one_laz) {
-            json_writer.write(model, std::format("output/async/{}.json",
-                                                 count_written.load()));
-            count_written++;
-            if (count_written % EMIT_TRACE_AT == 0) {
-              logger_write->trace(count_written.load());
-            }
+      std::unique_lock lock{reconstructed_mutex};
+      reconstructed_pending.wait(lock);
+      if (deque_reconstructed_buildings.empty()) continue;
+      auto pending_reconstructed{std::move(deque_reconstructed_buildings)};
+      lock.unlock();
+
+      while (!pending_reconstructed.empty()) {
+        auto models_one_laz = pending_reconstructed.front();
+        for (auto model : models_one_laz) {
+          json_writer.write(
+              model, std::format("output/async/{}.json", count_written.load()));
+          // just tracing
+          count_written++;
+          if (count_written % EMIT_TRACE_AT == 0) {
+            logger_write->trace(count_written.load());
           }
         }
+        pending_reconstructed.pop_front();
       }
     }
   });
