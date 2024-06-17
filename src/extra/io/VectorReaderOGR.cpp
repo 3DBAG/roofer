@@ -110,7 +110,7 @@ namespace roofer::io {
    public:
     using VectorReaderInterface::VectorReaderInterface;
 
-    void open(const std::string& source) {
+    void open(const std::string& source) override {
       if (GDALGetDriverCount() == 0) GDALAllRegister();
       poDS = GDALDatasetUniquePtr(
           GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
@@ -178,7 +178,7 @@ namespace roofer::io {
       if (poLayer == nullptr)
         throw(rooferException("Could not get the selected layer "));
 
-      logger.info("Layer '{}' feature count: {}", poLayer->GetName(),
+      logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
                   poLayer->GetFeatureCount());
       auto geometry_type = poLayer->GetGeomType();
       auto geometry_type_name = OGRGeometryTypeToName(geometry_type);
@@ -227,6 +227,11 @@ namespace roofer::io {
       }
 
       poLayer->ResetReading();
+      if (this->region_of_interest.has_value()) {
+        logger.info("Setting spatial filter");
+        auto& roi = *this->region_of_interest;
+        poLayer->SetSpatialFilterRect(roi[0], roi[1], roi[2], roi[3]);
+      }
 
       // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <
       // 0)

@@ -107,6 +107,9 @@ namespace roofer::io {
       }
     }
 
+    /**
+     * @brief Find polygon that intersects point and add the point to the corresponding building point cloud
+     */
     void add_point(arr3f point, int point_class, int acqusition_year) {
       // look up grid index cell and do pip for all polygons retreived from that
       // cell
@@ -175,6 +178,15 @@ namespace roofer::io {
       delete pipoint;
     }
 
+    /**
+     * @brief Post processes building objects after adding all points.
+     *  - compute building polygon area
+     *  - compute building elevation value for building
+     *  - compute point counts for ground and building classification
+     *  - compute ground elevation value for building
+     *  - clear point clouds with very low coverage (ie. underground footprints)
+     *    cov_thres = mean_density - coverage_threshold * std_dev_density
+     */
     void do_post_process(float& ground_percentile, float& max_density_delta,
                          float& coverage_threshold, bool& clear_if_insufficient,
                          vec1f& poly_areas, vec1i& poly_pt_counts_bld,
@@ -192,6 +204,11 @@ namespace roofer::io {
 
       auto& logger = logger::Logger::get_logger();
 
+      // compute totals and statistics about pointcloud for each polygon
+      // - polygon area
+      // - count of ground points
+      // - count of building points
+      // - average elevation of building points
       for (size_t poly_i = 0; poly_i < polygons.size(); poly_i++) {
         auto& polygon = polygons.at(poly_i);
         auto& point_cloud = point_clouds.at(poly_i);
@@ -277,7 +294,7 @@ namespace roofer::io {
         }
       }
 
-      // Compute average elevation per polygon
+      // Compute ground elevation per polygon (eg 5th percentile of all ground pts)
       // std::cout <<"Computing the average ground elevation per polygon..." <<
       // std::endl;
       for (size_t i = 0; i < z_ground.size(); ++i) {
