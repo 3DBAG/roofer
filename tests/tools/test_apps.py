@@ -1,6 +1,8 @@
 """Test the installed apps"""
+import os
 import platform
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -52,3 +54,20 @@ class TestApps:
         """Can we run reconstruct on the wippolder data?"""
         path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
         subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True, check=True)
+
+class TestBindings:
+
+    def test_python_bindings(self):
+        """Can we run reconstruct with python bindings on the wippolder data?"""
+        so_path = os.path.join(os.path.dirname(__file__), '../../build/rooferpy')
+        path_script = os.path.join(os.path.dirname(__file__), '../../rooferpy/example_rooferpy.py')
+
+        env = os.environ.copy()
+        env['PYTHONPATH'] = so_path
+
+        print(f"Running script: {path_script}")
+        print(f"Using PYTHONPATH: {env['PYTHONPATH']}")
+
+        result = subprocess.run(['python3', path_script], capture_output=True, text=True, env=env, check=True)
+        print(f"stdout: {result.stdout}")
+        print(f"stderr: {result.stderr}")

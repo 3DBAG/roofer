@@ -2,7 +2,7 @@ import rooferpy
 import laspy
 import numpy as np
 from shapely import wkt
-import rerun as rr
+#import rerun as rr
 
 def apply_offset(points, x_offset, y_offset):
     for point in points:
@@ -66,13 +66,17 @@ def wkt_polygon_to_rings(wkt_str, x_offset=0, y_offset=0):
 x_offset = -85205.20
 y_offset = -446846
 
+# Input filenames
+input_points = "data/wippolder/objects/503100000030812/crop/503100000030812_pointcloud.las"
+input_polygon = 'data/wippolder/wippolder.txt'
+
 # Load building points and ground points
 print("Reading .LAZ...")
-building_pts, ground_pts = read_las_from_file('./example_data/input.laz', x_offset, y_offset)
+building_pts, ground_pts = read_las_from_file(input_points, x_offset, y_offset)
 
 # Load polygon points
 print("Reading the WKT polygon...")
-footprint_str = read_wkt_from_file('./example_data/input.txt')
+footprint_str = read_wkt_from_file(input_polygon)
 footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
 
 # Set the reconstruction configuration
@@ -84,11 +88,11 @@ print("Reconstructing building...")
 roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
 
 # Triangulate the mesh
-print("Triangulating mesh")
+print("Triangulating mesh...")
 vertices, faces = rooferpy.triangulate_mesh(roofer_meshes[0])
 
-# Show the results in rerun
-rr.init("Reconstruction results", spawn=True)
-rr.connect()  # Connect to a remote viewer
-rr.log("mesh faces", rr.Mesh3D(vertex_positions=vertices,
-                               triangle_indices=faces))
+# For visualisation, install rerun and uncomment line 5 and lines below
+#rr.init("Reconstruction results", spawn=True)
+#rr.connect()  # Connect to a remote viewer
+#rr.log("mesh faces", rr.Mesh3D(vertex_positions=vertices,
+#                               triangle_indices=faces))

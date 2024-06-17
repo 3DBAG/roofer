@@ -52,4 +52,14 @@ if(RF_BUILD_APPS)
     set_tests_properties("installed-apps" PROPERTIES ENVIRONMENT
       "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}")
   endif()
+
+  add_test(
+    NAME "reconstruct-with-bindings"
+    COMMAND pytest -k TestBindings -s
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  if(WIN32)
+    set_tests_properties("reconstruct-with-bindings" PROPERTIES ENVIRONMENT
+      "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}")
+  endif()
+
 endif()
