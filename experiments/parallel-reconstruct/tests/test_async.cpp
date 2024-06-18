@@ -117,6 +117,7 @@ int main(int argc, char* argv[]) {
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
       auto pending_cropped{std::move(deque_cropped_laz)};
+      deque_cropped_laz.clear();
       lock.unlock();
 
       while (!pending_cropped.empty()) {
@@ -152,6 +153,7 @@ int main(int argc, char* argv[]) {
       reconstructed_pending.wait(lock);
       if (deque_reconstructed_buildings.empty()) continue;
       auto pending_reconstructed{std::move(deque_reconstructed_buildings)};
+      deque_reconstructed_buildings.clear();
       lock.unlock();
 
       while (!pending_reconstructed.empty()) {
