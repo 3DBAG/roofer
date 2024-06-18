@@ -18,5 +18,8 @@ tests/output/*
 # Documentation
 docs/html
 
-# Misc
+# Local build scripts
 build-deps-balazs.sh
+
+# Virtual environments
+.venv
