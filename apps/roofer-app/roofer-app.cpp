@@ -1,10 +1,11 @@
-#include <list>
+#include <deque>
 #include <vector>
 #include <string>
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
 
+// common
 #include <roofer/logger/logger.h>
 #include <roofer/common/datastructures.hpp>
 
@@ -21,6 +22,26 @@ namespace fs = std::filesystem;
 #include <roofer/misc/select_pointcloud.hpp>
 
 // reconstruct
+// #include <roofer/io/PointCloudReader.hpp>
+// #include <roofer/io/VectorReader.hpp>
+#include <roofer/misc/PC2MeshDistCalculator.hpp>
+// #include <roofer/misc/projHelper.hpp>
+#include <roofer/reconstruction/AlphaShaper.hpp>
+#include <roofer/reconstruction/ArrangementBuilder.hpp>
+#include <roofer/reconstruction/ArrangementDissolver.hpp>
+#include <roofer/reconstruction/ArrangementExtruder.hpp>
+#include <roofer/reconstruction/ArrangementOptimiser.hpp>
+#include <roofer/reconstruction/ArrangementSnapper.hpp>
+#include <roofer/reconstruction/LineDetector.hpp>
+#include <roofer/reconstruction/LineRegulariser.hpp>
+#include <roofer/reconstruction/MeshTriangulator.hpp>
+#include <roofer/reconstruction/PlaneDetector.hpp>
+#include <roofer/reconstruction/PlaneIntersector.hpp>
+#include <roofer/reconstruction/SegmentRasteriser.hpp>
+#include <roofer/reconstruction/SimplePolygonExtruder.hpp>
+
+// serialisation
+#include <roofer/io/CityJsonWriter.hpp>
 
 #include "argh.h"
 #include "toml.hpp"
@@ -49,9 +70,46 @@ struct InputPointcloud {
   roofer::vec1i acquisition_years;
 };
 
+struct BuildingObject {
+  roofer::PointCollection pointcloud;
+  roofer::LinearRing footprint;
+
+  std::unordered_map<int, roofer::Mesh> multisolids_lod12;
+  std::unordered_map<int, roofer::Mesh> multisolids_lod13;
+  std::unordered_map<int, roofer::Mesh> multisolids_lod22;
+
+  double h_ground;
+  // float nodata_radius;
+  // float nodata_fraction;
+  // float pt_density;
+  // bool is_mutated;
+  // roofer::LinearRing nodata_circle;
+  // roofer::ImageMap building_raster;
+  // float ground_elevation;
+  // int acquisition_year;
+
+  // reconstruction attributes
+  std::string b3_dak_type;
+  float b3_h_dak_50p;
+  float b3_h_dak_70p;
+  float b3_h_dak_min;
+  float b3_h_dak_max;
+  float b3_rmse_lod12;
+  float b3_rmse_lod13;
+  float b3_rmse_lod22;
+  bool b3_reconstructie_onvolledig; //skip attribute
+};
+
+struct BuildingTile {
+  std::deque<BuildingObject> buildings;
+  roofer::AttributeVecMap attributes;
+  // offset
+  // extent
+};
+
 struct RooferConfig {
   // footprint source parameters
-  std::string path_footprint;
+  std::string path_footprints;
   std::string building_bid_attribute;
   std::string low_lod_attribute = "kas_warenhuis";
   std::string year_of_construction_attribute;
@@ -83,7 +141,6 @@ struct RooferConfig {
   std::string metadata_json_file_spec;
   std::string crop_output_path;
 
-
   //reconstruct
   //...
 };
@@ -110,14 +167,22 @@ void print_help(std::string program_name) {
             << "\n";
 }
 
+void print_version() {
+  std::cout << fmt::format(
+      "roofer {} ({}{}{})\n", git_Describe(),
+      std::strcmp(git_Branch(), "main") ? ""
+                                        : fmt::format("{}, ", git_Branch()),
+      git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
+}
+
 void read_config(const std::string& config_path, RooferConfig& cfg, std::vector<InputPointcloud>& input_pointclouds) {
     auto& logger = roofer::logger::Logger::get_logger();
     toml::table config;
     config = toml::parse_file(config_path);
 
-    auto tml_path_footprint =
+    auto tml_path_footprints =
         config["input"]["footprint"]["path"].value<std::string>();
-    if (tml_path_footprint.has_value()) cfg.path_footprint = *tml_path_footprint;
+    if (tml_path_footprints.has_value()) cfg.path_footprints = *tml_path_footprints;
 
     auto id_attribute_ =
         config["input"]["footprint"]["id_attribute"].value<std::string>();
@@ -241,9 +306,10 @@ void read_config(const std::string& config_path, RooferConfig& cfg, std::vector<
     if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
-void crop_batchtile(
-  const std::array<double, 4>& batchtile, 
+void crop_tile(
+  const std::array<double, 4>& tile, 
   std::vector<InputPointcloud>& input_pointclouds, 
+  BuildingTile& output_building_tile,
   RooferConfig& cfg,
   roofer::misc::projHelperInterface* pj,
   roofer::io::VectorReaderInterface* vector_reader) {
@@ -259,7 +325,7 @@ void crop_batchtile(
 
   // logger.info("region_of_interest.has_value()? {}", region_of_interest.has_value());
   // if(region_of_interest.has_value())
-    vector_reader->region_of_interest = batchtile;
+    vector_reader->region_of_interest = tile;
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   vector_reader->readPolygons(footprints, &attributes);
@@ -488,6 +554,18 @@ void crop_batchtile(
     pc_source.push_back(selected->name);
     pc_year.push_back(selected->date);
 
+    // output to BuildingTile
+    {
+      BuildingObject& building = output_building_tile.buildings.emplace_back();
+
+      building.pointcloud = input_pointclouds[selected->index].building_clouds[i];
+      building.footprint = footprints[i];
+      building.h_ground = 
+        input_pointclouds[selected->index].ground_elevations[i] + (*pj->data_offset)[2];
+
+      output_building_tile.attributes = attributes;
+    }
+
     if (cfg.write_crop_outputs) {
 
       if (input_pointclouds[selected->index].force_low_lod) {
@@ -661,9 +739,21 @@ void crop_batchtile(
       ofs.close();
     }
   }
+  // clear input_pointclouds data
+  for(auto& ipc : input_pointclouds) {
+    ipc.nodata_radii.clear();
+    ipc.nodata_fractions.clear();
+    ipc.pt_densities.clear();
+    ipc.is_mutated.clear();
+    ipc.nodata_circles.clear();
+    ipc.building_clouds.clear();
+    ipc.building_rasters.clear();
+    ipc.ground_elevations.clear();
+    ipc.acquisition_years.clear();
+  }
 }
 
-void reconstruct_building() {
+void reconstruct_building(BuildingObject& building) {
   
 }
 
@@ -682,9 +772,20 @@ int main(int argc, const char* argv[]) {
   roofer_cfg.write_rasters = cmdl[{"-r", "--rasters"}];
   roofer_cfg.write_metadata = cmdl[{"-m", "--metadata"}];
   roofer_cfg.write_index = cmdl[{"-i", "--index"}];
-  
-  bool verbose = cmdl[{"-v", "--verbose"}];
-  bool version = cmdl[{"-V", "--version"}];
+
+  if (cmdl[{"-h", "--help"}]) {
+    print_help(program_name);
+    return EXIT_SUCCESS;
+  }
+  if (cmdl[{"-V", "--version"}]) {
+    print_version();
+    return EXIT_SUCCESS;
+  }
+  if (cmdl[{"-v", "--verbose"}]) {
+    logger.set_level(roofer::logger::LogLevel::debug);
+  } else {
+    logger.set_level(roofer::logger::LogLevel::warning);
+  }
   
   // Read configuration
   std::string config_path;
@@ -709,24 +810,37 @@ int main(int argc, const char* argv[]) {
   }
 
   // Compute batch tile regions
-  std::vector<std::array<double, 4>> batchtiles;
+  std::vector<std::array<double, 4>> tiles;
 
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
-  VectorReader->open(roofer_cfg.path_footprint);
+  VectorReader->open(roofer_cfg.path_footprints);
   logger.info("region_of_interest.has_value()? {}", roofer_cfg.region_of_interest.has_value());
   if(roofer_cfg.region_of_interest.has_value()) {
     VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
-    batchtiles.push_back(*roofer_cfg.region_of_interest);
+    tiles.push_back(*roofer_cfg.region_of_interest);
   } else {
-    batchtiles.push_back(VectorReader->layer_extent);
+    tiles.push_back(VectorReader->layer_extent);
   }
   
-  logger.info("Reading footprints from {}", roofer_cfg.path_footprint);
+  logger.info("Reading footprints from {}", roofer_cfg.path_footprints);
 
   // Read data for each batch tile
-  for(const auto& batchtile : batchtiles) {
-    // crop_batchtile(batchtile, input_pointclouds, roofer_cfg);
+  std::deque<BuildingTile> building_tiles;
+  for(const auto& tile : tiles) {
+    auto& building_tile = building_tiles.emplace_back();
+    crop_tile(
+      tile, // tile extent
+      input_pointclouds, // input pointclouds
+      building_tile, // output building data
+      roofer_cfg, // configuration parameters
+      pj.get(), 
+      VectorReader.get()
+    );
+
+    for (building : building_tile.buildings) {
+      // reconstruct_building(building)
+    }
   }
 
   // reconstruct buildings
