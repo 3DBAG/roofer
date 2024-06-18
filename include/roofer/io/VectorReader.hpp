@@ -9,6 +9,7 @@ namespace roofer::io {
   struct VectorReaderInterface {
     roofer::misc::projHelperInterface& pjHelper;
     std::optional<std::array<double, 4>> region_of_interest;
+    std::array<double, 4> layer_extent;
 
     VectorReaderInterface(roofer::misc::projHelperInterface& pjh)
         : pjHelper(pjh){};

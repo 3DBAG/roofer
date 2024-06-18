@@ -17,6 +17,7 @@
 #include <ogrsf_frmts.h>
 #include <roofer/logger/logger.h>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -32,6 +33,7 @@ namespace roofer::io {
 
   class VectorReaderOGR : public VectorReaderInterface {
     GDALDatasetUniquePtr poDS;
+    OGRLayer* poLayer;
 
     int layer_count = 0;
     int layer_id = 0;
@@ -111,10 +113,42 @@ namespace roofer::io {
     using VectorReaderInterface::VectorReaderInterface;
 
     void open(const std::string& source) override {
+      auto& logger = logger::Logger::get_logger();
+
+      // Open Dataset
       if (GDALGetDriverCount() == 0) GDALAllRegister();
       poDS = GDALDatasetUniquePtr(
           GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
       if (poDS == nullptr) throw(rooferException("Open failed on " + source));
+      
+      // Open Layer
+      layer_count = poDS->GetLayerCount();
+      logger.info("Layer count: {}", layer_count);
+
+      poLayer = poDS->GetLayerByName(layer_name_.c_str());
+      if (poLayer == nullptr) {
+        if (layer_id >= layer_count) {
+          throw(rooferException(
+              "Illegal layer ID! Layer ID must be less than the layer count."));
+        } else if (layer_id < 0) {
+          throw(rooferException(
+              "Illegal layer ID! Layer ID cannot be negative."));
+        }
+        poLayer = poDS->GetLayer(layer_id);
+        // throw(rooferException("Could not get the selected layer by name=" +
+        // layer_name));
+      }
+      if (poLayer == nullptr)
+        throw(rooferException("Could not get the selected layer "));
+
+      logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
+                  poLayer->GetFeatureCount());
+      
+      logger.info("Getting layer extent...");
+      OGREnvelope extent;
+      poLayer->GetExtent(&extent);
+      logger.info("Layer extent: {} {} {} {}", extent.MinX, extent.MinY, extent.MaxX, extent.MaxY);
+      layer_extent = {extent.MinX, extent.MinY, extent.MaxX, extent.MaxY};
     }
 
     void read_polygon(OGRPolygon* poPolygon,
@@ -158,26 +192,7 @@ namespace roofer::io {
     void readPolygons(std::vector<LinearRing>& polygons,
                       AttributeVecMap* attributes) override {
       auto& logger = logger::Logger::get_logger();
-      layer_count = poDS->GetLayerCount();
-      logger.info("Layer count: {}", layer_count);
-      OGRLayer* poLayer;
-
-      poLayer = poDS->GetLayerByName(layer_name_.c_str());
-      if (poLayer == nullptr) {
-        if (layer_id >= layer_count) {
-          throw(rooferException(
-              "Illegal layer ID! Layer ID must be less than the layer count."));
-        } else if (layer_id < 0) {
-          throw(rooferException(
-              "Illegal layer ID! Layer ID cannot be negative."));
-        }
-        poLayer = poDS->GetLayer(layer_id);
-        // throw(rooferException("Could not get the selected layer by name=" +
-        // layer_name));
-      }
-      if (poLayer == nullptr)
-        throw(rooferException("Could not get the selected layer "));
-
+      
       logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
                   poLayer->GetFeatureCount());
       auto geometry_type = poLayer->GetGeomType();
