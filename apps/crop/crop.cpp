@@ -312,7 +312,6 @@ int main(int argc, const char* argv[]) {
   VectorOps->buffer_polygons(buffered_footprints);
 
   // Crop all pointclouds
-  std::map<std::string, std::vector<roofer::PointCollection>> point_clouds;
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
@@ -381,7 +380,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  // add raster stats attributes to footprints
+  // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
     auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
     auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
@@ -396,6 +395,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
+  // compute is_mutated attribute for first 2 pointclouds and add to footprint attributes
   roofer::misc::selectPointCloudConfig select_pc_cfg;
   if (input_pointclouds.size() > 1) {
     auto& is_mutated =
@@ -411,7 +411,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  // write out geoflow config + pointcloud / fp for each building
+  // select pointcloud and write out geoflow config + pointcloud / fp for each building
   logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(building_bid_attribute);
   auto& pc_select = attributes.insert_vec<std::string>("pc_select");
