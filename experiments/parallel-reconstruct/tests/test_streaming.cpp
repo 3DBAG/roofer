@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
   spdlog::set_level(spdlog::level::trace);
 
   // Init loggers
-  auto logs_dir = "logs/sequential_coro";
+  auto logs_dir = "logs/streaming";
   auto logger_read_pc = spdlog::basic_logger_mt(
       "read_pc", std::format("{}/log_read_pc.json", logs_dir));
   auto logger_crop = spdlog::basic_logger_mt(
@@ -64,8 +64,8 @@ int main(int argc, char* argv[]) {
       logger_reconstruct->trace(count_buildings);
     }
 
-    json_writer.write(
-        model, std::format("output/sequential_coro/{}.json", count_buildings));
+    json_writer.write(model,
+                      std::format("output/streaming/{}.json", count_buildings));
     if (count_buildings % EMIT_TRACE_AT == 0) {
       logger_write->trace(count_buildings);
     }

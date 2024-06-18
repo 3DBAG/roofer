@@ -8,7 +8,7 @@ if __name__ == "__main__":
     dir_logs = Path(__name__).parent.parent.joinpath("tests", "logs").absolute()
     dir_plots = Path(__name__).parent.parent.joinpath("tests", "plots").absolute()
 
-    for case in ["sequential", "sequential_coro", "parallel_reconstruct", "async"]:
+    for case in ["sequential", "streaming", "parallel_reconstruct", "async"]:
         path_log_crop = dir_logs / case / "log_crop.json"
         path_log_read_pc = dir_logs / case / "log_read_pc.json"
         path_log_reconstruct = dir_logs / case / "log_reconstruct.json"

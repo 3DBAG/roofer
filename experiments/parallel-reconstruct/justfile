@@ -13,12 +13,12 @@ sequential:
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
-sequential_coro:
+streaming:
   cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
-  cmake --build {{build_dir}} --target sequential_coro -j 6
-  rm {{source_dir}}/tests/logs/sequential_coro/*.json || true
-  rm {{source_dir}}/tests/output/sequential_coro/*.json || true
-  ctest --test-dir {{build_dir}} --output-on-failure -R "^sequential_coro$"
+  cmake --build {{build_dir}} --target streaming -j 6
+  rm {{source_dir}}/tests/logs/streaming/*.json || true
+  rm {{source_dir}}/tests/output/streaming/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^streaming$"
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
@@ -43,4 +43,4 @@ async:
   cd {{source_dir}}
   {{python}} tools/plot_traces.py
 
-run: parallel_reconstruct async
+run: sequential streaming parallel_reconstruct async
