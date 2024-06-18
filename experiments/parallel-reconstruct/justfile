@@ -1,0 +1,46 @@
+#!/usr/bin/env just --justfile
+
+source_dir := "/home/balazs/Development/roofer-dev/experiments/parallel-reconstruct"
+build_dir := "/home/balazs/.build-cmake/ParallelReconstruct/release"
+python := "/home/balazs/.virtualenvs/parallel-reconstruct/bin/python"
+
+sequential:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target sequential -j 6
+  rm {{source_dir}}/tests/logs/sequential/*.json || true
+  rm {{source_dir}}/tests/output/sequential/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^sequential$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+streaming:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target streaming -j 6
+  rm {{source_dir}}/tests/logs/streaming/*.json || true
+  rm {{source_dir}}/tests/output/streaming/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^streaming$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+parallel_reconstruct:
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target parallel_reconstruct -j 6
+  rm {{source_dir}}/tests/logs/parallel_reconstruct/*.json || true
+  rm {{source_dir}}/tests/output/parallel_reconstruct/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^parallel_reconstruct$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+async:
+  mkdir -p {{source_dir}}/tests/logs/async || true
+  mkdir -p {{source_dir}}/tests/output/async || true
+  mkdir -p {{source_dir}}/tests/plots/async || true
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DUSE_VCPKG:BOOL=OFF -DENABLE_TESTING:BOOL=ON -DCPM_SOURCE_CACHE=/home/balazs/.cache/CPM -G Ninja -S {{source_dir}} -B {{build_dir}}
+  cmake --build {{build_dir}} --target async -j 6
+  rm {{source_dir}}/tests/logs/async/*.json || true
+  rm {{source_dir}}/tests/output/async/*.json || true
+  ctest --test-dir {{build_dir}} --output-on-failure -R "^async$"
+  cd {{source_dir}}
+  {{python}} tools/plot_traces.py
+
+run: sequential streaming parallel_reconstruct async

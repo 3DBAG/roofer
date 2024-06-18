@@ -120,6 +120,7 @@ int main(int argc, const char* argv[]) {
   float max_point_density_low_lod = 5;
   float cellsize = 0.5;
   float low_lod_area = 69000.0;
+  std::optional<std::array<double, 4>> region_of_interest;
   std::string year_of_construction_attribute = "oorspronkelijkbouwjaar";
   std::string low_lod_attribute = "kas_warenhuis";
   std::string output_crs = "";
@@ -212,7 +213,25 @@ int main(int argc, const char* argv[]) {
     if (cellsize_.has_value()) cellsize = *cellsize_;
 
     auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
-    if (low_lod_area_.has_value()) low_lod_area = *low_lod_area_;
+    if(low_lod_area_.has_value())
+      low_lod_area = *low_lod_area_;
+    
+    if (toml::array* region_of_interest_ = config["parameters"]["region_of_interest"].as_array())
+    {
+      if(region_of_interest_->size() == 4 && 
+          (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
+            region_of_interest_->is_homogeneous(toml::node_type::integer) )) {
+        region_of_interest = std::array<double, 4>{
+          *region_of_interest_->get(0)->value<double>(),
+          *region_of_interest_->get(1)->value<double>(),
+          *region_of_interest_->get(2)->value<double>(),
+          *region_of_interest_->get(3)->value<double>()
+        };
+      } else {
+        logger.error("Failed to read parameter.region_of_interest");
+      }
+    }
+    // logger.info("Region of interest: {}", fmt::format("{}", region_of_interest));
 
     auto building_toml_file_spec_ =
         config["output"]["building_toml_file"].value<std::string>();
@@ -275,6 +294,9 @@ int main(int argc, const char* argv[]) {
   auto LASWriter = roofer::io::createLASWriter(*pj);
 
   VectorReader->open(path_footprint);
+  logger.info("region_of_interest.has_value()? {}", region_of_interest.has_value());
+  if(region_of_interest.has_value())
+    VectorReader->region_of_interest = *region_of_interest;
   logger.info("Reading footprints from {}", path_footprint);
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
