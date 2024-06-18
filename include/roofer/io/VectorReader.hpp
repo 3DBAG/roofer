@@ -1,11 +1,14 @@
 #pragma once
 #include <memory>
+#include <optional>
+
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
   struct VectorReaderInterface {
     roofer::misc::projHelperInterface& pjHelper;
+    std::optional<std::array<double, 4>> region_of_interest;
 
     VectorReaderInterface(roofer::misc::projHelperInterface& pjh)
         : pjHelper(pjh){};
