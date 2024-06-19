@@ -120,7 +120,7 @@ namespace roofer::io {
       poDS = GDALDatasetUniquePtr(
           GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
       if (poDS == nullptr) throw(rooferException("Open failed on " + source));
-      
+
       // Open Layer
       layer_count = poDS->GetLayerCount();
       logger.info("Layer count: {}", layer_count);
@@ -143,11 +143,12 @@ namespace roofer::io {
 
       logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
                   poLayer->GetFeatureCount());
-      
+
       logger.info("Getting layer extent...");
       OGREnvelope extent;
       poLayer->GetExtent(&extent);
-      logger.info("Layer extent: {} {} {} {}", extent.MinX, extent.MinY, extent.MaxX, extent.MaxY);
+      logger.info("Layer extent: {} {} {} {}", extent.MinX, extent.MinY,
+                  extent.MaxX, extent.MaxY);
       layer_extent = {extent.MinX, extent.MinY, extent.MaxX, extent.MaxY};
     }
 
@@ -192,7 +193,7 @@ namespace roofer::io {
     void readPolygons(std::vector<LinearRing>& polygons,
                       AttributeVecMap* attributes) override {
       auto& logger = logger::Logger::get_logger();
-      
+
       logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
                   poLayer->GetFeatureCount());
       auto geometry_type = poLayer->GetGeomType();

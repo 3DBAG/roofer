@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <optional>
-
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
 

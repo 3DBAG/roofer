@@ -93,7 +93,7 @@ void reconstruct_building(BuildingObject& building) {
   // split into ground and roof points
   roofer::PointCollection points, points_ground, points_roof;
   auto classification =
-                building.pointcloud.attributes.get_if<int>("classification");
+      building.pointcloud.attributes.get_if<int>("classification");
   for (size_t i = 0; i < building.pointcloud.size(); ++i) {
     if (2 == (*classification)[i]) {
       points_ground.push_back(building.pointcloud[i]);
@@ -270,31 +270,34 @@ void reconstruct_building(BuildingObject& building) {
     auto& attr_val3dity_lod12 =
         attributes.insert_vec<std::string>("b3_val3dity_lod12");
 #endif
-    building.multisolids_lod12 = extrude(arrangement, building.h_ground,
+    building.multisolids_lod12 =
+        extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                                     attr_val3dity_lod12,
+                attr_val3dity_lod12,
 #endif
-                                     building.rmse_lod12, SegmentRasteriser.get(),
-                                     PlaneDetector.get(), LOD12);
+                building.rmse_lod12, SegmentRasteriser.get(),
+                PlaneDetector.get(), LOD12);
 #ifdef RF_USE_VAL3DITY
     auto& attr_val3dity_lod13 =
         attributes.insert_vec<std::string>("b3_val3dity_lod13");
 #endif
-    building.multisolids_lod13 = extrude(arrangement, building.h_ground,
+    building.multisolids_lod13 =
+        extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                                     attr_val3dity_lod13,
+                attr_val3dity_lod13,
 #endif
-                                     building.rmse_lod13, SegmentRasteriser.get(),
-                                     PlaneDetector.get(), LOD13);
+                building.rmse_lod13, SegmentRasteriser.get(),
+                PlaneDetector.get(), LOD13);
 #ifdef RF_USE_VAL3DITY
     auto& attr_val3dity_lod22 =
         attributes.insert_vec<std::string>("b3_val3dity_lod22");
 #endif
-    building.multisolids_lod22 = extrude(arrangement, building.h_ground,
+    building.multisolids_lod22 =
+        extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                                     attr_val3dity_lod22,
+                attr_val3dity_lod22,
 #endif
-                                     building.rmse_lod22, SegmentRasteriser.get(),
-                                     PlaneDetector.get(), LOD22);
+                building.rmse_lod22, SegmentRasteriser.get(),
+                PlaneDetector.get(), LOD22);
   }
 }
