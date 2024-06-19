@@ -78,18 +78,12 @@ struct BuildingObject {
   std::unordered_map<int, roofer::Mesh> multisolids_lod13;
   std::unordered_map<int, roofer::Mesh> multisolids_lod22;
 
+  // set in crop
   std::string jsonl_path;
   float h_ground;
-  // float nodata_radius;
-  // float nodata_fraction;
-  // float pt_density;
-  // bool is_mutated;
-  // roofer::LinearRing nodata_circle;
-  // roofer::ImageMap building_raster;
-  // float ground_elevation;
-  // int acquisition_year;
+  bool skip;  // kas_warenhuis / low_lod
 
-  // reconstruction attributes
+  // set in reconstruction
   std::string roof_type;
   float roof_elevation_50p;
   float roof_elevation_70p;
@@ -98,7 +92,6 @@ struct BuildingObject {
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
-  bool skip;  // kas_warenhuis / low_lod
   bool was_skipped;//b3_reconstructie_onvolledig;
 };
 
@@ -107,6 +100,7 @@ struct BuildingTile {
   roofer::AttributeVecMap attributes;
   // offset
   // extent
+  std::array<double, 4> extent;
 };
 
 struct RooferConfig {
@@ -364,28 +358,28 @@ int main(int argc, const char* argv[]) {
   }
 
   // Compute batch tile regions
-  std::vector<std::array<double, 4>> tiles;
+  // we just create one tile for now
+  std::deque<BuildingTile> building_tiles;
 
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
   VectorReader->open(roofer_cfg.path_footprints);
   logger.info("region_of_interest.has_value()? {}", roofer_cfg.region_of_interest.has_value());
-  if(roofer_cfg.region_of_interest.has_value()) {
-    VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
-    tiles.push_back(*roofer_cfg.region_of_interest);
-  } else {
-    tiles.push_back(VectorReader->layer_extent);
-  }
-  
   logger.info("Reading footprints from {}", roofer_cfg.path_footprints);
 
-  // Read data for each batch tile
-  std::deque<BuildingTile> building_tiles;
-  for(const auto& tile : tiles) {
+  auto& building_tile = building_tiles.emplace_back();
+  if(roofer_cfg.region_of_interest.has_value()) {
+    VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
+    building_tile.extent = *roofer_cfg.region_of_interest;
+  } else {
+    building_tile.extent = VectorReader->layer_extent;
+  }
+
+  // Process tiles
+  for(auto& building_tile : building_tiles) {
     // crop each tile
-    auto& building_tile = building_tiles.emplace_back();
     crop_tile(
-      tile, // tile extent
+      building_tile.extent, // tile extent
       input_pointclouds, // input pointclouds
       building_tile, // output building data
       roofer_cfg, // configuration parameters
@@ -413,6 +407,9 @@ int main(int argc, const char* argv[]) {
                             &multisolidvec13, &multisolidvec22, building_tile.attributes);
       logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
     }
+
+    // buildings are finishes processing so they can be cleared
+    building_tile.buildings.clear();
   }
 
 }
