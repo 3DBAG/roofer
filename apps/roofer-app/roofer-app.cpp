@@ -1,12 +1,13 @@
 #include <deque>
-#include <vector>
-#include <string>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
 namespace fs = std::filesystem;
 
 // common
 #include <roofer/logger/logger.h>
+
 #include <roofer/common/datastructures.hpp>
 
 // crop
@@ -44,8 +45,8 @@ namespace fs = std::filesystem;
 #include <roofer/io/CityJsonWriter.hpp>
 
 #include "argh.h"
-#include "toml.hpp"
 #include "git.h"
+#include "toml.hpp"
 // roofer crop
 // roofer reconstruct
 // roofer tile
@@ -92,7 +93,7 @@ struct BuildingObject {
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
-  bool was_skipped;//b3_reconstructie_onvolledig;
+  bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 
 struct BuildingTile {
@@ -115,7 +116,7 @@ struct RooferConfig {
   float cellsize = 0.5;
   int low_lod_area = 69000;
   float max_point_density_low_lod = 5;
-  
+
   bool write_crop_outputs = false;
   bool output_all = false;
   bool write_rasters = false;
@@ -126,7 +127,7 @@ struct RooferConfig {
   std::optional<std::array<double, 4>> region_of_interest;
   std::string output_crs;
 
-  // crop output 
+  // crop output
   std::string building_toml_file_spec;
   std::string building_las_file_spec;
   std::string building_gpkg_file_spec;
@@ -137,7 +138,7 @@ struct RooferConfig {
   std::string metadata_json_file_spec;
   std::string crop_output_path;
 
-  //reconstruct
+  // reconstruct
   //...
 };
 
@@ -174,139 +175,140 @@ void print_version() {
       git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
 }
 
-void read_config(const std::string& config_path, RooferConfig& cfg, std::vector<InputPointcloud>& input_pointclouds) {
-    auto& logger = roofer::logger::Logger::get_logger();
-    toml::table config;
-    config = toml::parse_file(config_path);
+void read_config(const std::string& config_path, RooferConfig& cfg,
+                 std::vector<InputPointcloud>& input_pointclouds) {
+  auto& logger = roofer::logger::Logger::get_logger();
+  toml::table config;
+  config = toml::parse_file(config_path);
 
-    auto tml_path_footprints =
-        config["input"]["footprint"]["path"].value<std::string>();
-    if (tml_path_footprints.has_value()) cfg.path_footprints = *tml_path_footprints;
+  auto tml_path_footprints =
+      config["input"]["footprint"]["path"].value<std::string>();
+  if (tml_path_footprints.has_value())
+    cfg.path_footprints = *tml_path_footprints;
 
-    auto id_attribute_ =
-        config["input"]["footprint"]["id_attribute"].value<std::string>();
-    if (id_attribute_.has_value()) cfg.building_bid_attribute = *id_attribute_;
-    auto low_lod_attribute_ =
-        config["input"]["low_lod_attribute"].value<std::string>();
-    if (low_lod_attribute_.has_value()) cfg.low_lod_attribute = *low_lod_attribute_;
-    auto year_of_construction_attribute_ =
-        config["input"]["year_of_construction_attribute"].value<std::string>();
-    if (year_of_construction_attribute_.has_value())
-      cfg.year_of_construction_attribute = *year_of_construction_attribute_;
+  auto id_attribute_ =
+      config["input"]["footprint"]["id_attribute"].value<std::string>();
+  if (id_attribute_.has_value()) cfg.building_bid_attribute = *id_attribute_;
+  auto low_lod_attribute_ =
+      config["input"]["low_lod_attribute"].value<std::string>();
+  if (low_lod_attribute_.has_value())
+    cfg.low_lod_attribute = *low_lod_attribute_;
+  auto year_of_construction_attribute_ =
+      config["input"]["year_of_construction_attribute"].value<std::string>();
+  if (year_of_construction_attribute_.has_value())
+    cfg.year_of_construction_attribute = *year_of_construction_attribute_;
 
-    auto tml_pointclouds = config["input"]["pointclouds"];
-    if (toml::array* arr = tml_pointclouds.as_array()) {
-      // visitation with for_each() helps deal with heterogeneous data
-      for (auto& el : *arr) {
-        toml::table* tb = el.as_table();
-        InputPointcloud pc;
+  auto tml_pointclouds = config["input"]["pointclouds"];
+  if (toml::array* arr = tml_pointclouds.as_array()) {
+    // visitation with for_each() helps deal with heterogeneous data
+    for (auto& el : *arr) {
+      toml::table* tb = el.as_table();
+      InputPointcloud pc;
 
-        if (auto n = (*tb)["name"].value<std::string>(); n.has_value()) {
-          pc.name = *n;
-        }
-        if (auto n = (*tb)["quality"].value<int>(); n.has_value()) {
-          pc.quality = *n;
-        }
-        if (auto n = (*tb)["date"].value<int>(); n.has_value()) {
-          pc.date = *n;
-        }
-        if (auto n = (*tb)["force_low_lod"].value<bool>(); n.has_value()) {
-          pc.force_low_lod = *n;
-        }
-        if (auto n = (*tb)["select_only_for_date"].value<bool>();
-            n.has_value()) {
-          pc.select_only_for_date = *n;
-        }
-
-        if (auto n = (*tb)["building_class"].value<int>(); n.has_value()) {
-          pc.bld_class = *n;
-        }
-        if (auto n = (*tb)["ground_class"].value<int>(); n.has_value()) {
-          pc.grnd_class = *n;
-        }
-
-        auto tml_path = (*tb)["path"].value<std::string>();
-        if (tml_path.has_value()) {
-          pc.path = *tml_path;
-        }
-        input_pointclouds.push_back(pc);
-      };
-    }
-
-    auto max_point_density_ =
-        config["parameters"]["max_point_density"].value<float>();
-    if (max_point_density_.has_value()) cfg.max_point_density = *max_point_density_;
-
-    auto cellsize_ = config["parameters"]["cellsize"].value<float>();
-    if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
-
-    auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
-    if (low_lod_area_.has_value()) cfg.low_lod_area = *low_lod_area_;
-
-    if (toml::array* region_of_interest_ = config["parameters"]["region_of_interest"].as_array())
-    {
-      if(region_of_interest_->size() == 4 && 
-          (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
-            region_of_interest_->is_homogeneous(toml::node_type::integer) )) {
-        cfg.region_of_interest = std::array<double, 4>{
-          *region_of_interest_->get(0)->value<double>(),
-          *region_of_interest_->get(1)->value<double>(),
-          *region_of_interest_->get(2)->value<double>(),
-          *region_of_interest_->get(3)->value<double>()
-        };
-      } else {
-        logger.error("Failed to read parameter.region_of_interest");
+      if (auto n = (*tb)["name"].value<std::string>(); n.has_value()) {
+        pc.name = *n;
       }
+      if (auto n = (*tb)["quality"].value<int>(); n.has_value()) {
+        pc.quality = *n;
+      }
+      if (auto n = (*tb)["date"].value<int>(); n.has_value()) {
+        pc.date = *n;
+      }
+      if (auto n = (*tb)["force_low_lod"].value<bool>(); n.has_value()) {
+        pc.force_low_lod = *n;
+      }
+      if (auto n = (*tb)["select_only_for_date"].value<bool>(); n.has_value()) {
+        pc.select_only_for_date = *n;
+      }
+
+      if (auto n = (*tb)["building_class"].value<int>(); n.has_value()) {
+        pc.bld_class = *n;
+      }
+      if (auto n = (*tb)["ground_class"].value<int>(); n.has_value()) {
+        pc.grnd_class = *n;
+      }
+
+      auto tml_path = (*tb)["path"].value<std::string>();
+      if (tml_path.has_value()) {
+        pc.path = *tml_path;
+      }
+      input_pointclouds.push_back(pc);
+    };
+  }
+
+  auto max_point_density_ =
+      config["parameters"]["max_point_density"].value<float>();
+  if (max_point_density_.has_value())
+    cfg.max_point_density = *max_point_density_;
+
+  auto cellsize_ = config["parameters"]["cellsize"].value<float>();
+  if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
+
+  auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
+  if (low_lod_area_.has_value()) cfg.low_lod_area = *low_lod_area_;
+
+  if (toml::array* region_of_interest_ =
+          config["parameters"]["region_of_interest"].as_array()) {
+    if (region_of_interest_->size() == 4 &&
+        (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
+         region_of_interest_->is_homogeneous(toml::node_type::integer))) {
+      cfg.region_of_interest =
+          std::array<double, 4>{*region_of_interest_->get(0)->value<double>(),
+                                *region_of_interest_->get(1)->value<double>(),
+                                *region_of_interest_->get(2)->value<double>(),
+                                *region_of_interest_->get(3)->value<double>()};
+    } else {
+      logger.error("Failed to read parameter.region_of_interest");
     }
-    auto building_toml_file_spec_ =
-        config["output"]["building_toml_file"].value<std::string>();
-    if (building_toml_file_spec_.has_value())
-      cfg.building_toml_file_spec = *building_toml_file_spec_;
+  }
+  auto building_toml_file_spec_ =
+      config["output"]["building_toml_file"].value<std::string>();
+  if (building_toml_file_spec_.has_value())
+    cfg.building_toml_file_spec = *building_toml_file_spec_;
 
-    auto building_las_file_spec_ =
-        config["output"]["building_las_file"].value<std::string>();
-    if (building_las_file_spec_.has_value())
-      cfg.building_las_file_spec = *building_las_file_spec_;
+  auto building_las_file_spec_ =
+      config["output"]["building_las_file"].value<std::string>();
+  if (building_las_file_spec_.has_value())
+    cfg.building_las_file_spec = *building_las_file_spec_;
 
-    auto building_gpkg_file_spec_ =
-        config["output"]["building_gpkg_file"].value<std::string>();
-    if (building_gpkg_file_spec_.has_value())
-      cfg.building_gpkg_file_spec = *building_gpkg_file_spec_;
+  auto building_gpkg_file_spec_ =
+      config["output"]["building_gpkg_file"].value<std::string>();
+  if (building_gpkg_file_spec_.has_value())
+    cfg.building_gpkg_file_spec = *building_gpkg_file_spec_;
 
-    auto building_raster_file_spec_ =
-        config["output"]["building_raster_file"].value<std::string>();
-    if (building_raster_file_spec_.has_value())
-      cfg.building_raster_file_spec = *building_raster_file_spec_;
+  auto building_raster_file_spec_ =
+      config["output"]["building_raster_file"].value<std::string>();
+  if (building_raster_file_spec_.has_value())
+    cfg.building_raster_file_spec = *building_raster_file_spec_;
 
-    if (cfg.write_metadata) {
-      auto metadata_json_file_spec_ =
-          config["output"]["metadata_json_file"].value<std::string>();
-      if (metadata_json_file_spec_.has_value())
-        cfg.metadata_json_file_spec = *metadata_json_file_spec_;
-    }
+  if (cfg.write_metadata) {
+    auto metadata_json_file_spec_ =
+        config["output"]["metadata_json_file"].value<std::string>();
+    if (metadata_json_file_spec_.has_value())
+      cfg.metadata_json_file_spec = *metadata_json_file_spec_;
+  }
 
-    auto building_jsonl_file_spec_ =
-        config["output"]["building_jsonl_file"].value<std::string>();
-    if (building_jsonl_file_spec_.has_value())
-      cfg.building_jsonl_file_spec = *building_jsonl_file_spec_;
+  auto building_jsonl_file_spec_ =
+      config["output"]["building_jsonl_file"].value<std::string>();
+  if (building_jsonl_file_spec_.has_value())
+    cfg.building_jsonl_file_spec = *building_jsonl_file_spec_;
 
-    auto index_file_spec_ = config["output"]["index_file"].value<std::string>();
-    if (index_file_spec_.has_value()) cfg.index_file_spec = *index_file_spec_;
+  auto index_file_spec_ = config["output"]["index_file"].value<std::string>();
+  if (index_file_spec_.has_value()) cfg.index_file_spec = *index_file_spec_;
 
-    auto jsonl_list_file_spec_ =
-        config["output"]["jsonl_list_file"].value<std::string>();
-    if (jsonl_list_file_spec_.has_value())
-      cfg.jsonl_list_file_spec = *jsonl_list_file_spec_;
+  auto jsonl_list_file_spec_ =
+      config["output"]["jsonl_list_file"].value<std::string>();
+  if (jsonl_list_file_spec_.has_value())
+    cfg.jsonl_list_file_spec = *jsonl_list_file_spec_;
 
-    auto output_path_ = config["output"]["path"].value<std::string>();
-    if (output_path_.has_value()) cfg.crop_output_path = *output_path_;
+  auto output_path_ = config["output"]["path"].value<std::string>();
+  if (output_path_.has_value()) cfg.crop_output_path = *output_path_;
 
-    auto output_crs_ = config["output"]["crs"].value<std::string>();
-    if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
+  auto output_crs_ = config["output"]["crs"].value<std::string>();
+  if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
 int main(int argc, const char* argv[]) {
-
   auto cmdl = argh::parser({"-c", "--config"});
 
   cmdl.parse(argc, argv);
@@ -334,7 +336,7 @@ int main(int argc, const char* argv[]) {
   } else {
     logger.set_level(roofer::logger::LogLevel::warning);
   }
-  
+
   // Read configuration
   std::string config_path;
   std::vector<InputPointcloud> input_pointclouds;
@@ -349,7 +351,7 @@ int main(int argc, const char* argv[]) {
       read_config(config_path, roofer_cfg, input_pointclouds);
     } catch (const std::exception& e) {
       logger.error("Unable to parse config file {}.\n{}", config_path,
-                    e.what());
+                   e.what());
       return EXIT_FAILURE;
     }
   } else {
@@ -364,11 +366,12 @@ int main(int argc, const char* argv[]) {
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
   VectorReader->open(roofer_cfg.path_footprints);
-  logger.info("region_of_interest.has_value()? {}", roofer_cfg.region_of_interest.has_value());
+  logger.info("region_of_interest.has_value()? {}",
+              roofer_cfg.region_of_interest.has_value());
   logger.info("Reading footprints from {}", roofer_cfg.path_footprints);
 
   auto& building_tile = building_tiles.emplace_back();
-  if(roofer_cfg.region_of_interest.has_value()) {
+  if (roofer_cfg.region_of_interest.has_value()) {
     VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
     building_tile.extent = *roofer_cfg.region_of_interest;
   } else {
@@ -376,16 +379,13 @@ int main(int argc, const char* argv[]) {
   }
 
   // Process tiles
-  for(auto& building_tile : building_tiles) {
+  for (auto& building_tile : building_tiles) {
     // crop each tile
-    crop_tile(
-      building_tile.extent, // tile extent
-      input_pointclouds, // input pointclouds
-      building_tile, // output building data
-      roofer_cfg, // configuration parameters
-      pj.get(), 
-      VectorReader.get()
-    );
+    crop_tile(building_tile.extent,  // tile extent
+              input_pointclouds,     // input pointclouds
+              building_tile,         // output building data
+              roofer_cfg,            // configuration parameters
+              pj.get(), VectorReader.get());
 
     // reconstruct buildings
     for (auto& building : building_tile.buildings) {
@@ -395,21 +395,21 @@ int main(int argc, const char* argv[]) {
     // output reconstructed buildings
     auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
     for (auto& building : building_tile.buildings) {
-      std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec12,
-        multisolidvec13, multisolidvec22;
+      std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
+          multisolidvec13, multisolidvec22;
       multisolidvec12.push_back(building.multisolids_lod12);
       multisolidvec13.push_back(building.multisolids_lod13);
       multisolidvec22.push_back(building.multisolids_lod22);
       std::vector<roofer::LinearRing> footprints{building.footprint};
 
-      //TODO: fix attributes
+      // TODO: fix attributes
       CityJsonWriter->write(building.jsonl_path, footprints, &multisolidvec12,
-                            &multisolidvec13, &multisolidvec22, building_tile.attributes);
+                            &multisolidvec13, &multisolidvec22,
+                            building_tile.attributes);
       logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
     }
 
     // buildings are finishes processing so they can be cleared
     building_tile.buildings.clear();
   }
-
 }

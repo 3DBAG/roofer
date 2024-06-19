@@ -1,23 +1,20 @@
-void crop_tile(
-  const std::array<double, 4>& tile, 
-  std::vector<InputPointcloud>& input_pointclouds, 
-  BuildingTile& output_building_tile,
-  RooferConfig& cfg,
-  roofer::misc::projHelperInterface* pj,
-  roofer::io::VectorReaderInterface* vector_reader) {
-
+void crop_tile(const std::array<double, 4>& tile,
+               std::vector<InputPointcloud>& input_pointclouds,
+               BuildingTile& output_building_tile, RooferConfig& cfg,
+               roofer::misc::projHelperInterface* pj,
+               roofer::io::VectorReaderInterface* vector_reader) {
   auto& logger = roofer::logger::Logger::get_logger();
-  
-  auto  vector_writer = roofer::io::createVectorWriterOGR(*pj);
+
+  auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
   vector_writer->srs = cfg.output_crs;
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
   auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
   auto vector_ops = roofer::misc::createVector2DOpsGEOS();
   auto LASWriter = roofer::io::createLASWriter(*pj);
 
-  // logger.info("region_of_interest.has_value()? {}", region_of_interest.has_value());
-  // if(region_of_interest.has_value())
-    vector_reader->region_of_interest = tile;
+  // logger.info("region_of_interest.has_value()? {}",
+  // region_of_interest.has_value()); if(region_of_interest.has_value())
+  vector_reader->region_of_interest = tile;
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
   vector_reader->readPolygons(footprints, &attributes);
@@ -33,8 +30,9 @@ void crop_tile(
   for (size_t i = 0; i < N_fp; ++i) {
     // need dereference operator here for dereferencing pointer and getting
     // std::option value
-    (*low_lod_vec)[i] = *(*low_lod_vec)[i] ||
-                        std::fabs(footprints[i].signed_area()) > cfg.low_lod_area;
+    (*low_lod_vec)[i] =
+        *(*low_lod_vec)[i] ||
+        std::fabs(footprints[i].signed_area()) > cfg.low_lod_area;
   }
 
   // get yoc attribute vector (nullptr if it does not exist)
@@ -79,7 +77,8 @@ void crop_tile(
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
-    if (cfg.write_crop_outputs && cfg.write_index) ipc.nodata_circles.resize(N_fp);
+    if (cfg.write_crop_outputs && cfg.write_index)
+      ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
     roofer::arr2f nodata_c;
@@ -137,7 +136,8 @@ void crop_tile(
     }
   }
 
-  // compute is_mutated attribute for first 2 pointclouds and add to footprint attributes
+  // compute is_mutated attribute for first 2 pointclouds and add to footprint
+  // attributes
   roofer::misc::selectPointCloudConfig select_pc_cfg;
   if (input_pointclouds.size() > 1) {
     auto& is_mutated =
@@ -153,7 +153,8 @@ void crop_tile(
     }
   }
 
-  // select pointcloud and write out geoflow config + pointcloud / fp for each building
+  // select pointcloud and write out geoflow config + pointcloud / fp for each
+  // building
   logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.building_bid_attribute);
   auto& pc_select = attributes.insert_vec<std::string>("pc_select");
@@ -250,27 +251,29 @@ void crop_tile(
     {
       BuildingObject& building = output_building_tile.buildings.emplace_back();
 
-      building.pointcloud = input_pointclouds[selected->index].building_clouds[i];
+      building.pointcloud =
+          input_pointclouds[selected->index].building_clouds[i];
       building.footprint = footprints[i];
-      building.h_ground = 
-        input_pointclouds[selected->index].ground_elevations[i] + (*pj->data_offset)[2];
+      building.h_ground =
+          input_pointclouds[selected->index].ground_elevations[i] +
+          (*pj->data_offset)[2];
 
       output_building_tile.attributes = attributes;
       building.jsonl_path = fmt::format(
-              fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
-              fmt::arg("pc_name", input_pointclouds[selected->index].name), fmt::arg("path", cfg.crop_output_path));
+          fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
+          fmt::arg("pc_name", input_pointclouds[selected->index].name),
+          fmt::arg("path", cfg.crop_output_path));
     }
 
     if (cfg.write_crop_outputs) {
-
       if (input_pointclouds[selected->index].force_low_lod) {
         (*low_lod_vec)[i] = true;
       }
       {
         // fs::create_directories(fs::path(fname).parent_path());
-        std::string fp_path =
-            fmt::format(fmt::runtime(cfg.building_gpkg_file_spec),
-                        fmt::arg("bid", bid), fmt::arg("path", cfg.crop_output_path));
+        std::string fp_path = fmt::format(
+            fmt::runtime(cfg.building_gpkg_file_spec), fmt::arg("bid", bid),
+            fmt::arg("path", cfg.crop_output_path));
         vector_writer->writePolygons(fp_path, footprints, attributes, i, i + 1);
 
         size_t j = 0;
@@ -280,15 +283,18 @@ void crop_tile(
             continue;
           };
 
-          std::string pc_path = fmt::format(
-              fmt::runtime(cfg.building_las_file_spec), fmt::arg("bid", bid),
-              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.crop_output_path));
-          std::string raster_path = fmt::format(
-              fmt::runtime(cfg.building_raster_file_spec), fmt::arg("bid", bid),
-              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.crop_output_path));
-          std::string jsonl_path = fmt::format(
-              fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
-              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.crop_output_path));
+          std::string pc_path =
+              fmt::format(fmt::runtime(cfg.building_las_file_spec),
+                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
+                          fmt::arg("path", cfg.crop_output_path));
+          std::string raster_path =
+              fmt::format(fmt::runtime(cfg.building_raster_file_spec),
+                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
+                          fmt::arg("path", cfg.crop_output_path));
+          std::string jsonl_path =
+              fmt::format(fmt::runtime(cfg.building_jsonl_file_spec),
+                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
+                          fmt::arg("path", cfg.crop_output_path));
 
           if (cfg.write_rasters) {
             RasterWriter->writeBands(raster_path, ipc.building_rasters[i]);
@@ -297,15 +303,16 @@ void crop_tile(
           LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
                                       pc_path);
 
-          // Correct ground height for offset, NB this ignores crs transformation
+          // Correct ground height for offset, NB this ignores crs
+          // transformation
           double h_ground =
               input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
 
           auto gf_config = toml::table{
               {"INPUT_FOOTPRINT", fp_path},
               // {"INPUT_POINTCLOUD", sresult.explanation ==
-              // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? "" :
-              // pc_path},
+              // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? ""
+              // : pc_path},
               {"INPUT_POINTCLOUD", pc_path},
               {"BID", bid},
               {"GROUND_ELEVATION", h_ground},
@@ -334,9 +341,10 @@ void crop_tile(
 
           if (!only_write_selected) {
             std::ofstream ofs;
-            std::string config_path = fmt::format(
-                fmt::runtime(cfg.building_toml_file_spec), fmt::arg("bid", bid),
-                fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.crop_output_path));
+            std::string config_path =
+                fmt::format(fmt::runtime(cfg.building_toml_file_spec),
+                            fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
+                            fmt::arg("path", cfg.crop_output_path));
             ofs.open(config_path);
             ofs << gf_config;
             ofs.close();
@@ -345,17 +353,19 @@ void crop_tile(
           }
           if (selected->index == j) {
             // set optimal jsonl path
-            std::string jsonl_path = fmt::format(
-                fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
-                fmt::arg("pc_name", ""), fmt::arg("path", cfg.crop_output_path));
+            std::string jsonl_path =
+                fmt::format(fmt::runtime(cfg.building_jsonl_file_spec),
+                            fmt::arg("bid", bid), fmt::arg("pc_name", ""),
+                            fmt::arg("path", cfg.crop_output_path));
             gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
             jsonl_paths[""].push_back(jsonl_path);
 
             // write optimal config
             std::ofstream ofs;
-            std::string config_path = fmt::format(
-                fmt::runtime(cfg.building_toml_file_spec), fmt::arg("bid", bid),
-                fmt::arg("pc_name", ""), fmt::arg("path", cfg.crop_output_path));
+            std::string config_path =
+                fmt::format(fmt::runtime(cfg.building_toml_file_spec),
+                            fmt::arg("bid", bid), fmt::arg("pc_name", ""),
+                            fmt::arg("path", cfg.crop_output_path));
             ofs.open(config_path);
             ofs << gf_config;
             ofs.close();
@@ -370,8 +380,9 @@ void crop_tile(
   if (cfg.write_crop_outputs) {
     // Write index output
     if (cfg.write_index) {
-      std::string index_file = fmt::format(fmt::runtime(cfg.index_file_spec),
-                                          fmt::arg("path", cfg.crop_output_path));
+      std::string index_file =
+          fmt::format(fmt::runtime(cfg.index_file_spec),
+                      fmt::arg("path", cfg.crop_output_path));
       vector_writer->writePolygons(index_file, footprints, attributes);
 
       // write nodata circles
@@ -386,9 +397,10 @@ void crop_tile(
     {
       for (auto& [name, pathsvec] : jsonl_paths) {
         if (pathsvec.size() != 0) {
-          std::string jsonl_list_file = fmt::format(
-              fmt::runtime(cfg.jsonl_list_file_spec), fmt::arg("path", cfg.crop_output_path),
-              fmt::arg("pc_name", name));
+          std::string jsonl_list_file =
+              fmt::format(fmt::runtime(cfg.jsonl_list_file_spec),
+                          fmt::arg("path", cfg.crop_output_path),
+                          fmt::arg("pc_name", name));
           std::ofstream ofs;
           ofs.open(jsonl_list_file);
           for (auto& jsonl_p : pathsvec) {
@@ -410,16 +422,18 @@ void crop_tile(
           {"CityObjects", toml::table{}},
           {"vertices", toml::array{}},
           {"transform",
-          toml::table{
-              {"scale", toml::array{md_scale[0], md_scale[1], md_scale[2]}},
-              {"translate", toml::array{md_trans[0], md_trans[1], md_trans[2]}},
-          }},
+           toml::table{
+               {"scale", toml::array{md_scale[0], md_scale[1], md_scale[2]}},
+               {"translate",
+                toml::array{md_trans[0], md_trans[1], md_trans[2]}},
+           }},
           {"metadata",
-          toml::table{{"referenceSystem",
+           toml::table{{"referenceSystem",
                         "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
       // serializing as JSON using toml::json_formatter:
-      std::string metadata_json_file = fmt::format(
-          fmt::runtime(cfg.metadata_json_file_spec), fmt::arg("path", cfg.crop_output_path));
+      std::string metadata_json_file =
+          fmt::format(fmt::runtime(cfg.metadata_json_file_spec),
+                      fmt::arg("path", cfg.crop_output_path));
 
       // minimize json
       std::stringstream ss;
@@ -435,7 +449,7 @@ void crop_tile(
     }
   }
   // clear input_pointclouds data
-  for(auto& ipc : input_pointclouds) {
+  for (auto& ipc : input_pointclouds) {
     ipc.nodata_radii.clear();
     ipc.nodata_fractions.clear();
     ipc.pt_densities.clear();
