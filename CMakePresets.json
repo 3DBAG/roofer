@@ -41,7 +41,6 @@
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
       "inherits": "vcpkg-minimal-test",
-      "generator": "Ninja"
     },
     {
       "name": "gh-macOS",
