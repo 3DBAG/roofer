@@ -139,8 +139,9 @@ namespace roofer::reconstruction {
           new_face->data().is_footprint_hole = false;
           old_face->data().in_footprint = true;
           old_face->data().is_footprint_hole = false;
-//          std::cout << "Ignored input footprint hole that is touching "
-//                       "footprint exterior\n";
+          //          std::cout << "Ignored input footprint hole that is
+          //          touching "
+          //                       "footprint exterior\n";
         } else {  // normal holes that do not touch outer_ccb of existing face
           new_face->data().in_footprint = !hole_mode;
           new_face->data().is_footprint_hole = hole_mode;
