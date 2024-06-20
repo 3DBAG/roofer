@@ -81,10 +81,6 @@ namespace roofer {
     DT cdt_from_linearing(const roofer::LinearRing& poly);
 
     float interpolate_from_cdt(const Point_2& p, const DT& cdt);
-
-    // todo temp for testing
-    void write_cdt_to_obj(const DT& cdt, const std::string& filename);
-
   }  // namespace proj_tri_util
 
 }  // namespace roofer

@@ -480,6 +480,12 @@ namespace roofer {
     return new_lr;
   }
 
+  void pop_back_if_equal_to_front(LinearRing& poly) {
+    auto it = poly.end();
+    --it;
+    if ((*poly.begin()) == *it) poly.erase(it);
+  }
+
   std::time_t Date::to_time_t() {
     std::tm tm{};
     tm.tm_year = this->year - 1900;

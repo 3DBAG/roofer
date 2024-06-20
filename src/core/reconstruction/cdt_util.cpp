@@ -17,8 +17,6 @@
 #include <CGAL/Polygon_2.h>
 
 #include <roofer/reconstruction/cdt_util.hpp>
-// todo temp for testing
-#include <CGAL/Surface_mesh.h>
 
 namespace roofer {
 
@@ -172,29 +170,6 @@ namespace roofer {
         h += fh->vertex(i)->point().z() * coords[i];
       }
       return h;
-    }
-
-    // todo temp function for testing
-    void write_cdt_to_obj(const DT& cdt, const std::string& filename) {
-      typedef CGAL::Surface_mesh<EPICK::Point_3> Mesh;
-      std::map<DT::Vertex_handle, int> indices;
-      std::vector<Mesh::vertex_index> mesh_vertex;
-      std::vector<Mesh::face_index> face_index;
-      mesh_vertex.reserve(cdt.number_of_vertices());
-      int counter = 0;
-      Mesh mesh;
-      for (const auto& it : cdt.finite_vertex_handles()) {
-        mesh_vertex.emplace_back(mesh.add_vertex(it->point()));
-        //        outstream << it->point() << std::endl;
-        indices.insert(std::pair<DT::Vertex_handle, int>(it, counter++));
-      }
-      for (const auto& it : cdt.finite_face_handles()) {
-        int v1 = indices[it->vertex(0)];
-        int v2 = indices[it->vertex(1)];
-        int v3 = indices[it->vertex(2)];
-        mesh.add_face(mesh_vertex[v1], mesh_vertex[v2], mesh_vertex[v3]);
-      }
-      CGAL::IO::write_OBJ(filename, mesh);
     }
 
   }  // namespace proj_tri_util

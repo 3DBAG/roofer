@@ -311,5 +311,6 @@ namespace roofer {
   bool has_duplicates_ring(const vec3f& poly, const float& dupe_threshold);
   bool is_degenerate(const LinearRing& poly, const float& dupe_threshold);
   LinearRing fix_duplicates(LinearRing& poly, float& dupe_threshold);
+  void pop_back_if_equal_to_front(LinearRing& poly);
 
 }  // namespace roofer

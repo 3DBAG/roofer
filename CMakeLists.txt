@@ -10,6 +10,7 @@ option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
+option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 
@@ -19,7 +20,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use extensions, because they might affect compiler compatibility
 set(CMAKE_CXX_EXTENSIONS OFF)
-
+# Enable position independent code for shared libraries in case we build them
+if (BUILD_SHARED_LIBS OR RF_BUILD_BINDINGS)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif ()
 # CMAKE MODULES
 
 # CMake modules, like the documentation module, go in here
@@ -89,6 +93,11 @@ if(RF_BUILD_TESTING)
   # We use the apps in the integration tests, so we need to build them here
   # add_subdirectory(apps)
   add_subdirectory(tests)
+endif()
+
+# Python binding
+if(RF_BUILD_BINDINGS)
+    add_subdirectory(rooferpy)
 endif()
 
 # EXECUTABLES

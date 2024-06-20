@@ -21,7 +21,8 @@
       "inherits": "vcpkg-minimal",
       "cacheVariables": {
         "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
@@ -34,13 +35,22 @@
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
         "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "ON"
+      }
+    },
+    {
+      "name": "vcpkg-with-bindings",
+      "description": "Build python bindings using vcpkg and pybind as a dependency",
+      "inherits": "vcpkg-minimal",
+      "cacheVariables": {
+        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-minimal-test",
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-macOS",

@@ -28,7 +28,13 @@ if(RF_BUILD_APPS)
       "${CONFIG_DIR}/reconstruct-wippolder.toml"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "crop-wippolder;reconstruct-wippolder")
+  add_test(
+    NAME "reconstruct-api-wippolder"
+    COMMAND
+      $<TARGET_FILE:reconstruct_api>
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  set(tests_built "crop-wippolder;reconstruct-wippolder;reconstruct-api-wippolder")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                 "${TEST_ENVIRONMENT}")
 
@@ -46,4 +52,19 @@ if(RF_BUILD_APPS)
     set_tests_properties("installed-apps" PROPERTIES ENVIRONMENT
       "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}")
   endif()
+
+endif()
+
+if(RF_BUILD_BINDINGS)
+  add_test(
+    NAME "rooferpy"
+    COMMAND python "${CMAKE_SOURCE_DIR}/rooferpy/example_rooferpy.py"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    if(WIN32)
+      set_tests_properties("rooferpy" PROPERTIES ENVIRONMENT
+        "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy/Release")
+    else()
+      set_tests_properties("rooferpy" PROPERTIES ENVIRONMENT
+        "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy")
+    endif()
 endif()

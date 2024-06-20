@@ -1,6 +1,8 @@
 """Test the installed apps"""
+import os
 import platform
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -32,7 +34,6 @@ def reconstruct_exe() -> str:
         return 'reconstruct.exe'
     else:
         return 'reconstruct'
-
 
 class TestApps:
 
