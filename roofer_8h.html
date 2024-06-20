@@ -83,6 +83,7 @@ $(function() {
 <code>#include &lt;<a class="el" href="ElevationProvider_8hpp_source.html">roofer/reconstruction/ElevationProvider.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="LineDetector_8hpp_source.html">roofer/reconstruction/LineDetector.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="LineRegulariser_8hpp_source.html">roofer/reconstruction/LineRegulariser.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="MeshTriangulator_8hpp_source.html">roofer/reconstruction/MeshTriangulator.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="PlaneDetector_8hpp_source.html">roofer/reconstruction/PlaneDetector.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="PlaneIntersector_8hpp_source.html">roofer/reconstruction/PlaneIntersector.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="SegmentRasteriser_8hpp_source.html">roofer/reconstruction/SegmentRasteriser.hpp</a>&gt;</code><br />
@@ -93,49 +94,50 @@ Include dependency graph for roofer.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="roofer_8h__incl.png" border="0" usemap="#a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2include_2roofer_2roofer_8h" alt=""/></div>
 <map name="a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2include_2roofer_2roofer_8h" id="a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2include_2roofer_2roofer_8h">
-<area shape="rect" title=" " alt="" coords="1983,5,2183,61"/>
-<area shape="rect" href="AlphaShaper_8hpp.html" title=" " alt="" coords="1845,288,2003,329"/>
-<area shape="rect" href="ArrangementBuilder_8hpp.html" title=" " alt="" coords="2028,288,2212,329"/>
-<area shape="rect" href="ArrangementDissolver_8hpp.html" title=" " alt="" coords="1539,199,1738,240"/>
+<area shape="rect" title=" " alt="" coords="2348,5,2548,61"/>
+<area shape="rect" href="AlphaShaper_8hpp.html" title=" " alt="" coords="2221,288,2379,329"/>
+<area shape="rect" href="ArrangementBuilder_8hpp.html" title=" " alt="" coords="2404,288,2588,329"/>
+<area shape="rect" href="ArrangementDissolver_8hpp.html" title=" " alt="" coords="1733,199,1931,240"/>
 <area shape="rect" href="ArrangementExtruder_8hpp.html" title=" " alt="" coords="1590,109,1783,151"/>
-<area shape="rect" href="ElevationProvider_8hpp.html" title=" " alt="" coords="1095,199,1263,240"/>
-<area shape="rect" href="cdt__util_8hpp.html" title=" " alt="" coords="1177,288,1335,329"/>
-<area shape="rect" href="ArrangementOptimiser_8hpp.html" title=" " alt="" coords="1812,199,2015,240"/>
-<area shape="rect" href="ArrangementSnapper_8hpp.html" title=" " alt="" coords="2237,288,2427,329"/>
-<area shape="rect" href="LineDetector_8hpp.html" title=" " alt="" coords="2451,288,2610,329"/>
-<area shape="rect" href="LineRegulariser_8hpp.html" title=" " alt="" coords="2634,288,2793,329"/>
-<area shape="rect" href="PlaneDetector_8hpp.html" title=" " alt="" coords="2817,288,2975,329"/>
-<area shape="rect" href="PlaneIntersector_8hpp.html" title=" " alt="" coords="2999,288,3158,329"/>
-<area shape="rect" href="SegmentRasteriser_8hpp.html" title=" " alt="" coords="1287,199,1465,240"/>
-<area shape="rect" title=" " alt="" coords="2646,117,2863,143"/>
-<area shape="rect" title=" " alt="" coords="2767,385,2844,411"/>
-<area shape="rect" href="datastructures_8hpp.html" title=" " alt="" coords="2252,385,2500,411"/>
-<area shape="rect" href="cgal__shared__definitions_8hpp.html" title=" " alt="" coords="2021,377,2227,419"/>
-<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="2271,481,2481,508"/>
-<area shape="rect" title=" " alt="" coords="1328,571,1384,597"/>
-<area shape="rect" title=" " alt="" coords="2435,571,2509,597"/>
-<area shape="rect" title=" " alt="" coords="2534,571,2658,597"/>
-<area shape="rect" title=" " alt="" coords="314,571,377,597"/>
-<area shape="rect" title=" " alt="" coords="2176,571,2235,597"/>
-<area shape="rect" title=" " alt="" coords="2259,571,2317,597"/>
-<area shape="rect" title=" " alt="" coords="2342,571,2410,597"/>
-<area shape="rect" title=" " alt="" coords="1441,481,1636,508"/>
-<area shape="rect" title=" " alt="" coords="1660,481,1852,508"/>
-<area shape="rect" title=" " alt="" coords="1876,481,2049,508"/>
-<area shape="rect" title=" " alt="" coords="2074,467,2246,523"/>
-<area shape="rect" title=" " alt="" coords="935,467,1107,523"/>
-<area shape="rect" href="Raster_8hpp.html" title=" " alt="" coords="424,295,619,322"/>
-<area shape="rect" title=" " alt="" coords="383,385,468,411"/>
-<area shape="rect" title=" " alt="" coords="492,385,551,411"/>
-<area shape="rect" title=" " alt="" coords="43,385,106,411"/>
-<area shape="rect" title=" " alt="" coords="130,385,203,411"/>
-<area shape="rect" title=" " alt="" coords="228,385,308,411"/>
-<area shape="rect" title=" " alt="" coords="676,377,884,419"/>
-<area shape="rect" title=" " alt="" coords="908,385,1148,411"/>
-<area shape="rect" title=" " alt="" coords="1173,377,1339,419"/>
-<area shape="rect" title=" " alt="" coords="1364,377,1553,419"/>
-<area shape="rect" title=" " alt="" coords="1578,377,1769,419"/>
-<area shape="rect" title=" " alt="" coords="1793,377,1996,419"/>
+<area shape="rect" href="ElevationProvider_8hpp.html" title=" " alt="" coords="1440,199,1608,240"/>
+<area shape="rect" href="cdt__util_8hpp.html" title=" " alt="" coords="961,288,1119,329"/>
+<area shape="rect" href="ArrangementOptimiser_8hpp.html" title=" " alt="" coords="2157,199,2360,240"/>
+<area shape="rect" href="ArrangementSnapper_8hpp.html" title=" " alt="" coords="2613,288,2803,329"/>
+<area shape="rect" href="LineDetector_8hpp.html" title=" " alt="" coords="2827,288,2986,329"/>
+<area shape="rect" href="LineRegulariser_8hpp.html" title=" " alt="" coords="3010,288,3169,329"/>
+<area shape="rect" href="MeshTriangulator_8hpp.html" title=" " alt="" coords="3193,288,3359,329"/>
+<area shape="rect" href="PlaneDetector_8hpp.html" title=" " alt="" coords="3383,288,3542,329"/>
+<area shape="rect" href="PlaneIntersector_8hpp.html" title=" " alt="" coords="2038,288,2197,329"/>
+<area shape="rect" href="SegmentRasteriser_8hpp.html" title=" " alt="" coords="1955,199,2133,240"/>
+<area shape="rect" title=" " alt="" coords="3022,117,3239,143"/>
+<area shape="rect" title=" " alt="" coords="2267,385,2344,411"/>
+<area shape="rect" href="datastructures_8hpp.html" title=" " alt="" coords="2875,385,3123,411"/>
+<area shape="rect" href="cgal__shared__definitions_8hpp.html" title=" " alt="" coords="2035,377,2242,419"/>
+<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="2657,481,2868,508"/>
+<area shape="rect" title=" " alt="" coords="2123,571,2179,597"/>
+<area shape="rect" title=" " alt="" coords="2821,571,2896,597"/>
+<area shape="rect" title=" " alt="" coords="2921,571,3045,597"/>
+<area shape="rect" title=" " alt="" coords="1419,571,1482,597"/>
+<area shape="rect" title=" " alt="" coords="2563,571,2621,597"/>
+<area shape="rect" title=" " alt="" coords="2645,571,2704,597"/>
+<area shape="rect" title=" " alt="" coords="2729,571,2797,597"/>
+<area shape="rect" title=" " alt="" coords="1828,481,2023,508"/>
+<area shape="rect" title=" " alt="" coords="2047,481,2239,508"/>
+<area shape="rect" title=" " alt="" coords="2263,481,2436,508"/>
+<area shape="rect" title=" " alt="" coords="2461,467,2633,523"/>
+<area shape="rect" title=" " alt="" coords="1534,467,1706,523"/>
+<area shape="rect" href="Raster_8hpp.html" title=" " alt="" coords="1363,295,1557,322"/>
+<area shape="rect" title=" " alt="" coords="1828,385,1913,411"/>
+<area shape="rect" title=" " alt="" coords="1937,385,1996,411"/>
+<area shape="rect" title=" " alt="" coords="1489,385,1551,411"/>
+<area shape="rect" title=" " alt="" coords="1575,385,1649,411"/>
+<area shape="rect" title=" " alt="" coords="1673,385,1753,411"/>
+<area shape="rect" title=" " alt="" coords="43,377,251,419"/>
+<area shape="rect" title=" " alt="" coords="275,385,515,411"/>
+<area shape="rect" title=" " alt="" coords="539,377,706,419"/>
+<area shape="rect" title=" " alt="" coords="731,377,920,419"/>
+<area shape="rect" title=" " alt="" coords="945,377,1135,419"/>
+<area shape="rect" title=" " alt="" coords="1160,377,1363,419"/>
 </map>
 </div>
 </div>
@@ -153,12 +155,14 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a255dc84ff47e092b63d351e33e654ed3"><td class="memTemplParams" colspan="2">template&lt;typename Footprint &gt; </td></tr>
-<tr class="memitem:a255dc84ff47e092b63d351e33e654ed3"><td class="memTemplItemLeft" align="right" valign="top">Mesh&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a255dc84ff47e092b63d351e33e654ed3">roofer::reconstruct_single_instance</a> (const PointCollection &amp;points_roof, const PointCollection &amp;points_ground, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())</td></tr>
-<tr class="separator:a255dc84ff47e092b63d351e33e654ed3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a970ab8c2a2b03689a144987a37ec575d"><td class="memTemplParams" colspan="2">template&lt;typename Footprint &gt; </td></tr>
-<tr class="memitem:a970ab8c2a2b03689a144987a37ec575d"><td class="memTemplItemLeft" align="right" valign="top">Mesh&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a970ab8c2a2b03689a144987a37ec575d">roofer::reconstruct_single_instance</a> (const PointCollection &amp;points_roof, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())</td></tr>
-<tr class="separator:a970ab8c2a2b03689a144987a37ec575d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10c11243e1f4858db1b095ac5d059650"><td class="memTemplParams" colspan="2">template&lt;typename Footprint &gt; </td></tr>
+<tr class="memitem:a10c11243e1f4858db1b095ac5d059650"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Mesh &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#a10c11243e1f4858db1b095ac5d059650">roofer::reconstruct_single_instance</a> (const PointCollection &amp;points_roof, const PointCollection &amp;points_ground, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())</td></tr>
+<tr class="separator:a10c11243e1f4858db1b095ac5d059650"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0a1884220dc960b55887e6d723de578"><td class="memTemplParams" colspan="2">template&lt;typename Footprint &gt; </td></tr>
+<tr class="memitem:ad0a1884220dc960b55887e6d723de578"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Mesh &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#ad0a1884220dc960b55887e6d723de578">roofer::reconstruct_single_instance</a> (const PointCollection &amp;points_roof, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())</td></tr>
+<tr class="separator:ad0a1884220dc960b55887e6d723de578"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae54a8795137063a4c8cb423124bb633f"><td class="memItemLeft" align="right" valign="top">TriangleCollection&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer.html#ae54a8795137063a4c8cb423124bb633f">roofer::triangulate_mesh</a> (const Mesh &amp;mesh)</td></tr>
+<tr class="separator:ae54a8795137063a4c8cb423124bb633f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->
