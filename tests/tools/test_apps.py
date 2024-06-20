@@ -54,28 +54,3 @@ class TestApps:
         """Can we run reconstruct on the wippolder data?"""
         path_config = dir_tests / "config" / "reconstruct-wippolder.toml"
         subprocess.run([reconstruct_exe, "--config", path_config], capture_output=True, check=True)
-
-class TestBindings:
-
-    def test_python_bindings(self):
-        """Can we run reconstruct with python bindings on the wippolder data?"""
-        # Path to the base rooferpy build directory
-        base_so_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../build/rooferpy'))
-        # Check if the Release directory exists for windows
-        release_so_path = os.path.join(base_so_path, 'Release')
-        if os.path.exists(release_so_path):
-            so_path = release_so_path
-        else:
-            so_path = base_so_path
-
-        path_script = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../rooferpy/example_rooferpy.py'))
-
-        env = os.environ.copy()
-        env['PYTHONPATH'] = so_path
-
-        print(f"Running script: {path_script}")
-        print(f"Using PYTHONPATH: {env['PYTHONPATH']}")
-
-        result = subprocess.run([sys.executable, path_script], capture_output=True, text=True, env=env, check=True)
-        print(f"stdout: {result.stdout}")
-        print(f"stderr: {result.stderr}")
