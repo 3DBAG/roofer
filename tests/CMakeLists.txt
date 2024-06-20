@@ -58,10 +58,10 @@ if(RF_BUILD_APPS)
     COMMAND python "${CMAKE_SOURCE_DIR}/rooferpy/example_rooferpy.py"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
     if(WIN32)
-      set_tests_properties("reconstruct-with-bindings" PROPERTIES ENVIRONMENT
+      set_tests_properties("rooferpy" PROPERTIES ENVIRONMENT
         "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy/Release")
     else()
-      set_tests_properties("reconstruct-with-bindings" PROPERTIES ENVIRONMENT
+      set_tests_properties("rooferpy" PROPERTIES ENVIRONMENT
         "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy")
     endif()
 
