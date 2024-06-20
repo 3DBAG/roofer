@@ -1,0 +1,5 @@
+external/vcpkg
+
+# Test dirs
+tests/logs
+tests/output

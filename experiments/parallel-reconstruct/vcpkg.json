@@ -1,0 +1,25 @@
+{
+    "name": "roofer",
+    "version-string": "1.0.0",
+    "dependencies": [
+        {
+            "name": "nlohmann-json",
+            "version>=": "3.11.3"
+        },
+        {
+            "name": "catch2",
+            "version>=": "3.5.4"
+        },
+        {
+            "name": "libfork",
+            "version>=": "3.8.0"
+        }
+    ],
+    "overrides": [
+        {
+            "name": "nlohmann-json",
+            "version": "3.11.3"
+        }
+    ],
+    "builtin-baseline": "90a5b03c9f1f7af404b16f780a2cc60b77c1f34f"
+}

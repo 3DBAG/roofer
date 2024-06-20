@@ -108,7 +108,8 @@ namespace roofer::io {
     }
 
     /**
-     * @brief Find polygon that intersects point and add the point to the corresponding building point cloud
+     * @brief Find polygon that intersects point and add the point to the
+     * corresponding building point cloud
      */
     void add_point(arr3f point, int point_class, int acqusition_year) {
       // look up grid index cell and do pip for all polygons retreived from that
@@ -294,9 +295,9 @@ namespace roofer::io {
         }
       }
 
-      // Compute ground elevation per polygon (eg 5th percentile of all ground pts)
-      // std::cout <<"Computing the average ground elevation per polygon..." <<
-      // std::endl;
+      // Compute ground elevation per polygon (eg 5th percentile of all ground
+      // pts) std::cout <<"Computing the average ground elevation per
+      // polygon..." << std::endl;
       for (size_t i = 0; i < z_ground.size(); ++i) {
         float ground_ele = min_ground_elevation;
         if (z_ground[i].size() != 0) {
