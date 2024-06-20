@@ -53,6 +53,9 @@ if(RF_BUILD_APPS)
       "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}")
   endif()
 
+endif()
+
+if(RF_BUILD_BINDINGS)
   add_test(
     NAME "rooferpy"
     COMMAND python "${CMAKE_SOURCE_DIR}/rooferpy/example_rooferpy.py"
@@ -64,5 +67,4 @@ if(RF_BUILD_APPS)
       set_tests_properties("rooferpy" PROPERTIES ENVIRONMENT
         "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy")
     endif()
-
 endif()
