@@ -85,7 +85,7 @@ roofer_config.complexity_factor = 0.7
 
 # Reconstruct
 print("Reconstructing building...")
-roofer_meshes = rooferpy.reconstruct_single_instance(building_pts, ground_pts, footprint, roofer_config)
+roofer_meshes = rooferpy.reconstruct(building_pts, ground_pts, footprint, roofer_config)
 
 # Triangulate the mesh
 print("Triangulating mesh...")

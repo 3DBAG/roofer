@@ -78,7 +78,7 @@ namespace roofer {
     return mesh;
   }
 
-  std::vector<PyMesh> py_reconstruct_single_instance(
+  std::vector<PyMesh> py_reconstruct(
       const PyPointCollection& points_roof,
       const PyPointCollection& points_ground, const PyLinearRing& footprint,
       ReconstructionConfig cfg = ReconstructionConfig()) {
@@ -96,7 +96,7 @@ namespace roofer {
     return convert_meshes_to_py_meshes(meshes);
   }
 
-  std::vector<PyMesh> py_reconstruct_single_instance(
+  std::vector<PyMesh> py_reconstruct(
       const PyPointCollection& points_roof, const PyLinearRing& footprint,
       ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_roof_pc;
@@ -148,19 +148,19 @@ PYBIND11_MODULE(rooferpy, m) {
           &roofer::ReconstructionConfig::override_with_floor_elevation)
       .def("is_valid", &roofer::ReconstructionConfig::is_valid);
 
-  m.def("reconstruct_single_instance",
+  m.def("reconstruct",
         py::overload_cast<const PyPointCollection&, const PyPointCollection&,
                           const PyLinearRing&, roofer::ReconstructionConfig>(
-            &roofer::py_reconstruct_single_instance),
+            &roofer::py_reconstruct),
         "Reconstruct a single instance of a building from a point cloud with "
         "ground points",
         py::arg("points_roof"), py::arg("points_ground"), py::arg("footprint"),
         py::arg("cfg") = roofer::ReconstructionConfig());
 
-  m.def("reconstruct_single_instance",
+  m.def("reconstruct",
         py::overload_cast<const PyPointCollection&, const PyLinearRing&,
                           roofer::ReconstructionConfig>(
-            &roofer::py_reconstruct_single_instance),
+            &roofer::py_reconstruct),
         "Reconstruct a single instance of a building from a point cloud "
         "without ground points",
         py::arg("points_roof"), py::arg("footprint"),
