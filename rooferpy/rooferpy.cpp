@@ -157,14 +157,14 @@ PYBIND11_MODULE(rooferpy, m) {
         py::arg("points_roof"), py::arg("points_ground"), py::arg("footprint"),
         py::arg("cfg") = roofer::ReconstructionConfig());
 
-  m.def("reconstruct",
-        py::overload_cast<const PyPointCollection&, const PyLinearRing&,
-                          roofer::ReconstructionConfig>(
-            &roofer::py_reconstruct),
-        "Reconstruct a single instance of a building from a point cloud "
-        "without ground points",
-        py::arg("points_roof"), py::arg("footprint"),
-        py::arg("cfg") = roofer::ReconstructionConfig());
+  m.def(
+      "reconstruct",
+      py::overload_cast<const PyPointCollection&, const PyLinearRing&,
+                        roofer::ReconstructionConfig>(&roofer::py_reconstruct),
+      "Reconstruct a single instance of a building from a point cloud "
+      "without ground points",
+      py::arg("points_roof"), py::arg("footprint"),
+      py::arg("cfg") = roofer::ReconstructionConfig());
 
   m.def("triangulate_mesh", &roofer::py_triangulate_mesh, "Triangulate a mesh",
         py::arg("mesh"));
