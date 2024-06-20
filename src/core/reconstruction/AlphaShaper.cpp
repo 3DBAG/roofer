@@ -324,7 +324,6 @@ namespace roofer::reconstruction {
         grower.grow(cfg.extract_polygons);
 
         // collect triangles
-        alpha_triangles;
         for (auto fh = A.finite_faces_begin(); fh != A.finite_faces_end();
              ++fh) {
           // only export triangles in the interior of a shape (thus excluding
