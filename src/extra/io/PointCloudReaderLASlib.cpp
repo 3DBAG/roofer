@@ -1,5 +1,6 @@
 #include <roofer/logger/logger.h>
 
+#include <array>
 #include <iomanip>
 #include <lasreader.hpp>
 #include <laswriter.hpp>
@@ -52,10 +53,28 @@ namespace roofer::io {
     using PointCloudReaderInterface::PointCloudReaderInterface;
 
     void open(const std::string& source) {
+      if (!lasreader) close();
       LASreadOpener lasreadopener;
       lasreadopener.set_file_name(source.c_str());
       lasreader = lasreadopener.open();
       if (!lasreader) throw(rooferException("Open failed on " + source));
+    }
+
+    void close () {
+      if (lasreader) {
+        lasreader->close();
+        delete lasreader;
+      }
+    }
+
+    std::array<double, 4> getExtent() {
+      std::array<double, 4> file_bbox;
+      file_bbox[0] = lasreader->get_min_x();
+      file_bbox[1] = lasreader->get_min_y();
+      file_bbox[3] = lasreader->get_max_x();
+      file_bbox[4] = lasreader->get_max_y();
+
+      return file_bbox;
     }
 
     virtual void readPointCloud(PointCollection& points, vec1i* classification,
@@ -103,8 +122,6 @@ namespace roofer::io {
             lasreader->point.get_z()));
       }
       pjHelper.clear_fwd_crs_transform();
-      lasreader->close();
-      delete lasreader;
     }
   };
 

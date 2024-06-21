@@ -372,7 +372,7 @@ int main(int argc, const char* argv[]) {
 
   auto& building_tile = building_tiles.emplace_back();
   if (roofer_cfg.region_of_interest.has_value()) {
-    VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
+    // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
     building_tile.extent = *roofer_cfg.region_of_interest;
   } else {
     building_tile.extent = VectorReader->layer_extent;

@@ -14,7 +14,7 @@ namespace roofer::io {
     void add_vertices_ring(std::map<arr3d, size_t>& vertex_map,
                            std::vector<arr3d>& vertex_vec,
                            std::set<arr3d>& vertex_set, const T& ring,
-                           Box& bbox) {
+                           TBox<double>& bbox) {
       size_t v_cntr = vertex_vec.size();
       for (auto& vertex_ : ring) {
         auto vertex = pjHelper.coord_transform_rev(vertex_);
@@ -27,11 +27,11 @@ namespace roofer::io {
       }
     }
 
-    Box add_vertices_polygon(std::map<arr3d, size_t>& vertex_map,
+    TBox<double> add_vertices_polygon(std::map<arr3d, size_t>& vertex_map,
                              std::vector<arr3d>& vertex_vec,
                              std::set<arr3d>& vertex_set,
                              const LinearRing& polygon) {
-      Box bbox;
+      TBox<double> bbox;
       add_vertices_ring(vertex_map, vertex_vec, vertex_set, polygon, bbox);
       for (auto& iring : polygon.interior_rings()) {
         add_vertices_ring(vertex_map, vertex_vec, vertex_set, iring, bbox);
@@ -39,10 +39,10 @@ namespace roofer::io {
       return bbox;
     }
 
-    Box add_vertices_mesh(std::map<arr3d, size_t>& vertex_map,
+    TBox<double> add_vertices_mesh(std::map<arr3d, size_t>& vertex_map,
                           std::vector<arr3d>& vertex_vec,
                           std::set<arr3d>& vertex_set, const Mesh& mesh) {
-      Box bbox;
+      TBox<double> bbox;
       for (auto& face : mesh.get_polygons()) {
         bbox.add(
             add_vertices_polygon(vertex_map, vertex_vec, vertex_set, face));
@@ -112,7 +112,7 @@ namespace roofer::io {
 
     // Computes the geographicalExtent array from a geoflow::Box and the
     // data_offset from the NodeManager
-    nlohmann::json::array_t compute_geographical_extent(Box& bbox) {
+    nlohmann::json::array_t compute_geographical_extent(TBox<double>& bbox) {
       auto minp = bbox.min();
       auto maxp = bbox.max();
       return {minp[0], minp[1], minp[2], maxp[0], maxp[1], maxp[2]};
@@ -249,7 +249,7 @@ namespace roofer::io {
         if (export_lod13) has_solids = multisolids_lod13->at(i).size();
         if (export_lod22) has_solids = multisolids_lod22->at(i).size();
 
-        Box building_bbox;
+        TBox<double> building_bbox;
         if (has_solids) {
           MeshMap meshmap;
           if (export_lod22) {
