@@ -91,8 +91,8 @@ namespace roofer {
     }
     roofer::LinearRing linear_ring;
     convert_to_linear_ring(footprint, linear_ring);
-    auto meshes = reconstruct_single_instance(points_roof_pc, points_ground_pc,
-                                              linear_ring, cfg);
+    auto meshes =
+        reconstruct(points_roof_pc, points_ground_pc, linear_ring, cfg);
     return convert_meshes_to_py_meshes(meshes);
   }
 
@@ -105,7 +105,7 @@ namespace roofer {
     }
     roofer::LinearRing linear_ring;
     convert_to_linear_ring(footprint, linear_ring);
-    auto meshes = reconstruct_single_instance(points_roof_pc, linear_ring, cfg);
+    auto meshes = reconstruct(points_roof_pc, linear_ring, cfg);
     return convert_meshes_to_py_meshes(meshes);
   }
 
