@@ -67,14 +67,15 @@ namespace roofer::io {
       }
     }
 
-    std::array<double, 4> getExtent() {
-      std::array<double, 4> file_bbox;
-      file_bbox[0] = lasreader->get_min_x();
-      file_bbox[1] = lasreader->get_min_y();
-      file_bbox[3] = lasreader->get_max_x();
-      file_bbox[4] = lasreader->get_max_y();
-
-      return file_bbox;
+    TBox<double> getExtent() {
+      return {
+        lasreader->get_min_x(),
+        lasreader->get_min_y(),
+        lasreader->get_min_z(),
+        lasreader->get_max_x(),
+        lasreader->get_max_y(),
+        lasreader->get_max_z()
+      };
     }
 
     virtual void readPointCloud(PointCollection& points, vec1i* classification,

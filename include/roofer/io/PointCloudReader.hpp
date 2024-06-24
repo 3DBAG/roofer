@@ -15,7 +15,7 @@ namespace roofer::io {
     
     virtual void close() = 0;
 
-    virtual std::array<double, 4> getExtent() = 0;
+    virtual TBox<double> getExtent() = 0;
 
     virtual void readPointCloud(PointCollection& points,
                                 vec1i* classification = nullptr,

@@ -1,4 +1,5 @@
 #include <array>
+#include <initializer_list>
 
 namespace roofer {
 
@@ -11,6 +12,18 @@ namespace roofer {
     TBox(){
       clear();
     };
+
+    TBox(std::initializer_list<T> initList) {
+      clear();
+      auto it = initList.begin();
+      pmin[0] = *it++;
+      pmin[1] = *it++;
+      pmin[2] = *it++;
+      pmax[0] = *it++;
+      pmax[1] = *it++;
+      pmax[2] = *it;
+      just_cleared = false;
+    }
 
     std::array<T, 3> min() const { return pmin; };
     std::array<T, 3> max() const { return pmax; };

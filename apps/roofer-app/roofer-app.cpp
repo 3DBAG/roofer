@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 // crop
 #include <roofer/io/PointCloudWriter.hpp>
+#include <roofer/io/PointCloudReader.hpp>
 #include <roofer/io/RasterWriter.hpp>
 #include <roofer/io/StreamCropper.hpp>
 #include <roofer/io/VectorReader.hpp>
@@ -308,6 +309,69 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
+std::unordered_map<std::string, roofer::TBox<double>> get_las_extents(const InputPointcloud& ipc) {;
+  std::unordered_map<std::string, roofer::TBox<double>> extents;
+  auto pj = roofer::misc::createProjHelper();
+  for(auto& fp : roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
+    auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
+    PointReader->open(fp);
+    extents[fp] = PointReader->getExtent();
+  }
+  return extents;
+}
+
+void create_tiles() {
+  // auto& tile_geoms = vector_output("tile_geoms");
+
+  // // get the intersection of footprints extent and pointcloud extent
+
+  // // split up into tiles of predetermined cellsize
+
+  // Box bbox;
+  // for (size_t i=0; i<polygons.size(); ++i) {
+  //   bbox.add(polygons.get<LinearRing&>(i).box());
+  // }
+  // auto grid = RasterTools::Raster(cellsize_, bbox.min()[0], bbox.max()[0], bbox.min()[1], bbox.max()[1]);
+
+  // std::unordered_map<int, int> tile_cnts;
+  // for (size_t i=0; i<polygons.size(); ++i) {
+  //   auto c = polygons.get<LinearRing&>(i).box().center();
+  //   int lc = (int) grid.getLinearCoord(c[0], c[1]);
+  //   polygon_tile_ids.push_back(lc);
+  //   tile_cnts[lc]++;
+  // }
+
+  // for(size_t col=0; col < grid.dimx_; ++col) {
+  //   for(size_t row=0; row < grid.dimy_; ++row) {
+  //     LinearRing g;
+  //     g.push_back(arr3f{
+  //       float(grid.minx_ + col*cellsize_),
+  //       float(grid.miny_ + row*cellsize_),
+  //       0            
+  //     });
+  //     g.push_back(arr3f{
+  //       float(grid.minx_ + (col+1)*cellsize_),
+  //       float(grid.miny_ + row*cellsize_),
+  //       0            
+  //     });
+  //     g.push_back(arr3f{
+  //       float(grid.minx_ + (col+1)*cellsize_),
+  //       float(grid.miny_ + (row+1)*cellsize_),
+  //       0            
+  //     });
+  //     g.push_back(arr3f{
+  //       float(grid.minx_ + col*cellsize_),
+  //       float(grid.miny_ + (row+1)*cellsize_),
+  //       0            
+  //     });
+  //     auto lc = int(grid.getLinearCoord(row,col));
+  //     tile_geom_cnts.push_back(tile_cnts[lc]);
+  //     tile_geoms.push_back(g);
+  //     tile_geom_ids.push_back(lc);
+  //   }
+  // }
+}
+
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
 
@@ -362,6 +426,10 @@ int main(int argc, const char* argv[]) {
   // Compute batch tile regions
   // we just create one tile for now
   std::deque<BuildingTile> building_tiles;
+
+  for(auto& ipc: input_pointclouds) {
+    get_las_extents(ipc);
+  }
 
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
