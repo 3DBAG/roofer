@@ -125,6 +125,8 @@ struct RooferConfig {
   float cellsize = 0.5;
   int low_lod_area = 69000;
   float max_point_density_low_lod = 5;
+  float tilesize_x = 1000;
+  float tilesize_y = 1000;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -327,57 +329,25 @@ void get_las_extents(InputPointcloud& ipc) {
   }
 }
 
-void create_tiles() {
-  // auto& tile_geoms = vector_output("tile_geoms");
+std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi, double tilesize_x, double tilesize_y) {
 
-  // // get the intersection of footprints extent and pointcloud extent
+  size_t dimx_ = (roi.max()[0] - roi.min()[0]) / tilesize_x + 1;
+  size_t dimy_ = (roi.max()[1] - roi.min()[1]) / tilesize_y + 1;
+  std::vector<roofer::TBox<double>> tiles;
 
-  // // split up into tiles of predetermined cellsize
-
-  // Box bbox;
-  // for (size_t i=0; i<polygons.size(); ++i) {
-  //   bbox.add(polygons.get<LinearRing&>(i).box());
-  // }
-  // auto grid = RasterTools::Raster(cellsize_, bbox.min()[0], bbox.max()[0],
-  // bbox.min()[1], bbox.max()[1]);
-
-  // std::unordered_map<int, int> tile_cnts;
-  // for (size_t i=0; i<polygons.size(); ++i) {
-  //   auto c = polygons.get<LinearRing&>(i).box().center();
-  //   int lc = (int) grid.getLinearCoord(c[0], c[1]);
-  //   polygon_tile_ids.push_back(lc);
-  //   tile_cnts[lc]++;
-  // }
-
-  // for(size_t col=0; col < grid.dimx_; ++col) {
-  //   for(size_t row=0; row < grid.dimy_; ++row) {
-  //     LinearRing g;
-  //     g.push_back(arr3f{
-  //       float(grid.minx_ + col*cellsize_),
-  //       float(grid.miny_ + row*cellsize_),
-  //       0
-  //     });
-  //     g.push_back(arr3f{
-  //       float(grid.minx_ + (col+1)*cellsize_),
-  //       float(grid.miny_ + row*cellsize_),
-  //       0
-  //     });
-  //     g.push_back(arr3f{
-  //       float(grid.minx_ + (col+1)*cellsize_),
-  //       float(grid.miny_ + (row+1)*cellsize_),
-  //       0
-  //     });
-  //     g.push_back(arr3f{
-  //       float(grid.minx_ + col*cellsize_),
-  //       float(grid.miny_ + (row+1)*cellsize_),
-  //       0
-  //     });
-  //     auto lc = int(grid.getLinearCoord(row,col));
-  //     tile_geom_cnts.push_back(tile_cnts[lc]);
-  //     tile_geoms.push_back(g);
-  //     tile_geom_ids.push_back(lc);
-  //   }
-  // }
+  for(size_t col=0; col < dimx_; ++col) {
+    for(size_t row=0; row < dimy_; ++row) {
+      tiles.emplace_back(roofer::TBox<double>{
+        roi.min()[0] + col*tilesize_x,
+        roi.min()[1] + row*tilesize_y,
+        0.,
+        roi.min()[0] + (col+1)*tilesize_x,
+        roi.min()[1] + (row+1)*tilesize_y,
+        0.
+      });
+    }
+  }
+  return tiles;
 }
 
 int main(int argc, const char* argv[]) {
@@ -431,8 +401,7 @@ int main(int argc, const char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  // Compute batch tile regions
-  // we just create one tile for now
+  // precomputation for tiling
   std::deque<BuildingTile> building_tiles;
 
   for (auto& ipc : input_pointclouds) {
@@ -443,6 +412,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
+  // Compute batch tile regions
+  // we just create one tile for now
   {
     auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
@@ -451,13 +422,21 @@ int main(int argc, const char* argv[]) {
                 roofer_cfg.region_of_interest.has_value());
     logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
 
-    auto& building_tile = building_tiles.emplace_back();
-    building_tile.proj_helper = roofer::misc::createProjHelper();
+    roofer::TBox<double> roi;
     if (roofer_cfg.region_of_interest.has_value()) {
       // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
-      building_tile.extent = *roofer_cfg.region_of_interest;
+      roi = *roofer_cfg.region_of_interest;
     } else {
-      building_tile.extent = VectorReader->layer_extent;
+      roi = VectorReader->layer_extent;
+    }
+
+    // actual tiling
+    auto tile_extents = create_tiles(roi, roofer_cfg.tilesize_x, roofer_cfg.tilesize_y);
+
+    for(auto& tile : tile_extents) {
+      auto& building_tile = building_tiles.emplace_back();
+      building_tile.extent = tile;
+      building_tile.proj_helper = roofer::misc::createProjHelper();
     }
   }
   // Process tiles
