@@ -336,13 +336,18 @@ int main(int argc, const char* argv[]) {
   auto buffered_footprints = footprints;
   VectorOps->buffer_polygons(buffered_footprints);
 
+  roofer::Box polygon_extent;
+  for (auto& buf_ring : buffered_footprints) {
+    polygon_extent.add(buf_ring.box());
+  }
+
   // Crop all pointclouds
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
     PointCloudCropper->process(ipc.path, footprints, buffered_footprints,
                                ipc.building_clouds, ipc.ground_elevations,
-                               ipc.acquisition_years,
+                               ipc.acquisition_years, polygon_extent,
                                {.ground_class = ipc.grnd_class,
                                 .building_class = ipc.bld_class,
                                 .use_acquisition_year = use_acquisition_year});

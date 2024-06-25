@@ -52,11 +52,22 @@ void crop_tile(const roofer::TBox<double>& tile,
   auto buffered_footprints = footprints;
   vector_ops->buffer_polygons(buffered_footprints);
 
+  // compute true extent that includes all buffered footprints
+  roofer::Box polygon_extent;
+  for (auto& buf_ring : buffered_footprints) {
+    polygon_extent.add(buf_ring.box());
+  }
+
+  // transform back to input coordinates
+  roofer::TBox<double> polygon_extent_untransformed;
+      polygon_extent_untransformed.add(pj->coord_transform_rev(polygon_extent.pmin[0], polygon_extent.pmin[1], polygon_extent.pmin[2]));
+      polygon_extent_untransformed.add(pj->coord_transform_rev(polygon_extent.pmax[0], polygon_extent.pmax[1], polygon_extent.pmax[2]));
+
   // Crop all pointclouds
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
-    auto intersecting_files = ipc.rtree->query(vector_reader->layer_extent);
+    auto intersecting_files = ipc.rtree->query(polygon_extent_untransformed);
 
     std::vector<std::string> lasfiles;
     for (auto* file_extent_ : intersecting_files) {
@@ -66,7 +77,7 @@ void crop_tile(const roofer::TBox<double>& tile,
 
     PointCloudCropper->process(lasfiles, footprints, buffered_footprints,
                                ipc.building_clouds, ipc.ground_elevations,
-                               ipc.acquisition_years,
+                               ipc.acquisition_years, polygon_extent,
                                {.ground_class = ipc.grnd_class,
                                 .building_class = ipc.bld_class,
                                 .use_acquisition_year = use_acquisition_year});

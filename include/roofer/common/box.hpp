@@ -64,7 +64,7 @@ namespace roofer {
     void add(std::vector<std::array<T, 3>>& vec){
       for (auto& p : vec) add(p);
     };
-    bool intersects(TBox& otherBox) const {
+    bool intersects(const TBox& otherBox) const {
       bool intersect_x =
           (pmin[0] < otherBox.pmax[0]) && (pmax[0] > otherBox.pmin[0]);
       bool intersect_y =
