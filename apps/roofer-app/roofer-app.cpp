@@ -250,6 +250,15 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       config["parameters"]["max_point_density"].value<float>();
   if (max_point_density_.has_value())
     cfg.max_point_density = *max_point_density_;
+  
+  auto tilesize_x_ =
+      config["parameters"]["tilesize_x"].value<float>();
+  if (tilesize_x_.has_value())
+    cfg.tilesize_x = *tilesize_x_;
+  auto tilesize_y_ =
+      config["parameters"]["tilesize_y"].value<float>();
+  if (tilesize_y_.has_value())
+    cfg.tilesize_y = *tilesize_y_;
 
   auto cellsize_ = config["parameters"]["cellsize"].value<float>();
   if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
