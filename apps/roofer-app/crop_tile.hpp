@@ -3,7 +3,7 @@ void crop_tile(const roofer::TBox<double>& tile,
                BuildingTile& output_building_tile, RooferConfig& cfg) {
   auto& logger = roofer::logger::Logger::get_logger();
 
-  auto* pj = &output_building_tile.proj_helper;
+  auto& pj = output_building_tile.proj_helper;
   auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
   auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
   vector_writer->srs = cfg.output_crs;
