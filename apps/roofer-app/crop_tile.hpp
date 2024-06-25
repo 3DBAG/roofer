@@ -1,10 +1,10 @@
 void crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, RooferConfig& cfg,
-               roofer::misc::projHelperInterface* pj,
-               roofer::io::VectorReaderInterface* vector_reader) {
+               roofer::misc::projHelperInterface* pj) {
   auto& logger = roofer::logger::Logger::get_logger();
 
+  auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
   auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
   vector_writer->srs = cfg.output_crs;
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
@@ -14,6 +14,7 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // logger.info("region_of_interest.has_value()? {}",
   // region_of_interest.has_value()); if(region_of_interest.has_value())
+  vector_reader->open(cfg.source_footprints);
   vector_reader->region_of_interest = tile;
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
@@ -55,7 +56,7 @@ void crop_tile(const roofer::TBox<double>& tile,
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
-    auto intersecting_files = ipc.rtree->query(tile);
+    auto intersecting_files = ipc.rtree->query(vector_reader->layer_extent);
 
     std::vector<std::string> lasfiles;
     for (auto* file_extent_ : intersecting_files) {

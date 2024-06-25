@@ -145,32 +145,36 @@ namespace roofer::misc {
   struct RTreeGEOS : public RTreeInterface {
     GEOSSTRtree* tree;
     std::vector<GEOSGeometry*> geoms;
+    GEOSContextHandle_t gc_;
     
     RTreeGEOS() : RTreeInterface() {
-      tree = GEOSSTRtree_create(10);
+      gc_ = GEOS_init_r();
+      tree = GEOSSTRtree_create_r(gc_, 10);
     };
 
     ~RTreeGEOS() override {
-      GEOSSTRtree_destroy(tree);
-      for (auto box_g : geoms) GEOSGeom_destroy(box_g);
+      GEOSSTRtree_destroy_r(gc_, tree);
+      for (auto box_g : geoms) GEOSGeom_destroy_r(gc_, box_g);
     };
     
     void insert(const roofer::TBox<double>& box, void *item) override {
-      auto* box_g = GEOSGeom_createRectangle(box.pmin[0], box.pmin[1], box.pmax[0], box.pmax[1]);
-      GEOSSTRtree_insert(tree, box_g, item);
+      GEOSGeometry* box_g = GEOSGeom_createRectangle_r(gc_, box.pmin[0], box.pmin[1], box.pmax[0], box.pmax[1]);
+      auto& logger = logger::Logger::get_logger();
+      logger.info("WKT: {}", GEOSGeomToWKT_r(gc_, box_g));
+      GEOSSTRtree_insert_r(gc_, tree, box_g, item);
       geoms.push_back(box_g);
     };
 
     virtual std::vector<void*> query(const roofer::TBox<double>& query) override {
-      auto* query_g = GEOSGeom_createRectangle(query.pmin[0], query.pmin[1], query.pmax[0], query.pmax[1]);
+      auto* query_g = GEOSGeom_createRectangle_r(gc, query.pmin[0], query.pmin[1], query.pmax[0], query.pmax[1]);
       std::vector<void*> result;
-      GEOSSTRtree_query(
+      GEOSSTRtree_query_r(gc_,
         tree,              // STRTree to query
         query_g,        // GEOSGeometry query bounds
         itemQueryCallback, // Callback to process index entries that pass query
         &result);          // Userdata to hand to the callback
       /* Free the query bounds geometry */
-      GEOSGeom_destroy(query_g);
+      GEOSGeom_destroy_r(gc_, query_g);
       return result;
     };
     

@@ -114,7 +114,7 @@ struct BuildingTile {
 
 struct RooferConfig {
   // footprint source parameters
-  std::string path_footprints;
+  std::string source_footprints;
   std::string building_bid_attribute;
   std::string low_lod_attribute = "kas_warenhuis";
   std::string year_of_construction_attribute;
@@ -189,10 +189,10 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   toml::table config;
   config = toml::parse_file(config_path);
 
-  auto tml_path_footprints =
+  auto tml_source_footprints =
       config["input"]["footprint"]["path"].value<std::string>();
-  if (tml_path_footprints.has_value())
-    cfg.path_footprints = *tml_path_footprints;
+  if (tml_source_footprints.has_value())
+    cfg.source_footprints = *tml_source_footprints;
 
   auto id_attribute_ =
       config["input"]["footprint"]["id_attribute"].value<std::string>();
@@ -440,20 +440,21 @@ int main(int argc, const char* argv[]) {
   }
 
   auto pj = roofer::misc::createProjHelper();
-  auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
-  VectorReader->open(roofer_cfg.path_footprints);
-  logger.info("region_of_interest.has_value()? {}",
-              roofer_cfg.region_of_interest.has_value());
-  logger.info("Reading footprints from {}", roofer_cfg.path_footprints);
+  {
+    auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
+    VectorReader->open(roofer_cfg.source_footprints);
+    logger.info("region_of_interest.has_value()? {}",
+                roofer_cfg.region_of_interest.has_value());
+    logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
 
-  auto& building_tile = building_tiles.emplace_back();
-  if (roofer_cfg.region_of_interest.has_value()) {
-    // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
-    building_tile.extent = *roofer_cfg.region_of_interest;
-  } else {
-    building_tile.extent = VectorReader->layer_extent;
+    auto& building_tile = building_tiles.emplace_back();
+    if (roofer_cfg.region_of_interest.has_value()) {
+      // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
+      building_tile.extent = *roofer_cfg.region_of_interest;
+    } else {
+      building_tile.extent = VectorReader->layer_extent;
+    }
   }
-
   // Process tiles
   for (auto& building_tile : building_tiles) {
     // crop each tile
@@ -461,7 +462,7 @@ int main(int argc, const char* argv[]) {
               input_pointclouds,     // input pointclouds
               building_tile,         // output building data
               roofer_cfg,            // configuration parameters
-              pj.get(), VectorReader.get());
+              pj.get());
 
     // reconstruct buildings
     for (auto& building : building_tile.buildings) {
