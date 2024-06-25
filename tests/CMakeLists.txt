@@ -15,6 +15,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(wippolder)
 
 # API testing
+include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
                "${CMAKE_CURRENT_SOURCE_DIR}/reconstruct_api.cpp")
 set_target_properties("reconstruct_api" PROPERTIES CXX_STANDARD 20)
