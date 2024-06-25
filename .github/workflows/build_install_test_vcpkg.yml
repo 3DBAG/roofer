@@ -118,11 +118,11 @@ jobs:
       - name: Test
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --preset test-built --build-config ${{ matrix.build_type }} --test-dir build
+        run: ctest --preset test-built --build-config ${{ matrix.build_type }} --test-dir build --output-on-failure
 
       - name: Install
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
 
       - name: Test installed
         shell: bash
-        run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir build
+        run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir build --output-on-failure
