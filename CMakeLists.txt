@@ -39,6 +39,7 @@ find_package(
 find_package(nlohmann_json REQUIRED)
 find_package(GEOS CONFIG REQUIRED)
 find_package(laslib CONFIG REQUIRED)
+find_package(libfork CONFIG REQUIRED)
 
 # GDAL
 find_package(GDAL CONFIG REQUIRED)

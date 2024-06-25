@@ -20,6 +20,10 @@
         "recommended-features",
         "postgresql"
       ]
+    },
+    {
+      "name": "libfork",
+      "version>=": "3.8.0"
     }
   ],
   "overrides": [
