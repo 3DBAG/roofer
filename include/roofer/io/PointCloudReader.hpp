@@ -12,7 +12,7 @@ namespace roofer::io {
     virtual ~PointCloudReaderInterface() = default;
 
     virtual void open(const std::string& source) = 0;
-    
+
     virtual void close() = 0;
 
     virtual TBox<double> getExtent() = 0;

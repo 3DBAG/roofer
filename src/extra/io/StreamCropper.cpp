@@ -425,12 +425,12 @@ namespace roofer::io {
   struct PointCloudCropper : public PointCloudCropperInterface {
     using PointCloudCropperInterface::PointCloudCropperInterface;
 
-    void process(const std::vector<std::string>& lasfiles, std::vector<LinearRing>& polygons,
+    void process(const std::vector<std::string>& lasfiles,
+                 std::vector<LinearRing>& polygons,
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
                  vec1f& ground_elevations, vec1i& acquisition_years,
-                 const Box& polygon_extent,
-                 PointCloudCropperConfig cfg) {
+                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
@@ -440,12 +440,17 @@ namespace roofer::io {
 
       auto& logger = logger::Logger::get_logger();
 
-      PointsInPolygonsCollector pip_collector{
-          polygons,           buf_polygons,
-          point_clouds,       ground_elevations,
-          acquisition_years,  polygon_extent, cfg.cellsize,
-          cfg.buffer,         cfg.ground_class,
-          cfg.building_class, cfg.handle_overlap_points};
+      PointsInPolygonsCollector pip_collector{polygons,
+                                              buf_polygons,
+                                              point_clouds,
+                                              ground_elevations,
+                                              acquisition_years,
+                                              polygon_extent,
+                                              cfg.cellsize,
+                                              cfg.buffer,
+                                              cfg.ground_class,
+                                              cfg.building_class,
+                                              cfg.handle_overlap_points};
 
       for (auto lasfile : lasfiles) {
         LASreadOpener lasreadopener;
@@ -481,10 +486,8 @@ namespace roofer::io {
         // tell lasreader our area of interest. It will then use quadtree
         // indexing if available (.lax file created with lasindex)
         pjHelper.set_rev_crs_transform(wkt.c_str());
-        const auto aoi_min =
-            pjHelper.coord_transform_rev(polygon_extent.min());
-        const auto aoi_max =
-            pjHelper.coord_transform_rev(polygon_extent.max());
+        const auto aoi_min = pjHelper.coord_transform_rev(polygon_extent.min());
+        const auto aoi_max = pjHelper.coord_transform_rev(polygon_extent.max());
         pjHelper.clear_rev_crs_transform();
         // std::cout << lasreader->npoints << std::endl;
         // std::cout << lasreader->get_min_x() << " " << lasreader->get_min_y()
@@ -531,10 +534,11 @@ namespace roofer::io {
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
                  vec1f& ground_elevations, vec1i& acquisition_years,
-                 const Box& polygon_extent,
-                 PointCloudCropperConfig cfg) {
-      std::vector<std::string> lasfiles = roofer::find_filepaths(source, {".las", ".LAS", ".laz", ".LAZ"});
-      process(lasfiles, polygons, buf_polygons, point_clouds, ground_elevations, acquisition_years, polygon_extent, cfg);
+                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
+      std::vector<std::string> lasfiles =
+          roofer::find_filepaths(source, {".las", ".LAS", ".laz", ".LAZ"});
+      process(lasfiles, polygons, buf_polygons, point_clouds, ground_elevations,
+              acquisition_years, polygon_extent, cfg);
     }
   };
 

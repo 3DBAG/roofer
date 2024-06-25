@@ -3,13 +3,12 @@
 
 namespace roofer {
 
-  template<typename T> struct TBox {
+  template <typename T>
+  struct TBox {
     std::array<T, 3> pmin, pmax;
     bool just_cleared;
 
-    TBox(){
-      clear();
-    };
+    TBox() { clear(); };
 
     TBox(std::initializer_list<T> initList) {
       clear();
@@ -57,11 +56,12 @@ namespace roofer {
     void add(TBox& otherBox) {
       add(otherBox.min());
       add(otherBox.max());
-    };;
+    };
+    ;
     void add(const std::vector<std::array<T, 3>>& vec) {
       for (auto& p : vec) add(p);
     };
-    void add(std::vector<std::array<T, 3>>& vec){
+    void add(std::vector<std::array<T, 3>>& vec) {
       for (auto& p : vec) add(p);
     };
     bool intersects(const TBox& otherBox) const {
@@ -84,4 +84,4 @@ namespace roofer {
   };
 
   typedef TBox<float> Box;
-}
+}  // namespace roofer

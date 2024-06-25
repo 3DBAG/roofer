@@ -28,9 +28,9 @@ namespace roofer::io {
     }
 
     TBox<double> add_vertices_polygon(std::map<arr3d, size_t>& vertex_map,
-                             std::vector<arr3d>& vertex_vec,
-                             std::set<arr3d>& vertex_set,
-                             const LinearRing& polygon) {
+                                      std::vector<arr3d>& vertex_vec,
+                                      std::set<arr3d>& vertex_set,
+                                      const LinearRing& polygon) {
       TBox<double> bbox;
       add_vertices_ring(vertex_map, vertex_vec, vertex_set, polygon, bbox);
       for (auto& iring : polygon.interior_rings()) {
@@ -40,8 +40,9 @@ namespace roofer::io {
     }
 
     TBox<double> add_vertices_mesh(std::map<arr3d, size_t>& vertex_map,
-                          std::vector<arr3d>& vertex_vec,
-                          std::set<arr3d>& vertex_set, const Mesh& mesh) {
+                                   std::vector<arr3d>& vertex_vec,
+                                   std::set<arr3d>& vertex_set,
+                                   const Mesh& mesh) {
       TBox<double> bbox;
       for (auto& face : mesh.get_polygons()) {
         bbox.add(

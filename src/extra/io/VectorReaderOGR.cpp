@@ -246,7 +246,8 @@ namespace roofer::io {
       if (this->region_of_interest.has_value()) {
         logger.info("Setting spatial filter");
         auto& roi = *this->region_of_interest;
-        poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0], roi.pmax[1]);
+        poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0],
+                                      roi.pmax[1]);
       }
 
       // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <

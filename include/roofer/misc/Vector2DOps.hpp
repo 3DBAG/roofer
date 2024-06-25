@@ -6,10 +6,9 @@
 
 namespace roofer::misc {
   struct RTreeInterface {
-
     virtual ~RTreeInterface(){};
 
-    virtual void insert(const roofer::TBox<double>& box, void *item) = 0;
+    virtual void insert(const roofer::TBox<double>& box, void* item) = 0;
     virtual std::vector<void*> query(const roofer::TBox<double>& query) = 0;
   };
 

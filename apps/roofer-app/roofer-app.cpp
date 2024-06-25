@@ -12,8 +12,8 @@ namespace fs = std::filesystem;
 #include <roofer/common/datastructures.hpp>
 
 // crop
-#include <roofer/io/PointCloudWriter.hpp>
 #include <roofer/io/PointCloudReader.hpp>
+#include <roofer/io/PointCloudWriter.hpp>
 #include <roofer/io/RasterWriter.hpp>
 #include <roofer/io/StreamCropper.hpp>
 #include <roofer/io/VectorReader.hpp>
@@ -261,9 +261,9 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
          region_of_interest_->is_homogeneous(toml::node_type::integer))) {
       cfg.region_of_interest =
           roofer::TBox<double>{*region_of_interest_->get(0)->value<double>(),
-                                *region_of_interest_->get(1)->value<double>(),
-                                *region_of_interest_->get(2)->value<double>(),
-                                *region_of_interest_->get(3)->value<double>()};
+                               *region_of_interest_->get(1)->value<double>(),
+                               *region_of_interest_->get(2)->value<double>(),
+                               *region_of_interest_->get(3)->value<double>()};
     } else {
       logger.error("Failed to read parameter.region_of_interest");
     }
@@ -315,9 +315,11 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
-void get_las_extents(InputPointcloud& ipc) {;
+void get_las_extents(InputPointcloud& ipc) {
+  ;
   auto pj = roofer::misc::createProjHelper();
-  for(auto& fp : roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
+  for (auto& fp :
+       roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
     auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
     PointReader->open(fp);
     ipc.file_extents.push_back(std::make_pair(fp, PointReader->getExtent()));
@@ -335,7 +337,8 @@ void create_tiles() {
   // for (size_t i=0; i<polygons.size(); ++i) {
   //   bbox.add(polygons.get<LinearRing&>(i).box());
   // }
-  // auto grid = RasterTools::Raster(cellsize_, bbox.min()[0], bbox.max()[0], bbox.min()[1], bbox.max()[1]);
+  // auto grid = RasterTools::Raster(cellsize_, bbox.min()[0], bbox.max()[0],
+  // bbox.min()[1], bbox.max()[1]);
 
   // std::unordered_map<int, int> tile_cnts;
   // for (size_t i=0; i<polygons.size(); ++i) {
@@ -351,22 +354,22 @@ void create_tiles() {
   //     g.push_back(arr3f{
   //       float(grid.minx_ + col*cellsize_),
   //       float(grid.miny_ + row*cellsize_),
-  //       0            
+  //       0
   //     });
   //     g.push_back(arr3f{
   //       float(grid.minx_ + (col+1)*cellsize_),
   //       float(grid.miny_ + row*cellsize_),
-  //       0            
+  //       0
   //     });
   //     g.push_back(arr3f{
   //       float(grid.minx_ + (col+1)*cellsize_),
   //       float(grid.miny_ + (row+1)*cellsize_),
-  //       0            
+  //       0
   //     });
   //     g.push_back(arr3f{
   //       float(grid.minx_ + col*cellsize_),
   //       float(grid.miny_ + (row+1)*cellsize_),
-  //       0            
+  //       0
   //     });
   //     auto lc = int(grid.getLinearCoord(row,col));
   //     tile_geom_cnts.push_back(tile_cnts[lc]);
@@ -431,10 +434,10 @@ int main(int argc, const char* argv[]) {
   // we just create one tile for now
   std::deque<BuildingTile> building_tiles;
 
-  for(auto& ipc: input_pointclouds) {
+  for (auto& ipc : input_pointclouds) {
     get_las_extents(ipc);
     ipc.rtree = roofer::misc::createRTreeGEOS();
-    for (auto& item : ipc.file_extents){
+    for (auto& item : ipc.file_extents) {
       ipc.rtree->insert(item.second, &item);
     }
   }

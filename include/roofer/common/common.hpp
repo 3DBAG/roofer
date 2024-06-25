@@ -283,7 +283,8 @@ namespace roofer {
   std::vector<std::string> split_string(const std::string& s,
                                         std::string delimiter);
 
-  std::vector<std::string> find_filepaths(const std::string& path, std::initializer_list<std::string> extensions);
+  std::vector<std::string> find_filepaths(
+      const std::string& path, std::initializer_list<std::string> extensions);
 
   bool has_duplicates_ring(const vec3f& poly, const float& dupe_threshold);
   bool is_degenerate(const LinearRing& poly, const float& dupe_threshold);

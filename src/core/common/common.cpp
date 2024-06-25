@@ -16,9 +16,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <roofer/common/common.hpp>
-#include <initializer_list>
 #include <filesystem>
+#include <initializer_list>
+#include <roofer/common/common.hpp>
 
 namespace roofer {
 
@@ -356,22 +356,23 @@ namespace roofer {
     return parts;
   }
 
-  std::vector<std::string> find_filepaths(const std::string& filepaths, std::initializer_list<std::string> extensions) {
+  std::vector<std::string> find_filepaths(
+      const std::string& filepaths,
+      std::initializer_list<std::string> extensions) {
     std::vector<std::string> files;
     std::vector<std::string> filepath_parts = split_string(filepaths, " ");
-    for (const auto &filepath_part : filepath_parts) {
+    for (const auto& filepath_part : filepath_parts) {
       if (fs::is_directory(filepath_part)) {
         for (auto& p : fs::directory_iterator(filepath_part)) {
           auto ext = p.path().extension();
-          for(auto& filter_ext : extensions) {
+          for (auto& filter_ext : extensions) {
             if (filter_ext == ext) {
               files.push_back(p.path().string());
             }
           }
         }
       } else {
-        if (fs::exists(filepath_part))
-          files.push_back(filepath_part);
+        if (fs::exists(filepath_part)) files.push_back(filepath_part);
       }
     }
     return files;

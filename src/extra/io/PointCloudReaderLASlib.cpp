@@ -60,7 +60,7 @@ namespace roofer::io {
       if (!lasreader) throw(rooferException("Open failed on " + source));
     }
 
-    void close () {
+    void close() {
       if (lasreader) {
         lasreader->close();
         delete lasreader;
@@ -68,14 +68,9 @@ namespace roofer::io {
     }
 
     TBox<double> getExtent() {
-      return {
-        lasreader->get_min_x(),
-        lasreader->get_min_y(),
-        lasreader->get_min_z(),
-        lasreader->get_max_x(),
-        lasreader->get_max_y(),
-        lasreader->get_max_z()
-      };
+      return {lasreader->get_min_x(), lasreader->get_min_y(),
+              lasreader->get_min_z(), lasreader->get_max_x(),
+              lasreader->get_max_y(), lasreader->get_max_z()};
     }
 
     virtual void readPointCloud(PointCollection& points, vec1i* classification,

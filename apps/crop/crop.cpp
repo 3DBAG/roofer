@@ -221,13 +221,12 @@ int main(int argc, const char* argv[]) {
           (region_of_interest_->is_homogeneous(
                toml::node_type::floating_point) ||
            region_of_interest_->is_homogeneous(toml::node_type::integer))) {
-        region_of_interest = {
-            *region_of_interest_->get(0)->value<double>(),
-            *region_of_interest_->get(1)->value<double>(),
-            0,
-            *region_of_interest_->get(2)->value<double>(),
-            *region_of_interest_->get(3)->value<double>(),
-            0};
+        region_of_interest = {*region_of_interest_->get(0)->value<double>(),
+                              *region_of_interest_->get(1)->value<double>(),
+                              0,
+                              *region_of_interest_->get(2)->value<double>(),
+                              *region_of_interest_->get(3)->value<double>(),
+                              0};
       } else {
         logger.error("Failed to read parameter.region_of_interest");
       }

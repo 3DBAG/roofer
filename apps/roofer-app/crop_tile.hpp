@@ -60,8 +60,10 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // transform back to input coordinates
   roofer::TBox<double> polygon_extent_untransformed;
-      polygon_extent_untransformed.add(pj->coord_transform_rev(polygon_extent.pmin[0], polygon_extent.pmin[1], polygon_extent.pmin[2]));
-      polygon_extent_untransformed.add(pj->coord_transform_rev(polygon_extent.pmax[0], polygon_extent.pmax[1], polygon_extent.pmax[2]));
+  polygon_extent_untransformed.add(pj->coord_transform_rev(
+      polygon_extent.pmin[0], polygon_extent.pmin[1], polygon_extent.pmin[2]));
+  polygon_extent_untransformed.add(pj->coord_transform_rev(
+      polygon_extent.pmax[0], polygon_extent.pmax[1], polygon_extent.pmax[2]));
 
   // Crop all pointclouds
   for (auto& ipc : input_pointclouds) {
