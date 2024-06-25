@@ -109,6 +109,7 @@ struct BuildingTile {
   roofer::AttributeVecMap attributes;
   // offset
   roofer::arr3d data_offset;
+  std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
   // extent
   roofer::TBox<double> extent;
 };
@@ -443,8 +444,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  auto pj = roofer::misc::createProjHelper();
   {
+    auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
     VectorReader->open(roofer_cfg.source_footprints);
     logger.info("region_of_interest.has_value()? {}",
@@ -452,6 +453,7 @@ int main(int argc, const char* argv[]) {
     logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
 
     auto& building_tile = building_tiles.emplace_back();
+    proj_helper.proj_helper = roofer::misc::createProjHelper();
     if (roofer_cfg.region_of_interest.has_value()) {
       // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
       building_tile.extent = *roofer_cfg.region_of_interest;
@@ -473,7 +475,7 @@ int main(int argc, const char* argv[]) {
     }
 
     // output reconstructed buildings
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
+    auto CityJsonWriter = roofer::io::createCityJsonWriter(building_tile.proj_helper);
     for (auto& building : building_tile.buildings) {
       std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
           multisolidvec13, multisolidvec22;
