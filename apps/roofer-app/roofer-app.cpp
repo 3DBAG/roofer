@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 namespace fs = std::filesystem;
 
@@ -52,6 +53,8 @@ namespace fs = std::filesystem;
 // roofer reconstruct
 // roofer tile
 
+using fileExtent = std::pair<std::string, roofer::TBox<double>>;
+
 struct InputPointcloud {
   std::string path;
   std::string name;
@@ -61,6 +64,7 @@ struct InputPointcloud {
   int grnd_class = 2;
   bool force_low_lod = false;
   bool select_only_for_date = false;
+
   roofer::vec1f nodata_radii;
   roofer::vec1f nodata_fractions;
   roofer::vec1f pt_densities;
@@ -70,6 +74,9 @@ struct InputPointcloud {
   std::vector<roofer::ImageMap> building_rasters;
   roofer::vec1f ground_elevations;
   roofer::vec1i acquisition_years;
+
+  std::unique_ptr<roofer::misc::RTreeInterface> rtree;
+  std::vector<fileExtent> file_extents;
 };
 
 struct BuildingObject {
@@ -102,7 +109,7 @@ struct BuildingTile {
   roofer::AttributeVecMap attributes;
   // offset
   // extent
-  std::array<double, 4> extent;
+  roofer::TBox<double> extent;
 };
 
 struct RooferConfig {
@@ -125,7 +132,7 @@ struct RooferConfig {
   bool write_index = false;
 
   // general parameters
-  std::optional<std::array<double, 4>> region_of_interest;
+  std::optional<roofer::TBox<double>> region_of_interest;
   std::string output_crs;
 
   // crop output
@@ -204,7 +211,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
     // visitation with for_each() helps deal with heterogeneous data
     for (auto& el : *arr) {
       toml::table* tb = el.as_table();
-      InputPointcloud pc;
+      auto& pc = input_pointclouds.emplace_back();
 
       if (auto n = (*tb)["name"].value<std::string>(); n.has_value()) {
         pc.name = *n;
@@ -233,7 +240,6 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       if (tml_path.has_value()) {
         pc.path = *tml_path;
       }
-      input_pointclouds.push_back(pc);
     };
   }
 
@@ -254,7 +260,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
         (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
          region_of_interest_->is_homogeneous(toml::node_type::integer))) {
       cfg.region_of_interest =
-          std::array<double, 4>{*region_of_interest_->get(0)->value<double>(),
+          roofer::TBox<double>{*region_of_interest_->get(0)->value<double>(),
                                 *region_of_interest_->get(1)->value<double>(),
                                 *region_of_interest_->get(2)->value<double>(),
                                 *region_of_interest_->get(3)->value<double>()};
@@ -309,15 +315,13 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
-std::unordered_map<std::string, roofer::TBox<double>> get_las_extents(const InputPointcloud& ipc) {;
-  std::unordered_map<std::string, roofer::TBox<double>> extents;
+void get_las_extents(InputPointcloud& ipc) {;
   auto pj = roofer::misc::createProjHelper();
   for(auto& fp : roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
     auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
     PointReader->open(fp);
-    extents[fp] = PointReader->getExtent();
+    ipc.file_extents.push_back(std::make_pair(fp, PointReader->getExtent()));
   }
-  return extents;
 }
 
 void create_tiles() {
@@ -429,6 +433,10 @@ int main(int argc, const char* argv[]) {
 
   for(auto& ipc: input_pointclouds) {
     get_las_extents(ipc);
+    ipc.rtree = roofer::misc::createRTreeGEOS();
+    for (auto& item : ipc.file_extents){
+      ipc.rtree->insert(item.second, &item);
+    }
   }
 
   auto pj = roofer::misc::createProjHelper();

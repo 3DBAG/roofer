@@ -1,4 +1,4 @@
-void crop_tile(const std::array<double, 4>& tile,
+void crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, RooferConfig& cfg,
                roofer::misc::projHelperInterface* pj,
@@ -55,7 +55,15 @@ void crop_tile(const std::array<double, 4>& tile,
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
-    PointCloudCropper->process(ipc.path, footprints, buffered_footprints,
+    auto intersecting_files = ipc.rtree->query(tile);
+
+    std::vector<std::string> lasfiles;
+    for (auto* file_extent_ : intersecting_files) {
+      auto* file_extent = static_cast<fileExtent*>(file_extent_);
+      lasfiles.push_back(file_extent->first);
+    }
+
+    PointCloudCropper->process(lasfiles, footprints, buffered_footprints,
                                ipc.building_clouds, ipc.ground_elevations,
                                ipc.acquisition_years,
                                {.ground_class = ipc.grnd_class,

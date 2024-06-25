@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <geos_c.h>
+
 #include <roofer/logger/logger.h>
 
 #include <roofer/misc/Vector2DOps.hpp>
+#include <vector>
 
 namespace roofer::misc {
 
@@ -134,6 +136,49 @@ namespace roofer::misc {
     }
     return lr;
   }
+
+  void itemQueryCallback(void* item, void* userdata)
+  {
+      std::vector<void*>* vecdata = static_cast<std::vector<void*>*>(userdata);
+      vecdata->push_back(item);
+  }
+  struct RTreeGEOS : public RTreeInterface {
+    GEOSSTRtree* tree;
+    std::vector<GEOSGeometry*> geoms;
+    
+    RTreeGEOS() : RTreeInterface() {
+      tree = GEOSSTRtree_create(10);
+    };
+
+    ~RTreeGEOS() override {
+      GEOSSTRtree_destroy(tree);
+      for (auto box_g : geoms) GEOSGeom_destroy(box_g);
+    };
+    
+    void insert(const roofer::TBox<double>& box, void *item) override {
+      auto* box_g = GEOSGeom_createRectangle(box.pmin[0], box.pmin[1], box.pmax[0], box.pmax[1]);
+      GEOSSTRtree_insert(tree, box_g, item);
+      geoms.push_back(box_g);
+    };
+
+    virtual std::vector<void*> query(const roofer::TBox<double>& query) override {
+      auto* query_g = GEOSGeom_createRectangle(query.pmin[0], query.pmin[1], query.pmax[0], query.pmax[1]);
+      std::vector<void*> result;
+      GEOSSTRtree_query(
+        tree,              // STRTree to query
+        query_g,        // GEOSGeometry query bounds
+        itemQueryCallback, // Callback to process index entries that pass query
+        &result);          // Userdata to hand to the callback
+      /* Free the query bounds geometry */
+      GEOSGeom_destroy(query_g);
+      return result;
+    };
+    
+  };
+
+  std::unique_ptr<RTreeInterface> createRTreeGEOS() {
+    return std::make_unique<RTreeGEOS>();
+  };
 
   struct Vector2DOpsGEOS : public Vector2DOpsInterface {
     void simplify_polygons(std::vector<LinearRing>& polygons, float tolerance,

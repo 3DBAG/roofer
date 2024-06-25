@@ -3,12 +3,10 @@
 
 namespace roofer {
 
-  template<typename T> class TBox {
-   private:
+  template<typename T> struct TBox {
     std::array<T, 3> pmin, pmax;
     bool just_cleared;
 
-   public:
     TBox(){
       clear();
     };
