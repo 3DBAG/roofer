@@ -66,7 +66,7 @@ namespace roofer {
    * @param cfg Configuration parameters
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(
+  std::vector<Mesh> reconstruct(
       const PointCollection& points_roof, const PointCollection& points_ground,
       Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
@@ -210,12 +210,11 @@ namespace roofer {
    * //todo doc
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct_single_instance(
+  std::vector<Mesh> reconstruct(
       const PointCollection& points_roof, Footprint& footprint,
       ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();
-    return reconstruct_single_instance(points_roof, points_ground, footprint,
-                                       cfg);
+    return reconstruct(points_roof, points_ground, footprint, cfg);
   }
 
   // todo maybe move to another location
