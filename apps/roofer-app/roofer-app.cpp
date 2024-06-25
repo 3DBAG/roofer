@@ -108,6 +108,7 @@ struct BuildingTile {
   std::deque<BuildingObject> buildings;
   roofer::AttributeVecMap attributes;
   // offset
+  roofer::arr3d data_offset;
   // extent
   roofer::TBox<double> extent;
 };
@@ -464,8 +465,7 @@ int main(int argc, const char* argv[]) {
     crop_tile(building_tile.extent,  // tile extent
               input_pointclouds,     // input pointclouds
               building_tile,         // output building data
-              roofer_cfg,            // configuration parameters
-              pj.get());
+              roofer_cfg);           // configuration parameters
 
     // reconstruct buildings
     for (auto& building : building_tile.buildings) {

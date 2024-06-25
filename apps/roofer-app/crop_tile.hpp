@@ -1,9 +1,9 @@
 void crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
-               BuildingTile& output_building_tile, RooferConfig& cfg,
-               roofer::misc::projHelperInterface* pj) {
+               BuildingTile& output_building_tile, RooferConfig& cfg) {
   auto& logger = roofer::logger::Logger::get_logger();
 
+  auto pj = roofer::misc::createProjHelper();
   auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
   auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
   vector_writer->srs = cfg.output_crs;
@@ -89,6 +89,7 @@ void crop_tile(const roofer::TBox<double>& tile,
                 ipc.date);
     }
   }
+  output_building_tile.data_offset = *pj->data_offset;
 
   // compute rasters
   // thin
