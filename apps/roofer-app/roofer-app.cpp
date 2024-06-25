@@ -250,15 +250,11 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       config["parameters"]["max_point_density"].value<float>();
   if (max_point_density_.has_value())
     cfg.max_point_density = *max_point_density_;
-  
-  auto tilesize_x_ =
-      config["parameters"]["tilesize_x"].value<float>();
-  if (tilesize_x_.has_value())
-    cfg.tilesize_x = *tilesize_x_;
-  auto tilesize_y_ =
-      config["parameters"]["tilesize_y"].value<float>();
-  if (tilesize_y_.has_value())
-    cfg.tilesize_y = *tilesize_y_;
+
+  auto tilesize_x_ = config["parameters"]["tilesize_x"].value<float>();
+  if (tilesize_x_.has_value()) cfg.tilesize_x = *tilesize_x_;
+  auto tilesize_y_ = config["parameters"]["tilesize_y"].value<float>();
+  if (tilesize_y_.has_value()) cfg.tilesize_y = *tilesize_y_;
 
   auto cellsize_ = config["parameters"]["cellsize"].value<float>();
   if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
@@ -338,22 +334,19 @@ void get_las_extents(InputPointcloud& ipc) {
   }
 }
 
-std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi, double tilesize_x, double tilesize_y) {
-
+std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
+                                               double tilesize_x,
+                                               double tilesize_y) {
   size_t dimx_ = (roi.max()[0] - roi.min()[0]) / tilesize_x + 1;
   size_t dimy_ = (roi.max()[1] - roi.min()[1]) / tilesize_y + 1;
   std::vector<roofer::TBox<double>> tiles;
 
-  for(size_t col=0; col < dimx_; ++col) {
-    for(size_t row=0; row < dimy_; ++row) {
+  for (size_t col = 0; col < dimx_; ++col) {
+    for (size_t row = 0; row < dimy_; ++row) {
       tiles.emplace_back(roofer::TBox<double>{
-        roi.min()[0] + col*tilesize_x,
-        roi.min()[1] + row*tilesize_y,
-        0.,
-        roi.min()[0] + (col+1)*tilesize_x,
-        roi.min()[1] + (row+1)*tilesize_y,
-        0.
-      });
+          roi.min()[0] + col * tilesize_x, roi.min()[1] + row * tilesize_y, 0.,
+          roi.min()[0] + (col + 1) * tilesize_x,
+          roi.min()[1] + (row + 1) * tilesize_y, 0.});
     }
   }
   return tiles;
@@ -440,9 +433,10 @@ int main(int argc, const char* argv[]) {
     }
 
     // actual tiling
-    auto tile_extents = create_tiles(roi, roofer_cfg.tilesize_x, roofer_cfg.tilesize_y);
+    auto tile_extents =
+        create_tiles(roi, roofer_cfg.tilesize_x, roofer_cfg.tilesize_y);
 
-    for(auto& tile : tile_extents) {
+    for (auto& tile : tile_extents) {
       auto& building_tile = building_tiles.emplace_back();
       building_tile.extent = tile;
       building_tile.proj_helper = roofer::misc::createProjHelper();
@@ -462,7 +456,8 @@ int main(int argc, const char* argv[]) {
     }
 
     // output reconstructed buildings
-    auto CityJsonWriter = roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+    auto CityJsonWriter =
+        roofer::io::createCityJsonWriter(*building_tile.proj_helper);
     for (auto& building : building_tile.buildings) {
       std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
           multisolidvec13, multisolidvec22;
