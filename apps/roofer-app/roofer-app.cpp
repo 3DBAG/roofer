@@ -1,8 +1,10 @@
+#include <atomic>
+#include <condition_variable>
 #include <deque>
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <utility>
+#include <thread>
 #include <vector>
 namespace fs = std::filesystem;
 
@@ -48,6 +50,8 @@ namespace fs = std::filesystem;
 
 #include "argh.h"
 #include "git.h"
+#include "libfork/core.hpp"
+#include "libfork/schedule.hpp"
 #include "toml.hpp"
 // roofer crop
 // roofer reconstruct
@@ -352,6 +356,35 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
+inline constexpr auto reconstruct_building_coro =
+    [](auto reconstruct_building_coro,
+       BuildingObject building_object) -> lf::task<BuildingObject> {
+  reconstruct_building(building_object);
+  co_return building_object;
+};
+
+// Ref:
+// https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
+inline constexpr auto reconstruct_parallel =
+    [](auto reconstruct_parallel, std::span<BuildingObject> cropped_buildings)
+    -> lf::task<std::vector<BuildingObject>> {
+  // Allocate space for results, outputs is a std::span<Points>
+  auto [outputs] =
+      co_await lf::co_new<BuildingObject>(cropped_buildings.size());
+
+  for (std::size_t i = 0; i < cropped_buildings.size(); ++i) {
+    co_await lf::fork[&outputs[i], reconstruct_building_coro](
+        cropped_buildings[i]);
+  }
+
+  co_await lf::join;  // Wait for all tasks to complete.
+
+  std::vector<BuildingObject> o{};
+  o.assign(outputs.begin(), outputs.end());
+
+  co_return o;
+};
+
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
 
@@ -442,38 +475,108 @@ int main(int argc, const char* argv[]) {
       building_tile.proj_helper = roofer::misc::createProjHelper();
     }
   }
+
+  // Multithreading setup
+  unsigned int nthreads = std::thread::hardware_concurrency();
+  // -3, because we need one thread for crop, reconstruct, serialize each
+  lf::lazy_pool pool(nthreads - 3);
+
+  std::mutex cropped_mutex;  // protects the cropped queue
+  std::deque<BuildingTile> deque_cropped;
+  std::condition_variable cropped_pending;
+
+  std::mutex reconstructed_mutex;  // protects the reconstructed queue
+  std::deque<BuildingTile> deque_reconstructed;
+  std::condition_variable reconstructed_pending;
+
+  std::atomic crop_running{true};
+  std::atomic reconstruction_running{true};
+
   // Process tiles
-  for (auto& building_tile : building_tiles) {
-    // crop each tile
-    crop_tile(building_tile.extent,  // tile extent
-              input_pointclouds,     // input pointclouds
-              building_tile,         // output building data
-              roofer_cfg);           // configuration parameters
-
-    // reconstruct buildings
-    for (auto& building : building_tile.buildings) {
-      reconstruct_building(building);
+  std::thread cropper([&]() {
+    for (auto& building_tile : building_tiles) {
+      // crop each tile
+      crop_tile(building_tile.extent,  // tile extent
+                input_pointclouds,     // input pointclouds
+                building_tile,         // output building data
+                roofer_cfg);           // configuration parameters
+      {
+        std::scoped_lock lock{cropped_mutex};
+        deque_cropped.push_back(std::move(building_tile));
+      }
+      cropped_pending.notify_one();
     }
+    crop_running.store(false);
+  });
 
-    // output reconstructed buildings
-    auto CityJsonWriter =
-        roofer::io::createCityJsonWriter(*building_tile.proj_helper);
-    for (auto& building : building_tile.buildings) {
-      std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
-          multisolidvec13, multisolidvec22;
-      multisolidvec12.push_back(building.multisolids_lod12);
-      multisolidvec13.push_back(building.multisolids_lod13);
-      multisolidvec22.push_back(building.multisolids_lod22);
-      std::vector<roofer::LinearRing> footprints{building.footprint};
+  std::thread reconstructor([&]() {
+    while (crop_running.load()) {
+      std::unique_lock lock{cropped_mutex};
+      cropped_pending.wait(lock);
+      if (deque_cropped.empty()) continue;
+      // Temporary queue so we can quickly move off items of the producer queue
+      // and process them independently.
+      auto pending_cropped{std::move(deque_cropped)};
+      deque_cropped.clear();
+      lock.unlock();
 
-      // TODO: fix attributes
-      CityJsonWriter->write(building.jsonl_path, footprints, &multisolidvec12,
-                            &multisolidvec13, &multisolidvec22,
-                            building_tile.attributes);
-      logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
+      while (!pending_cropped.empty()) {
+        auto& building_tile = pending_cropped.front();
+        // reconstruct buildings
+        for (auto& building : building_tile.buildings) {
+          reconstruct_building(building);
+        }
+        // auto reconstructed_one_laz =
+        //     lf::sync_wait(pool, reconstruct_parallel,
+        //     pending_cropped.front());
+        {
+          std::scoped_lock lock_reconstructed{reconstructed_mutex};
+          deque_reconstructed.push_back(std::move(building_tile));
+        }
+        reconstructed_pending.notify_one();
+        pending_cropped.pop_front();
+      }
     }
+    reconstruction_running.store(false);
+  });
 
-    // buildings are finishes processing so they can be cleared
-    building_tile.buildings.clear();
-  }
+  std::thread serializer([&]() {
+    while (reconstruction_running.load()) {
+      std::unique_lock lock{reconstructed_mutex};
+      reconstructed_pending.wait(lock);
+      if (deque_reconstructed.empty()) continue;
+      auto pending_reconstructed{std::move(deque_reconstructed)};
+      deque_reconstructed.clear();
+      lock.unlock();
+
+      while (!pending_reconstructed.empty()) {
+        auto& building_tile = pending_reconstructed.front();
+        // output reconstructed buildings
+        auto CityJsonWriter =
+            roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+        for (auto& building : building_tile.buildings) {
+          std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
+              multisolidvec13, multisolidvec22;
+          multisolidvec12.push_back(building.multisolids_lod12);
+          multisolidvec13.push_back(building.multisolids_lod13);
+          multisolidvec22.push_back(building.multisolids_lod22);
+          std::vector<roofer::LinearRing> footprints{building.footprint};
+
+          // TODO: fix attributes
+          CityJsonWriter->write(building.jsonl_path, footprints,
+                                &multisolidvec12, &multisolidvec13,
+                                &multisolidvec22, building_tile.attributes);
+          logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
+        }
+
+        // buildings are finishes processing so they can be cleared
+        building_tile.buildings.clear();
+        pending_reconstructed.pop_front();
+      }
+    }
+  });
+
+  cropper.join();
+  reconstructor.join();
+  serializer.join();
 }
