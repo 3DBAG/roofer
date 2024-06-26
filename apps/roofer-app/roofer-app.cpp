@@ -356,6 +356,8 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
+// Coroutine wrapper for reconstructing a single building.
+// Because, libfork::fork requires an awaitable function.
 inline constexpr auto reconstruct_building_coro =
     [](auto reconstruct_building_coro,
        BuildingObject building_object) -> lf::task<BuildingObject> {
@@ -363,26 +365,26 @@ inline constexpr auto reconstruct_building_coro =
   co_return building_object;
 };
 
+// Parallel reconstruction of a single BuildingTile.
+// Uses the fork-join method, with the `libfork` library.
+// Coroutines should take arguments by value.
 // Ref:
 // https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
-inline constexpr auto reconstruct_parallel =
-    [](auto reconstruct_parallel, std::span<BuildingObject> cropped_buildings)
-    -> lf::task<std::vector<BuildingObject>> {
+inline constexpr auto reconstruct_tile_parallel =
+    [](auto reconstruct_tile_parallel,
+       BuildingTile building_tile) -> lf::task<BuildingTile> {
   // Allocate space for results, outputs is a std::span<Points>
   auto [outputs] =
-      co_await lf::co_new<BuildingObject>(cropped_buildings.size());
+      co_await lf::co_new<BuildingObject>(building_tile.buildings.size());
 
-  for (std::size_t i = 0; i < cropped_buildings.size(); ++i) {
+  for (std::size_t i = 0; i < building_tile.buildings.size(); ++i) {
     co_await lf::fork[&outputs[i], reconstruct_building_coro](
-        cropped_buildings[i]);
+        building_tile.buildings[i]);
   }
-
   co_await lf::join;  // Wait for all tasks to complete.
 
-  std::vector<BuildingObject> o{};
-  o.assign(outputs.begin(), outputs.end());
-
-  co_return o;
+  building_tile.buildings.assign(outputs.begin(), outputs.end());
+  co_return building_tile;
 };
 
 int main(int argc, const char* argv[]) {
@@ -522,16 +524,11 @@ int main(int argc, const char* argv[]) {
 
       while (!pending_cropped.empty()) {
         auto& building_tile = pending_cropped.front();
-        // reconstruct buildings
-        for (auto& building : building_tile.buildings) {
-          reconstruct_building(building);
-        }
-        // auto reconstructed_one_laz =
-        //     lf::sync_wait(pool, reconstruct_parallel,
-        //     pending_cropped.front());
+        auto reconstructed_tile = lf::sync_wait(pool, reconstruct_tile_parallel,
+                                                std::move(building_tile));
         {
           std::scoped_lock lock_reconstructed{reconstructed_mutex};
-          deque_reconstructed.push_back(std::move(building_tile));
+          deque_reconstructed.push_back(std::move(reconstructed_tile));
         }
         reconstructed_pending.notify_one();
         pending_cropped.pop_front();
