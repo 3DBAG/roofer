@@ -95,7 +95,6 @@ namespace roofer::linereg {
   void AngleCluster::calc_mean_value() { value = calc_mean_angle(lines); }
 
   double DistCluster::distance(Cluster<Segment_2>* other_cluster) {
-    std::cout << value << " | " << other_cluster->value << std::endl;
     return CGAL::to_double(CGAL::squared_distance(value, other_cluster->value));
   }
   void DistCluster::calc_mean_value() {
