@@ -378,8 +378,8 @@ inline constexpr auto reconstruct_tile_parallel =
       co_await lf::co_new<BuildingObject>(building_tile.buildings.size());
 
   for (std::size_t i = 0; i < building_tile.buildings.size(); ++i) {
-    co_await lf::fork[&outputs[i], reconstruct_building_coro](
-        building_tile.buildings[i]);
+    co_await lf::fork(&outputs[i],
+                      reconstruct_building_coro)(building_tile.buildings[i]);
   }
   co_await lf::join;  // Wait for all tasks to complete.
 
