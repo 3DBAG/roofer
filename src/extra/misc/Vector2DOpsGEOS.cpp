@@ -167,7 +167,7 @@ namespace roofer::misc {
     virtual std::vector<void*> query(
         const roofer::TBox<double>& query) override {
       auto* query_g = GEOSGeom_createRectangle_r(
-          gc, query.pmin[0], query.pmin[1], query.pmax[0], query.pmax[1]);
+          gc_, query.pmin[0], query.pmin[1], query.pmax[0], query.pmax[1]);
       std::vector<void*> result;
       GEOSSTRtree_query_r(gc_,
                           tree,               // STRTree to query
