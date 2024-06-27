@@ -50,6 +50,7 @@ namespace fs = std::filesystem;
 
 #include "argh.h"
 #include "git.h"
+#undef LF_USE_HWLOC
 #include "libfork/core.hpp"
 #include "libfork/schedule.hpp"
 #include "toml.hpp"
