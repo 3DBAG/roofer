@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.25)
 project(roofer LANGUAGES C CXX)
 
 # Options
-option(RF_USE_LOGGER_SPDLOG "Whether to use spdlog as logging backend." OFF)
+option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
@@ -84,15 +84,12 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:precise")
 endif()
 
-# Use configure files to configure compile-time variable for using them runtime,
-# e.g. version numbers and feature flags
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(src)
 if(RF_BUILD_TESTING)
+  find_package(Catch2 3 REQUIRED)
   include(FetchContent)
   enable_testing()
-  # We use the apps in the integration tests, so we need to build them here
-  # add_subdirectory(apps)
   add_subdirectory(tests)
 endif()
 

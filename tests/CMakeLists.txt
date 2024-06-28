@@ -14,10 +14,17 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
-# API testing
+# --- Library testing
+include(Catch)
+
+add_executable("test_logger" "${CMAKE_CURRENT_SOURCE_DIR}/test_logger.cpp")
+target_link_libraries("test_logger" PUBLIC logger)
+target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
+
+# --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
-               "${CMAKE_CURRENT_SOURCE_DIR}/reconstruct_api.cpp")
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_reconstruct_api.cpp")
 set_target_properties("reconstruct_api" PROPERTIES CXX_STANDARD 20)
 target_link_libraries("reconstruct_api" PRIVATE roofer-extra
                                                 cmake_git_version_tracking)
@@ -28,7 +35,7 @@ add_test(
 set(tests_api "reconstruct-api-wippolder")
 set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
-# Integration tests that are run on the built executables, before installation.
+# --- Integration tests that are run on the built executables, before installation.
 if(RF_BUILD_APPS)
   add_test(
     NAME "crop-wippolder"
