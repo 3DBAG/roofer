@@ -272,6 +272,7 @@ void crop_tile(const roofer::TBox<double>& tile,
     // output to BuildingTile
     {
       BuildingObject& building = output_building_tile.buildings.emplace_back();
+      building.attribute_index = i;
 
       building.pointcloud =
           input_pointclouds[selected->index].building_clouds[i];

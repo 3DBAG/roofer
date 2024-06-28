@@ -1,5 +1,6 @@
 #include <atomic>
 #include <condition_variable>
+#include <cstddef>
 #include <deque>
 #include <filesystem>
 #include <iostream>
@@ -91,6 +92,8 @@ struct BuildingObject {
   std::unordered_map<int, roofer::Mesh> multisolids_lod12;
   std::unordered_map<int, roofer::Mesh> multisolids_lod13;
   std::unordered_map<int, roofer::Mesh> multisolids_lod22;
+
+  size_t attribute_index;
 
   // set in crop
   std::string jsonl_path;
@@ -553,17 +556,10 @@ int main(int argc, const char* argv[]) {
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
         for (auto& building : building_tile.buildings) {
-          std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec12,
-              multisolidvec13, multisolidvec22;
-          multisolidvec12.push_back(building.multisolids_lod12);
-          multisolidvec13.push_back(building.multisolids_lod13);
-          multisolidvec22.push_back(building.multisolids_lod22);
-          std::vector<roofer::LinearRing> footprints{building.footprint};
 
-          // TODO: fix attributes
-          CityJsonWriter->write(building.jsonl_path, footprints,
-                                &multisolidvec12, &multisolidvec13,
-                                &multisolidvec22, building_tile.attributes);
+          CityJsonWriter->write(building.jsonl_path, building.footprint,
+                                &building.multisolids_lod12, &building.multisolids_lod13,
+                                &building.multisolids_lod22, building_tile.attributes, building.attribute_index);
           logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
         }
 
