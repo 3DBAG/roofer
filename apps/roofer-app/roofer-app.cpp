@@ -503,8 +503,14 @@ int main(int argc, const char* argv[]) {
   std::atomic crop_running{true};
   std::atomic reconstruction_running{true};
 
+  // Counters for tracing
+  std::atomic<unsigned int> cropped_count = 0;
+  std::atomic<unsigned int> reconstructed_count = 0;
+  std::atomic<unsigned int> serialized_count = 0;
+
   // Process tiles
   std::thread cropper([&]() {
+    logger.trace("crop", cropped_count);
     for (auto& building_tile : building_tiles) {
       // crop each tile
       crop_tile(building_tile.extent,  // tile extent
@@ -513,14 +519,17 @@ int main(int argc, const char* argv[]) {
                 roofer_cfg);           // configuration parameters
       {
         std::scoped_lock lock{cropped_mutex};
+        cropped_count += building_tile.buildings.size();
         deque_cropped.push_back(std::move(building_tile));
       }
+      logger.trace("crop", cropped_count);
       cropped_pending.notify_one();
     }
     crop_running.store(false);
   });
 
   std::thread reconstructor([&]() {
+    logger.trace("reconstruct", reconstructed_count);
     while (crop_running.load()) {
       std::unique_lock lock{cropped_mutex};
       cropped_pending.wait(lock);
@@ -537,8 +546,10 @@ int main(int argc, const char* argv[]) {
                                                 std::move(building_tile));
         {
           std::scoped_lock lock_reconstructed{reconstructed_mutex};
+          reconstructed_count += reconstructed_tile.buildings.size();
           deque_reconstructed.push_back(std::move(reconstructed_tile));
         }
+        logger.trace("reconstruct", reconstructed_count);
         reconstructed_pending.notify_one();
         pending_cropped.pop_front();
       }
@@ -547,6 +558,7 @@ int main(int argc, const char* argv[]) {
   });
 
   std::thread serializer([&]() {
+    logger.trace("serialize", serialized_count);
     while (reconstruction_running.load()) {
       std::unique_lock lock{reconstructed_mutex};
       reconstructed_pending.wait(lock);
@@ -576,6 +588,8 @@ int main(int argc, const char* argv[]) {
         }
 
         // buildings are finishes processing so they can be cleared
+        serialized_count += building_tile.buildings.size();
+        logger.trace("serialize", serialized_count);
         building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
