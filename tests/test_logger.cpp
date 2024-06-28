@@ -5,7 +5,7 @@
 TEST_CASE("logger") {
   auto& logger = roofer::logger::Logger::get_logger();
   logger.set_level(roofer::logger::LogLevel::trace);
-  logger.trace("trace");
+  logger.trace("trace", 42);
   logger.debug("debug");
   logger.info("info");
   logger.error("error");

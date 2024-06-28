@@ -1,6 +1,7 @@
 /**
  * spdlog logging backend implementation.
  * Logs messages to stdout, stderr, file.
+ * The log file is a JSON file.
  */
 #ifdef RF_USE_LOGGER_SPDLOG
 
@@ -55,9 +56,24 @@ namespace roofer::logger {
       stdout_sink->set_level(spdlog_level);
       stderr_sink->set_level(spdlog_level);
       file_sink->set_level(spdlog_level);
+      // Set up json logging in the logfile.
+      file_sink->set_pattern("{\n \"log\": [");
+      logger_stdout.log(spdlog_level, "");
+      std::string jsonpattern = {
+          R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"},)"};
+      file_sink->set_pattern(jsonpattern);
     }
 
-    ~logger_impl() { spdlog::drop_all(); }
+    ~logger_impl() {
+      // Finalize the json logfile.
+      std::string jsonlastlogpattern = {
+          R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"})"};
+      file_sink->set_pattern(jsonlastlogpattern);
+      logger_stdout.log(cast_level(level), "Finished.");
+      file_sink->set_pattern("]\n}");
+      logger_stdout.log(cast_level(level), "");
+      spdlog::drop_all();
+    }
 
     void set_level(LogLevel new_level) {
       // We set the "level" member too, for the sake of completeness, althought
