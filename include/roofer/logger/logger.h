@@ -27,6 +27,7 @@ namespace roofer::logger {
 
   enum class LogLevel : std::uint8_t {
     off = 0,
+    trace,
     debug,
     info,
     default_level = info,
@@ -56,6 +57,11 @@ namespace roofer::logger {
 
     /** @brief Returns a reference to the single logger instance. */
     static Logger &get_logger();
+
+    template <typename... Args>
+    void trace(fmt::format_string<Args...> fmt, Args &&...args) {
+      log(LogLevel::trace, fmt::vformat(fmt, fmt::make_format_args(args...)));
+    }
 
     template <typename... Args>
     void debug(fmt::format_string<Args...> fmt, Args &&...args) {
