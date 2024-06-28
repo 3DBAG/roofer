@@ -170,19 +170,23 @@ void print_help(std::string program_name) {
   std::cout << "   " << program_name;
   std::cout << " -c <file>" << "\n";
   std::cout << "Options:" << "\n";
-  // std::cout << "   -v, --version                Print version information\n";
-  std::cout << "   -h, --help                   Show this help message" << "\n";
-  std::cout << "   -V, --version                Show version" << "\n";
-  std::cout << "   -v, --verbose                Be more verbose" << "\n";
-  std::cout << "   -c <file>, --config <file>   Config file" << "\n";
+  std::cout << "   -h, --help                   Show this help message."
+            << "\n";
+  std::cout << "   -V, --version                Show version." << "\n";
+  std::cout << "   -v, --verbose                Be more verbose." << "\n";
+  std::cout << "   -t, --trace                  Trace the progress. Implies "
+               "--verbose."
+            << "\n";
+  std::cout << "   -c <file>, --config <file>   Config file." << "\n";
   std::cout << "   -r, --rasters                Output rasterised building "
-               "pointclouds"
+               "pointclouds."
             << "\n";
-  std::cout << "   -m, --metadata               Output metadata.json file"
+  std::cout << "   -m, --metadata               Output metadata.json file."
             << "\n";
-  std::cout << "   -i, --index                  Output index.gpkg file" << "\n";
+  std::cout << "   -i, --index                  Output index.gpkg file."
+            << "\n";
   std::cout << "   -a, --all                    Output files for each "
-               "candidate point cloud instead of only the optimal candidate"
+               "candidate point cloud instead of only the optimal candidate."
             << "\n";
 }
 
@@ -391,6 +395,28 @@ inline constexpr auto reconstruct_tile_parallel =
   co_return building_tile;
 };
 
+// Overrides for heap allocation counting
+// Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
+namespace {
+  struct HeapAllocationCounter {
+    uint32_t total_allocated = 0;
+    uint32_t total_freed = 0;
+    [[nodiscard]] uint32_t current_usage() const {
+      return total_allocated - total_freed;
+    };
+  };
+  HeapAllocationCounter s_HeapAllocationCounter;
+}  // namespace
+
+void* operator new(size_t size) {
+  s_HeapAllocationCounter.total_allocated += size;
+  return malloc(size);
+}
+void operator delete(void* memory, size_t size) {
+  s_HeapAllocationCounter.total_freed += size;
+  free(memory);
+};
+
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
 
@@ -418,6 +444,10 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::debug);
   } else {
     logger.set_level(roofer::logger::LogLevel::warning);
+  }
+  // Enabling tracing overwrites the log level
+  if (cmdl[{"-t", "--trace"}]) {
+    logger.set_level(roofer::logger::LogLevel::trace);
   }
 
   // Read configuration
@@ -483,7 +513,7 @@ int main(int argc, const char* argv[]) {
   }
 
   // Multithreading setup
-  unsigned int nthreads = std::thread::hardware_concurrency();
+  size_t nthreads = std::thread::hardware_concurrency();
   // -3, because we need one thread for crop, reconstruct, serialize each
   lf::lazy_pool pool(nthreads - 3);
 
@@ -498,8 +528,15 @@ int main(int argc, const char* argv[]) {
   std::atomic crop_running{true};
   std::atomic reconstruction_running{true};
 
+  // Counters for tracing
+  std::atomic<size_t> cropped_count = 0;
+  std::atomic<size_t> reconstructed_count = 0;
+  std::atomic<size_t> serialized_count = 0;
+
+  logger.trace("heap", s_HeapAllocationCounter.current_usage());
   // Process tiles
   std::thread cropper([&]() {
+    logger.trace("crop", cropped_count);
     for (auto& building_tile : building_tiles) {
       // crop each tile
       crop_tile(building_tile.extent,  // tile extent
@@ -508,14 +545,18 @@ int main(int argc, const char* argv[]) {
                 roofer_cfg);           // configuration parameters
       {
         std::scoped_lock lock{cropped_mutex};
+        cropped_count += building_tile.buildings.size();
         deque_cropped.push_back(std::move(building_tile));
       }
+      logger.trace("crop", cropped_count);
+      logger.trace("heap", s_HeapAllocationCounter.current_usage());
       cropped_pending.notify_one();
     }
     crop_running.store(false);
   });
 
   std::thread reconstructor([&]() {
+    logger.trace("reconstruct", reconstructed_count);
     while (crop_running.load()) {
       std::unique_lock lock{cropped_mutex};
       cropped_pending.wait(lock);
@@ -532,8 +573,11 @@ int main(int argc, const char* argv[]) {
                                                 std::move(building_tile));
         {
           std::scoped_lock lock_reconstructed{reconstructed_mutex};
+          reconstructed_count += reconstructed_tile.buildings.size();
           deque_reconstructed.push_back(std::move(reconstructed_tile));
         }
+        logger.trace("reconstruct", reconstructed_count);
+        logger.trace("heap", s_HeapAllocationCounter.current_usage());
         reconstructed_pending.notify_one();
         pending_cropped.pop_front();
       }
@@ -542,6 +586,7 @@ int main(int argc, const char* argv[]) {
   });
 
   std::thread serializer([&]() {
+    logger.trace("serialize", serialized_count);
     while (reconstruction_running.load()) {
       std::unique_lock lock{reconstructed_mutex};
       reconstructed_pending.wait(lock);
@@ -564,11 +609,15 @@ int main(int argc, const char* argv[]) {
         }
 
         // buildings are finishes processing so they can be cleared
+        serialized_count += building_tile.buildings.size();
+        logger.trace("serialize", serialized_count);
+        logger.trace("heap", s_HeapAllocationCounter.current_usage());
         building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
     }
   });
+  logger.trace("heap", s_HeapAllocationCounter.current_usage());
 
   cropper.join();
   reconstructor.join();

@@ -72,7 +72,7 @@ namespace roofer::logger {
      * @param name Name of the process, eg. "reconstruct".
      * @param count Current count, eg. the number of reconstructed buildings.
      */
-    void trace(std::string_view name, unsigned int count) {
+    void trace(std::string_view name, size_t count) {
       log(LogLevel::trace,
           fmt::format(R"({{\"name\":\"{}\",\"count\":{}}})", name, count));
     }
