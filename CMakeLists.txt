@@ -2,9 +2,6 @@
 # FetchContent-related changes
 cmake_minimum_required(VERSION 3.25)
 
-# TODO: add version number
-project(roofer LANGUAGES C CXX)
-
 # Options
 option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
@@ -13,6 +10,17 @@ option(RF_BUILD_APPS "Build applications in addition to library" ON)
 option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
+
+# Enable the vcpkg features that are required by the options
+if (RF_USE_LOGGER_SPDLOG)
+  list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
+endif()
+if(RF_BUILD_TESTING)
+  list(APPEND VCPKG_MANIFEST_FEATURES "test")
+endif()
+
+# TODO: add version number
+project(roofer LANGUAGES C CXX)
 
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang
