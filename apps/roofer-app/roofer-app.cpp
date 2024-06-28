@@ -392,6 +392,28 @@ inline constexpr auto reconstruct_tile_parallel =
   co_return building_tile;
 };
 
+// Overrides for heap allocation counting
+// Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
+namespace {
+  struct HeapAllocationCounter {
+    uint32_t total_allocated = 0;
+    uint32_t total_freed = 0;
+    [[nodiscard]] uint32_t current_usage() const {
+      return total_allocated - total_freed;
+    };
+  };
+  HeapAllocationCounter s_HeapAllocationCounter;
+}  // namespace
+
+void* operator new(size_t size) {
+  s_HeapAllocationCounter.total_allocated += size;
+  return malloc(size);
+}
+void operator delete(void* memory, size_t size) {
+  s_HeapAllocationCounter.total_freed += size;
+  free(memory);
+};
+
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
 
@@ -488,7 +510,7 @@ int main(int argc, const char* argv[]) {
   }
 
   // Multithreading setup
-  unsigned int nthreads = std::thread::hardware_concurrency();
+  size_t nthreads = std::thread::hardware_concurrency();
   // -3, because we need one thread for crop, reconstruct, serialize each
   lf::lazy_pool pool(nthreads - 3);
 
@@ -504,10 +526,11 @@ int main(int argc, const char* argv[]) {
   std::atomic reconstruction_running{true};
 
   // Counters for tracing
-  std::atomic<unsigned int> cropped_count = 0;
-  std::atomic<unsigned int> reconstructed_count = 0;
-  std::atomic<unsigned int> serialized_count = 0;
+  std::atomic<size_t> cropped_count = 0;
+  std::atomic<size_t> reconstructed_count = 0;
+  std::atomic<size_t> serialized_count = 0;
 
+  logger.trace("heap", s_HeapAllocationCounter.current_usage());
   // Process tiles
   std::thread cropper([&]() {
     logger.trace("crop", cropped_count);
@@ -523,6 +546,7 @@ int main(int argc, const char* argv[]) {
         deque_cropped.push_back(std::move(building_tile));
       }
       logger.trace("crop", cropped_count);
+      logger.trace("heap", s_HeapAllocationCounter.current_usage());
       cropped_pending.notify_one();
     }
     crop_running.store(false);
@@ -550,6 +574,7 @@ int main(int argc, const char* argv[]) {
           deque_reconstructed.push_back(std::move(reconstructed_tile));
         }
         logger.trace("reconstruct", reconstructed_count);
+        logger.trace("heap", s_HeapAllocationCounter.current_usage());
         reconstructed_pending.notify_one();
         pending_cropped.pop_front();
       }
@@ -590,11 +615,13 @@ int main(int argc, const char* argv[]) {
         // buildings are finishes processing so they can be cleared
         serialized_count += building_tile.buildings.size();
         logger.trace("serialize", serialized_count);
+        logger.trace("heap", s_HeapAllocationCounter.current_usage());
         building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
     }
   });
+  logger.trace("heap", s_HeapAllocationCounter.current_usage());
 
   cropper.join();
   reconstructor.join();
