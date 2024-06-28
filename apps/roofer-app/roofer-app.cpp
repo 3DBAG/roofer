@@ -167,19 +167,23 @@ void print_help(std::string program_name) {
   std::cout << "   " << program_name;
   std::cout << " -c <file>" << "\n";
   std::cout << "Options:" << "\n";
-  // std::cout << "   -v, --version                Print version information\n";
-  std::cout << "   -h, --help                   Show this help message" << "\n";
-  std::cout << "   -V, --version                Show version" << "\n";
-  std::cout << "   -v, --verbose                Be more verbose" << "\n";
-  std::cout << "   -c <file>, --config <file>   Config file" << "\n";
+  std::cout << "   -h, --help                   Show this help message."
+            << "\n";
+  std::cout << "   -V, --version                Show version." << "\n";
+  std::cout << "   -v, --verbose                Be more verbose." << "\n";
+  std::cout << "   -t, --trace                  Trace the progress. Implies "
+               "--verbose."
+            << "\n";
+  std::cout << "   -c <file>, --config <file>   Config file." << "\n";
   std::cout << "   -r, --rasters                Output rasterised building "
-               "pointclouds"
+               "pointclouds."
             << "\n";
-  std::cout << "   -m, --metadata               Output metadata.json file"
+  std::cout << "   -m, --metadata               Output metadata.json file."
             << "\n";
-  std::cout << "   -i, --index                  Output index.gpkg file" << "\n";
+  std::cout << "   -i, --index                  Output index.gpkg file."
+            << "\n";
   std::cout << "   -a, --all                    Output files for each "
-               "candidate point cloud instead of only the optimal candidate"
+               "candidate point cloud instead of only the optimal candidate."
             << "\n";
 }
 
@@ -415,6 +419,10 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::debug);
   } else {
     logger.set_level(roofer::logger::LogLevel::warning);
+  }
+  // Enabling tracing overwrites the log level
+  if (cmdl[{"-t", "--trace"}]) {
+    logger.set_level(roofer::logger::LogLevel::trace);
   }
 
   // Read configuration
