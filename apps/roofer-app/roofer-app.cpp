@@ -94,6 +94,7 @@ struct BuildingObject {
   std::unordered_map<int, roofer::Mesh> multisolids_lod22;
 
   size_t attribute_index;
+  bool reconstruction_success = false;
 
   // set in crop
   std::string jsonl_path;
@@ -370,7 +371,13 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
 inline constexpr auto reconstruct_building_coro =
     [](auto reconstruct_building_coro,
        BuildingObject building_object) -> lf::task<BuildingObject> {
-  reconstruct_building(building_object);
+  try {
+    reconstruct_building(building_object);
+    building_object.reconstruction_success = true;
+  } catch (...) {
+    auto& logger = roofer::logger::Logger::get_logger();
+    logger.error("building reconstruction failed");
+  }
   co_return building_object;
 };
 
