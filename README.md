@@ -39,7 +39,7 @@ export PATH="/opt/homebrew/opt/m4/bin:$PATH"
 Clone this repository and use one of the CMake presets to build the roofer.
 
 ```sh
-cd roofer-dev
+cd geoflow-roofer
 mkdir build
 cmake --preset vcpkg-minimal -S . -B build
 cmake --build build
@@ -50,8 +50,14 @@ cmake --install build
 You can list all available presets:
 
 ```shell
-cd roofer-dev
+cd geoflow-roofer
 cmake --list-presets
+```
+
+If you are using a preset, you can still enable individual dependencies, e.g. `spdlog`:
+
+```shell
+cmake --preset vcpkg-minimal -DRF_USE_LOGGER_SPDLOG=ON -S . -B build
 ```
 
 ## Logging
