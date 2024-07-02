@@ -113,7 +113,7 @@ void crop_tile(const roofer::TBox<double>& tile,
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
 
       auto target_density = cfg.max_point_density;
-      bool low_lod = *(*low_lod_vec)[i];
+      bool low_lod = *(*low_lod_vec)[i] || ipc.force_low_lod;
       if (low_lod) {
         target_density = cfg.max_point_density_low_lod;
         logger.info(

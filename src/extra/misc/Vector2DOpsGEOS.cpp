@@ -159,7 +159,7 @@ namespace roofer::misc {
       GEOSGeometry* box_g = GEOSGeom_createRectangle_r(
           gc_, box.pmin[0], box.pmin[1], box.pmax[0], box.pmax[1]);
       auto& logger = logger::Logger::get_logger();
-      logger.info("WKT: {}", GEOSGeomToWKT_r(gc_, box_g));
+      // logger.info("WKT: {}", GEOSGeomToWKT_r(gc_, box_g));
       GEOSSTRtree_insert_r(gc_, tree, box_g, item);
       geoms.push_back(box_g);
     };
