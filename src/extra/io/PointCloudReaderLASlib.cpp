@@ -8,7 +8,12 @@
 
 namespace roofer::io {
 
-  class PointCloudReaderLASlib : public PointCloudReaderInterface {
+  struct PointCloudReaderLASlib : public PointCloudReaderInterface {
+
+    ~PointCloudReaderLASlib() {
+      close();
+    };
+
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();
 
@@ -52,7 +57,7 @@ namespace roofer::io {
    public:
     using PointCloudReaderInterface::PointCloudReaderInterface;
 
-    void open(const std::string& source) {
+    void open(const std::string& source) override {
       if (!lasreader) close();
       LASreadOpener lasreadopener;
       lasreadopener.set_file_name(source.c_str());
@@ -60,10 +65,11 @@ namespace roofer::io {
       if (!lasreader) throw(rooferException("Open failed on " + source));
     }
 
-    void close() {
+    void close() override {
       if (lasreader) {
         lasreader->close();
         delete lasreader;
+        lasreader = nullptr;
       }
     }
 

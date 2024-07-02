@@ -338,7 +338,6 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
 }
 
 void get_las_extents(InputPointcloud& ipc) {
-  ;
   auto pj = roofer::misc::createProjHelper();
   for (auto& fp :
        roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
