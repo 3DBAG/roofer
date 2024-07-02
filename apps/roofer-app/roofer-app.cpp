@@ -376,7 +376,7 @@ inline constexpr auto reconstruct_building_coro =
     building_object.reconstruction_success = true;
   } catch (...) {
     auto& logger = roofer::logger::Logger::get_logger();
-    logger.error("building reconstruction failed");
+    logger.warning("reconstruction failed for: {}", building_object.jsonl_path);
   }
   co_return building_object;
 };
