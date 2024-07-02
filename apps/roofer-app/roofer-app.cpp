@@ -282,8 +282,10 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       cfg.region_of_interest =
           roofer::TBox<double>{*region_of_interest_->get(0)->value<double>(),
                                *region_of_interest_->get(1)->value<double>(),
+                               0,
                                *region_of_interest_->get(2)->value<double>(),
-                               *region_of_interest_->get(3)->value<double>()};
+                               *region_of_interest_->get(3)->value<double>(),
+                               0};
     } else {
       logger.error("Failed to read parameter.region_of_interest");
     }
