@@ -15,6 +15,7 @@ tests/data/*
 !tests/data/*.md5
 tests/output/*
 !tests/output/README.md
+tests_local
 
 # Documentation
 docs/html

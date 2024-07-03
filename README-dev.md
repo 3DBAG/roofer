@@ -57,6 +57,7 @@ Once available locally, the data is not re-downloaded, unless the files are remo
 The data for tests is stored at [https://data.3dgi.xyz/roofer-test-data](https://data.3dgi.xyz/roofer-test-data). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
 
 See `tests/CMakeLists.txt` how to fetch the data from the server and make it available for the tests. Note that `FetchContent` extracts the zip contents recursively. Thus, specify the directory as for instance `SOURCE_DIR "${DATA_DIR}/wippolder"` to have the contents placed into `data/wippolder`.
+Pass the md5 hash of the zipfile as the `URL_HASH` to `FetchContent`, so that only changed files are re-downloaded.
 
 ## Documentation
 

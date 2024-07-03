@@ -14,6 +14,13 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
+FetchContent_Declare(
+  wateringen_large
+  URL "${DATA_URL_ROOT}/wateringen-large.zip"
+  URL_HASH MD5=a649ab1d202606eb326a3f0d383a6de2
+  SOURCE_DIR "${DATA_DIR}/wateringen-large")
+FetchContent_MakeAvailable(wateringen_large)
+
 # --- Library testing
 include(Catch)
 
