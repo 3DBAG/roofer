@@ -563,12 +563,22 @@ int main(int argc, const char* argv[]) {
     crop_running.store(false);
   });
 
+  // for debug
+  std::atomic_bool last_iteration_reconstructor{false};
   std::thread reconstructor([&]() {
     logger.trace("reconstruct", reconstructed_count);
     while (true) {
       std::unique_lock lock{cropped_mutex};
       cropped_pending.wait(lock);
-      if (deque_cropped.empty()) continue;
+      if (deque_cropped.empty()) {
+        if (last_iteration_reconstructor.load()) {
+          logger.error(
+              "This is the last iteration of reconstructor, because cropper "
+              "has finished already, but deque_cropped is empty and it is "
+              "supposed to contain the last remaining tiles.");
+        }
+        continue;
+      }
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
       auto pending_cropped{std::move(deque_cropped)};
@@ -594,8 +604,15 @@ int main(int argc, const char* argv[]) {
       // if the cropper has finished an pushed all the input onto the queue,
       // the next reconstructor iteration will process the remaining input,
       // and finally break out from the loop.
-      if (!crop_running.load() && deque_cropped.empty()) {
-        break;
+      if (!crop_running.load()) {
+        if (deque_cropped.empty()) {
+          break;
+        }
+        logger.debug(
+            "cropper has finished, but deque_cropped is "
+            "not empty, it still contains {} items",
+            deque_cropped.size());
+        last_iteration_reconstructor.store(true);
       }
     }
     if (!deque_cropped.empty()) {
@@ -645,4 +662,16 @@ int main(int argc, const char* argv[]) {
   cropper.join();
   reconstructor.join();
   serializer.join();
+  if (!deque_cropped.empty()) {
+    logger.error(
+        "all threads have been joined, but deque_cropped is "
+        "not empty, it still contains {} items",
+        deque_cropped.size());
+  }
+  if (!deque_reconstructed.empty()) {
+    logger.error(
+        "all threads have been joined, but deque_reconstructed is "
+        "not empty, it still contains {} items",
+        deque_reconstructed.size());
+  }
 }
