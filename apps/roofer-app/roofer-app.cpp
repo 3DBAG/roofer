@@ -565,7 +565,7 @@ int main(int argc, const char* argv[]) {
 
   std::thread reconstructor([&]() {
     logger.trace("reconstruct", reconstructed_count);
-    while (crop_running.load()) {
+    while (true) {
       std::unique_lock lock{cropped_mutex};
       cropped_pending.wait(lock);
       if (deque_cropped.empty()) continue;
@@ -589,6 +589,20 @@ int main(int argc, const char* argv[]) {
         reconstructed_pending.notify_one();
         pending_cropped.pop_front();
       }
+
+      // Need to check the condition variable at the end of the loop, so that
+      // if the cropper has finished an pushed all the input onto the queue,
+      // the next reconstructor iteration will process the remaining input,
+      // and finally break out from the loop.
+      if (!crop_running.load() && deque_cropped.empty()) {
+        break;
+      }
+    }
+    if (!deque_cropped.empty()) {
+      logger.error(
+          "reconstructor is finished, but deque_cropped is "
+          "not empty, it still contains {} items",
+          deque_cropped.size());
     }
     reconstruction_running.store(false);
   });
@@ -609,10 +623,11 @@ int main(int argc, const char* argv[]) {
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
         for (auto& building : building_tile.buildings) {
-
-          CityJsonWriter->write(building.jsonl_path, building.footprint,
-                                &building.multisolids_lod12, &building.multisolids_lod13,
-                                &building.multisolids_lod22, building_tile.attributes, building.attribute_index);
+          CityJsonWriter->write(
+              building.jsonl_path, building.footprint,
+              &building.multisolids_lod12, &building.multisolids_lod13,
+              &building.multisolids_lod22, building_tile.attributes,
+              building.attribute_index);
           logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
         }
 
