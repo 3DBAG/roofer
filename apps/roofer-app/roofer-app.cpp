@@ -492,7 +492,6 @@ int main(int argc, const char* argv[]) {
   }
 
   // Compute batch tile regions
-  // we just create one tile for now
   {
     auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
@@ -519,6 +518,7 @@ int main(int argc, const char* argv[]) {
       building_tile.proj_helper = roofer::misc::createProjHelper();
     }
   }
+  logger.debug("Created {} batch tile regions", building_tiles.size());
 
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
@@ -561,6 +561,7 @@ int main(int argc, const char* argv[]) {
       cropped_pending.notify_one();
     }
     crop_running.store(false);
+    cropped_pending.notify_one();
   });
 
   // for debug
@@ -568,9 +569,14 @@ int main(int argc, const char* argv[]) {
   std::thread reconstructor([&]() {
     logger.trace("reconstruct", reconstructed_count);
     while (true) {
+      logger.debug("reconstructor before lock cropped_mutex");
       std::unique_lock lock{cropped_mutex};
-      cropped_pending.wait(lock);
+      logger.debug("reconstructor before wait(lock)");
+      logger.debug("crop_running.load() == {}, !deque_cropped.empty() == {}",
+                   crop_running.load(), !deque_cropped.empty());
+      cropped_pending.wait(lock, [&] { return !deque_cropped.empty(); });
       if (deque_cropped.empty()) {
+        logger.debug("deque_cropped.empty() == true");
         if (last_iteration_reconstructor.load()) {
           logger.error(
               "This is the last iteration of reconstructor, because cropper "
@@ -584,9 +590,22 @@ int main(int argc, const char* argv[]) {
       auto pending_cropped{std::move(deque_cropped)};
       deque_cropped.clear();
       lock.unlock();
+      logger.debug("reconstructor after lock.unlock()");
+      if (last_iteration_reconstructor.load()) {
+        logger.debug(
+            "This is the last iteration of reconstructor. pending_cropped has "
+            "{} items, deque_cropped has {} items",
+            pending_cropped.size(), deque_cropped.size());
+      }
 
       while (!pending_cropped.empty()) {
         auto& building_tile = pending_cropped.front();
+        if (last_iteration_reconstructor.load()) {
+          logger.debug(
+              "This is the last iteration of reconstructor. Starting "
+              "reconstruction...",
+              pending_cropped.size(), deque_cropped.size());
+        }
         auto reconstructed_tile = lf::sync_wait(pool, reconstruct_tile_parallel,
                                                 std::move(building_tile));
         {
@@ -605,14 +624,14 @@ int main(int argc, const char* argv[]) {
       // the next reconstructor iteration will process the remaining input,
       // and finally break out from the loop.
       if (!crop_running.load()) {
-        if (deque_cropped.empty()) {
-          break;
-        }
+        last_iteration_reconstructor.store(true);
         logger.debug(
             "cropper has finished, but deque_cropped is "
             "not empty, it still contains {} items",
             deque_cropped.size());
-        last_iteration_reconstructor.store(true);
+        if (deque_cropped.empty()) {
+          break;
+        }
       }
     }
     if (!deque_cropped.empty()) {
