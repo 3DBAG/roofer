@@ -1,5 +1,11 @@
 # Test data description
 
+## wateringen
+
+A medium area, with four point cloud files.
+The data is about 200Mb.
+
+
 ## wateringen-large
 
 A large area, with four point cloud files.

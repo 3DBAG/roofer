@@ -10,14 +10,21 @@ endif()
 FetchContent_Declare(
   wippolder
   URL "${DATA_URL_ROOT}/wippolder.zip"
-  URL_HASH MD5=f3b83a2b6a4c14aa25c8755291f673d2
+  URL_HASH MD5=8efc0a7cfb48d3d17f1dc834e3350efe
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
 FetchContent_Declare(
+  wateringen
+  URL "${DATA_URL_ROOT}/wateringen.zip"
+  URL_HASH MD5=f96240033427f03cffeeb2d3cae63f3a
+  SOURCE_DIR "${DATA_DIR}/wateringen")
+FetchContent_MakeAvailable(wateringen)
+
+FetchContent_Declare(
   wateringen_large
   URL "${DATA_URL_ROOT}/wateringen-large.zip"
-  URL_HASH MD5=a649ab1d202606eb326a3f0d383a6de2
+  URL_HASH MD5=10844a5722d8ffeb554363e404a3c27b
   SOURCE_DIR "${DATA_DIR}/wateringen-large")
 FetchContent_MakeAvailable(wateringen_large)
 
@@ -42,7 +49,8 @@ add_test(
 set(tests_api "reconstruct-api-wippolder")
 set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
-# --- Integration tests that are run on the built executables, before installation.
+# --- Integration tests that are run on the built executables, before
+# installation.
 if(RF_BUILD_APPS)
   add_test(
     NAME "crop-wippolder"

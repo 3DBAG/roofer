@@ -1,18 +1,18 @@
 [input.footprint]
-path = "data/wateringen-large/wateringen-large.gpkg"
+path = "data/wateringen/wateringen.gpkg"
 id_attribute = "identificatie"
 
 [[input.pointclouds]]
 name = "ahn4"
 quality = 1
-path = "data/wateringen-large"
+path = "data/wateringen"
 
 [parameters]
 cellsize = 0.5
-region_of_interest = [ 78421.161, 447315.091, 79983.606, 449303.658 ]
+region_of_interest = [ 78515.135, 447828.155, 79613.120, 448635.764 ]
 
 [output]
-path = 'output/wateringen-large'
+path = 'output/wateringen'
 
 building_toml_file = '{path}/objects/{bid}/config_{pc_name}.toml'
 building_las_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.las'
