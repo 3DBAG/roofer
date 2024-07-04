@@ -237,7 +237,7 @@ namespace roofer {
   }
 
   /**
-   * @brief Triangulates a mesh
+   * @brief Triangulates a mesh using `roofer::reconstruction::MeshTriangulatorLegacy`
    *
    * @param mesh Mesh to triangulate
    *
