@@ -75,6 +75,9 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
+<p>Configuration parameters for single instance building reconstruction.  
+ <a href="structroofer_1_1ReconstructionConfig.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="roofer_8h_source.html">roofer.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -97,7 +100,25 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a74dc4b2bf3a844e586311fb996ced407"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1ReconstructionConfig.html#a74dc4b2bf3a844e586311fb996ced407">override_with_floor_elevation</a> = false</td></tr>
 <tr class="separator:a74dc4b2bf3a844e586311fb996ced407"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Configuration parameters for single instance building reconstruction. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">lambda</td><td>Complexity factor for the optimisation </td></tr>
+    <tr><td class="paramname">clip_ground</td><td>Enable clipping parts off the footprint where ground planes are detected </td></tr>
+    <tr><td class="paramname">lod</td><td>Requested Level of Detail<ul>
+<li>12: LoD12</li>
+<li>13: LoD13</li>
+<li>22: LoD22 </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">lod13_step_height</td><td>Step height used for LoD13 generalisation </td></tr>
+    <tr><td class="paramname">floor_elevation</td><td>Floor elevation in case it is not provided by the footprint </td></tr>
+    <tr><td class="paramname">override_with_floor_elevation</td><td>Force flat floor instead of using the elevation of the footprint </td></tr>
+  </table>
+  </dd>
+</dl>
+</div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab491c51644706575e75dae95c7174ee0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab491c51644706575e75dae95c7174ee0">&#9670;&nbsp;</a></span>is_valid()</h2>
 
