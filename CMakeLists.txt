@@ -12,7 +12,7 @@ option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 
 # Enable the vcpkg features that are required by the options
-if (RF_USE_LOGGER_SPDLOG)
+if(RF_USE_LOGGER_SPDLOG)
   list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
 endif()
 if(RF_BUILD_TESTING)
@@ -29,9 +29,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use extensions, because they might affect compiler compatibility
 set(CMAKE_CXX_EXTENSIONS OFF)
 # Enable position independent code for shared libraries in case we build them
-if (BUILD_SHARED_LIBS OR RF_BUILD_BINDINGS)
+if(BUILD_SHARED_LIBS OR RF_BUILD_BINDINGS)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif ()
+endif()
 # CMAKE MODULES
 
 # CMake modules, like the documentation module, go in here
@@ -47,7 +47,9 @@ find_package(
 find_package(nlohmann_json REQUIRED)
 find_package(GEOS CONFIG REQUIRED)
 find_package(laslib CONFIG REQUIRED)
-find_package(libfork CONFIG REQUIRED)
+add_library(BS_thread_pool INTERFACE)
+target_include_directories(BS_thread_pool
+                           INTERFACE ${BS_thread_pool_SOURCE_DIR}/include)
 
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
@@ -103,7 +105,7 @@ endif()
 
 # Python binding
 if(RF_BUILD_BINDINGS)
-    add_subdirectory(rooferpy)
+  add_subdirectory(rooferpy)
 endif()
 
 # EXECUTABLES

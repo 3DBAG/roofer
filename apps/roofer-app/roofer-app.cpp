@@ -49,11 +49,9 @@ namespace fs = std::filesystem;
 // serialisation
 #include <roofer/io/CityJsonWriter.hpp>
 
+#include "BS_thread_pool.hpp"
 #include "argh.h"
 #include "git.h"
-#undef LF_USE_HWLOC
-#include "libfork/core.hpp"
-#include "libfork/schedule.hpp"
 #include "toml.hpp"
 // roofer crop
 // roofer reconstruct
@@ -366,42 +364,44 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
-// Coroutine wrapper for reconstructing a single building.
-// Because, libfork::fork requires an awaitable function.
-inline constexpr auto reconstruct_building_coro =
-    [](auto reconstruct_building_coro,
-       BuildingObject building_object) -> lf::task<BuildingObject> {
-  try {
-    reconstruct_building(building_object);
-    building_object.reconstruction_success = true;
-  } catch (...) {
-    auto& logger = roofer::logger::Logger::get_logger();
-    logger.warning("reconstruction failed for: {}", building_object.jsonl_path);
-  }
-  co_return building_object;
-};
+// // Coroutine wrapper for reconstructing a single building.
+// // Because, libfork::fork requires an awaitable function.
+// inline constexpr auto reconstruct_building_coro =
+//     [](auto reconstruct_building_coro,
+//        BuildingObject building_object) -> lf::task<BuildingObject> {
+//   try {
+//     reconstruct_building(building_object);
+//     building_object.reconstruction_success = true;
+//   } catch (...) {
+//     auto& logger = roofer::logger::Logger::get_logger();
+//     logger.warning("reconstruction failed for: {}",
+//     building_object.jsonl_path);
+//   }
+//   co_return building_object;
+// };
 
-// Parallel reconstruction of a single BuildingTile.
-// Uses the fork-join method, with the `libfork` library.
-// Coroutines should take arguments by value.
-// Ref:
+// // Parallel reconstruction of a single BuildingTile.
+// // Uses the fork-join method, with the `libfork` library.
+// // Coroutines should take arguments by value.
+// // Ref:
+// //
 // https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
-inline constexpr auto reconstruct_tile_parallel =
-    [](auto reconstruct_tile_parallel,
-       BuildingTile building_tile) -> lf::task<BuildingTile> {
-  // Allocate space for results, outputs is a std::span<Points>
-  auto [outputs] =
-      co_await lf::co_new<BuildingObject>(building_tile.buildings.size());
-
-  for (std::size_t i = 0; i < building_tile.buildings.size(); ++i) {
-    co_await lf::fork(&outputs[i],
-                      reconstruct_building_coro)(building_tile.buildings[i]);
-  }
-  co_await lf::join;  // Wait for all tasks to complete.
-
-  building_tile.buildings.assign(outputs.begin(), outputs.end());
-  co_return building_tile;
-};
+// inline constexpr auto reconstruct_tile_parallel =
+//     [](auto reconstruct_tile_parallel,
+//        BuildingTile building_tile) -> lf::task<BuildingTile> {
+//   // Allocate space for results, outputs is a std::span<Points>
+//   auto [outputs] =
+//       co_await lf::co_new<BuildingObject>(building_tile.buildings.size());
+//
+//   for (std::size_t i = 0; i < building_tile.buildings.size(); ++i) {
+//     co_await lf::fork(&outputs[i],
+//                       reconstruct_building_coro)(building_tile.buildings[i]);
+//   }
+//   co_await lf::join;  // Wait for all tasks to complete.
+//
+//   building_tile.buildings.assign(outputs.begin(), outputs.end());
+//   co_return building_tile;
+// };
 
 // Overrides for heap allocation counting
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
@@ -523,7 +523,7 @@ int main(int argc, const char* argv[]) {
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
   // -3, because we need one thread for crop, reconstruct, serialize each
-  lf::lazy_pool pool(nthreads - 3);
+  BS::thread_pool reconstructor_pool(nthreads - 3);
 
   std::mutex cropped_mutex;  // protects the cropped queue
   std::deque<BuildingTile> deque_cropped;
@@ -606,12 +606,19 @@ int main(int argc, const char* argv[]) {
               "reconstruction...",
               pending_cropped.size(), deque_cropped.size());
         }
-        auto reconstructed_tile = lf::sync_wait(pool, reconstruct_tile_parallel,
-                                                std::move(building_tile));
-        {
-          std::scoped_lock lock_reconstructed{reconstructed_mutex};
-          reconstructed_count += reconstructed_tile.buildings.size();
-          deque_reconstructed.push_back(std::move(reconstructed_tile));
+        for (auto& building : building_tile.buildings) {
+          reconstructor_pool.detach_task(
+              [b = std::move(building), &deque_reconstructed,
+               &reconstructed_count, &reconstructed_mutex] {
+                // It seems that I need to be explicit about the type here
+                BuildingObject building_object = b;
+                reconstruct_building(building_object);
+                {
+                  std::scoped_lock lock_reconstructed{reconstructed_mutex};
+                  reconstructed_count++;
+                  // deque_reconstructed.push_back(std::move(building_object));
+                }
+              });
         }
         logger.trace("reconstruct", reconstructed_count);
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
@@ -634,6 +641,8 @@ int main(int argc, const char* argv[]) {
         }
       }
     }
+    logger.debug("Waiting for all reconstructor threads to join...");
+    reconstructor_pool.wait();
     if (!deque_cropped.empty()) {
       logger.error(
           "reconstructor is finished, but deque_cropped is "
@@ -641,6 +650,8 @@ int main(int argc, const char* argv[]) {
           deque_cropped.size());
     }
     reconstruction_running.store(false);
+    logger.debug("All reconstructor threads have joined.");
+    reconstructed_pending.notify_one();
   });
 
   std::thread serializer([&]() {
