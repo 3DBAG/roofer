@@ -458,6 +458,8 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::trace);
   }
 
+  auto heap_trace_interval = std::chrono::seconds(10);
+
   // Read configuration
   std::string config_path;
   std::vector<InputPointcloud> input_pointclouds;
@@ -522,8 +524,12 @@ int main(int argc, const char* argv[]) {
 
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
-  // -3, because we need one thread for crop, reconstruct, serialize each
-  BS::thread_pool reconstructor_pool(nthreads - 3);
+  // -4, because we need one thread for crop, reconstruct, serialize,
+  // heap_tracer each
+  size_t nthreads_reconstructor_pool = nthreads - 4;
+  logger.debug("Using {} threads for the reconstructor pool",
+               nthreads_reconstructor_pool);
+  BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
 
   std::mutex cropped_mutex;  // protects the cropped queue
   std::deque<BuildingTile> deque_cropped;
@@ -535,10 +541,12 @@ int main(int argc, const char* argv[]) {
 
   std::atomic crop_running{true};
   std::atomic reconstruction_running{true};
+  std::atomic serialization_running{true};
 
   // Counters for tracing
   std::atomic<size_t> cropped_count = 0;
   std::atomic<size_t> reconstructed_count = 0;
+  std::atomic<size_t> reconstructed_started_count = 0;
   std::atomic<size_t> serialized_count = 0;
 
   logger.trace("heap", s_HeapAllocationCounter.current_usage());
@@ -607,6 +615,7 @@ int main(int argc, const char* argv[]) {
               pending_cropped.size(), deque_cropped.size());
         }
         for (auto& building : building_tile.buildings) {
+          reconstructed_started_count++;
           reconstructor_pool.detach_task(
               [b = std::move(building), &deque_reconstructed,
                &reconstructed_count, &reconstructed_mutex] {
@@ -620,6 +629,7 @@ int main(int argc, const char* argv[]) {
                 }
               });
         }
+        logger.debug("Submitted all buildings of one tile for reconstruction");
         logger.trace("reconstruct", reconstructed_count);
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
         reconstructed_pending.notify_one();
@@ -651,6 +661,9 @@ int main(int argc, const char* argv[]) {
     }
     reconstruction_running.store(false);
     logger.debug("All reconstructor threads have joined.");
+    logger.trace("reconstruct", reconstructed_count);
+    logger.debug("Sent {} buildings for reconstruction",
+                 reconstructed_started_count.load());
     reconstructed_pending.notify_one();
   });
 
@@ -686,12 +699,24 @@ int main(int argc, const char* argv[]) {
         pending_reconstructed.pop_front();
       }
     }
+    serialization_running.store(false);
   });
-  logger.trace("heap", s_HeapAllocationCounter.current_usage());
+
+  std::thread heap_tracer([&] {
+    while (crop_running.load() || reconstruction_running.load() ||
+           serialization_running.load()) {
+      logger.trace("heap", s_HeapAllocationCounter.current_usage());
+      std::this_thread::sleep_for(heap_trace_interval);
+    }
+    logger.trace("heap", s_HeapAllocationCounter.current_usage());
+    logger.debug("Exiting heap_tracer thread");
+  });
 
   cropper.join();
   reconstructor.join();
   serializer.join();
+  heap_tracer.join();
+
   if (!deque_cropped.empty()) {
     logger.error(
         "all threads have been joined, but deque_cropped is "
