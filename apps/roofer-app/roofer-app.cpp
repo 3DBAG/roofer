@@ -407,8 +407,8 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
 namespace {
   struct HeapAllocationCounter {
-    uint32_t total_allocated = 0;
-    uint32_t total_freed = 0;
+    std::atomic<uint32_t> total_allocated = 0;
+    std::atomic<uint32_t> total_freed = 0;
     [[nodiscard]] uint32_t current_usage() const {
       return total_allocated - total_freed;
     };
@@ -569,13 +569,14 @@ int main(int argc, const char* argv[]) {
       cropped_pending.notify_one();
     }
     crop_running.store(false);
-    cropped_pending.notify_one();
+    cropped_pending.notify_all();
   });
 
   // for debug
   std::atomic_bool last_iteration_reconstructor{false};
   std::thread reconstructor([&]() {
     logger.trace("reconstruct", reconstructed_count);
+
     while (true) {
       logger.debug("reconstructor before lock cropped_mutex");
       std::unique_lock lock{cropped_mutex};
@@ -583,6 +584,7 @@ int main(int argc, const char* argv[]) {
       logger.debug("crop_running.load() == {}, !deque_cropped.empty() == {}",
                    crop_running.load(), !deque_cropped.empty());
       cropped_pending.wait(lock, [&] { return !deque_cropped.empty(); });
+
       if (deque_cropped.empty()) {
         logger.debug("deque_cropped.empty() == true");
         if (last_iteration_reconstructor.load()) {
@@ -593,11 +595,13 @@ int main(int argc, const char* argv[]) {
         }
         continue;
       }
+
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
       auto pending_cropped{std::move(deque_cropped)};
       deque_cropped.clear();
       lock.unlock();
+
       logger.debug("reconstructor after lock.unlock()");
       if (last_iteration_reconstructor.load()) {
         logger.debug(
@@ -607,33 +611,44 @@ int main(int argc, const char* argv[]) {
       }
 
       while (!pending_cropped.empty()) {
-        auto& building_tile = pending_cropped.front();
+        auto building_tile = std::move(pending_cropped.front());
+        pending_cropped.pop_front();
+
         if (last_iteration_reconstructor.load()) {
           logger.debug(
               "This is the last iteration of reconstructor. Starting "
               "reconstruction...",
               pending_cropped.size(), deque_cropped.size());
         }
-        for (auto& building : building_tile.buildings) {
-          reconstructed_started_count++;
+
+        while (!building_tile.buildings.empty()) {
+          auto building = std::move(building_tile.buildings.front());
+          building_tile.buildings.pop_front();
+          ++reconstructed_started_count;
           reconstructor_pool.detach_task(
               [b = std::move(building), &deque_reconstructed,
                &reconstructed_count, &reconstructed_mutex] {
                 // It seems that I need to be explicit about the type here
                 BuildingObject building_object = b;
-                reconstruct_building(building_object);
+                try {
+                  reconstruct_building(building_object);
+                } catch (...) {
+                  auto& logger = roofer::logger::Logger::get_logger();
+                  logger.warning("reconstruction failed for: {}",
+                                 building_object.jsonl_path);
+                }
                 {
                   std::scoped_lock lock_reconstructed{reconstructed_mutex};
-                  reconstructed_count++;
+                  ++reconstructed_count;
                   // deque_reconstructed.push_back(std::move(building_object));
                 }
               });
         }
+
         logger.debug("Submitted all buildings of one tile for reconstruction");
         logger.trace("reconstruct", reconstructed_count);
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
         reconstructed_pending.notify_one();
-        pending_cropped.pop_front();
       }
 
       // Need to check the condition variable at the end of the loop, so that
@@ -651,20 +666,23 @@ int main(int argc, const char* argv[]) {
         }
       }
     }
+
     logger.debug("Waiting for all reconstructor threads to join...");
     reconstructor_pool.wait();
+
     if (!deque_cropped.empty()) {
       logger.error(
           "reconstructor is finished, but deque_cropped is "
           "not empty, it still contains {} items",
           deque_cropped.size());
     }
+
     reconstruction_running.store(false);
     logger.debug("All reconstructor threads have joined.");
     logger.trace("reconstruct", reconstructed_count);
     logger.debug("Sent {} buildings for reconstruction",
                  reconstructed_started_count.load());
-    reconstructed_pending.notify_one();
+    reconstructed_pending.notify_all();
   });
 
   std::thread serializer([&]() {
