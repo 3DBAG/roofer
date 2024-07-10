@@ -410,20 +410,22 @@ namespace {
     std::atomic<uint32_t> total_allocated = 0;
     std::atomic<uint32_t> total_freed = 0;
     [[nodiscard]] uint32_t current_usage() const {
-      return total_allocated - total_freed;
+      return total_allocated.load() - total_freed.load();
     };
   };
   HeapAllocationCounter s_HeapAllocationCounter;
 }  // namespace
 
-void* operator new(size_t size) {
-  s_HeapAllocationCounter.total_allocated += size;
-  return malloc(size);
-}
-void operator delete(void* memory, size_t size) {
-  s_HeapAllocationCounter.total_freed += size;
-  free(memory);
-};
+// // Linux only
+// // See https://man7.org/linux/man-pages/man2/getrusage.2.html
+// // See https://mrswolf.github.io/memory-usage-cpp/
+// #include <sys/resource.h>
+// long get_mem_usage() {
+//   struct rusage usage;
+//   int ret;
+//   ret = getrusage(RUSAGE_SELF, &usage);
+//   return usage.ru_maxrss * 1000;  // ru_maxrss is in KB
+// }
 
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
@@ -613,6 +615,16 @@ int main(int argc, const char* argv[]) {
       while (!pending_cropped.empty()) {
         auto building_tile = std::move(pending_cropped.front());
         pending_cropped.pop_front();
+        size_t _pcb = 0;
+        size_t _dcb = 0;
+        for (auto& bt : pending_cropped) {
+          _pcb += bt.buildings.size();
+        }
+        for (auto& bt : deque_cropped) {
+          _dcb += bt.buildings.size();
+        }
+        logger.debug("pending_cropped has {} buildings", _pcb);
+        logger.debug("deque_cropped has {} buildings", _dcb);
 
         if (last_iteration_reconstructor.load()) {
           logger.debug(
@@ -632,15 +644,19 @@ int main(int argc, const char* argv[]) {
                 BuildingObject building_object = b;
                 try {
                   reconstruct_building(building_object);
+                  {
+                    std::scoped_lock lock_reconstructed{reconstructed_mutex};
+                    ++reconstructed_count;
+                    // deque_reconstructed.push_back(std::move(building_object));
+                  }
+                  if (reconstructed_count.load() % 100 == 0) {
+                    auto& logger = roofer::logger::Logger::get_logger();
+                    logger.trace("reconstruct", reconstructed_count);
+                  }
                 } catch (...) {
                   auto& logger = roofer::logger::Logger::get_logger();
                   logger.warning("reconstruction failed for: {}",
                                  building_object.jsonl_path);
-                }
-                {
-                  std::scoped_lock lock_reconstructed{reconstructed_mutex};
-                  ++reconstructed_count;
-                  // deque_reconstructed.push_back(std::move(building_object));
                 }
               });
         }
