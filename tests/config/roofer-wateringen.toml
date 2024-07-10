@@ -6,6 +6,7 @@ id_attribute = "identificatie"
 name = "ahn4"
 quality = 1
 path = "data/wateringen"
+force_low_lod = true
 
 [parameters]
 cellsize = 0.5

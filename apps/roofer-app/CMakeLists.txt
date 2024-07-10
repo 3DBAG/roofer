@@ -5,6 +5,17 @@ set_target_properties("roofer" PROPERTIES CXX_STANDARD 20)
 target_link_libraries("roofer" PRIVATE roofer-extra cmake_git_version_tracking
                                        fmt::fmt BS_thread_pool)
 
+# Used for getting the process memory usage
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_compile_definitions("roofer" PUBLIC "IS_LINUX")
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  target_compile_definitions("roofer" PUBLIC "IS_MACOS")
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  target_compile_definitions("roofer" PUBLIC "IS_WINDOWS")
+endif()
+
 install(
   TARGETS "roofer"
   ARCHIVE DESTINATION lib

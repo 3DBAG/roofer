@@ -14,19 +14,19 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
-FetchContent_Declare(
-  wateringen
-  URL "${DATA_URL_ROOT}/wateringen.zip"
-  URL_HASH MD5=f96240033427f03cffeeb2d3cae63f3a
-  SOURCE_DIR "${DATA_DIR}/wateringen")
-FetchContent_MakeAvailable(wateringen)
-
-FetchContent_Declare(
-  wateringen_large
-  URL "${DATA_URL_ROOT}/wateringen-large.zip"
-  URL_HASH MD5=10844a5722d8ffeb554363e404a3c27b
-  SOURCE_DIR "${DATA_DIR}/wateringen-large")
-FetchContent_MakeAvailable(wateringen_large)
+#FetchContent_Declare(
+#  wateringen
+#  URL "${DATA_URL_ROOT}/wateringen.zip"
+#  URL_HASH MD5=f96240033427f03cffeeb2d3cae63f3a
+#  SOURCE_DIR "${DATA_DIR}/wateringen")
+#FetchContent_MakeAvailable(wateringen)
+#
+#FetchContent_Declare(
+#  wateringen_large
+#  URL "${DATA_URL_ROOT}/wateringen-large.zip"
+#  URL_HASH MD5=10844a5722d8ffeb554363e404a3c27b
+#  SOURCE_DIR "${DATA_DIR}/wateringen-large")
+#FetchContent_MakeAvailable(wateringen_large)
 
 # --- Library testing
 include(Catch)

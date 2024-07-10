@@ -17,7 +17,6 @@ if __name__ == "__main__":
     with path_log.open() as fo:
         log_json = json.load(fo)
 
-
     # Parse the trace messages for easy plotting
     def parse_trace_message(log):
         for record in log:
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     fig, (ax_counts, ax_heap) = plt.subplots(2, 1, layout='constrained')
     # The expected groups are "crop", "reconstruct", "serialize", "heap"
     for name, group_df in trace_df.groupby("name"):
-        if name != "heap":
+        if name != "heap" and name != "rss":
             ax_counts.plot(group_df["duration"], group_df["count"], label=name)
         else:
             ax_heap.plot(group_df["duration"], group_df["count"], label=name)
@@ -49,6 +48,7 @@ if __name__ == "__main__":
     ax_counts.legend()
     ax_counts.set_title(f"Total duration {(end_time - start_time).total_seconds():.2f}s")
     ax_heap.set_xlabel(f"Duration of the complete program [s]")
-    ax_heap.set_ylabel('Heap allocation [b]')
+    ax_heap.set_ylabel('Memory usage [b]')
+    ax_heap.legend()
     plt.savefig(f"roofer_trace_plot.png")
     plt.close()

@@ -407,14 +407,86 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
 namespace {
   struct HeapAllocationCounter {
-    std::atomic<uint32_t> total_allocated = 0;
-    std::atomic<uint32_t> total_freed = 0;
-    [[nodiscard]] uint32_t current_usage() const {
-      return total_allocated.load() - total_freed.load();
+    std::atomic<size_t> total_allocated = 0;
+    std::atomic<size_t> total_freed = 0;
+    [[nodiscard]] size_t current_usage() const {
+      return total_allocated - total_freed;
     };
   };
   HeapAllocationCounter s_HeapAllocationCounter;
 }  // namespace
+
+void* operator new(size_t size) {
+  s_HeapAllocationCounter.total_allocated += size;
+  return malloc(size);
+}
+void operator delete(void* memory, size_t size) {
+  s_HeapAllocationCounter.total_freed += size;
+  free(memory);
+};
+
+/*
+ * Author:  David Robert Nadeau
+ * Site:    http://NadeauSoftware.com/
+ * License: Creative Commons Attribution 3.0 Unported License
+ *          http://creativecommons.org/licenses/by/3.0/deed.en_US
+ * Ref.:
+ * https://lemire.me/blog/2022/11/10/measuring-the-memory-usage-of-your-c-program/
+ */
+#if defined(IS_WINDOWS)
+#include <psapi.h>
+#include <windows.h>
+
+#elif defined(IS_LINUX) || defined(IS_MACOS)
+#include <sys/resource.h>
+#include <unistd.h>
+
+#if defined(IS_MACOS)
+#include <mach/mach.h>
+#elif defined(IS_LINUX)
+#include <stdio.h>
+#endif
+
+#endif
+
+/**
+ * Returns the current resident set size (physical memory use) measured
+ * in bytes, or zero if the value cannot be determined on this OS.
+ */
+inline size_t getCurrentRSS() {
+#if defined(IS_WINDOWS)
+  /* Windows -------------------------------------------------- */
+  PROCESS_MEMORY_COUNTERS info;
+  GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
+  return (size_t)info.WorkingSetSize;
+
+#elif defined(IS_MACOS)
+  /* OSX ------------------------------------------------------ */
+  struct mach_task_basic_info info;
+  mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+  if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info,
+                &infoCount) != KERN_SUCCESS)
+    return (size_t)0L; /* Can't access? */
+  return (size_t)info.resident_size;
+
+#elif defined(IS_LINUX)
+  /* Linux ---------------------------------------------------- */
+  long rss = 0L;
+  FILE* fp = NULL;
+  if ((fp = fopen("/proc/self/statm", "r")) == NULL)
+    return (size_t)0L; /* Can't open? */
+  if (fscanf(fp, "%*s%ld", &rss) != 1) {
+    fclose(fp);
+    return (size_t)0L; /* Can't read? */
+  }
+  fclose(fp);
+  return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+
+#else
+  /* AIX, BSD, Solaris, and Unknown OS ------------------------ */
+  return (size_t)0L; /* Unsupported. */
+#endif
+}
 
 // // Linux only
 // // See https://man7.org/linux/man-pages/man2/getrusage.2.html
@@ -552,6 +624,7 @@ int main(int argc, const char* argv[]) {
   std::atomic<size_t> serialized_count = 0;
 
   logger.trace("heap", s_HeapAllocationCounter.current_usage());
+  logger.trace("rss", getCurrentRSS());
   // Process tiles
   std::thread cropper([&]() {
     logger.trace("crop", cropped_count);
@@ -568,6 +641,7 @@ int main(int argc, const char* argv[]) {
       }
       logger.trace("crop", cropped_count);
       logger.trace("heap", s_HeapAllocationCounter.current_usage());
+      logger.trace("rss", getCurrentRSS());
       cropped_pending.notify_one();
     }
     crop_running.store(false);
@@ -664,6 +738,7 @@ int main(int argc, const char* argv[]) {
         logger.debug("Submitted all buildings of one tile for reconstruction");
         logger.trace("reconstruct", reconstructed_count);
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
+        logger.trace("rss", getCurrentRSS());
         reconstructed_pending.notify_one();
       }
 
@@ -729,6 +804,7 @@ int main(int argc, const char* argv[]) {
         serialized_count += building_tile.buildings.size();
         logger.trace("serialize", serialized_count);
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
+        logger.trace("rss", getCurrentRSS());
         building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
@@ -740,9 +816,11 @@ int main(int argc, const char* argv[]) {
     while (crop_running.load() || reconstruction_running.load() ||
            serialization_running.load()) {
       logger.trace("heap", s_HeapAllocationCounter.current_usage());
+      logger.trace("rss", getCurrentRSS());
       std::this_thread::sleep_for(heap_trace_interval);
     }
     logger.trace("heap", s_HeapAllocationCounter.current_usage());
+    logger.trace("rss", getCurrentRSS());
     logger.debug("Exiting heap_tracer thread");
   });
 
