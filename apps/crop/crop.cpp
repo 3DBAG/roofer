@@ -374,7 +374,8 @@ int main(int argc, const char* argv[]) {
       ipc.pt_densities[i] =
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
 
-      ipc.is_glass_roof[i] = roofer::misc::assessGlassRoof(ipc.building_rasters[i]);
+      ipc.is_glass_roof[i] =
+          roofer::misc::assessGlassRoof(ipc.building_rasters[i]);
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];
       if (low_lod) {
@@ -411,7 +412,8 @@ int main(int argc, const char* argv[]) {
     auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
     auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
     auto& pt_density = attributes.insert_vec<float>("pt_density_" + ipc.name);
-    auto& is_glass_roof = attributes.insert_vec<bool>("is_glass_roof_" + ipc.name);
+    auto& is_glass_roof =
+        attributes.insert_vec<bool>("is_glass_roof_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
