@@ -213,6 +213,32 @@ namespace roofer::misc {
     }
   }
 
+
+  bool assessGlassRoof(const ImageMap& pc) {
+    auto& grp = pc.at("grp").array;
+    auto& cellsize = pc.at("grp").cellsize;
+    auto& grp_nodata = pc.at("grp").nodataval;
+    float grp_mean{0};
+    int grp_cnt{0};
+    std::vector<float> grp_vals;
+    for (size_t i = 0; i < grp.size(); ++i) {
+      if (grp[i] != grp_nodata) {
+        ++grp_cnt;
+        grp_mean += grp[i];
+        grp_vals.push_back(grp[i]);
+      }
+    }
+    grp_mean = grp_mean / grp_cnt;
+
+    if (grp_mean < 0.75){
+      return true;
+    }
+    else{
+      return false;
+    }
+  
+  }
+
   float computeNoDataFraction(const ImageMap& pc) {
     auto& fp = pc.at("fp").array;
     auto& cnt = pc.at("cnt").array;

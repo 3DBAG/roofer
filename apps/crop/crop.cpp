@@ -70,6 +70,7 @@ struct InputPointcloud {
   roofer::vec1f nodata_fractions;
   roofer::vec1f pt_densities;
   roofer::vec1b is_mutated;
+  roofer::vec1b is_glass_roof;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
@@ -360,6 +361,7 @@ int main(int argc, const char* argv[]) {
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
+    ipc.is_glass_roof.reserve(N_fp);
     if (write_index) ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
@@ -372,6 +374,7 @@ int main(int argc, const char* argv[]) {
       ipc.pt_densities[i] =
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
 
+      ipc.is_glass_roof[i] = roofer::misc::assessGlassRoof(ipc.building_rasters[i]);
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];
       if (low_lod) {
@@ -408,13 +411,16 @@ int main(int argc, const char* argv[]) {
     auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
     auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
     auto& pt_density = attributes.insert_vec<float>("pt_density_" + ipc.name);
+    auto& is_glass_roof = attributes.insert_vec<bool>("is_glass_roof_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
+    is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
+      is_glass_roof.push_back(ipc.is_glass_roof[i]);
     }
   }
 
