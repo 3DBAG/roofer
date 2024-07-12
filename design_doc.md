@@ -54,7 +54,7 @@ There are two command line applications:
 #### crop
 
 Parse configuration from the TOML file.
-Input data attribtues that control the operation:
+Input data attributes that control the operation:
 
 - low_lod_attribute
 - year_of_construction_attribute
@@ -73,7 +73,7 @@ Crop each input point cloud with the buffered footprints.
 Uses PointCloudCropper process each point cloud:
   - read
   - reproject
-  - instersect with the polygons
+  - intersect with the polygons
   - crop using lastools AOI indexed intersection test
   - get the point cloud acquisition year
   - compute point cloud quality with PointsInPolygonsCollector::do_post_process
