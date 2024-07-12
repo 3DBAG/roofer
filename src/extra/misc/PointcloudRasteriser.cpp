@@ -8,6 +8,8 @@
 
 namespace roofer::misc {
 
+  float THRESHOLD_GLASS_ROOF = 0.75;
+
   void RasterisePointcloud(PointCollection& pointcloud, LinearRing& footprint,
                            ImageMap& image_bundle,
                            // RasterTools::Raster& heightfield,
@@ -213,7 +215,6 @@ namespace roofer::misc {
     }
   }
 
-
   bool assessGlassRoof(const ImageMap& pc) {
     auto& grp = pc.at("grp").array;
     auto& cellsize = pc.at("grp").cellsize;
@@ -230,13 +231,10 @@ namespace roofer::misc {
     }
     grp_mean = grp_mean / grp_cnt;
 
-    if (grp_mean < 0.75){
+    if (grp_mean < THRESHOLD_GLASS_ROOF) {
       return true;
     }
-    else{
-      return false;
-    }
-  
+    return false;
   }
 
   float computeNoDataFraction(const ImageMap& pc) {
