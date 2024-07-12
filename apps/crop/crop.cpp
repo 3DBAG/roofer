@@ -373,11 +373,17 @@ int main(int argc, const char* argv[]) {
           roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
       ipc.pt_densities[i] =
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
-
       ipc.is_glass_roof[i] =
           roofer::misc::assessGlassRoof(ipc.building_rasters[i]);
+
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];
+
+      // Setting low_lod to true so that thinning can be applied
+      // also to the detected glass roof buildings.
+      if (ipc.is_glass_roof[i]) {
+        low_lod = true;
+      }
       if (low_lod) {
         target_density = max_point_density_low_lod;
         logger.info(
