@@ -650,12 +650,10 @@ int main(int argc, const char* argv[]) {
     cropped_pending.notify_all();
   });
 
-  // for debug
-  std::atomic_bool last_iteration_reconstructor{false};
   std::thread reconstructor([&]() {
     logger.trace("reconstruct", reconstructed_count);
 
-    while (true) {
+    while (crop_running.load() || !deque_cropped.empty()) {
       logger.debug("reconstructor before lock cropped_mutex");
       std::unique_lock lock{cropped_mutex};
       logger.debug("reconstructor before wait(lock)");
@@ -663,30 +661,12 @@ int main(int argc, const char* argv[]) {
                    crop_running.load(), !deque_cropped.empty());
       cropped_pending.wait(lock, [&] { return !deque_cropped.empty(); });
 
-      if (deque_cropped.empty()) {
-        logger.debug("deque_cropped.empty() == true");
-        if (last_iteration_reconstructor.load()) {
-          logger.error(
-              "This is the last iteration of reconstructor, because cropper "
-              "has finished already, but deque_cropped is empty and it is "
-              "supposed to contain the last remaining tiles.");
-        }
-        continue;
-      }
-
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
       auto pending_cropped{std::move(deque_cropped)};
       deque_cropped.clear();
       lock.unlock();
-
       logger.debug("reconstructor after lock.unlock()");
-      if (last_iteration_reconstructor.load()) {
-        logger.debug(
-            "This is the last iteration of reconstructor. pending_cropped has "
-            "{} items, deque_cropped has {} items",
-            pending_cropped.size(), deque_cropped.size());
-      }
 
       while (!pending_cropped.empty()) {
         auto building_tile = std::move(pending_cropped.back());
@@ -701,13 +681,6 @@ int main(int argc, const char* argv[]) {
         }
         logger.debug("pending_cropped has {} buildings", _pcb);
         logger.debug("deque_cropped has {} buildings", _dcb);
-
-        if (last_iteration_reconstructor.load()) {
-          logger.debug(
-              "This is the last iteration of reconstructor. Starting "
-              "reconstruction...",
-              pending_cropped.size(), deque_cropped.size());
-        }
 
         while (!building_tile.buildings.empty()) {
           BuildingObject building = std::move(building_tile.buildings.back());
@@ -743,21 +716,6 @@ int main(int argc, const char* argv[]) {
         logger.trace("heap", s_HeapAllocationCounter.current_usage());
         logger.trace("rss", getCurrentRSS());
         reconstructed_pending.notify_one();
-      }
-
-      // Need to check the condition variable at the end of the loop, so that
-      // if the cropper has finished an pushed all the input onto the queue,
-      // the next reconstructor iteration will process the remaining input,
-      // and finally break out from the loop.
-      if (!crop_running.load()) {
-        last_iteration_reconstructor.store(true);
-        logger.debug(
-            "cropper has finished, but deque_cropped is "
-            "not empty, it still contains {} items",
-            deque_cropped.size());
-        if (deque_cropped.empty()) {
-          break;
-        }
       }
     }
 
