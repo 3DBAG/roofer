@@ -9,6 +9,8 @@
 #include <vector>
 namespace fs = std::filesystem;
 
+#include <malloc.h>
+
 // common
 #include <roofer/logger/logger.h>
 
@@ -112,7 +114,7 @@ struct BuildingObject {
 };
 
 struct BuildingTile {
-  std::deque<BuildingObject> buildings;
+  std::vector<BuildingObject> buildings;
   roofer::AttributeVecMap attributes;
   // offset
   std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
@@ -610,7 +612,7 @@ int main(int argc, const char* argv[]) {
   std::condition_variable cropped_pending;
 
   std::mutex reconstructed_mutex;  // protects the reconstructed queue
-  std::deque<BuildingTile> deque_reconstructed;
+  std::deque<BuildingObject> deque_reconstructed;
   std::condition_variable reconstructed_pending;
 
   std::atomic crop_running{true};
@@ -687,8 +689,8 @@ int main(int argc, const char* argv[]) {
       }
 
       while (!pending_cropped.empty()) {
-        auto building_tile = std::move(pending_cropped.front());
-        pending_cropped.pop_front();
+        auto building_tile = std::move(pending_cropped.back());
+        pending_cropped.pop_back();
         size_t _pcb = 0;
         size_t _dcb = 0;
         for (auto& bt : pending_cropped) {
@@ -708,8 +710,8 @@ int main(int argc, const char* argv[]) {
         }
 
         while (!building_tile.buildings.empty()) {
-          auto building = std::move(building_tile.buildings.front());
-          building_tile.buildings.pop_front();
+          BuildingObject building = std::move(building_tile.buildings.back());
+          building_tile.buildings.pop_back();
           ++reconstructed_started_count;
           reconstructor_pool.detach_task(
               [b = std::move(building), &deque_reconstructed,
@@ -721,7 +723,7 @@ int main(int argc, const char* argv[]) {
                   {
                     std::scoped_lock lock_reconstructed{reconstructed_mutex};
                     ++reconstructed_count;
-                    // deque_reconstructed.push_back(std::move(building_object));
+                    deque_reconstructed.push_back(std::move(building_object));
                   }
                   if (reconstructed_count.load() % 100 == 0) {
                     auto& logger = roofer::logger::Logger::get_logger();
@@ -733,6 +735,7 @@ int main(int argc, const char* argv[]) {
                                  building_object.jsonl_path);
                 }
               });
+          malloc_trim(0);
         }
 
         logger.debug("Submitted all buildings of one tile for reconstruction");
@@ -788,24 +791,27 @@ int main(int argc, const char* argv[]) {
 
       while (!pending_reconstructed.empty()) {
         auto& building_tile = pending_reconstructed.front();
-        // output reconstructed buildings
-        auto CityJsonWriter =
-            roofer::io::createCityJsonWriter(*building_tile.proj_helper);
-        for (auto& building : building_tile.buildings) {
-          CityJsonWriter->write(
-              building.jsonl_path, building.footprint,
-              &building.multisolids_lod12, &building.multisolids_lod13,
-              &building.multisolids_lod22, building_tile.attributes,
-              building.attribute_index);
-          logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
+        // // output reconstructed buildings
+        // auto CityJsonWriter =
+        //     roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+        // for (auto& building : building_tile.buildings) {
+        //   CityJsonWriter->write(
+        //       building.jsonl_path, building.footprint,
+        //       &building.multisolids_lod12, &building.multisolids_lod13,
+        //       &building.multisolids_lod22, building_tile.attributes,
+        //       building.attribute_index);
+        //   logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
+        // }
+        //
+        // // buildings are finishes processing so they can be cleared
+        // serialized_count += building_tile.buildings.size();
+        ++serialized_count;
+        if (serialized_count % 100 == 0) {
+          logger.trace("serialize", serialized_count);
+          logger.trace("heap", s_HeapAllocationCounter.current_usage());
+          logger.trace("rss", getCurrentRSS());
         }
-
-        // buildings are finishes processing so they can be cleared
-        serialized_count += building_tile.buildings.size();
-        logger.trace("serialize", serialized_count);
-        logger.trace("heap", s_HeapAllocationCounter.current_usage());
-        logger.trace("rss", getCurrentRSS());
-        building_tile.buildings.clear();
+        // building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
     }
