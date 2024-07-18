@@ -534,7 +534,7 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::trace);
   }
 
-  auto heap_trace_interval = std::chrono::seconds(10);
+  auto memory_trace_interval = std::chrono::seconds(10);
 
   // Read configuration
   std::string config_path;
@@ -559,7 +559,7 @@ int main(int argc, const char* argv[]) {
   }
 
   // precomputation for tiling
-  std::deque<BuildingTile> building_tiles;
+  std::deque<BuildingTile> initial_tiles;
 
   for (auto& ipc : input_pointclouds) {
     get_las_extents(ipc);
@@ -591,32 +591,33 @@ int main(int argc, const char* argv[]) {
         create_tiles(roi, roofer_cfg.tilesize_x, roofer_cfg.tilesize_y);
 
     for (auto& tile : tile_extents) {
-      auto& building_tile = building_tiles.emplace_back();
+      auto& building_tile = initial_tiles.emplace_back();
       building_tile.extent = tile;
       building_tile.proj_helper = roofer::misc::createProjHelper();
     }
   }
-  logger.debug("Created {} batch tile regions", building_tiles.size());
+  logger.debug("Created {} batch tile regions", initial_tiles.size());
 
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
-  // -4, because we need one thread for crop, reconstruct, serialize,
-  // heap_tracer each
-  size_t nthreads_reconstructor_pool = nthreads - 4;
+  // -6, because we need one thread for crop, reconstruct, serialize,
+  // memory_tracer each, plus the main thread and logger
+  size_t nthreads_reconstructor_pool = nthreads - 6;
   logger.debug("Using {} threads for the reconstructor pool",
                nthreads_reconstructor_pool);
   BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
 
-  std::mutex cropped_mutex;  // protects the cropped queue
-  std::deque<BuildingTile> deque_cropped;
+  std::atomic crop_running{true};
+  std::mutex cropped_tiles_mutex;
+  std::deque<BuildingTile> cropped_tiles;
   std::condition_variable cropped_pending;
 
-  std::mutex reconstructed_mutex;  // protects the reconstructed queue
-  std::deque<BuildingObject> deque_reconstructed;
+  std::atomic reconstruction_running{true};
+  std::deque<BuildingObject> cropped_buildings;
+  std::mutex reconstructed_buildings_mutex;
+  std::deque<BuildingObject> reconstructed_buildings;
   std::condition_variable reconstructed_pending;
 
-  std::atomic crop_running{true};
-  std::atomic reconstruction_running{true};
   std::atomic serialization_running{true};
 
   // Counters for tracing
@@ -624,47 +625,58 @@ int main(int argc, const char* argv[]) {
   std::atomic<size_t> reconstructed_count = 0;
   std::atomic<size_t> reconstructed_started_count = 0;
   std::atomic<size_t> serialized_count = 0;
+  std::thread memory_tracer_thread([&] {
+    while (crop_running.load() || reconstruction_running.load() ||
+           serialization_running.load()) {
+      logger.trace("heap", s_HeapAllocationCounter.current_usage());
+      logger.trace("rss", getCurrentRSS());
+      std::this_thread::sleep_for(memory_trace_interval);
+    }
+    logger.trace("heap", s_HeapAllocationCounter.current_usage());
+    logger.trace("rss", getCurrentRSS());
+    logger.debug("Exiting heap_tracer thread");
+  });
 
-  logger.trace("heap", s_HeapAllocationCounter.current_usage());
-  logger.trace("rss", getCurrentRSS());
   // Process tiles
-  std::thread cropper([&]() {
+  std::thread cropper_thread([&]() {
     logger.trace("crop", cropped_count);
-    for (auto& building_tile : building_tiles) {
+    while (!initial_tiles.empty()) {
+      auto& building_tile = initial_tiles.front();
       // crop each tile
       crop_tile(building_tile.extent,  // tile extent
                 input_pointclouds,     // input pointclouds
                 building_tile,         // output building data
                 roofer_cfg);           // configuration parameters
       {
-        std::scoped_lock lock{cropped_mutex};
+        std::scoped_lock lock{cropped_tiles_mutex};
         cropped_count += building_tile.buildings.size();
-        deque_cropped.push_back(std::move(building_tile));
+        cropped_tiles.push_back(std::move(building_tile));
       }
+      initial_tiles.pop_front();
       logger.trace("crop", cropped_count);
-      logger.trace("heap", s_HeapAllocationCounter.current_usage());
-      logger.trace("rss", getCurrentRSS());
       cropped_pending.notify_one();
     }
     crop_running.store(false);
     cropped_pending.notify_all();
   });
 
-  std::thread reconstructor([&]() {
+  std::thread reconstructor_thread([&]() {
     logger.trace("reconstruct", reconstructed_count);
 
-    while (crop_running.load() || !deque_cropped.empty()) {
+    while (crop_running.load() || !cropped_tiles.empty()) {
       logger.debug("reconstructor before lock cropped_mutex");
-      std::unique_lock lock{cropped_mutex};
+      std::unique_lock lock{cropped_tiles_mutex};
       logger.debug("reconstructor before wait(lock)");
       logger.debug("crop_running.load() == {}, !deque_cropped.empty() == {}",
-                   crop_running.load(), !deque_cropped.empty());
-      cropped_pending.wait(lock, [&] { return !deque_cropped.empty(); });
+                   crop_running.load(), !cropped_tiles.empty());
+      cropped_pending.wait(lock,
+                           [&cropped_tiles] { return !cropped_tiles.empty(); });
 
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
-      auto pending_cropped{std::move(deque_cropped)};
-      deque_cropped.clear();
+      auto pending_cropped{std::move(cropped_tiles)};
+      cropped_tiles.clear();
+      cropped_tiles.shrink_to_fit();
       lock.unlock();
       logger.debug("reconstructor after lock.unlock()");
 
@@ -676,7 +688,7 @@ int main(int argc, const char* argv[]) {
         for (auto& bt : pending_cropped) {
           _pcb += bt.buildings.size();
         }
-        for (auto& bt : deque_cropped) {
+        for (auto& bt : cropped_tiles) {
           _dcb += bt.buildings.size();
         }
         logger.debug("pending_cropped has {} buildings", _pcb);
@@ -686,35 +698,35 @@ int main(int argc, const char* argv[]) {
           BuildingObject building = std::move(building_tile.buildings.back());
           building_tile.buildings.pop_back();
           ++reconstructed_started_count;
-          reconstructor_pool.detach_task(
-              [b = std::move(building), &deque_reconstructed,
-               &reconstructed_count, &reconstructed_mutex] {
-                // It seems that I need to be explicit about the type here
-                BuildingObject building_object = b;
-                try {
-                  reconstruct_building(building_object);
-                  {
-                    std::scoped_lock lock_reconstructed{reconstructed_mutex};
-                    ++reconstructed_count;
-                    deque_reconstructed.push_back(std::move(building_object));
-                  }
-                  if (reconstructed_count.load() % 100 == 0) {
-                    auto& logger = roofer::logger::Logger::get_logger();
-                    logger.trace("reconstruct", reconstructed_count);
-                  }
-                } catch (...) {
-                  auto& logger = roofer::logger::Logger::get_logger();
-                  logger.warning("reconstruction failed for: {}",
-                                 building_object.jsonl_path);
-                }
-              });
-          malloc_trim(0);
+          reconstructor_pool.detach_task([b = std::move(building),
+                                          &reconstructed_buildings,
+                                          &reconstructed_count,
+                                          &reconstructed_buildings_mutex] {
+            // It seems that I need to be explicit about the type here
+            BuildingObject building_object = b;
+            try {
+              reconstruct_building(building_object);
+              {
+                std::scoped_lock lock_reconstructed{
+                    reconstructed_buildings_mutex};
+                ++reconstructed_count;
+                reconstructed_buildings.push_back(std::move(building_object));
+              }
+              if (reconstructed_count.load() % 100 == 0) {
+                auto& logger = roofer::logger::Logger::get_logger();
+                logger.trace("reconstruct", reconstructed_count);
+              }
+            } catch (...) {
+              auto& logger = roofer::logger::Logger::get_logger();
+              logger.warning("reconstruction failed for: {}",
+                             building_object.jsonl_path);
+            }
+          });
+          // malloc_trim(0);
         }
 
         logger.debug("Submitted all buildings of one tile for reconstruction");
         logger.trace("reconstruct", reconstructed_count);
-        logger.trace("heap", s_HeapAllocationCounter.current_usage());
-        logger.trace("rss", getCurrentRSS());
         reconstructed_pending.notify_one();
       }
     }
@@ -722,11 +734,11 @@ int main(int argc, const char* argv[]) {
     logger.debug("Waiting for all reconstructor threads to join...");
     reconstructor_pool.wait();
 
-    if (!deque_cropped.empty()) {
+    if (!cropped_tiles.empty()) {
       logger.error(
           "reconstructor is finished, but deque_cropped is "
           "not empty, it still contains {} items",
-          deque_cropped.size());
+          cropped_tiles.size());
     }
 
     reconstruction_running.store(false);
@@ -737,14 +749,15 @@ int main(int argc, const char* argv[]) {
     reconstructed_pending.notify_all();
   });
 
-  std::thread serializer([&]() {
+  std::thread serializer_thread([&]() {
     logger.trace("serialize", serialized_count);
     while (reconstruction_running.load()) {
-      std::unique_lock lock{reconstructed_mutex};
+      std::unique_lock lock{reconstructed_buildings_mutex};
       reconstructed_pending.wait(lock);
-      if (deque_reconstructed.empty()) continue;
-      auto pending_reconstructed{std::move(deque_reconstructed)};
-      deque_reconstructed.clear();
+      if (reconstructed_buildings.empty()) continue;
+      auto pending_reconstructed{std::move(reconstructed_buildings)};
+      reconstructed_buildings.clear();
+      reconstructed_buildings.shrink_to_fit();
       lock.unlock();
 
       while (!pending_reconstructed.empty()) {
@@ -766,8 +779,6 @@ int main(int argc, const char* argv[]) {
         ++serialized_count;
         if (serialized_count % 100 == 0) {
           logger.trace("serialize", serialized_count);
-          logger.trace("heap", s_HeapAllocationCounter.current_usage());
-          logger.trace("rss", getCurrentRSS());
         }
         // building_tile.buildings.clear();
         pending_reconstructed.pop_front();
@@ -776,33 +787,21 @@ int main(int argc, const char* argv[]) {
     serialization_running.store(false);
   });
 
-  std::thread heap_tracer([&] {
-    while (crop_running.load() || reconstruction_running.load() ||
-           serialization_running.load()) {
-      logger.trace("heap", s_HeapAllocationCounter.current_usage());
-      logger.trace("rss", getCurrentRSS());
-      std::this_thread::sleep_for(heap_trace_interval);
-    }
-    logger.trace("heap", s_HeapAllocationCounter.current_usage());
-    logger.trace("rss", getCurrentRSS());
-    logger.debug("Exiting heap_tracer thread");
-  });
+  cropper_thread.join();
+  reconstructor_thread.join();
+  serializer_thread.join();
+  memory_tracer_thread.join();
 
-  cropper.join();
-  reconstructor.join();
-  serializer.join();
-  heap_tracer.join();
-
-  if (!deque_cropped.empty()) {
+  if (!cropped_tiles.empty()) {
     logger.error(
         "all threads have been joined, but deque_cropped is "
         "not empty, it still contains {} items",
-        deque_cropped.size());
+        cropped_tiles.size());
   }
-  if (!deque_reconstructed.empty()) {
+  if (!reconstructed_buildings.empty()) {
     logger.error(
-        "all threads have been joined, but deque_reconstructed is "
+        "all threads have been joined, but reconstructed_buildings is "
         "not empty, it still contains {} items",
-        deque_reconstructed.size());
+        reconstructed_buildings.size());
   }
 }
