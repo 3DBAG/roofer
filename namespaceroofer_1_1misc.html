@@ -167,6 +167,9 @@ Functions</h2></td></tr>
 <tr class="separator:aecbb9744fbb275f8a9d95d4871da3eae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b39fc90f04c6d58a9ec094774603516"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a5b39fc90f04c6d58a9ec094774603516">computePointDensity</a> (const <a class="el" href="namespaceroofer.html#a56a92af4dbba3ee79e20f1f647582ecb">ImageMap</a> &amp;pc)</td></tr>
 <tr class="separator:a5b39fc90f04c6d58a9ec094774603516"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad722b417371cddb15e82cf4ca34527ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#ad722b417371cddb15e82cf4ca34527ff">testForGlassRoof</a> (const <a class="el" href="namespaceroofer.html#a56a92af4dbba3ee79e20f1f647582ecb">ImageMap</a> &amp;image_bundle, float threshold_glass_roof=0.75)</td></tr>
+<tr class="memdesc:ad722b417371cddb15e82cf4ca34527ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assesses if the point cloud presents a glass roof based on the presence of ground points and non-ground points.  <a href="namespaceroofer_1_1misc.html#ad722b417371cddb15e82cf4ca34527ff">More...</a><br /></td></tr>
+<tr class="separator:ad722b417371cddb15e82cf4ca34527ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a923409565436ed10759cd3a19bdb2640"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a923409565436ed10759cd3a19bdb2640">computeNoDataFraction</a> (const <a class="el" href="namespaceroofer.html#a56a92af4dbba3ee79e20f1f647582ecb">ImageMap</a> &amp;pc)</td></tr>
 <tr class="separator:a923409565436ed10759cd3a19bdb2640"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d98883b58a32b44801ba55536c93d66"><td class="memItemLeft" align="right" valign="top">std::vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a6d98883b58a32b44801ba55536c93d66">computeMask</a> (const std::vector&lt; float &gt; &amp;image_array, const float &amp;nodataval)</td></tr>
@@ -1078,6 +1081,45 @@ template&lt;typename Point &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad722b417371cddb15e82cf4ca34527ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad722b417371cddb15e82cf4ca34527ff">&#9670;&nbsp;</a></span>testForGlassRoof()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool roofer::misc::testForGlassRoof </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespaceroofer.html#a56a92af4dbba3ee79e20f1f647582ecb">ImageMap</a> &amp;&#160;</td>
+          <td class="paramname"><em>image_bundle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>threshold_glass_roof</em> = <code>0.75</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Assesses if the point cloud presents a glass roof based on the presence of ground points and non-ground points. </p>
+<p>This function analyzes the raster layer 'grp' provided in the ImageMap to determine if its characteristics suggest the presence of a glass roof. Each cell in the layer 'grp' gives probability for it to be a glass roof cell The closer the value is to 1, the cell contains mostly points belonging to one class, either ground or non-ground. The closer the value is to 0, the cell contains a mix of points from both classes, which is a characteristic of a glass roof. The function computes the average and the mean value of the 'grp' layer and if they are below the threshold values, the point cloud is classified as a glass roof.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">image_bundle</td><td>The ImageMap containing multiple raster layers, including 'grp'. </td></tr>
+    <tr><td class="paramname">threshold_glass_roof</td><td>The threshold for determining if this building has a glass roof. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>bool Returns true if the analysis suggests the presence of a glass roof; otherwise, false. </dd></dl>
 
 </div>
 </div>
