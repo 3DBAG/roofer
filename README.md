@@ -34,12 +34,14 @@ On *macOS* you need to install additional build tools:
 brew install autoconf autoconf-archive automake libtool
 ```
 
+```shell
 export PATH="/opt/homebrew/opt/m4/bin:$PATH"
+```
 
 Clone this repository and use one of the CMake presets to build the roofer.
 
 ```sh
-cd roofer-dev
+cd geoflow-roofer
 mkdir build
 cmake --preset vcpkg-minimal -S . -B build
 cmake --build build

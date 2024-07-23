@@ -37,14 +37,17 @@ namespace roofer {
    * @brief Configuration parameters for single instance building reconstruction
    *
    * @param lambda Complexity factor for the optimisation
-   * @param clip_ground Enable clipping parts off the footprint where ground planes are detected
+   * @param clip_ground Enable clipping parts off the footprint where ground
+   * planes are detected
    * @param lod Requested Level of Detail
    *         - 12: LoD12
    *         - 13: LoD13
    *         - 22: LoD22
    * @param lod13_step_height Step height used for LoD13 generalisation
-   * @param floor_elevation Floor elevation in case it is not provided by the footprint
-   * @param override_with_floor_elevation Force flat floor instead of using the elevation of the footprint
+   * @param floor_elevation Floor elevation in case it is not provided by the
+   * footprint
+   * @param override_with_floor_elevation Force flat floor instead of using the
+   * elevation of the footprint
    */
   struct ReconstructionConfig {
     // control optimisation
@@ -69,14 +72,16 @@ namespace roofer {
   /**
    * @brief Reconstructs a single instance of a building from a point cloud
    *
-   * @tparam Footprint Type of the footprint, either a `LinearRing` or a `CGAL::Polygon_with_holes_2<Epick>`
+   * @tparam Footprint Type of the footprint, either a `LinearRing` or a
+   * `CGAL::Polygon_with_holes_2<Epick>`
    *
    * @param points_roof Point cloud representing the roof points
    * @param points_ground Point cloud representing the ground points
    * @param footprint Footprint of the building
    * @param cfg Configuration parameters
    *
-   * @return std::vector<Mesh> Building geometry meshes. The number of meshes is equal to the number of building parts.
+   * @return std::vector<Mesh> Building geometry meshes. The number of meshes is
+   * equal to the number of building parts.
    */
   template <typename Footprint>
   std::vector<Mesh> reconstruct(
@@ -220,13 +225,16 @@ namespace roofer {
    * @brief Reconstructs a single instance of a building from a point cloud
    * Overload for when the ground points are not available
    *
-   * @tparam Footprint Type of the footprint, either a `LinearRing` or a `CGAL::Polygon_with_holes_2<Epick>`
+   * @tparam Footprint Type of the footprint, either a `LinearRing` or a
+   * `CGAL::Polygon_with_holes_2<Epick>`
    *
    * @param points_roof Point cloud representing the roof points
    * @param footprint Footprint of the building
    * @param cfg Configuration parameters
    *
-   * @return std::vector<Mesh> Building geometry meshes. The number of meshes is equal to the number of building parts. This number is equal to one if no ground points are available.
+   * @return std::vector<Mesh> Building geometry meshes. The number of meshes is
+   * equal to the number of building parts. This number is equal to one if no
+   * ground points are available.
    */
   template <typename Footprint>
   std::vector<Mesh> reconstruct(
@@ -237,7 +245,8 @@ namespace roofer {
   }
 
   /**
-   * @brief Triangulates a mesh using `roofer::reconstruction::MeshTriangulatorLegacy`
+   * @brief Triangulates a mesh using
+   * `roofer::reconstruction::MeshTriangulatorLegacy`
    *
    * @param mesh Mesh to triangulate
    *
