@@ -374,7 +374,7 @@ int main(int argc, const char* argv[]) {
       ipc.pt_densities[i] =
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
       ipc.is_glass_roof[i] =
-          roofer::misc::assessGlassRoof(ipc.building_rasters[i]);
+          roofer::misc::testForGlassRoof(ipc.building_rasters[i]);
 
       auto target_density = max_point_density;
       bool low_lod = *(*low_lod_vec)[i];

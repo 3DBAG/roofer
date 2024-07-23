@@ -33,12 +33,15 @@ namespace roofer::misc {
    *
    * @param image_bundle The ImageMap containing multiple raster layers,
    * including 'grp'.
+   * @param threshold_glass_roof The threshold for determining if this building
+   * has a glass roof.
    * @return bool Returns true if the analysis suggests the presence of a glass
    * roof; otherwise, false.
    */
-  bool assessGlassRoof(const ImageMap& pc);
+  bool testForGlassRoof(const ImageMap& image_bundle,
+                        float threshold_glass_roof = 0.75);
 
-  float computePointDensity(const ImageMap& pc);
+  float computePointDensity(const ImageMap& image_bundle);
 
   // Determine if the two point clouds describe the same object.
   bool isMutated(const ImageMap& a, const ImageMap& b,
