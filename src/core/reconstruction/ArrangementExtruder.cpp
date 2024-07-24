@@ -310,7 +310,7 @@ namespace roofer::reconstruction {
             // TODO: check if distance from px to p1 and p2 is longer than
             // snap_tolerance?
 
-            extra_wall_points[edge] = *px;
+            extra_wall_points.at(edge) = *px;
             // EPECK::Point_2 px_2d(px->x(),px->y());
             // arr.split_edge(edge, AT::Segment_2(p1,px_2d),
             // AT::Segment_2(px_2d,p2)); if (result) { auto px = )
@@ -351,7 +351,7 @@ namespace roofer::reconstruction {
             // TODO: check if distance from px to p1 and p2 is longer than
             // snap_tolerance?
 
-            extra_wall_points[edge] = *px;
+            extra_wall_points.at(edge) = *px;
             // EPECK::Point_2 px_2d(px->x(),px->y());
             // arr.split_edge(edge, AT::Segment_2(p1,px_2d),
             // AT::Segment_2(px_2d,p2)); if (result) { auto px = )
