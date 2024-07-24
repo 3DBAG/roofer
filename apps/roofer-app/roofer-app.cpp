@@ -534,7 +534,7 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::trace);
   }
 
-  auto memory_trace_interval = std::chrono::seconds(10);
+  auto trace_interval = std::chrono::seconds(10);
 
   // Read configuration
   std::string config_path;
@@ -625,16 +625,22 @@ int main(int argc, const char* argv[]) {
   std::atomic<size_t> reconstructed_count = 0;
   std::atomic<size_t> reconstructed_started_count = 0;
   std::atomic<size_t> serialized_count = 0;
-  std::thread memory_tracer_thread([&] {
+  std::thread tracer_thread([&] {
     while (crop_running.load() || reconstruction_running.load() ||
            serialization_running.load()) {
       logger.trace("heap", s_HeapAllocationCounter.current_usage());
       logger.trace("rss", getCurrentRSS());
-      std::this_thread::sleep_for(memory_trace_interval);
+      logger.trace("crop", cropped_count);
+      logger.trace("reconstruct", reconstructed_count);
+      logger.trace("serialize", serialized_count);
+      std::this_thread::sleep_for(trace_interval);
     }
     logger.trace("heap", s_HeapAllocationCounter.current_usage());
     logger.trace("rss", getCurrentRSS());
-    logger.debug("Exiting heap_tracer thread");
+    logger.trace("crop", cropped_count);
+    logger.trace("reconstruct", reconstructed_count);
+    logger.trace("serialize", serialized_count);
+    logger.debug("Exiting tracer thread");
   });
 
   // Process tiles
@@ -653,7 +659,6 @@ int main(int argc, const char* argv[]) {
         cropped_tiles.push_back(std::move(building_tile));
       }
       initial_tiles.pop_front();
-      logger.trace("crop", cropped_count);
       cropped_pending.notify_one();
     }
     crop_running.store(false);
@@ -661,8 +666,6 @@ int main(int argc, const char* argv[]) {
   });
 
   std::thread reconstructor_thread([&]() {
-    logger.trace("reconstruct", reconstructed_count);
-
     while (crop_running.load() || !cropped_tiles.empty()) {
       logger.debug("reconstructor before lock cropped_mutex");
       std::unique_lock lock{cropped_tiles_mutex};
@@ -712,10 +715,6 @@ int main(int argc, const char* argv[]) {
                 ++reconstructed_count;
                 reconstructed_buildings.push_back(std::move(building_object));
               }
-              if (reconstructed_count.load() % 100 == 0) {
-                auto& logger = roofer::logger::Logger::get_logger();
-                logger.trace("reconstruct", reconstructed_count);
-              }
             } catch (...) {
               auto& logger = roofer::logger::Logger::get_logger();
               logger.warning("reconstruction failed for: {}",
@@ -726,7 +725,6 @@ int main(int argc, const char* argv[]) {
         }
 
         logger.debug("Submitted all buildings of one tile for reconstruction");
-        logger.trace("reconstruct", reconstructed_count);
         reconstructed_pending.notify_one();
       }
     }
@@ -743,14 +741,12 @@ int main(int argc, const char* argv[]) {
 
     reconstruction_running.store(false);
     logger.debug("All reconstructor threads have joined.");
-    logger.trace("reconstruct", reconstructed_count);
     logger.debug("Sent {} buildings for reconstruction",
                  reconstructed_started_count.load());
     reconstructed_pending.notify_all();
   });
 
   std::thread serializer_thread([&]() {
-    logger.trace("serialize", serialized_count);
     while (reconstruction_running.load()) {
       std::unique_lock lock{reconstructed_buildings_mutex};
       reconstructed_pending.wait(lock);
@@ -777,9 +773,6 @@ int main(int argc, const char* argv[]) {
         // // buildings are finishes processing so they can be cleared
         // serialized_count += building_tile.buildings.size();
         ++serialized_count;
-        if (serialized_count % 100 == 0) {
-          logger.trace("serialize", serialized_count);
-        }
         // building_tile.buildings.clear();
         pending_reconstructed.pop_front();
       }
@@ -790,7 +783,7 @@ int main(int argc, const char* argv[]) {
   cropper_thread.join();
   reconstructor_thread.join();
   serializer_thread.join();
-  memory_tracer_thread.join();
+  tracer_thread.join();
 
   if (!cropped_tiles.empty()) {
     logger.error(
