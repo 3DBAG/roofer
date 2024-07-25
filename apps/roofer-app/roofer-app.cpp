@@ -601,7 +601,7 @@ int main(int argc, const char* argv[]) {
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
   // -6, because we need one thread for crop, reconstruct, serialize,
-  // memory_tracer each, plus the main thread and logger
+  // tracer each, plus the main thread and logger
   size_t nthreads_reconstructor_pool = nthreads - 6;
   logger.debug("Using {} threads for the reconstructor pool",
                nthreads_reconstructor_pool);
@@ -633,6 +633,10 @@ int main(int argc, const char* argv[]) {
       logger.trace("crop", cropped_count);
       logger.trace("reconstruct", reconstructed_count);
       logger.trace("serialize", serialized_count);
+      logger.debug(
+          "[reconstructor] reconstructor_pool nr. tasks waiting in the queue "
+          "== {}",
+          reconstructor_pool.get_tasks_queued());
       std::this_thread::sleep_for(trace_interval);
     }
     logger.trace("heap", s_HeapAllocationCounter.current_usage());
@@ -644,8 +648,9 @@ int main(int argc, const char* argv[]) {
   });
 
   // Process tiles
+  size_t cropped_tile_count = 0;
   std::thread cropper_thread([&]() {
-    logger.trace("crop", cropped_count);
+    logger.debug("[cropper] Starting cropper");
     while (!initial_tiles.empty()) {
       auto& building_tile = initial_tiles.front();
       // crop each tile
@@ -658,44 +663,43 @@ int main(int argc, const char* argv[]) {
         cropped_count += building_tile.buildings.size();
         cropped_tiles.push_back(std::move(building_tile));
       }
+      cropped_tile_count++;
       initial_tiles.pop_front();
+      logger.debug(
+          "[cropper] Finished cropping tile nr. {}, notifying reconstructor",
+          cropped_tile_count);
       cropped_pending.notify_one();
     }
     crop_running.store(false);
-    cropped_pending.notify_all();
+    logger.debug("[cropper] Finished cropper");
+    cropped_pending
+        .notify_all();  // TODO: notify_one would suffice, because there is just
+                        // one reconstructor_thread, which then distributes the
+                        // buildings to subthreads
   });
 
   std::thread reconstructor_thread([&]() {
     while (crop_running.load() || !cropped_tiles.empty()) {
-      logger.debug("reconstructor before lock cropped_mutex");
+      logger.debug("[reconstructor] before lock cropped_tiles_mutex");
       std::unique_lock lock{cropped_tiles_mutex};
-      logger.debug("reconstructor before wait(lock)");
-      logger.debug("crop_running.load() == {}, !deque_cropped.empty() == {}",
-                   crop_running.load(), !cropped_tiles.empty());
+      logger.debug("[reconstructor] before wait(lock)");
+      logger.debug(
+          "[reconstructor] crop_running.load() == {}, !cropped_tiles.empty() "
+          "== {}",
+          crop_running.load(), !cropped_tiles.empty());
       cropped_pending.wait(lock,
                            [&cropped_tiles] { return !cropped_tiles.empty(); });
-
       // Temporary queue so we can quickly move off items of the producer queue
       // and process them independently.
       auto pending_cropped{std::move(cropped_tiles)};
       cropped_tiles.clear();
       cropped_tiles.shrink_to_fit();
       lock.unlock();
-      logger.debug("reconstructor after lock.unlock()");
+      logger.debug("[reconstructor] after lock.unlock()");
 
       while (!pending_cropped.empty()) {
         auto building_tile = std::move(pending_cropped.back());
         pending_cropped.pop_back();
-        size_t _pcb = 0;
-        size_t _dcb = 0;
-        for (auto& bt : pending_cropped) {
-          _pcb += bt.buildings.size();
-        }
-        for (auto& bt : cropped_tiles) {
-          _dcb += bt.buildings.size();
-        }
-        logger.debug("pending_cropped has {} buildings", _pcb);
-        logger.debug("deque_cropped has {} buildings", _dcb);
 
         while (!building_tile.buildings.empty()) {
           BuildingObject building = std::move(building_tile.buildings.back());
@@ -717,31 +721,33 @@ int main(int argc, const char* argv[]) {
               }
             } catch (...) {
               auto& logger = roofer::logger::Logger::get_logger();
-              logger.warning("reconstruction failed for: {}",
+              logger.warning("[reconstructor] reconstruction failed for: {}",
                              building_object.jsonl_path);
             }
           });
-          // malloc_trim(0);
         }
 
-        logger.debug("Submitted all buildings of one tile for reconstruction");
+        logger.debug(
+            "[reconstructor] Submitted all buildings of one tile for "
+            "reconstruction");
         reconstructed_pending.notify_one();
       }
     }
 
-    logger.debug("Waiting for all reconstructor threads to join...");
+    logger.debug(
+        "[reconstructor] Waiting for all reconstructor threads to join...");
     reconstructor_pool.wait();
 
     if (!cropped_tiles.empty()) {
       logger.error(
-          "reconstructor is finished, but deque_cropped is "
+          "[reconstructor] reconstructor is finished, but cropped_tiles is "
           "not empty, it still contains {} items",
           cropped_tiles.size());
     }
 
     reconstruction_running.store(false);
-    logger.debug("All reconstructor threads have joined.");
-    logger.debug("Sent {} buildings for reconstruction",
+    logger.debug("[reconstructor] All reconstructor threads have joined.");
+    logger.debug("[reconstructor] Sent {} buildings for reconstruction",
                  reconstructed_started_count.load());
     reconstructed_pending.notify_all();
   });
@@ -787,7 +793,7 @@ int main(int argc, const char* argv[]) {
 
   if (!cropped_tiles.empty()) {
     logger.error(
-        "all threads have been joined, but deque_cropped is "
+        "all threads have been joined, but cropped_tiles is "
         "not empty, it still contains {} items",
         cropped_tiles.size());
   }
