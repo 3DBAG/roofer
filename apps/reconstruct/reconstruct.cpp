@@ -235,6 +235,7 @@ int main(int argc, const char* argv[]) {
   std::string crs_process = "EPSG:7415";
   std::string crs_output = "EPSG:7415";
   std::string skip_attribute_name = "kas_warenhuis";
+  std::string skip_glass_roof_attribute_name = "is_glass_roof_pointcloud";
   std::string building_bid_attribute = "CCA";
   float offset_x = 85373.406000000003;
   float offset_y = 447090.51799999998;
@@ -328,6 +329,11 @@ int main(int argc, const char* argv[]) {
     auto tml_skip_attribute_name = config["skip_attribute_name"].value<float>();
     if (tml_skip_attribute_name.has_value())
       skip_attribute_name = *tml_skip_attribute_name;
+
+    auto tml_skip_glass_roof_attribute_name =
+        config["skip_glass_roof_attribute_name"].value<float>();
+    if (tml_skip_glass_roof_attribute_name.has_value())
+      skip_glass_roof_attribute_name = *tml_skip_glass_roof_attribute_name;
 
   } else {
     logger.error("No config file specified\n");
@@ -442,6 +448,13 @@ int main(int argc, const char* argv[]) {
   bool skip = false;
   if (auto vec = attributes.get_if<bool>(skip_attribute_name)) {
     if ((*vec)[fp_i].has_value()) {
+      skip = (*vec)[fp_i].value();
+    }
+  }
+
+  // Check skip_glass_roof_attribute: set only if skip is still false
+  if (auto vec = attributes.get_if<bool>(skip_glass_roof_attribute_name)) {
+    if ((*vec)[fp_i].has_value() && skip == false) {
       skip = (*vec)[fp_i].value();
     }
   }
