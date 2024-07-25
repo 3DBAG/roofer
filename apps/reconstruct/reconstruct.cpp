@@ -467,8 +467,10 @@ int main(int argc, const char* argv[]) {
         roofer::reconstruction::createSimplePolygonExtruder();
     SimplePolygonExtruder->compute(footprints[fp_i], floor_elevation,
                                    PlaneDetector->roof_elevation_70p);
-    CityJsonWriter->write(path_output_jsonl, footprints[fp_i], &SimplePolygonExtruder->multisolid,
-                          &SimplePolygonExtruder->multisolid, &SimplePolygonExtruder->multisolid, attributes, fp_i);
+    CityJsonWriter->write(path_output_jsonl, footprints[fp_i],
+                          &SimplePolygonExtruder->multisolid,
+                          &SimplePolygonExtruder->multisolid,
+                          &SimplePolygonExtruder->multisolid, attributes, fp_i);
     logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
@@ -592,7 +594,8 @@ int main(int argc, const char* argv[]) {
                                      PlaneDetector.get(), LOD22);
 
     CityJsonWriter->write(path_output_jsonl, footprints[0], &multisolids_lod12,
-                          &multisolids_lod13, &multisolids_lod22, attributes, fp_i);
+                          &multisolids_lod13, &multisolids_lod22, attributes,
+                          fp_i);
     logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
   }
   // end LoD2

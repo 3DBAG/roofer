@@ -9,10 +9,7 @@
 namespace roofer::io {
 
   struct PointCloudReaderLASlib : public PointCloudReaderInterface {
-
-    ~PointCloudReaderLASlib() {
-      close();
-    };
+    ~PointCloudReaderLASlib() { close(); };
 
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();

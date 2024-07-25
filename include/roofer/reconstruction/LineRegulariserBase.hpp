@@ -92,7 +92,8 @@ namespace roofer::linereg {
     //       ((lhs.first==rhs.second) && (lhs.second==rhs.first));
     //   }
     // };
-    using Cluster2DistPairMap = std::unordered_map<ClusterH, std::list<std::shared_ptr<heap_handle>>>;
+    using Cluster2DistPairMap =
+        std::unordered_map<ClusterH, std::list<std::shared_ptr<heap_handle>>>;
 
     Cluster2DistPairMap cluster_to_dist_pairs;
     DistanceHeap distances;
@@ -162,7 +163,7 @@ namespace roofer::linereg {
     std::set<AngleClusterH> angle_clusters;
     std::set<DistClusterH> dist_clusters;
 
-    LineRegulariser()= default;
+    LineRegulariser() = default;
 
     void add_segments(size_t priority, const Polygon_2& polygon,
                       double offset) {

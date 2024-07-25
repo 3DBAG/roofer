@@ -122,10 +122,8 @@ namespace roofer::io {
 
     using MeshMap = std::unordered_map<int, Mesh>;
     void write_cityobject(
-        const LinearRing& footprint,
-        const MeshMap* multisolid_lod12,
-        const MeshMap* multisolid_lod13,
-        const MeshMap* multisolid_lod22,
+        const LinearRing& footprint, const MeshMap* multisolid_lod12,
+        const MeshMap* multisolid_lod13, const MeshMap* multisolid_lod22,
         const AttributeVecMap& attributes, size_t i, nlohmann::json& outputJSON,
         std::vector<arr3d>& vertex_vec, std::string& identifier_attribute,
         StrMap& output_attribute_names, bool& only_output_renamed) {
@@ -139,7 +137,6 @@ namespace roofer::io {
       bool export_lod13 = multisolid_lod13;
       bool export_lod22 = multisolid_lod22;
 
-      
       nlohmann::json j_null;
       {
         auto building = nlohmann::json::object();
@@ -270,8 +267,8 @@ namespace roofer::io {
                 building_bbox =
                     add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
                                       multisolid_lod12->at(sid));
-                buildingPart["geometry"].push_back(mesh2jSolid(
-                    multisolid_lod12->at(sid), "1.2", vertex_map));
+                buildingPart["geometry"].push_back(
+                    mesh2jSolid(multisolid_lod12->at(sid), "1.2", vertex_map));
               } catch (const std::exception& e) {
                 // std::cout << "skipping lod 12 building part\n";
               }
@@ -281,8 +278,8 @@ namespace roofer::io {
                 building_bbox =
                     add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
                                       multisolid_lod13->at(sid));
-                buildingPart["geometry"].push_back(mesh2jSolid(
-                    multisolid_lod13->at(sid), "1.3", vertex_map));
+                buildingPart["geometry"].push_back(
+                    mesh2jSolid(multisolid_lod13->at(sid), "1.3", vertex_map));
               } catch (const std::exception& e) {
                 // std::cout << "skipping lod 13 building part\n";
               }
@@ -291,8 +288,8 @@ namespace roofer::io {
               building_bbox =
                   add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
                                     multisolid_lod22->at(sid));
-              buildingPart["geometry"].push_back(mesh2jSolid(
-                  multisolid_lod22->at(sid), "2.2", vertex_map));
+              buildingPart["geometry"].push_back(
+                  mesh2jSolid(multisolid_lod22->at(sid), "2.2", vertex_map));
             }
 
             // attributes
@@ -333,12 +330,11 @@ namespace roofer::io {
 
    public:
     using CityJsonWriterInterface::CityJsonWriterInterface;
-    void write(
-        const std::string& source, const LinearRing& footprint,
-        const MeshMap* multisolid_lod12,
-        const MeshMap* multisolid_lod13,
-        const MeshMap* multisolid_lod22,
-        const AttributeVecMap& attributes, size_t attribute_index) override {
+    void write(const std::string& source, const LinearRing& footprint,
+               const MeshMap* multisolid_lod12, const MeshMap* multisolid_lod13,
+               const MeshMap* multisolid_lod22,
+               const AttributeVecMap& attributes,
+               size_t attribute_index) override {
       pjHelper.set_rev_crs_transform(CRS_.c_str());
 
       nlohmann::json outputJSON;
@@ -348,9 +344,9 @@ namespace roofer::io {
 
       std::vector<arr3d> vertex_vec;
       write_cityobject(footprint, multisolid_lod12, multisolid_lod13,
-                        multisolid_lod22, attributes, attribute_index, outputJSON, vertex_vec,
-                        identifier_attribute, output_attribute_names,
-                        only_output_renamed_);
+                       multisolid_lod22, attributes, attribute_index,
+                       outputJSON, vertex_vec, identifier_attribute,
+                       output_attribute_names, only_output_renamed_);
 
       // The main Building is the parent object.
       // Bit of a hack. Ideally we would know exactly which ID we set,
