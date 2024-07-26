@@ -3,7 +3,7 @@
 #include <random>
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/datastructures.hpp>
-#include <roofer/common/pip_util.hpp>
+#include <roofer/common/GridPIPTester.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
 
 namespace roofer::misc {
@@ -38,33 +38,18 @@ namespace roofer::misc {
     std::vector<std::vector<float>> buckets(r_max.dimx_ * r_max.dimy_);
 
     if (use_footprint) {
-      auto exterior = build_grid(footprint);
-      std::vector<pGridSet> holes;
-      for (auto& hole : footprint.interior_rings()) {
-        holes.push_back(build_grid(hole));
-      }
+      auto fp_grid = GridPIPTester(footprint);
 
       for (size_t col = 0; col < r_fp.dimx_; ++col) {
         for (size_t row = 0; row < r_fp.dimy_; ++row) {
           auto p = r_fp.getPointFromRasterCoords(col, row);
-          pPipoint pipoint = new Pipoint{p[0], p[1]};
-          if (GridTest(exterior, pipoint)) {
+          if (fp_grid.test(p)) {
             r_fp.add_point(p[0], p[1], 1, RasterTools::MAX);
           } else {
             r_fp.add_point(p[0], p[1], 0, RasterTools::MAX);
           }
-          for (auto& hole : holes) {
-            if (GridTest(hole, pipoint)) {
-              r_fp.add_point(p[0], p[1], 1, RasterTools::MAX);
-            } else {
-              r_fp.add_point(p[0], p[1], 0, RasterTools::MAX);
-            }
-          }
-          delete pipoint;
         }
       }
-      delete exterior;
-      for (auto& hole : holes) delete hole;
     }
 
     auto classification = pointcloud.attributes.get_if<int>("classification");

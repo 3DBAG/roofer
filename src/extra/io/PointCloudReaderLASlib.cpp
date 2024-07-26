@@ -70,7 +70,7 @@ namespace roofer::io {
       }
     }
 
-    TBox<double> getExtent() {
+    TBox<double> getExtent() override {
       return {lasreader->get_min_x(), lasreader->get_min_y(),
               lasreader->get_min_z(), lasreader->get_max_x(),
               lasreader->get_max_y(), lasreader->get_max_z()};
@@ -78,7 +78,7 @@ namespace roofer::io {
 
     virtual void readPointCloud(PointCollection& points, vec1i* classification,
                                 vec1i* order, vec1f* intensities,
-                                vec3f* colors) {
+                                vec3f* colors) override {
       auto& logger = logger::Logger::get_logger();
       logger.debug("Attemting to find OGC CRS WKT...");
       // std::string wkt = manager.substitute_globals(wkt_);

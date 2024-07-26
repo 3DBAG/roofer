@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <lasreader.hpp>
 #include <roofer/common/Raster.hpp>
-#include <roofer/common/pip_util.hpp>
+#include <roofer/common/GridPIPTester.hpp>
 #include <roofer/io/StreamCropper.hpp>
 
 namespace roofer::io {
@@ -22,7 +22,7 @@ namespace roofer::io {
     std::vector<std::vector<arr3f>> ground_buffer_points;
     RasterTools::Raster pindex;
     std::vector<std::vector<size_t>> pindex_vals;
-    std::vector<pGridSet> poly_grids, buf_poly_grids;
+    std::vector<std::unique_ptr<GridPIPTester>> poly_grids, buf_poly_grids;
     std::vector<vec1f> z_ground;
     std::unordered_map<std::unique_ptr<arr3f>, std::vector<size_t>>
         points_overlap;  // point, [poly id's], these are points that intersect
@@ -66,8 +66,8 @@ namespace roofer::io {
       for (size_t i = 0; i < polygons.size(); ++i) {
         auto ring = polygons.at(i);
         auto buf_ring = buf_polygons.at(i);
-        poly_grids.push_back(build_grid(ring));
-        buf_poly_grids.push_back(build_grid(buf_ring));
+        poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(ring)));
+        buf_poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(buf_ring)));
       }
 
       // build an index grid for the polygons
@@ -99,13 +99,6 @@ namespace roofer::io {
       }
     }
 
-    ~PointsInPolygonsCollector() {
-      for (int i = 0; i < poly_grids.size(); i++) {
-        delete poly_grids[i];
-        delete buf_poly_grids[i];
-      }
-    }
-
     /**
      * @brief Find polygon that intersects point and add the point to the
      * corresponding building point cloud
@@ -132,10 +125,9 @@ namespace roofer::io {
       //    Thus a single ground height value per grid cell is good enough for
       //    representing the ground/floor elevation of the buildings in that
       //    grid cell.
-      pPipoint pipoint = new Pipoint{point[0], point[1]};
       std::vector<size_t> poly_intersect;
       for (size_t& poly_i : pindex_vals[lincoord]) {
-        if (GridTest(buf_poly_grids[poly_i], pipoint)) {
+        if (buf_poly_grids[poly_i]->test(point)) {
           auto& point_cloud = point_clouds.at(poly_i);
           auto classification =
               point_cloud.attributes.get_if<int>("classification");
@@ -145,7 +137,7 @@ namespace roofer::io {
             z_ground[poly_i].push_back(point[2]);
           }
 
-          if (GridTest(poly_grids[poly_i], pipoint)) {
+          if (poly_grids[poly_i]->test(point)) {
             if (point_class == ground_class) {
               point_cloud.push_back(point);
               (*classification).push_back(2);
@@ -175,7 +167,6 @@ namespace roofer::io {
           }
         }
       }
-      delete pipoint;
     }
 
     /**

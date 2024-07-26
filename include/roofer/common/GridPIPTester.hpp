@@ -23,6 +23,16 @@
 
 namespace roofer {
 
-  pGridSet build_grid(const roofer::vec3f& ring);
+  class GridPIPTester {
+    pGridSet ext_gridset;
+    std::vector<pGridSet> hole_gridsets;
+    int Grid_Resolution = 20;
 
-}
+    public:
+    GridPIPTester(const LinearRing& polygon);
+    GridPIPTester(const GridPIPTester&) = delete;
+    ~GridPIPTester();
+    bool test(const arr3f& p);
+  };
+  
+}  // namespace roofer
