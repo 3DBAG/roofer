@@ -44,6 +44,7 @@ if __name__ == "__main__":
     colormap = {
         "crop": "#2BC5F0",
         "reconstruct": "#F08B2B",
+        "sort": "#E8667D",
         "serialize": "#9CF02B",
         "heap": "#CD2BF0",
         "rss": "#4F8A9B"
