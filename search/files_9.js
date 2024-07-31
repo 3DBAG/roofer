@@ -1,11 +1,20 @@
 var searchData=
 [
-  ['segmentrasteriser_2ecpp_1243',['SegmentRasteriser.cpp',['../SegmentRasteriser_8cpp.html',1,'']]],
-  ['segmentrasteriser_2ehpp_1244',['SegmentRasteriser.hpp',['../SegmentRasteriser_8hpp.html',1,'']]],
-  ['select_5fpointcloud_2ecpp_1245',['select_pointcloud.cpp',['../select__pointcloud_8cpp.html',1,'']]],
-  ['select_5fpointcloud_2ehpp_1246',['select_pointcloud.hpp',['../select__pointcloud_8hpp.html',1,'']]],
-  ['simplepolygonextruder_2ecpp_1247',['SimplePolygonExtruder.cpp',['../SimplePolygonExtruder_8cpp.html',1,'']]],
-  ['simplepolygonextruder_2ehpp_1248',['SimplePolygonExtruder.hpp',['../SimplePolygonExtruder_8hpp.html',1,'']]],
-  ['streamcropper_2ecpp_1249',['StreamCropper.cpp',['../StreamCropper_8cpp.html',1,'']]],
-  ['streamcropper_2ehpp_1250',['StreamCropper.hpp',['../StreamCropper_8hpp.html',1,'']]]
+  ['pc2meshdistcalculator_2ecpp_1246',['PC2MeshDistCalculator.cpp',['../PC2MeshDistCalculator_8cpp.html',1,'']]],
+  ['pc2meshdistcalculator_2ehpp_1247',['PC2MeshDistCalculator.hpp',['../PC2MeshDistCalculator_8hpp.html',1,'']]],
+  ['planedetector_2ecpp_1248',['PlaneDetector.cpp',['../PlaneDetector_8cpp.html',1,'']]],
+  ['planedetector_2ehpp_1249',['PlaneDetector.hpp',['../PlaneDetector_8hpp.html',1,'']]],
+  ['planedetectorbase_2ehpp_1250',['PlaneDetectorBase.hpp',['../PlaneDetectorBase_8hpp.html',1,'']]],
+  ['planedetectorransac_2ecpp_1251',['PlaneDetectorRANSAC.cpp',['../PlaneDetectorRANSAC_8cpp.html',1,'']]],
+  ['planeintersector_2ecpp_1252',['PlaneIntersector.cpp',['../PlaneIntersector_8cpp.html',1,'']]],
+  ['planeintersector_2ehpp_1253',['PlaneIntersector.hpp',['../PlaneIntersector_8hpp.html',1,'']]],
+  ['pointcloudrasteriser_2ecpp_1254',['PointcloudRasteriser.cpp',['../PointcloudRasteriser_8cpp.html',1,'']]],
+  ['pointcloudrasteriser_2ehpp_1255',['PointcloudRasteriser.hpp',['../PointcloudRasteriser_8hpp.html',1,'']]],
+  ['pointcloudreader_2ehpp_1256',['PointCloudReader.hpp',['../PointCloudReader_8hpp.html',1,'']]],
+  ['pointcloudreaderlaslib_2ecpp_1257',['PointCloudReaderLASlib.cpp',['../PointCloudReaderLASlib_8cpp.html',1,'']]],
+  ['pointcloudwriter_2ehpp_1258',['PointCloudWriter.hpp',['../PointCloudWriter_8hpp.html',1,'']]],
+  ['pointcloudwriterlaslib_2ecpp_1259',['PointCloudWriterLASlib.cpp',['../PointCloudWriterLASlib_8cpp.html',1,'']]],
+  ['projhelper_2ecpp_1260',['projHelper.cpp',['../projHelper_8cpp.html',1,'']]],
+  ['projhelper_2ehpp_1261',['projHelper.hpp',['../projHelper_8hpp.html',1,'']]],
+  ['ptinpoly_2eh_1262',['ptinpoly.h',['../ptinpoly_8h.html',1,'']]]
 ];

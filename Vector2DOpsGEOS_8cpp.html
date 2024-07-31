@@ -79,33 +79,38 @@ $(function() {
 <div class="textblock"><code>#include &lt;geos_c.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="logger_8h_source.html">roofer/logger/logger.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="Vector2DOps_8hpp_source.html">roofer/misc/Vector2DOps.hpp</a>&gt;</code><br />
+<code>#include &lt;vector&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Vector2DOpsGEOS.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="Vector2DOpsGEOS_8cpp__incl.png" border="0" usemap="#a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2src_2extra_2misc_2Vector2DOpsGEOS_8cpp" alt=""/></div>
 <map name="a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2src_2extra_2misc_2Vector2DOpsGEOS_8cpp" id="a_2home_2runner_2work_2geoflow-roofer_2geoflow-roofer_2src_2extra_2misc_2Vector2DOpsGEOS_8cpp">
-<area shape="rect" title=" " alt="" coords="75,5,344,61"/>
-<area shape="rect" title=" " alt="" coords="25,109,103,136"/>
-<area shape="rect" href="logger_8h.html" title=" " alt="" coords="128,109,291,136"/>
-<area shape="rect" href="Vector2DOps_8hpp.html" title=" " alt="" coords="367,109,579,136"/>
+<area shape="rect" title=" " alt="" coords="281,5,551,61"/>
+<area shape="rect" title=" " alt="" coords="126,109,205,136"/>
+<area shape="rect" href="logger_8h.html" title=" " alt="" coords="229,109,392,136"/>
+<area shape="rect" href="Vector2DOps_8hpp.html" title=" " alt="" coords="417,109,629,136"/>
+<area shape="rect" title=" " alt="" coords="803,333,866,360"/>
 <area shape="rect" title=" " alt="" coords="5,184,72,211"/>
 <area shape="rect" title=" " alt="" coords="397,184,475,211"/>
-<area shape="rect" title=" " alt="" coords="108,333,167,360"/>
+<area shape="rect" title=" " alt="" coords="124,333,183,360"/>
 <area shape="rect" title=" " alt="" coords="147,184,245,211"/>
 <area shape="rect" title=" " alt="" coords="269,184,374,211"/>
-<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="407,259,617,285"/>
+<area shape="rect" href="common_8hpp.html" title=" " alt="" coords="429,259,640,285"/>
 <area shape="rect" href="datastructures_8hpp.html" title=" " alt="" coords="549,184,797,211"/>
-<area shape="rect" title=" " alt="" coords="244,333,300,360"/>
-<area shape="rect" title=" " alt="" coords="324,333,399,360"/>
-<area shape="rect" title=" " alt="" coords="423,333,547,360"/>
-<area shape="rect" title=" " alt="" coords="571,333,634,360"/>
-<area shape="rect" title=" " alt="" coords="659,333,717,360"/>
-<area shape="rect" title=" " alt="" coords="742,333,810,360"/>
+<area shape="rect" title=" " alt="" coords="399,408,455,435"/>
+<area shape="rect" title=" " alt="" coords="268,333,343,360"/>
+<area shape="rect" title=" " alt="" coords="367,333,491,360"/>
+<area shape="rect" title=" " alt="" coords="516,333,575,360"/>
+<area shape="rect" title=" " alt="" coords="599,333,667,360"/>
+<area shape="rect" href="box_8hpp.html" title=" " alt="" coords="692,333,767,360"/>
+<area shape="rect" title=" " alt="" coords="674,408,785,435"/>
 </map>
 </div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1RTreeGEOS.html">roofer::misc::RTreeGEOS</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1Vector2DOpsGEOS.html">roofer::misc::Vector2DOpsGEOS</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -141,6 +146,10 @@ Functions</h2></td></tr>
 <tr class="separator:a0bb411da39b66b326e6c22d23401a123"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1cb74dd8bf5e609b8c43a2a9b1f61ee"><td class="memItemLeft" align="right" valign="top">LinearRing&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#ae1cb74dd8bf5e609b8c43a2a9b1f61ee">roofer::misc::from_geos_polygon</a> (const GEOSGeometry *g_polygon)</td></tr>
 <tr class="separator:ae1cb74dd8bf5e609b8c43a2a9b1f61ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50c26c682581a5ac8b58d4c9bf0ffd3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a50c26c682581a5ac8b58d4c9bf0ffd3f">roofer::misc::itemQueryCallback</a> (void *item, void *userdata)</td></tr>
+<tr class="separator:a50c26c682581a5ac8b58d4c9bf0ffd3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaf71ac577e24e7df13e7475dce9ed8c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; RTreeInterface &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#abaf71ac577e24e7df13e7475dce9ed8c">roofer::misc::createRTreeGEOS</a> ()</td></tr>
+<tr class="separator:abaf71ac577e24e7df13e7475dce9ed8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a656f7089935b6c48ddab88cb78db48d9"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; Vector2DOpsInterface &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a656f7089935b6c48ddab88cb78db48d9">roofer::misc::createVector2DOpsGEOS</a> ()</td></tr>
 <tr class="separator:a656f7089935b6c48ddab88cb78db48d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">

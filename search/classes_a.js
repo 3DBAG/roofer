@@ -1,4 +1,27 @@
 var searchData=
 [
-  ['overlay_5ffunctor_1105',['overlay_functor',['../structroofer_1_1reconstruction_1_1overlay__functor.html',1,'roofer::reconstruction']]]
+  ['pc2meshdistcalculator_1128',['PC2MeshDistCalculator',['../classroofer_1_1misc_1_1PC2MeshDistCalculator.html',1,'roofer::misc']]],
+  ['pc2meshdistcalculatorconfig_1129',['PC2MeshDistCalculatorConfig',['../structroofer_1_1misc_1_1PC2MeshDistCalculatorConfig.html',1,'roofer::misc']]],
+  ['pc2meshdistcalculatorinterface_1130',['PC2MeshDistCalculatorInterface',['../structroofer_1_1misc_1_1PC2MeshDistCalculatorInterface.html',1,'roofer::misc']]],
+  ['pipoint_1131',['Pipoint',['../structPipoint.html',1,'']]],
+  ['planedetector_1132',['PlaneDetector',['../classroofer_1_1reconstruction_1_1PlaneDetector.html',1,'roofer::reconstruction']]],
+  ['planedetectorconfig_1133',['PlaneDetectorConfig',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html',1,'roofer::reconstruction']]],
+  ['planedetectorinterface_1134',['PlaneDetectorInterface',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html',1,'roofer::reconstruction']]],
+  ['planedetectorransac_1135',['PlaneDetectorRANSAC',['../structroofer_1_1reconstruction_1_1PlaneDetectorRANSAC.html',1,'roofer::reconstruction']]],
+  ['planeds_1136',['PlaneDS',['../classroofer_1_1planedect_1_1PlaneDS.html',1,'roofer::planedect']]],
+  ['planehash_1137',['PlaneHash',['../structroofer_1_1reconstruction_1_1PlaneHash.html',1,'roofer::reconstruction']]],
+  ['planeintersector_1138',['PlaneIntersector',['../classroofer_1_1reconstruction_1_1PlaneIntersector.html',1,'roofer::reconstruction']]],
+  ['planeintersectorconfig_1139',['PlaneIntersectorConfig',['../structroofer_1_1reconstruction_1_1PlaneIntersectorConfig.html',1,'roofer::reconstruction']]],
+  ['planeintersectorinterface_1140',['PlaneIntersectorInterface',['../structroofer_1_1reconstruction_1_1PlaneIntersectorInterface.html',1,'roofer::reconstruction']]],
+  ['planeregion_1141',['PlaneRegion',['../classroofer_1_1planedect_1_1PlaneRegion.html',1,'roofer::planedect']]],
+  ['pointcloudcropper_1142',['PointCloudCropper',['../structroofer_1_1io_1_1PointCloudCropper.html',1,'roofer::io']]],
+  ['pointcloudcropperconfig_1143',['PointCloudCropperConfig',['../structroofer_1_1io_1_1PointCloudCropperConfig.html',1,'roofer::io']]],
+  ['pointcloudcropperinterface_1144',['PointCloudCropperInterface',['../structroofer_1_1io_1_1PointCloudCropperInterface.html',1,'roofer::io']]],
+  ['pointcloudreaderinterface_1145',['PointCloudReaderInterface',['../structroofer_1_1io_1_1PointCloudReaderInterface.html',1,'roofer::io']]],
+  ['pointcloudreaderlaslib_1146',['PointCloudReaderLASlib',['../structroofer_1_1io_1_1PointCloudReaderLASlib.html',1,'roofer::io']]],
+  ['pointcloudselectresult_1147',['PointCloudSelectResult',['../structroofer_1_1misc_1_1PointCloudSelectResult.html',1,'roofer::misc']]],
+  ['pointcollection_1148',['PointCollection',['../classroofer_1_1PointCollection.html',1,'roofer']]],
+  ['pointsinpolygonscollector_1149',['PointsInPolygonsCollector',['../classroofer_1_1io_1_1PointsInPolygonsCollector.html',1,'roofer::io']]],
+  ['projhelper_1150',['projHelper',['../structroofer_1_1misc_1_1projHelper.html',1,'roofer::misc']]],
+  ['projhelperinterface_1151',['projHelperInterface',['../structroofer_1_1misc_1_1projHelperInterface.html',1,'roofer::misc']]]
 ];

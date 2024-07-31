@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['edge_1059',['Edge',['../structEdge.html',1,'']]],
-  ['edge_5fweight_5fproperty_5fmap_1060',['Edge_weight_property_map',['../classroofer_1_1reconstruction_1_1Edge__weight__property__map.html',1,'roofer::reconstruction']]],
-  ['edgeinfo_1061',['EdgeInfo',['../structroofer_1_1EdgeInfo.html',1,'roofer']]],
-  ['elevationprovider_1062',['ElevationProvider',['../structroofer_1_1reconstruction_1_1ElevationProvider.html',1,'roofer::reconstruction']]]
+  ['face_5findex_5fobserver_1085',['Face_index_observer',['../classroofer_1_1reconstruction_1_1Face__index__observer.html',1,'roofer::reconstruction']]],
+  ['face_5fmerge_5fobserver_1086',['Face_merge_observer',['../classroofer_1_1reconstruction_1_1Face__merge__observer.html',1,'roofer::reconstruction']]],
+  ['face_5fsplit_5fobserver_1087',['Face_split_observer',['../classroofer_1_1reconstruction_1_1Face__split__observer.html',1,'roofer::reconstruction']]],
+  ['faceinfo_1088',['FaceInfo',['../structroofer_1_1FaceInfo.html',1,'roofer::FaceInfo'],['../structroofer_1_1reconstruction_1_1FaceInfo.html',1,'roofer::reconstruction::FaceInfo'],['../structroofer_1_1tri__util_1_1FaceInfo.html',1,'roofer::tri_util::FaceInfo']]],
+  ['footprintgraph_1089',['FootprintGraph',['../classroofer_1_1reconstruction_1_1FootprintGraph.html',1,'roofer::reconstruction']]]
 ];

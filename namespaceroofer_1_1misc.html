@@ -91,6 +91,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classroofer_1_1misc_1_1Val3dator.html">Val3dator</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1RTreeGEOS.html">RTreeGEOS</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1Vector2DOpsGEOS.html">Vector2DOpsGEOS</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1PC2MeshDistCalculatorConfig.html">PC2MeshDistCalculatorConfig</a></td></tr>
@@ -108,6 +110,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1Val3datorConfig.html">Val3datorConfig</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1Val3datorInterface.html">Val3datorInterface</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1RTreeInterface.html">RTreeInterface</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1misc_1_1Vector2DOpsInterface.html">Vector2DOpsInterface</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -208,6 +212,10 @@ Functions</h2></td></tr>
 <tr class="separator:a0bb411da39b66b326e6c22d23401a123"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1cb74dd8bf5e609b8c43a2a9b1f61ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classroofer_1_1LinearRing.html">LinearRing</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#ae1cb74dd8bf5e609b8c43a2a9b1f61ee">from_geos_polygon</a> (const GEOSGeometry *g_polygon)</td></tr>
 <tr class="separator:ae1cb74dd8bf5e609b8c43a2a9b1f61ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50c26c682581a5ac8b58d4c9bf0ffd3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a50c26c682581a5ac8b58d4c9bf0ffd3f">itemQueryCallback</a> (void *item, void *userdata)</td></tr>
+<tr class="separator:a50c26c682581a5ac8b58d4c9bf0ffd3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaf71ac577e24e7df13e7475dce9ed8c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structroofer_1_1misc_1_1RTreeInterface.html">RTreeInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#abaf71ac577e24e7df13e7475dce9ed8c">createRTreeGEOS</a> ()</td></tr>
+<tr class="separator:abaf71ac577e24e7df13e7475dce9ed8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a656f7089935b6c48ddab88cb78db48d9"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structroofer_1_1misc_1_1Vector2DOpsInterface.html">Vector2DOpsInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1misc.html#a656f7089935b6c48ddab88cb78db48d9">createVector2DOpsGEOS</a> ()</td></tr>
 <tr class="separator:a656f7089935b6c48ddab88cb78db48d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a758dc5b7e071e599521de7b734c5ddb1"><td class="memTemplParams" colspan="2">template&lt;typename Point &gt; </td></tr>
@@ -602,6 +610,23 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="abaf71ac577e24e7df13e7475dce9ed8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abaf71ac577e24e7df13e7475dce9ed8c">&#9670;&nbsp;</a></span>createRTreeGEOS()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::unique_ptr&lt; <a class="el" href="structroofer_1_1misc_1_1RTreeInterface.html">RTreeInterface</a> &gt; roofer::misc::createRTreeGEOS </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aad2347d74be296afe0804353c2b7aa3e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aad2347d74be296afe0804353c2b7aa3e">&#9670;&nbsp;</a></span>createVal3dator()</h2>
 
@@ -901,6 +926,34 @@ template&lt;typename T &gt; </div>
           <td></td>
           <td class="paramtype">const float &amp;&#160;</td>
           <td class="paramname"><em>threshold_mutation_difference</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a50c26c682581a5ac8b58d4c9bf0ffd3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50c26c682581a5ac8b58d4c9bf0ffd3f">&#9670;&nbsp;</a></span>itemQueryCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void roofer::misc::itemQueryCallback </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>item</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>userdata</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

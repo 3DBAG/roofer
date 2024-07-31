@@ -1,4 +1,5 @@
 <map id="roofer::io::VectorReaderInterface" name="roofer::io::VectorReaderInterface">
-<area shape="rect" id="node1" title=" " alt="" coords="5,109,181,151"/>
-<area shape="rect" id="node2" href="$structroofer_1_1misc_1_1projHelperInterface.html" title=" " alt="" coords="5,5,181,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="105,109,281,151"/>
+<area shape="rect" id="node2" href="$structroofer_1_1TBox.html" title=" " alt="" coords="5,13,181,39"/>
+<area shape="rect" id="node3" href="$structroofer_1_1misc_1_1projHelperInterface.html" title=" " alt="" coords="205,5,381,47"/>
 </map>

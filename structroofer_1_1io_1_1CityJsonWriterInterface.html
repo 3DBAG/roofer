@@ -101,8 +101,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a6b56524c0a6c122b1e0148279ab12966"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5944f9c7c805311c6eb41da9eb575849"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1io_1_1CityJsonWriterInterface.html#a5944f9c7c805311c6eb41da9eb575849">~CityJsonWriterInterface</a> ()=default</td></tr>
 <tr class="separator:a5944f9c7c805311c6eb41da9eb575849"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2be239946fd67857e11d8df9c66772c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1io_1_1CityJsonWriterInterface.html#ab2be239946fd67857e11d8df9c66772c">write</a> (const std::string &amp;source, const std::vector&lt; <a class="el" href="classroofer_1_1LinearRing.html">LinearRing</a> &gt; &amp;footprints, const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *geometry_lod12, const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *geometry_lod13, const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *geometry_lod22, const <a class="el" href="classroofer_1_1AttributeVecMap.html">AttributeVecMap</a> &amp;attributes)=0</td></tr>
-<tr class="separator:ab2be239946fd67857e11d8df9c66772c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab86b283f94ba1491f526296794cb9002"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1io_1_1CityJsonWriterInterface.html#ab86b283f94ba1491f526296794cb9002">write</a> (const std::string &amp;source, const <a class="el" href="classroofer_1_1LinearRing.html">LinearRing</a> &amp;footprints, const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *geometry_lod12, const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *geometry_lod13, const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *geometry_lod22, const <a class="el" href="classroofer_1_1AttributeVecMap.html">AttributeVecMap</a> &amp;attributes, const size_t attribute_index)=0</td></tr>
+<tr class="separator:ab86b283f94ba1491f526296794cb9002"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -188,8 +188,8 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ab2be239946fd67857e11d8df9c66772c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2be239946fd67857e11d8df9c66772c">&#9670;&nbsp;</a></span>write()</h2>
+<a id="ab86b283f94ba1491f526296794cb9002"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab86b283f94ba1491f526296794cb9002">&#9670;&nbsp;</a></span>write()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -206,32 +206,38 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="classroofer_1_1LinearRing.html">LinearRing</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classroofer_1_1LinearRing.html">LinearRing</a> &amp;&#160;</td>
           <td class="paramname"><em>footprints</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *&#160;</td>
+          <td class="paramtype">const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *&#160;</td>
           <td class="paramname"><em>geometry_lod12</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *&#160;</td>
+          <td class="paramtype">const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *&#160;</td>
           <td class="paramname"><em>geometry_lod13</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; &gt; *&#160;</td>
+          <td class="paramtype">const std::unordered_map&lt; int, <a class="el" href="classroofer_1_1Mesh.html">Mesh</a> &gt; *&#160;</td>
           <td class="paramname"><em>geometry_lod22</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classroofer_1_1AttributeVecMap.html">AttributeVecMap</a> &amp;&#160;</td>
-          <td class="paramname"><em>attributes</em>&#160;</td>
+          <td class="paramname"><em>attributes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t&#160;</td>
+          <td class="paramname"><em>attribute_index</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

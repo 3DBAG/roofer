@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['zero_2050',['ZERO',['../namespaceroofer_1_1RasterTools.html#aef217d5aeb584c553c60b1a19f4cad1eaa8681e001e6e9139c5949d7210e69faa',1,'roofer::RasterTools']]]
+  ['warning_2095',['warning',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7b83d3f08fa392b79e3f553b585971cd',1,'roofer::logger']]]
 ];

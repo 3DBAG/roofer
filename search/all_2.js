@@ -7,11 +7,12 @@ var searchData=
   ['blocks_92',['blocks',['../structroofer_1_1EdgeInfo.html#a6fd2b36bc3bc97abb0eb301cbf6864b2',1,'roofer::EdgeInfo']]],
   ['boost_93',['boost',['../namespaceboost.html',1,'']]],
   ['box_94',['box',['../classroofer_1_1Geometry.html#a9310f3f68d724d599febaec392f2c86e',1,'roofer::Geometry']]],
-  ['box_95',['Box',['../classroofer_1_1Box.html#af3bd5fc18903332ba06835317a05bab7',1,'roofer::Box::Box()'],['../classroofer_1_1Box.html',1,'roofer::Box']]],
-  ['buffer_96',['buffer',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#ab4ec6cee85f8785db4cb571fd06b6725',1,'roofer::io::PointCloudCropperConfig']]],
-  ['buffer_5fpolygons_97',['buffer_polygons',['../structroofer_1_1misc_1_1Vector2DOpsGEOS.html#a55b60e9f6352bca0b96887e9bba0fdb3',1,'roofer::misc::Vector2DOpsGEOS::buffer_polygons()'],['../structroofer_1_1misc_1_1Vector2DOpsInterface.html#aa8bf7f08225a7832df65cf8c572f1968',1,'roofer::misc::Vector2DOpsInterface::buffer_polygons()']]],
-  ['build_5fgrid_98',['build_grid',['../namespaceroofer.html#a49652f29a1e1da771d393bc33c1f03bd',1,'roofer']]],
-  ['building_5fclass_99',['building_class',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a41b6426209a70da4394861aa7ede9260',1,'roofer::io::PointCloudCropperConfig']]],
-  ['building_5fpart_5fids_5f_100',['building_part_ids_',['../classroofer_1_1MultiTriangleCollection.html#ab91894d37afab20bf6464cbf3d51394c',1,'roofer::MultiTriangleCollection']]],
-  ['building_5fyoc_101',['building_yoc',['../structroofer_1_1misc_1_1CandidatePointCloud.html#a35ac32823b7a83c98d44059f45ab5099',1,'roofer::misc::CandidatePointCloud']]]
+  ['box_95',['Box',['../namespaceroofer.html#a3f3ff617f64cf9bca9ae080b65f33e63',1,'roofer']]],
+  ['box_2ehpp_96',['box.hpp',['../box_8hpp.html',1,'']]],
+  ['buffer_97',['buffer',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#ab4ec6cee85f8785db4cb571fd06b6725',1,'roofer::io::PointCloudCropperConfig']]],
+  ['buffer_5fpolygons_98',['buffer_polygons',['../structroofer_1_1misc_1_1Vector2DOpsGEOS.html#a55b60e9f6352bca0b96887e9bba0fdb3',1,'roofer::misc::Vector2DOpsGEOS::buffer_polygons()'],['../structroofer_1_1misc_1_1Vector2DOpsInterface.html#aa8bf7f08225a7832df65cf8c572f1968',1,'roofer::misc::Vector2DOpsInterface::buffer_polygons()']]],
+  ['build_5fgrid_99',['build_grid',['../namespaceroofer.html#a2b5dd3ea3960821f61ab69ef700f538c',1,'roofer']]],
+  ['building_5fclass_100',['building_class',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a41b6426209a70da4394861aa7ede9260',1,'roofer::io::PointCloudCropperConfig']]],
+  ['building_5fpart_5fids_5f_101',['building_part_ids_',['../classroofer_1_1MultiTriangleCollection.html#ab91894d37afab20bf6464cbf3d51394c',1,'roofer::MultiTriangleCollection']]],
+  ['building_5fyoc_102',['building_yoc',['../structroofer_1_1misc_1_1CandidatePointCloud.html#a35ac32823b7a83c98d44059f45ab5099',1,'roofer::misc::CandidatePointCloud']]]
 ];

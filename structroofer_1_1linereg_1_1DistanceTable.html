@@ -86,14 +86,14 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a990f16f64b80f2fa8020fc444ddc9ba8"><td class="memItemLeft" align="right" valign="top">typedef std::pair&lt; ClusterH, ClusterH &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a990f16f64b80f2fa8020fc444ddc9ba8">ClusterPair</a></td></tr>
-<tr class="separator:a990f16f64b80f2fa8020fc444ddc9ba8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c2e656b496b29749e95d99d1659ef49"><td class="memItemLeft" align="right" valign="top">typedef boost::heap::fibonacci_heap&lt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable_1_1ClusterPairDist.html">ClusterPairDist</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a5c2e656b496b29749e95d99d1659ef49">DistanceHeap</a></td></tr>
-<tr class="separator:a5c2e656b496b29749e95d99d1659ef49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2c2379cf6a21ce3124ecd15025b9f1f"><td class="memItemLeft" align="right" valign="top">typedef DistanceHeap::handle_type&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#ac2c2379cf6a21ce3124ecd15025b9f1f">heap_handle</a></td></tr>
-<tr class="separator:ac2c2379cf6a21ce3124ecd15025b9f1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a052a082b799e26eba61b0fd0697466a7"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_map&lt; ClusterH, std::list&lt; std::shared_ptr&lt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#ac2c2379cf6a21ce3124ecd15025b9f1f">heap_handle</a> &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a052a082b799e26eba61b0fd0697466a7">Cluster2DistPairMap</a></td></tr>
-<tr class="separator:a052a082b799e26eba61b0fd0697466a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1458e04197a860caa9b6d9f4cf63b68c"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a1458e04197a860caa9b6d9f4cf63b68c">ClusterPair</a> = std::pair&lt; ClusterH, ClusterH &gt;</td></tr>
+<tr class="separator:a1458e04197a860caa9b6d9f4cf63b68c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90c4b3d60f39b3d5906c15cbcb7f166f"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a90c4b3d60f39b3d5906c15cbcb7f166f">DistanceHeap</a> = boost::heap::fibonacci_heap&lt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable_1_1ClusterPairDist.html">ClusterPairDist</a> &gt;</td></tr>
+<tr class="separator:a90c4b3d60f39b3d5906c15cbcb7f166f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ff9e5c72436a0a2352848e87f995f7d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a7ff9e5c72436a0a2352848e87f995f7d">heap_handle</a> = typename DistanceHeap::handle_type</td></tr>
+<tr class="separator:a7ff9e5c72436a0a2352848e87f995f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a71ad5d2b49f7c74e65157af0a13ac9"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a6a71ad5d2b49f7c74e65157af0a13ac9">Cluster2DistPairMap</a> = std::unordered_map&lt; ClusterH, std::list&lt; std::shared_ptr&lt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a7ff9e5c72436a0a2352848e87f995f7d">heap_handle</a> &gt; &gt;&gt;</td></tr>
+<tr class="separator:a6a71ad5d2b49f7c74e65157af0a13ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -106,16 +106,16 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aa85611146a7cacd861db36ee24994461"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a052a082b799e26eba61b0fd0697466a7">Cluster2DistPairMap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#aa85611146a7cacd861db36ee24994461">cluster_to_dist_pairs</a></td></tr>
+<tr class="memitem:aa85611146a7cacd861db36ee24994461"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a6a71ad5d2b49f7c74e65157af0a13ac9">Cluster2DistPairMap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#aa85611146a7cacd861db36ee24994461">cluster_to_dist_pairs</a></td></tr>
 <tr class="separator:aa85611146a7cacd861db36ee24994461"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f586b042e772b897962cd0d68405602"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a5c2e656b496b29749e95d99d1659ef49">DistanceHeap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a0f586b042e772b897962cd0d68405602">distances</a></td></tr>
+<tr class="memitem:a0f586b042e772b897962cd0d68405602"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a90c4b3d60f39b3d5906c15cbcb7f166f">DistanceHeap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a0f586b042e772b897962cd0d68405602">distances</a></td></tr>
 <tr class="separator:a0f586b042e772b897962cd0d68405602"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab577b98e1748abd41752ef2c45802c4a"><td class="memItemLeft" align="right" valign="top">std::set&lt; ClusterH &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#ab577b98e1748abd41752ef2c45802c4a">clusters</a></td></tr>
 <tr class="separator:ab577b98e1748abd41752ef2c45802c4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="a052a082b799e26eba61b0fd0697466a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a052a082b799e26eba61b0fd0697466a7">&#9670;&nbsp;</a></span>Cluster2DistPairMap</h2>
+<a id="a6a71ad5d2b49f7c74e65157af0a13ac9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a71ad5d2b49f7c74e65157af0a13ac9">&#9670;&nbsp;</a></span>Cluster2DistPairMap</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -123,15 +123,15 @@ Public Attributes</h2></td></tr>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::unordered_map&lt;ClusterH, std::list&lt;std::shared_ptr&lt;<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#ac2c2379cf6a21ce3124ecd15025b9f1f">heap_handle</a>&gt; &gt; &gt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a052a082b799e26eba61b0fd0697466a7">Cluster2DistPairMap</a></td>
+          <td class="memname">using <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a6a71ad5d2b49f7c74e65157af0a13ac9">Cluster2DistPairMap</a> =  std::unordered_map&lt;ClusterH, std::list&lt;std::shared_ptr&lt;<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a7ff9e5c72436a0a2352848e87f995f7d">heap_handle</a>&gt; &gt;&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a990f16f64b80f2fa8020fc444ddc9ba8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a990f16f64b80f2fa8020fc444ddc9ba8">&#9670;&nbsp;</a></span>ClusterPair</h2>
+<a id="a1458e04197a860caa9b6d9f4cf63b68c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1458e04197a860caa9b6d9f4cf63b68c">&#9670;&nbsp;</a></span>ClusterPair</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -139,15 +139,15 @@ template&lt;typename ClusterH &gt; </div>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::pair&lt;ClusterH, ClusterH&gt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a990f16f64b80f2fa8020fc444ddc9ba8">ClusterPair</a></td>
+          <td class="memname">using <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a1458e04197a860caa9b6d9f4cf63b68c">ClusterPair</a> =  std::pair&lt;ClusterH, ClusterH&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a5c2e656b496b29749e95d99d1659ef49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c2e656b496b29749e95d99d1659ef49">&#9670;&nbsp;</a></span>DistanceHeap</h2>
+<a id="a90c4b3d60f39b3d5906c15cbcb7f166f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90c4b3d60f39b3d5906c15cbcb7f166f">&#9670;&nbsp;</a></span>DistanceHeap</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -155,15 +155,15 @@ template&lt;typename ClusterH &gt; </div>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef boost::heap::fibonacci_heap&lt;<a class="el" href="structroofer_1_1linereg_1_1DistanceTable_1_1ClusterPairDist.html">ClusterPairDist</a>&gt; <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a5c2e656b496b29749e95d99d1659ef49">DistanceHeap</a></td>
+          <td class="memname">using <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a90c4b3d60f39b3d5906c15cbcb7f166f">DistanceHeap</a> =  boost::heap::fibonacci_heap&lt;<a class="el" href="structroofer_1_1linereg_1_1DistanceTable_1_1ClusterPairDist.html">ClusterPairDist</a>&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ac2c2379cf6a21ce3124ecd15025b9f1f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac2c2379cf6a21ce3124ecd15025b9f1f">&#9670;&nbsp;</a></span>heap_handle</h2>
+<a id="a7ff9e5c72436a0a2352848e87f995f7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ff9e5c72436a0a2352848e87f995f7d">&#9670;&nbsp;</a></span>heap_handle</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -171,7 +171,7 @@ template&lt;typename ClusterH &gt; </div>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef DistanceHeap::handle_type <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#ac2c2379cf6a21ce3124ecd15025b9f1f">heap_handle</a></td>
+          <td class="memname">using <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::<a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a7ff9e5c72436a0a2352848e87f995f7d">heap_handle</a> =  typename DistanceHeap::handle_type</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -256,7 +256,7 @@ template&lt;typename ClusterH &gt; </div>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a052a082b799e26eba61b0fd0697466a7">Cluster2DistPairMap</a> <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::cluster_to_dist_pairs</td>
+          <td class="memname"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a6a71ad5d2b49f7c74e65157af0a13ac9">Cluster2DistPairMap</a> <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::cluster_to_dist_pairs</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -288,7 +288,7 @@ template&lt;typename ClusterH &gt; </div>
 template&lt;typename ClusterH &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a5c2e656b496b29749e95d99d1659ef49">DistanceHeap</a> <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::distances</td>
+          <td class="memname"><a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html#a90c4b3d60f39b3d5906c15cbcb7f166f">DistanceHeap</a> <a class="el" href="structroofer_1_1linereg_1_1DistanceTable.html">roofer::linereg::DistanceTable</a>&lt; ClusterH &gt;::distances</td>
         </tr>
       </table>
 </div><div class="memdoc">

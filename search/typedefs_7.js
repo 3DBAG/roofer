@@ -1,13 +1,7 @@
 var searchData=
 [
-  ['id_1933',['Id',['../structroofer_1_1misc_1_1My__triangle__primitive.html#a7eaf8e6ffad9322c3ec375e58a96eeab',1,'roofer::misc::My_triangle_primitive']]],
-  ['id_5fmap_1934',['Id_map',['../namespaceroofer.html#a9cc3b858d7b1dd41e79e57ad23404e0b',1,'roofer']]],
-  ['idpair_1935',['IDPair',['../namespaceroofer_1_1reconstruction.html#a4bba983d7a8ff051e1b9ce4966b1fe60',1,'roofer::reconstruction']]],
-  ['imagemap_1936',['ImageMap',['../namespaceroofer.html#a56a92af4dbba3ee79e20f1f647582ecb',1,'roofer']]],
-  ['indexedplaneswithpoints_1937',['IndexedPlanesWithPoints',['../namespaceroofer.html#a38800a4203a6828eaf374ba9cd8828c2',1,'roofer']]],
-  ['ipolygon_5f2_1938',['iPolygon_2',['../namespaceroofer_1_1reconstruction.html#a3ac68228cc6c9016a715276eb90b403d',1,'roofer::reconstruction']]],
-  ['ishorizontal_5fmap_1939',['IsHorizontal_map',['../namespaceroofer.html#a9e4d159d973dae5adb13f504b160ba9c',1,'roofer']]],
-  ['isstep_5fmap_1940',['IsStep_map',['../namespaceroofer.html#adc70d52b5749674c1b38a5ada809a3f6',1,'roofer']]],
-  ['iswall_5fmap_1941',['IsWall_map',['../namespaceroofer.html#aca40402fc4586dd8e2d6f673de2c442d',1,'roofer']]],
-  ['iterator_1942',['Iterator',['../namespaceroofer_1_1misc.html#ad6ebcc306f661181c71e6bf25cb2d270',1,'roofer::misc']]]
+  ['halfedge_5fconst_5fhandle_1974',['Halfedge_const_handle',['../namespaceroofer_1_1reconstruction.html#a13055fccacefc52af12583716abcb330',1,'roofer::reconstruction']]],
+  ['halfedge_5fhandle_1975',['Halfedge_handle',['../classroofer_1_1reconstruction_1_1Edge__weight__property__map.html#a9d6c2c4ecdf64198ece602899b10c369',1,'roofer::reconstruction::Edge_weight_property_map::Halfedge_handle()'],['../namespaceroofer_1_1reconstruction.html#ab80c9caf8ccbf93b83259c093678e36d',1,'roofer::reconstruction::Halfedge_handle()']]],
+  ['heap_5fhandle_1976',['heap_handle',['../structroofer_1_1linereg_1_1DistanceTable.html#a7ff9e5c72436a0a2352848e87f995f7d',1,'roofer::linereg::DistanceTable']]],
+  ['hf_5fpair_1977',['hf_pair',['../namespaceroofer_1_1reconstruction.html#aed700198ce5bd0a1983425943dc6d973',1,'roofer::reconstruction']]]
 ];

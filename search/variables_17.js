@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['y_1870',['y',['../structPipoint.html#ab7131f5b326f4e60f000e7c631d405ae',1,'Pipoint']]],
-  ['ya_1871',['ya',['../structGridRec.html#ad7f16ee32667748510757f57839376da',1,'GridRec']]],
-  ['ydelta_1872',['ydelta',['../structGridSet.html#a5115b7c088895a1a664b2d0df271e3e3',1,'GridSet']]],
-  ['year_1873',['year',['../structroofer_1_1Date.html#a99ad371fd342f9581f2d3f5941e7539e',1,'roofer::Date']]],
-  ['yres_1874',['yres',['../structGridSet.html#a7df64b9f67a9b7a8012bb905b8bc3964',1,'GridSet']]]
+  ['x_1910',['x',['../structPipoint.html#a21c0436e0d9770ed8a60aec6f4c439e6',1,'Pipoint']]],
+  ['xa_1911',['xa',['../structGridRec.html#a5302d169adbe32355a7b828dd0572dce',1,'GridRec']]],
+  ['xdelta_1912',['xdelta',['../structGridSet.html#a44084fa05423b557c0fe25eb450a9928',1,'GridSet']]],
+  ['xres_1913',['xres',['../structGridSet.html#afcaccc5f633823cc60fc3097c94ef862',1,'GridSet']]]
 ];

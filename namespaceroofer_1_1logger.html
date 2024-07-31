@@ -87,11 +87,12 @@ Classes</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:a78852f4f987d2d2adc98bc4232184047"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047">LogLevel</a> : std::uint8_t { <br />
 &#160;&#160;<a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a3262d48df5d75e3452f0f16b313b7808">off</a> = 0
+, <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a04a75036e9d520bb983c5ed03b8d0182">trace</a>
 , <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047aad42f6697b035b7580e4fef93be20b4d">debug</a>
 , <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047acaf9b6b99962bf5c2264824231d7a40c">info</a>
-, <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a6637b88286cba926cc1bb0ef49f9d2e8">default_level</a> = info
 , <br />
-&#160;&#160;<a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7b83d3f08fa392b79e3f553b585971cd">warning</a>
+&#160;&#160;<a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a6637b88286cba926cc1bb0ef49f9d2e8">default_level</a> = info
+, <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7b83d3f08fa392b79e3f553b585971cd">warning</a>
 , <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047acb5e100e5a9a3e7f6d1fd97512215282">error</a>
 , <a class="el" href="namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7e85bcb66fb9a809d5ab4f62a8b8bea8">critical</a>
 <br />
@@ -111,11 +112,11 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Internal logging backend implementation. </p>
 <p><a class="el" href="classroofer_1_1logger_1_1Logger.html">Logger</a> library for roofer.</p>
 <p>Logs all messages to stdout.</p>
-<p>Uses a separate writer-thread to serialize the messages to the output stream. Message writer thread implementation taken from <a href="https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime">https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime</a> Implements a generic logger facade that can use different logging backends. The logging backend is selected compile time with the USE_LOGGER_* option. Currently available backends:</p><ul>
+<p>Uses a separate writer-thread to serialize the messages to the output stream. Message writer thread implementation taken from <a href="https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime">https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime</a> Implements a generic logger facade that can use different logging backends. The logging backend is selected compile time with the RF_USE_LOGGER_* option. Currently available backends:</p><ul>
 <li>internal (default)</li>
-<li>spdlog (enable with USE_LOGGER_SPDLOG)</li>
+<li>spdlog (enable with RF_USE_LOGGER_SPDLOG)</li>
 </ul>
-<p>Each implementation is thread-safe.</p>
+<p>Each implementation is thread-safe. The spdlog backend writes the messages to a JSON file in addition to logging to the console. If you enable tracing, it is recommended to use the spdlog backend, because the JSON log allows efficient log processing.</p>
 <p>References:</p><ul>
 <li><a href="https://hnrck.io/post/singleton-design-pattern/">https://hnrck.io/post/singleton-design-pattern/</a></li>
 <li><a href="https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime/blob/master/src/helpers/logger.h">https://github.com/PacktPublishing/Multi-Paradigm-Programming-with-Modern-Cpp-daytime/blob/master/src/helpers/logger.h</a> </li>
@@ -142,6 +143,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a78852f4f987d2d2adc98bc4232184047a3262d48df5d75e3452f0f16b313b7808"></a>off&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a78852f4f987d2d2adc98bc4232184047a04a75036e9d520bb983c5ed03b8d0182"></a>trace&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a78852f4f987d2d2adc98bc4232184047aad42f6697b035b7580e4fef93be20b4d"></a>debug&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a78852f4f987d2d2adc98bc4232184047acaf9b6b99962bf5c2264824231d7a40c"></a>info&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a78852f4f987d2d2adc98bc4232184047a6637b88286cba926cc1bb0ef49f9d2e8"></a>default_level&#160;</td><td class="fielddoc"></td></tr>

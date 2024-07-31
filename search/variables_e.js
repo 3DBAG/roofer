@@ -1,23 +1,12 @@
 var searchData=
 [
-  ['part_5fid_1769',['part_id',['../structroofer_1_1FaceInfo.html#a339ec574590e481f2192e86b106cfa82',1,'roofer::FaceInfo']]],
-  ['perform_5fchaining_1770',['perform_chaining',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#a022c28c3e3e52a615b771cda69c27c76',1,'roofer::reconstruction::LineDetectorConfig']]],
-  ['pixel_5fcount_1771',['pixel_count',['../structroofer_1_1FaceInfo.html#a61a04ab4eba816466807a62ca31ef820',1,'roofer::FaceInfo']]],
-  ['pjhelper_1772',['pjHelper',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#a1b11c6ed371e053e6af2642f2d6f1d57',1,'roofer::io::CityJsonWriterInterface::pjHelper()'],['../structroofer_1_1io_1_1PointCloudReaderInterface.html#a1739d96915ebc919fd6478af8d40d7bb',1,'roofer::io::PointCloudReaderInterface::pjHelper()'],['../structroofer_1_1io_1_1LASWriterInterface.html#a52f09d6c7c4a5cbd207ddee9e87a34c1',1,'roofer::io::LASWriterInterface::pjHelper()'],['../structroofer_1_1io_1_1RasterWriterInterface.html#a69e3aa58dc11bb2474cc4ddd97673f5d',1,'roofer::io::RasterWriterInterface::pjHelper()'],['../structroofer_1_1io_1_1PointCloudCropperInterface.html#ab86385ea540235878dafc5de167a6396',1,'roofer::io::PointCloudCropperInterface::pjHelper()'],['../structroofer_1_1io_1_1VectorReaderInterface.html#aa31c6f0d799056f69f9535e521c9dd5c',1,'roofer::io::VectorReaderInterface::pjHelper()'],['../structroofer_1_1io_1_1VectorWriterInterface.html#aaa998b05a12c8f384a9f75c6067b5290',1,'roofer::io::VectorWriterInterface::pjHelper()']]],
-  ['plane_1773',['plane',['../structroofer_1_1FaceInfo.html#a18bb9144709b8d6696d13dac8989fa95',1,'roofer::FaceInfo::plane()'],['../classroofer_1_1planedect_1_1PlaneRegion.html#affae7bb78d05ee66f95a73bbcdf6f42c',1,'roofer::planedect::PlaneRegion::plane()']]],
-  ['plane_5fadjacencies_1774',['plane_adjacencies',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#aecdde9225c30a33fbf995817ffefbe24',1,'roofer::reconstruction::PlaneDetectorInterface']]],
-  ['plane_5fid_1775',['plane_id',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a91f14c18206bffac9e10e66a5fac9e09',1,'roofer::reconstruction::PlaneDetectorInterface::plane_id()'],['../structroofer_1_1reconstruction_1_1Custom__plane__index__map.html#aee59c85f16da3f909c046b415d473c9b',1,'roofer::reconstruction::Custom_plane_index_map::plane_id()']]],
-  ['point_1776',['point',['../structroofer_1_1tri__util_1_1VertexInfo.html#ae7d4c21b2eee8474565e6a3c731c84a6',1,'roofer::tri_util::VertexInfo']]],
-  ['point_5ferrors_1777',['point_errors',['../structroofer_1_1misc_1_1PC2MeshDistCalculatorInterface.html#a22c0f1e6c6ee8bf86738afacb1be6e87',1,'roofer::misc::PC2MeshDistCalculatorInterface']]],
-  ['point_5fsegment_5fidx_1778',['point_segment_idx',['../classroofer_1_1linedect_1_1LineDetector.html#a0d2038709cd0c7a46ef6dd312db6fb5e',1,'roofer::linedect::LineDetector']]],
-  ['points_1779',['points',['../structroofer_1_1FaceInfo.html#ae2c1adefad4921ba7d94daf661243147',1,'roofer::FaceInfo::points()'],['../classroofer_1_1regiongrower_1_1CGAL__RegionGrowerDS.html#a3540d024fd788184c93ab2ca716f3cc9',1,'roofer::regiongrower::CGAL_RegionGrowerDS::points()']]],
-  ['polygons_5f3d_1780',['polygons_3d',['../structroofer_1_1reconstruction_1_1SimplePolygonExtruderInterface.html#ae2a02f5851206d1e41c97cb7f177dcbd',1,'roofer::reconstruction::SimplePolygonExtruderInterface']]],
-  ['preset_5flabels_1781',['preset_labels',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a330b0c51f84a0a8d04d2f6a9b3b45c3e',1,'roofer::reconstruction::ArrangementOptimiserConfig']]],
-  ['prettyprint_5f_1782',['prettyPrint_',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#a691a9f9b4e3346efe6b3060a45bc5c48',1,'roofer::io::CityJsonWriterInterface']]],
-  ['priority_1783',['priority',['../structroofer_1_1linereg_1_1linetype.html#af692e992891c249109e7ff8dd3f860a4',1,'roofer::linereg::linetype']]],
-  ['processcrs_1784',['processCRS',['../structroofer_1_1misc_1_1projHelper.html#aa0b215840f173b2763994019ea56635f',1,'roofer::misc::projHelper']]],
-  ['projcontext_1785',['projContext',['../structroofer_1_1misc_1_1projHelper.html#aae785ec53a2136c1e4d7fa495dee1f1b',1,'roofer::misc::projHelper']]],
-  ['projfwdtransform_1786',['projFwdTransform',['../structroofer_1_1misc_1_1projHelper.html#ad36ccfbf46ffe9b49b7ce20045661a8c',1,'roofer::misc::projHelper']]],
-  ['projrevtransform_1787',['projRevTransform',['../structroofer_1_1misc_1_1projHelper.html#af9318cf376c2068598476031a9b06802',1,'roofer::misc::projHelper']]],
-  ['pts_5fper_5froofplane_1788',['pts_per_roofplane',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#ab5d0dd881116fa8b105e039ee271b629',1,'roofer::reconstruction::PlaneDetectorInterface']]]
+  ['only_5foutput_5frenamed_5f_1801',['only_output_renamed_',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#a4b5690fc3ad4ed06cc6d0ee112e8abbc',1,'roofer::io::CityJsonWriterInterface']]],
+  ['optimal_5falpha_1802',['optimal_alpha',['../structroofer_1_1reconstruction_1_1AlphaShaperConfig.html#af06a4c0d6be1cd71081f789dacdca911',1,'roofer::reconstruction::AlphaShaperConfig']]],
+  ['optimal_5fonly_5fif_5fneeded_1803',['optimal_only_if_needed',['../structroofer_1_1reconstruction_1_1AlphaShaperConfig.html#a8151a75f48457c6b5c406d10fa062297',1,'roofer::reconstruction::AlphaShaperConfig']]],
+  ['output_5fall_5ftriangles_1804',['output_all_triangles',['../structroofer_1_1reconstruction_1_1MeshTriangulatorConfig.html#a043560b4bc3eb4d0c31e822a0c9e53ca',1,'roofer::reconstruction::MeshTriangulatorConfig']]],
+  ['output_5fattribute_5fnames_1805',['output_attribute_names',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#aaf1e4244ea0f552c8e66f76124611346',1,'roofer::io::CityJsonWriterInterface']]],
+  ['output_5fmtc_5ffor_5fevery_5finput_1806',['output_mtc_for_every_input',['../structroofer_1_1reconstruction_1_1MeshTriangulatorConfig.html#acb985144ce426434c2a4d074d03486f9',1,'roofer::reconstruction::MeshTriangulatorConfig']]],
+  ['override_5fwith_5ffloor_5felevation_1807',['override_with_floor_elevation',['../structroofer_1_1ReconstructionConfig.html#a74dc4b2bf3a844e586311fb996ced407',1,'roofer::ReconstructionConfig']]],
+  ['overwrite_5ffile_5f_1808',['overwrite_file_',['../structroofer_1_1io_1_1VectorWriterInterface.html#a1f18667754f1f8ebee16aaf7744dbcec',1,'roofer::io::VectorWriterInterface']]],
+  ['overwrite_5flayer_5f_1809',['overwrite_layer_',['../structroofer_1_1io_1_1VectorWriterInterface.html#afc198c175fd54e715ed7381ed2d15911',1,'roofer::io::VectorWriterInterface']]]
 ];

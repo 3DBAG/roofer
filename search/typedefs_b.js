@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['neighbor_5fsearch_1952',['Neighbor_search',['../structroofer_1_1AdjacencyFinder.html#aeca3d4d9d1c4ed5ff8a025ebe8ae978a',1,'roofer::AdjacencyFinder::Neighbor_search()'],['../classroofer_1_1regiongrower_1_1CGAL__RegionGrowerDS.html#a0018c99adaf4b68dcc7e7f31d4166ca7',1,'roofer::regiongrower::CGAL_RegionGrowerDS::Neighbor_search()'],['../namespaceroofer_1_1reconstruction.html#a163c6bd9e2261a15bf77532ae4e5412d',1,'roofer::reconstruction::Neighbor_search()']]],
-  ['neighbourvec_1953',['NeighbourVec',['../namespaceroofer_1_1linedect.html#a8c83005ec965353fb89eb17641bf28dd',1,'roofer::linedect']]],
-  ['normal_5fmap_1954',['Normal_map',['../structroofer_1_1reconstruction_1_1PlaneDetectorRANSAC.html#ace5cd57f07283d513f0a2c8ccad915b5',1,'roofer::reconstruction::PlaneDetectorRANSAC::Normal_map()'],['../namespaceroofer.html#a4cda670ca3c3939b11b2322516ccec94',1,'roofer::Normal_map()']]]
+  ['label_5fmap_1993',['Label_map',['../namespaceroofer.html#a595218c95a39d7a0ff4ccdc0cfa3f539',1,'roofer']]],
+  ['line_1994',['Line',['../namespaceroofer.html#aa1627e6b4db7843ec335c2cc225f0bd1',1,'roofer::Line()'],['../namespaceroofer_1_1linedect.html#aea008821a16d343c003bd21251d8500d',1,'roofer::linedect::Line()']]],
+  ['line_5f2_1995',['Line_2',['../namespaceroofer_1_1reconstruction.html#aaf3f06853a0d9fcf94e1ef7a2311c6cc',1,'roofer::reconstruction::Line_2()'],['../namespaceroofer_1_1linereg.html#a8b26ced858a3c8eee02aa27d9d3658c3',1,'roofer::linereg::Line_2()']]],
+  ['linefit_5fmap_1996',['LineFit_map',['../namespaceroofer.html#ad6c4fb80c122788530762d98954717ca',1,'roofer']]]
 ];

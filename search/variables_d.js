@@ -1,12 +1,16 @@
 var searchData=
 [
-  ['only_5foutput_5frenamed_5f_1760',['only_output_renamed_',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#a4b5690fc3ad4ed06cc6d0ee112e8abbc',1,'roofer::io::CityJsonWriterInterface']]],
-  ['optimal_5falpha_1761',['optimal_alpha',['../structroofer_1_1reconstruction_1_1AlphaShaperConfig.html#af06a4c0d6be1cd71081f789dacdca911',1,'roofer::reconstruction::AlphaShaperConfig']]],
-  ['optimal_5fonly_5fif_5fneeded_1762',['optimal_only_if_needed',['../structroofer_1_1reconstruction_1_1AlphaShaperConfig.html#a8151a75f48457c6b5c406d10fa062297',1,'roofer::reconstruction::AlphaShaperConfig']]],
-  ['output_5fall_5ftriangles_1763',['output_all_triangles',['../structroofer_1_1reconstruction_1_1MeshTriangulatorConfig.html#a043560b4bc3eb4d0c31e822a0c9e53ca',1,'roofer::reconstruction::MeshTriangulatorConfig']]],
-  ['output_5fattribute_5fnames_1764',['output_attribute_names',['../structroofer_1_1io_1_1CityJsonWriterInterface.html#aaf1e4244ea0f552c8e66f76124611346',1,'roofer::io::CityJsonWriterInterface']]],
-  ['output_5fmtc_5ffor_5fevery_5finput_1765',['output_mtc_for_every_input',['../structroofer_1_1reconstruction_1_1MeshTriangulatorConfig.html#acb985144ce426434c2a4d074d03486f9',1,'roofer::reconstruction::MeshTriangulatorConfig']]],
-  ['override_5fwith_5ffloor_5felevation_1766',['override_with_floor_elevation',['../structroofer_1_1ReconstructionConfig.html#a74dc4b2bf3a844e586311fb996ced407',1,'roofer::ReconstructionConfig']]],
-  ['overwrite_5ffile_5f_1767',['overwrite_file_',['../structroofer_1_1io_1_1VectorWriterInterface.html#a1f18667754f1f8ebee16aaf7744dbcec',1,'roofer::io::VectorWriterInterface']]],
-  ['overwrite_5flayer_5f_1768',['overwrite_layer_',['../structroofer_1_1io_1_1VectorWriterInterface.html#afc198c175fd54e715ed7381ed2d15911',1,'roofer::io::VectorWriterInterface']]]
+  ['n_1788',['N',['../classroofer_1_1linedect_1_1LineDetector.html#a1e280a2ce8cd88b6624f7bab3d62d200',1,'roofer::linedect::LineDetector']]],
+  ['n_5fiterations_1789',['n_iterations',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a833747462eb1173a5ce16ac53a43b414',1,'roofer::reconstruction::ArrangementOptimiserConfig']]],
+  ['n_5frefit_1790',['n_refit',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#ab08f171e093ce272f016085b27f44fb7',1,'roofer::reconstruction::PlaneDetectorConfig::n_refit()'],['../classroofer_1_1planedect_1_1DistAndNormalTester.html#ab9168eac1f7ee86d89f7f4d30fb653ec',1,'roofer::planedect::DistAndNormalTester::n_refit()']]],
+  ['name_1791',['name',['../structroofer_1_1misc_1_1CandidatePointCloud.html#aca1c2731d7db3bcd55fd8488bb165a36',1,'roofer::misc::CandidatePointCloud']]],
+  ['neighbours_1792',['neighbours',['../classroofer_1_1regiongrower_1_1CGAL__RegionGrowerDS.html#aa3887384dcf2585268381d67c4ee2029',1,'roofer::regiongrower::CGAL_RegionGrowerDS']]],
+  ['nesting_5flevel_1793',['nesting_level',['../structroofer_1_1tri__util_1_1FaceInfo.html#aa62fbb8c05990ec9008ca3025f934d75',1,'roofer::tri_util::FaceInfo']]],
+  ['nodata_5felevation_1794',['nodata_elevation',['../structroofer_1_1reconstruction_1_1ArrangementExtruderConfig.html#a5c51e0e3b3c169b8a9635002abb8ceed',1,'roofer::reconstruction::ArrangementExtruderConfig']]],
+  ['nodata_5ffraction_1795',['nodata_fraction',['../structroofer_1_1misc_1_1CandidatePointCloud.html#af95a74c442e8d556d1752d65e521dd6d',1,'roofer::misc::CandidatePointCloud']]],
+  ['nodata_5fradius_1796',['nodata_radius',['../structroofer_1_1misc_1_1CandidatePointCloud.html#ab7a833b229e59566ba97c53713286d3d',1,'roofer::misc::CandidatePointCloud']]],
+  ['nodataval_1797',['nodataval',['../structroofer_1_1Image.html#a0d8bac5730b50c85eac49f74aff596dd',1,'roofer::Image']]],
+  ['nodataval_5f_1798',['noDataVal_',['../classroofer_1_1RasterTools_1_1Raster.html#ab494de85e403891e9f49a16b766a2642',1,'roofer::RasterTools::Raster']]],
+  ['normal_5fthres_1799',['normal_thres',['../classroofer_1_1planedect_1_1DistAndNormalTester.html#a7b8c1d16e9104d5b50b6c701e59848cf',1,'roofer::planedect::DistAndNormalTester']]],
+  ['normals_1800',['normals',['../structroofer_1_1reconstruction_1_1MeshTriangulatorInterface.html#a79cb0112228359ba938c33a93fa1bd65',1,'roofer::reconstruction::MeshTriangulatorInterface::normals()'],['../classroofer_1_1planedect_1_1PlaneDS.html#abe02225e17ada76284b2058730e58679',1,'roofer::planedect::PlaneDS::normals()']]]
 ];

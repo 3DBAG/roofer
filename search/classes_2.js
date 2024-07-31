@@ -1,15 +1,8 @@
 var searchData=
 [
-  ['candidatepointcloud_1042',['CandidatePointCloud',['../structroofer_1_1misc_1_1CandidatePointCloud.html',1,'roofer::misc']]],
-  ['cgal_5fregiongrowerds_1043',['CGAL_RegionGrowerDS',['../classroofer_1_1regiongrower_1_1CGAL__RegionGrowerDS.html',1,'roofer::regiongrower']]],
-  ['cityjsonwriter_1044',['CityJsonWriter',['../classroofer_1_1io_1_1CityJsonWriter.html',1,'roofer::io']]],
-  ['cityjsonwriterinterface_1045',['CityJsonWriterInterface',['../structroofer_1_1io_1_1CityJsonWriterInterface.html',1,'roofer::io']]],
-  ['cluster_1046',['Cluster',['../structroofer_1_1linereg_1_1Cluster.html',1,'roofer::linereg']]],
-  ['cluster_3c_20double_20_3e_1047',['Cluster&lt; double &gt;',['../structroofer_1_1linereg_1_1Cluster.html',1,'roofer::linereg']]],
-  ['cluster_3c_20segment_5f2_20_3e_1048',['Cluster&lt; Segment_2 &gt;',['../structroofer_1_1linereg_1_1Cluster.html',1,'roofer::linereg']]],
-  ['clusterpairdist_1049',['ClusterPairDist',['../structroofer_1_1linereg_1_1DistanceTable_1_1ClusterPairDist.html',1,'roofer::linereg::DistanceTable']]],
-  ['cmp_1050',['Cmp',['../structroofer_1_1reconstruction_1_1Cmp.html',1,'roofer::reconstruction']]],
-  ['constantelevationprovider_1051',['ConstantElevationProvider',['../structroofer_1_1reconstruction_1_1ConstantElevationProvider.html',1,'roofer::reconstruction']]],
-  ['custom_5fplane_5findex_5fmap_1052',['Custom_plane_index_map',['../structroofer_1_1reconstruction_1_1Custom__plane__index__map.html',1,'roofer::reconstruction']]],
-  ['custom_5fplane_5fmap_1053',['Custom_plane_map',['../structroofer_1_1reconstruction_1_1Custom__plane__map.html',1,'roofer::reconstruction']]]
+  ['date_1076',['Date',['../structroofer_1_1Date.html',1,'roofer']]],
+  ['datetime_1077',['DateTime',['../structroofer_1_1DateTime.html',1,'roofer']]],
+  ['distancetable_1078',['DistanceTable',['../structroofer_1_1linereg_1_1DistanceTable.html',1,'roofer::linereg']]],
+  ['distandnormaltester_1079',['DistAndNormalTester',['../classroofer_1_1planedect_1_1DistAndNormalTester.html',1,'roofer::planedect']]],
+  ['distcluster_1080',['DistCluster',['../structroofer_1_1linereg_1_1DistCluster.html',1,'roofer::linereg']]]
 ];

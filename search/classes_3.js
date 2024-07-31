@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['date_1054',['Date',['../structroofer_1_1Date.html',1,'roofer']]],
-  ['datetime_1055',['DateTime',['../structroofer_1_1DateTime.html',1,'roofer']]],
-  ['distancetable_1056',['DistanceTable',['../structroofer_1_1linereg_1_1DistanceTable.html',1,'roofer::linereg']]],
-  ['distandnormaltester_1057',['DistAndNormalTester',['../classroofer_1_1planedect_1_1DistAndNormalTester.html',1,'roofer::planedect']]],
-  ['distcluster_1058',['DistCluster',['../structroofer_1_1linereg_1_1DistCluster.html',1,'roofer::linereg']]]
+  ['edge_1081',['Edge',['../structEdge.html',1,'']]],
+  ['edge_5fweight_5fproperty_5fmap_1082',['Edge_weight_property_map',['../classroofer_1_1reconstruction_1_1Edge__weight__property__map.html',1,'roofer::reconstruction']]],
+  ['edgeinfo_1083',['EdgeInfo',['../structroofer_1_1EdgeInfo.html',1,'roofer']]],
+  ['elevationprovider_1084',['ElevationProvider',['../structroofer_1_1reconstruction_1_1ElevationProvider.html',1,'roofer::reconstruction']]]
 ];
