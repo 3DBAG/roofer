@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <lasreader.hpp>
 #include <roofer/common/Raster.hpp>
-#include <roofer/common/pip_util.hpp>
+#include <roofer/common/GridPIPTester.hpp>
 #include <roofer/io/StreamCropper.hpp>
 
 namespace roofer::io {
@@ -22,7 +22,7 @@ namespace roofer::io {
     std::vector<std::vector<arr3f>> ground_buffer_points;
     RasterTools::Raster pindex;
     std::vector<std::vector<size_t>> pindex_vals;
-    std::vector<pGridSet> poly_grids, buf_poly_grids;
+    std::vector<std::unique_ptr<GridPIPTester>> poly_grids, buf_poly_grids;
     std::vector<vec1f> z_ground;
     std::unordered_map<std::unique_ptr<arr3f>, std::vector<size_t>>
         points_overlap;  // point, [poly id's], these are points that intersect
@@ -32,14 +32,14 @@ namespace roofer::io {
     bool handle_overlap_points;
 
    public:
-    Box completearea_bb;
     float min_ground_elevation = std::numeric_limits<float>::max();
 
     PointsInPolygonsCollector(std::vector<LinearRing>& polygons,
                               std::vector<LinearRing>& buf_polygons,
                               std::vector<PointCollection>& point_clouds,
                               vec1f& ground_elevations,
-                              vec1i& acquisition_years, float& cellsize,
+                              vec1i& acquisition_years,
+                              const Box& completearea_bb, float& cellsize,
                               float& buffer, int ground_class = 2,
                               int building_class = 6,
                               bool handle_overlap_points = false  // ·
@@ -66,9 +66,8 @@ namespace roofer::io {
       for (size_t i = 0; i < polygons.size(); ++i) {
         auto ring = polygons.at(i);
         auto buf_ring = buf_polygons.at(i);
-        poly_grids.push_back(build_grid(ring));
-        buf_poly_grids.push_back(build_grid(buf_ring));
-        completearea_bb.add(buf_ring.box());
+        poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(ring)));
+        buf_poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(buf_ring)));
       }
 
       // build an index grid for the polygons
@@ -100,13 +99,6 @@ namespace roofer::io {
       }
     }
 
-    ~PointsInPolygonsCollector() {
-      for (int i = 0; i < poly_grids.size(); i++) {
-        delete poly_grids[i];
-        delete buf_poly_grids[i];
-      }
-    }
-
     /**
      * @brief Find polygon that intersects point and add the point to the
      * corresponding building point cloud
@@ -133,10 +125,9 @@ namespace roofer::io {
       //    Thus a single ground height value per grid cell is good enough for
       //    representing the ground/floor elevation of the buildings in that
       //    grid cell.
-      pPipoint pipoint = new Pipoint{point[0], point[1]};
       std::vector<size_t> poly_intersect;
       for (size_t& poly_i : pindex_vals[lincoord]) {
-        if (GridTest(buf_poly_grids[poly_i], pipoint)) {
+        if (buf_poly_grids[poly_i]->test(point)) {
           auto& point_cloud = point_clouds.at(poly_i);
           auto classification =
               point_cloud.attributes.get_if<int>("classification");
@@ -146,7 +137,7 @@ namespace roofer::io {
             z_ground[poly_i].push_back(point[2]);
           }
 
-          if (GridTest(poly_grids[poly_i], pipoint)) {
+          if (poly_grids[poly_i]->test(point)) {
             if (point_class == ground_class) {
               point_cloud.push_back(point);
               (*classification).push_back(2);
@@ -176,7 +167,6 @@ namespace roofer::io {
           }
         }
       }
-      delete pipoint;
     }
 
     /**
@@ -426,11 +416,12 @@ namespace roofer::io {
   struct PointCloudCropper : public PointCloudCropperInterface {
     using PointCloudCropperInterface::PointCloudCropperInterface;
 
-    void process(std::string source, std::vector<LinearRing>& polygons,
+    void process(const std::vector<std::string>& lasfiles,
+                 std::vector<LinearRing>& polygons,
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
                  vec1f& ground_elevations, vec1i& acquisition_years,
-                 PointCloudCropperConfig cfg) {
+                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
@@ -440,110 +431,17 @@ namespace roofer::io {
 
       auto& logger = logger::Logger::get_logger();
 
-      PointsInPolygonsCollector pip_collector{
-          polygons,           buf_polygons,
-          point_clouds,       ground_elevations,
-          acquisition_years,  cfg.cellsize,
-          cfg.buffer,         cfg.ground_class,
-          cfg.building_class, cfg.handle_overlap_points};
-
-      auto filepaths = source;
-
-      std::vector<std::string> lasfiles;
-      std::vector<std::string> filepath_parts = split_string(filepaths, " ");
-      if (filepath_parts.size() == 1) {
-        if (fs::is_directory(filepaths)) {
-          for (auto& p : fs::directory_iterator(filepaths)) {
-            auto ext = p.path().extension();
-            if (ext == ".las" || ext == ".LAS" || ext == ".laz" ||
-                ext == ".LAZ") {
-              lasfiles.push_back(p.path().string());
-            }
-          }
-        } else {
-          if (fs::exists(filepaths))
-            lasfiles.push_back(filepaths);
-          else
-            logger.info("{} does not exist", filepaths);
-        }
-
-        for (auto lasfile : lasfiles) {
-          LASreadOpener lasreadopener;
-          lasreadopener.set_file_name(lasfile.c_str());
-          LASreader* lasreader = lasreadopener.open();
-
-          std::string wkt = cfg.wkt_;
-          if (wkt.size() == 0) {
-            getOgcWkt(&lasreader->header, wkt);
-          }
-          if (wkt.size() != 0) {
-            pjHelper.set_fwd_crs_transform(wkt.c_str());
-          }
-
-          if (!lasreader) {
-            logger.warning("cannot read las file: {}", lasfile);
-            continue;
-          }
-
-          Box file_bbox;
-          file_bbox.add(pjHelper.coord_transform_fwd(lasreader->get_min_x(),
-                                                     lasreader->get_min_y(),
-                                                     lasreader->get_min_z()));
-          file_bbox.add(pjHelper.coord_transform_fwd(lasreader->get_max_x(),
-                                                     lasreader->get_max_y(),
-                                                     lasreader->get_max_z()));
-
-          if (!file_bbox.intersects(pip_collector.completearea_bb)) {
-            logger.info("no intersection footprints with las file: {}",
-                        lasfile);
-            continue;
-          }
-
-          // tell lasreader our area of interest. It will then use quadtree
-          // indexing if available (.lax file created with lasindex)
-          pjHelper.set_rev_crs_transform(wkt.c_str());
-          const auto aoi_min =
-              pjHelper.coord_transform_rev(pip_collector.completearea_bb.min());
-          const auto aoi_max =
-              pjHelper.coord_transform_rev(pip_collector.completearea_bb.max());
-          pjHelper.clear_rev_crs_transform();
-          // std::cout << lasreader->npoints << std::endl;
-          // std::cout << lasreader->get_min_x() << " " <<
-          // lasreader->get_min_y()
-          // << " " << lasreader->get_min_z() << std::endl; std::cout <<
-          // aoi_min[0] << " " << aoi_min[1] << " " << aoi_min[2] << std::endl;
-          // std::cout << lasreader->get_max_x() << " " <<
-          // lasreader->get_max_y()
-          // << " " << lasreader->get_max_z() << std::endl; std::cout <<
-          // aoi_max[0] << " " << aoi_max[1] << " " << aoi_max[2] << std::endl;
-          lasreader->inside_rectangle(aoi_min[0], aoi_min[1], aoi_max[0],
-                                      aoi_max[1]);
-
-          // The point cloud acquisition year is the year of the GPS time of the
-          // last point in the AOI. Unless, GPS Week Time is used, in which case
-          // we default to the 'file creation year'.
-          int acqusition_year(0);
-          bool use_file_creation_year = useFileCreationYear(lasreader);
-          if (use_file_creation_year) {
-            acqusition_year = (int)lasreader->header.file_creation_year;
-          }
-          while (lasreader->read_point()) {
-            if (!use_file_creation_year && cfg.use_acquisition_year)
-              acqusition_year = getAcquisitionYearOfPoint(&lasreader->point);
-            pip_collector.add_point(
-                pjHelper.coord_transform_fwd(lasreader->point.get_x(),
-                                             lasreader->point.get_y(),
-                                             lasreader->point.get_z()),
-                lasreader->point.get_classification(), acqusition_year);
-          }
-          logger.info("Point cloud acquisition year: {}",
-                      acqusition_year);  // just for debug
-
-          pjHelper.clear_fwd_crs_transform();
-          lasreader->close();
-          delete lasreader;
-        }
-      }
+      PointsInPolygonsCollector pip_collector{polygons,
+                                              buf_polygons,
+                                              point_clouds,
+                                              ground_elevations,
+                                              acquisition_years,
+                                              polygon_extent,
+                                              cfg.cellsize,
+                                              cfg.buffer,
+                                              cfg.ground_class,
+                                              cfg.building_class,
+                                              cfg.handle_overlap_points};
 
       for (auto lasfile : lasfiles) {
         LASreadOpener lasreadopener;
@@ -571,7 +469,7 @@ namespace roofer::io {
                                                    lasreader->get_max_y(),
                                                    lasreader->get_max_z()));
 
-        if (!file_bbox.intersects(pip_collector.completearea_bb)) {
+        if (!file_bbox.intersects(polygon_extent)) {
           logger.info("no intersection footprints with las file: {}", lasfile);
           continue;
         }
@@ -579,10 +477,8 @@ namespace roofer::io {
         // tell lasreader our area of interest. It will then use quadtree
         // indexing if available (.lax file created with lasindex)
         pjHelper.set_rev_crs_transform(wkt.c_str());
-        const auto aoi_min =
-            pjHelper.coord_transform_rev(pip_collector.completearea_bb.min());
-        const auto aoi_max =
-            pjHelper.coord_transform_rev(pip_collector.completearea_bb.max());
+        const auto aoi_min = pjHelper.coord_transform_rev(polygon_extent.min());
+        const auto aoi_max = pjHelper.coord_transform_rev(polygon_extent.max());
         pjHelper.clear_rev_crs_transform();
         // std::cout << lasreader->npoints << std::endl;
         // std::cout << lasreader->get_min_x() << " " << lasreader->get_min_y()
@@ -623,6 +519,17 @@ namespace roofer::io {
           cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
           cfg.clear_if_insufficient, poly_areas, poly_pt_counts_bld,
           poly_pt_counts_grd, poly_ptcoverage_class, poly_densities);
+    }
+
+    void process(std::string source, std::vector<LinearRing>& polygons,
+                 std::vector<LinearRing>& buf_polygons,
+                 std::vector<PointCollection>& point_clouds,
+                 vec1f& ground_elevations, vec1i& acquisition_years,
+                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
+      std::vector<std::string> lasfiles =
+          roofer::find_filepaths(source, {".las", ".LAS", ".laz", ".LAZ"});
+      process(lasfiles, polygons, buf_polygons, point_clouds, ground_elevations,
+              acquisition_years, polygon_extent, cfg);
     }
   };
 

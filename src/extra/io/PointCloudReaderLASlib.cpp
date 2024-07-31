@@ -1,5 +1,6 @@
 #include <roofer/logger/logger.h>
 
+#include <array>
 #include <iomanip>
 #include <lasreader.hpp>
 #include <laswriter.hpp>
@@ -7,7 +8,9 @@
 
 namespace roofer::io {
 
-  class PointCloudReaderLASlib : public PointCloudReaderInterface {
+  struct PointCloudReaderLASlib : public PointCloudReaderInterface {
+    ~PointCloudReaderLASlib() { close(); };
+
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();
 
@@ -51,16 +54,31 @@ namespace roofer::io {
    public:
     using PointCloudReaderInterface::PointCloudReaderInterface;
 
-    void open(const std::string& source) {
+    void open(const std::string& source) override {
+      if (!lasreader) close();
       LASreadOpener lasreadopener;
       lasreadopener.set_file_name(source.c_str());
       lasreader = lasreadopener.open();
       if (!lasreader) throw(rooferException("Open failed on " + source));
     }
 
+    void close() override {
+      if (lasreader) {
+        lasreader->close();
+        delete lasreader;
+        lasreader = nullptr;
+      }
+    }
+
+    TBox<double> getExtent() override {
+      return {lasreader->get_min_x(), lasreader->get_min_y(),
+              lasreader->get_min_z(), lasreader->get_max_x(),
+              lasreader->get_max_y(), lasreader->get_max_z()};
+    }
+
     virtual void readPointCloud(PointCollection& points, vec1i* classification,
                                 vec1i* order, vec1f* intensities,
-                                vec3f* colors) {
+                                vec3f* colors) override {
       auto& logger = logger::Logger::get_logger();
       logger.debug("Attemting to find OGC CRS WKT...");
       // std::string wkt = manager.substitute_globals(wkt_);
@@ -103,8 +121,6 @@ namespace roofer::io {
             lasreader->point.get_z()));
       }
       pjHelper.clear_fwd_crs_transform();
-      lasreader->close();
-      delete lasreader;
     }
   };
 

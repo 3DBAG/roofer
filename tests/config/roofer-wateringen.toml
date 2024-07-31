@@ -1,18 +1,18 @@
 [input.footprint]
-path = "data/wippolder/wippolder.gpkg"
+path = "data/wateringen/wateringen.gpkg"
 id_attribute = "identificatie"
 
 [[input.pointclouds]]
-name = "pointcloud"
+name = "ahn4"
 quality = 1
-path = "data/wippolder/wippolder.las"
-force_low_lod = true
+path = "data/wateringen"
 
 [parameters]
 cellsize = 0.5
+region_of_interest = [ 78515.135, 447828.155, 79613.120, 448635.764 ]
 
 [output]
-path = 'output/wippolder'
+path = 'output/wateringen'
 
 building_toml_file = '{path}/objects/{bid}/config_{pc_name}.toml'
 building_las_file = '{path}/objects/{bid}/crop/{bid}_{pc_name}.las'

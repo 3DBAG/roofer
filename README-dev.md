@@ -57,6 +57,54 @@ Once available locally, the data is not re-downloaded, unless the files are remo
 The data for tests is stored at [https://data.3dgi.xyz/roofer-test-data](https://data.3dgi.xyz/roofer-test-data). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
 
 See `tests/CMakeLists.txt` how to fetch the data from the server and make it available for the tests. Note that `FetchContent` extracts the zip contents recursively. Thus, specify the directory as for instance `SOURCE_DIR "${DATA_DIR}/wippolder"` to have the contents placed into `data/wippolder`.
+Pass the md5 hash of the zipfile as the `URL_HASH` to `FetchContent`, so that only changed archives are re-downloaded.
+
+**Example (wippolder test case)**
+
+The input data directory `tests/data/wippolder` has the following structure:
+
+```
+wippolder/
+├── LICENSE
+├── wippolder.gpkg
+├── wippolder.las
+└── wippolder.txt
+```
+
+The `tests/data/wippolder/wippolder.txt` contains the WKT of the area.
+
+The ZIP compressed `tests/data/wippolder` directory is uploaded to `https://data.3dgi.xyz/roofer-test-data`.
+The data is declared in `tests/CMakeLists.txt` with `FetchContent`.
+The archive's MD5 has is `8efc0a7cfb48d3d17f1dc834e3350efe`.
+
+```cmake
+# tests/CMakeLists.txt
+FetchContent_Declare(
+  wippolder
+  URL "${DATA_URL_ROOT}/wippolder.zip"
+  URL_HASH MD5=8efc0a7cfb48d3d17f1dc834e3350efe
+  SOURCE_DIR "${DATA_DIR}/wippolder")
+FetchContent_MakeAvailable(wippolder)
+```
+
+The `tests/README.md` contains the detailed test data description.
+
+The `tests/config/*-wippolder.toml` configuration files refer to the input data directory, relative to the `tests` directory.
+
+```toml
+[input.footprint]
+path = "data/wippolder/wippolder.gpkg"
+```
+
+Finally, tests use the configuration file , e.g. the test that runs `roofer` with the `wippolder` input, uses `roofer-wippolder.toml`.
+
+```cmake
+# tests/CMakeLists.txt
+add_test(
+  NAME "roofer-wippolder"
+  COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+```
 
 ## Documentation
 

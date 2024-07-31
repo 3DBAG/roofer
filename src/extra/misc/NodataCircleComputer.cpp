@@ -63,8 +63,10 @@ namespace roofer::misc {
       }
     }
     ~GridPIPTester() {
+      GridCleanup(ext_gridset);
       delete ext_gridset;
       for (auto& h : hole_gridsets) {
+        GridCleanup(h);
         delete h;
       }
     }

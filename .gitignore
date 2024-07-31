@@ -1,5 +1,6 @@
 # Build dirs
 cmake-build-*
+vcpkg_installed
 
 # CMake
 CMakeUserPresets.json
@@ -14,6 +15,7 @@ tests/data/*
 !tests/data/*.md5
 tests/output/*
 !tests/output/README.md
+tests_local
 
 # Documentation
 docs/html

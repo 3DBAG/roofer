@@ -1,5 +1,18 @@
 # Test data description
 
+## wateringen
+
+A medium area, with four point cloud files.
+The data is about 200Mb.
+
+
+## wateringen-large
+
+A large area, with four point cloud files.
+The region of interest [ 78421.161 447315.091 79983.606 449303.658 ] overlaps all four files.
+The data is about 1.5GB.
+Includes greenhouses in the vicinity of Den Haag.
+
 ## wippolder
 
 A small, representative area in Delft, Netherlands. Mostly used for basic tests.
