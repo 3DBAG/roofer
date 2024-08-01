@@ -85,6 +85,12 @@ struct InputPointcloud {
   std::vector<fileExtent> file_extents;
 };
 
+/**
+ * @brief A single building object
+ *
+ * Contains the footprint polygon, the point cloud, the reconstructed model and
+ * some attributes that are set during the reconstruction.
+ */
 struct BuildingObject {
   roofer::PointCollection pointcloud;
   roofer::LinearRing footprint;
@@ -148,6 +154,14 @@ struct BuildingObjectRef {
   Progress progress;
 };
 
+/**
+ * @brief A single batch for processing
+ *
+ * It contains a tile ID, all the buildings of the tile, their attributes,
+ * the progress of each building, the tile extent and projection information.
+ * Buildings and attributes are stored in separate containers and they are
+ * matched on their index in the container.
+ */
 struct BuildingTile {
   std::size_t id = 0;
   std::vector<BuildingObject> buildings;
@@ -404,45 +418,6 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
-// // Coroutine wrapper for reconstructing a single building.
-// // Because, libfork::fork requires an awaitable function.
-// inline constexpr auto reconstruct_building_coro =
-//     [](auto reconstruct_building_coro,
-//        BuildingObject building_object) -> lf::task<BuildingObject> {
-//   try {
-//     reconstruct_building(building_object);
-//     building_object.reconstruction_success = true;
-//   } catch (...) {
-//     auto& logger = roofer::logger::Logger::get_logger();
-//     logger.warning("reconstruction failed for: {}",
-//     building_object.jsonl_path);
-//   }
-//   co_return building_object;
-// };
-
-// // Parallel reconstruction of a single BuildingTile.
-// // Uses the fork-join method, with the `libfork` library.
-// // Coroutines should take arguments by value.
-// // Ref:
-// //
-// https://github.com/ConorWilliams/libfork?tab=readme-ov-file#the-cactus-stack
-// inline constexpr auto reconstruct_tile_parallel =
-//     [](auto reconstruct_tile_parallel,
-//        BuildingTile building_tile) -> lf::task<BuildingTile> {
-//   // Allocate space for results, outputs is a std::span<Points>
-//   auto [outputs] =
-//       co_await lf::co_new<BuildingObject>(building_tile.buildings.size());
-//
-//   for (std::size_t i = 0; i < building_tile.buildings.size(); ++i) {
-//     co_await lf::fork(&outputs[i],
-//                       reconstruct_building_coro)(building_tile.buildings[i]);
-//   }
-//   co_await lf::join;  // Wait for all tasks to complete.
-//
-//   building_tile.buildings.assign(outputs.begin(), outputs.end());
-//   co_return building_tile;
-// };
-
 // Overrides for heap allocation counting
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
 namespace {
@@ -453,15 +428,15 @@ namespace {
       return total_allocated - total_freed;
     };
   };
-  HeapAllocationCounter s_HeapAllocationCounter;
+  HeapAllocationCounter heap_allocation_counter;
 }  // namespace
 
 void* operator new(size_t size) {
-  s_HeapAllocationCounter.total_allocated += size;
+  heap_allocation_counter.total_allocated += size;
   return malloc(size);
 }
 void operator delete(void* memory, size_t size) {
-  s_HeapAllocationCounter.total_freed += size;
+  heap_allocation_counter.total_freed += size;
   free(memory);
 };
 
@@ -484,7 +459,7 @@ void operator delete(void* memory, size_t size) {
 #if defined(IS_MACOS)
 #include <mach/mach.h>
 #elif defined(IS_LINUX)
-#include <stdio.h>
+#include <cstdio>
 #endif
 
 #endif
@@ -493,7 +468,7 @@ void operator delete(void* memory, size_t size) {
  * Returns the current resident set size (physical memory use) measured
  * in bytes, or zero if the value cannot be determined on this OS.
  */
-inline size_t getCurrentRSS() {
+inline size_t GetCurrentRSS() {
 #if defined(IS_WINDOWS)
   /* Windows -------------------------------------------------- */
   PROCESS_MEMORY_COUNTERS info;
@@ -527,17 +502,6 @@ inline size_t getCurrentRSS() {
   return (size_t)0L; /* Unsupported. */
 #endif
 }
-
-// // Linux only
-// // See https://man7.org/linux/man-pages/man2/getrusage.2.html
-// // See https://mrswolf.github.io/memory-usage-cpp/
-// #include <sys/resource.h>
-// long get_mem_usage() {
-//   struct rusage usage;
-//   int ret;
-//   ret = getrusage(RUSAGE_SELF, &usage);
-//   return usage.ru_maxrss * 1000;  // ru_maxrss is in KB
-// }
 
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
@@ -640,11 +604,11 @@ int main(int argc, const char* argv[]) {
 
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
-  // -5, because we need one thread for crop, reconstruct, serialize,
+  // -6, because we need one thread for crop, reconstruct, sort, serialize,
   // tracer each, plus logger. We don't count with the main thread, because all
   // the work is offloaded to the worker threads and the main is not doing much
   // work.
-  size_t nthreads_reconstructor_pool = nthreads - 5;
+  size_t nthreads_reconstructor_pool = nthreads - 6;
   logger.debug("Using {} threads for the reconstructor pool",
                nthreads_reconstructor_pool);
   BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
@@ -677,8 +641,8 @@ int main(int argc, const char* argv[]) {
   std::thread tracer_thread([&] {
     while (crop_running.load() || reconstruction_running.load() ||
            serialization_running.load()) {
-      logger.trace("heap", s_HeapAllocationCounter.current_usage());
-      logger.trace("rss", getCurrentRSS());
+      logger.trace("heap", heap_allocation_counter.current_usage());
+      logger.trace("rss", GetCurrentRSS());
       logger.trace("crop", cropped_buildings_cnt);
       logger.trace("reconstruct", reconstructed_buildings_cnt);
       logger.trace("sort", sorted_buildings_cnt);
@@ -691,13 +655,12 @@ int main(int argc, const char* argv[]) {
     }
     // We log once more after all threads have finished, to measure the finaly
     // memory use
-    logger.trace("heap", s_HeapAllocationCounter.current_usage());
-    logger.trace("rss", getCurrentRSS());
+    logger.trace("heap", heap_allocation_counter.current_usage());
+    logger.trace("rss", GetCurrentRSS());
     logger.trace("crop", cropped_buildings_cnt);
     logger.trace("reconstruct", reconstructed_buildings_cnt);
     logger.trace("sort", sorted_buildings_cnt);
     logger.trace("serialize", serialized_buildings_cnt);
-    logger.debug("Exiting tracer thread");
   });
 
   // Process tiles
@@ -890,6 +853,7 @@ int main(int argc, const char* argv[]) {
 
   std::thread serializer_thread([&]() {
     while (sorting_running.load() || !sorted_tiles.empty()) {
+      logger.debug("[serializer] before lock sorted_tiles_mutex");
       std::unique_lock lock{sorted_tiles_mutex};
       sorted_pending.wait(lock,
                           [&sorted_tiles] { return !sorted_tiles.empty(); });
@@ -897,6 +861,7 @@ int main(int argc, const char* argv[]) {
       sorted_tiles.clear();
       sorted_tiles.shrink_to_fit();
       lock.unlock();
+      logger.debug("[serializer] after lock.unlock()");
 
       while (!pending_serialized.empty()) {
         auto& building_tile = pending_serialized.front();
