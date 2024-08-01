@@ -682,21 +682,18 @@ int main(int argc, const char* argv[]) {
           cropped_buildings_cnt += building_tile.buildings_cnt;
           cropped_tiles.push_back(std::move(building_tile));
         }
+        logger.debug(
+            "[cropper] Finished cropping tile {}, notifying reconstructor",
+            building_tile.id);
+        cropped_pending.notify_one();
       } catch (...) {
         logger.error("[cropper] Failed to crop tile {}", building_tile.id);
       }
       initial_tiles.pop_front();
-      logger.debug(
-          "[cropper] Finished cropping tile {}, notifying reconstructor",
-          building_tile.id);
-      cropped_pending.notify_one();
     }
     crop_running.store(false);
     logger.debug("[cropper] Finished cropper");
-    cropped_pending
-        .notify_all();  // TODO: notify_one would suffice, because there is just
-                        // one reconstructor_thread, which then distributes the
-                        // buildings to subthreads
+    cropped_pending.notify_one();
   });
 
   std::thread reconstructor_thread([&]() {
@@ -727,8 +724,9 @@ int main(int argc, const char* argv[]) {
         reconstructed_tiles.push_back(std::move(building_tile));
         cropped_tiles.pop_front();
         logger.debug(
-            "[reconstructor] Submitted all buildings of one tile for "
-            "reconstruction");
+            "[reconstructor] Submitted all buildings of tile {} for "
+            "reconstruction",
+            building_tile.id);
         // This wakes up the serializer thread as soon as we submitted one tile
         // for reconstruction, but that doesn't mean that any building of the
         // tile has finished reconstruction. But at least the serializer thread
@@ -740,6 +738,7 @@ int main(int argc, const char* argv[]) {
       lock.unlock();
       logger.debug("[reconstructor] after lock.unlock()");
 
+      // Start one reconstruction task per building, running parallel
       while (!cropped_buildings.empty()) {
         auto building_ref = std::move(cropped_buildings.front());
         cropped_buildings.pop_front();
@@ -757,7 +756,9 @@ int main(int argc, const char* argv[]) {
           BuildingObjectRef building_object_ref = bref;
           try {
             reconstruct_building(building_object_ref.building);
+            // TODO: These two seem to be redundant
             building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
+            building_object_ref.building.reconstruction_success = true;
           } catch (...) {
             building_object_ref.progress = RECONSTRUCTION_FAILED;
             auto& logger = roofer::logger::Logger::get_logger();
@@ -783,14 +784,12 @@ int main(int argc, const char* argv[]) {
           "not empty, it still contains {} items",
           cropped_tiles.size());
     }
-
+    logger.debug(
+        "[reconstructor] All reconstructor threads have joined, sent {} "
+        "buildings for reconstruction",
+        reconstructed_started_cnt.load());
     reconstruction_running.store(false);
-    logger.debug("[reconstructor] All reconstructor threads have joined.");
-    logger.debug("[reconstructor] Sent {} buildings for reconstruction",
-                 reconstructed_started_cnt.load());
-    reconstructed_pending.notify_all();  // TODO: Similar to cropper, notify_one
-                                         // is probably sufficient here, because
-                                         // there is only one serializer thread
+    reconstructed_pending.notify_one();
   });
 
   std::thread sorter_thread([&] {
@@ -843,15 +842,17 @@ int main(int argc, const char* argv[]) {
           reconstructed_tiles.erase(reconstructed_tiles.begin() +
                                     finished_idx.second);
         }
-
         ++sorted_buildings_cnt;
         pending_sorted.pop_front();
       }
     }
     sorting_running.store(false);
+    logger.debug("[sorter] Finished sorter");
   });
 
   std::thread serializer_thread([&]() {
+    logger.info("[serializer] Writing output to {}",
+                roofer_cfg.crop_output_path);
     while (sorting_running.load() || !sorted_tiles.empty()) {
       logger.debug("[serializer] before lock sorted_tiles_mutex");
       std::unique_lock lock{sorted_tiles_mutex};
@@ -869,18 +870,23 @@ int main(int argc, const char* argv[]) {
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
         for (auto& building : building_tile.buildings) {
-          CityJsonWriter->write(
-              building.jsonl_path, building.footprint,
-              &building.multisolids_lod12, &building.multisolids_lod13,
-              &building.multisolids_lod22, building_tile.attributes,
-              building.attribute_index);
-          logger.info("Completed CityJsonWriter to {}", building.jsonl_path);
+          try {
+            CityJsonWriter->write(
+                building.jsonl_path, building.footprint,
+                &building.multisolids_lod12, &building.multisolids_lod13,
+                &building.multisolids_lod22, building_tile.attributes,
+                building.attribute_index);
+            ++serialized_buildings_cnt;
+          } catch (...) {
+            logger.error("[serializer] Failed to serialize {}",
+                         building.jsonl_path);
+          }
         }
-        serialized_buildings_cnt += building_tile.buildings.size();
         pending_serialized.pop_front();
       }
     }
     serialization_running.store(false);
+    logger.debug("[serializer] Finished serializer");
   });
 
   cropper_thread.join();
