@@ -244,6 +244,9 @@ void print_help(std::string program_name) {
   std::cout << "   -a, --all                    Output files for each "
                "candidate point cloud instead of only the optimal candidate."
             << "\n";
+  std::cout << "   -j <n>, --jobs <n>           Limit the number of threads "
+               "used by roofer. Default is to use all available resources."
+            << "\n";
 }
 
 void print_version() {
@@ -508,7 +511,7 @@ inline size_t GetCurrentRSS() {
 
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
-  cmdl.add_param("trace-interval");
+  cmdl.add_params({"trace-interval", "-j", "--jobs"});
 
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
@@ -539,7 +542,7 @@ int main(int argc, const char* argv[]) {
   auto trace_interval = std::chrono::seconds(10);
   if (cmdl[{"-t", "--trace"}]) {
     logger.set_level(roofer::logger::LogLevel::trace);
-    unsigned ti;
+    size_t ti;
     if (cmdl("trace-interval") >> ti) {
       trace_interval = std::chrono::seconds(ti);
     }
@@ -612,13 +615,25 @@ int main(int argc, const char* argv[]) {
 
   // Multithreading setup
   size_t nthreads = std::thread::hardware_concurrency();
-  // -6, because we need one thread for crop, reconstruct, sort, serialize,
-  // tracer each, plus logger. We don't count with the main thread, because all
-  // the work is offloaded to the worker threads and the main is not doing much
-  // work.
-  size_t nthreads_reconstructor_pool = nthreads - 6;
-  logger.debug("Using {} threads for the reconstructor pool",
-               nthreads_reconstructor_pool);
+  // -5, because we need one thread for crop, reconstruct, sort, serialize,
+  // plus logger. We don't count with the main thread and tracer thread, because
+  // all the work is offloaded to the worker threads and the main is not doing
+  // much work, tracer either.
+  size_t nthreads_reserved = 5;
+  size_t jobs_from_param = 0;
+  if (cmdl({"-j", "--jobs"}) >> jobs_from_param) {
+    // Limit the parallelism
+    if (jobs_from_param < nthreads_reserved + 1) {
+      // Only one thread will be available for the reconstructor pool
+      nthreads = nthreads_reserved + 1;
+    } else {
+      nthreads = jobs_from_param;
+    }
+  }
+  size_t nthreads_reconstructor_pool = nthreads - nthreads_reserved;
+  logger.debug(
+      "Using {} threads for the reconstructor pool, {} threads in total",
+      nthreads_reconstructor_pool, nthreads);
   BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
 
   std::atomic crop_running{true};

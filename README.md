@@ -26,6 +26,10 @@ Currently it is using rerun.io to visualise the result. You need to install the 
 
 Combines `crop` and `reconstruct` and serialization.
 
+By default, `roofer` uses all concurrent threads that are supported by the machine.
+You can limit the total number of threads used by `roofer` with the `-j, --jobs` parameter.
+However, `roofer` requires at least 6 concurrent threads, so that is the minimum that will be used, even if `-j` is set to a lower value.
+
 ## Performance
 
 On Linux, we strongly recommend to run `roofer` with the `jemalloc` memory allocator instead of the default `glibc`.
