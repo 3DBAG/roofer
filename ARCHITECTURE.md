@@ -77,6 +77,28 @@ Q. how to deal with change detection/multiple pc selection?
 
 output of reconstruct could be streamed to other compatible applications for format conversion, enrichment with eg party walls, tiling etc.
 
+### roofer (crop + reconstruct)
+
+#### Multithreading
+
+The `roofer` process is split into four stages. Each stage runs on its own thread, processing data as soon as it receives it. Thus, once the cropper is done with the first tile, the reconstruction of that tile begins immediately, followed by sorting and serialization.
+
+- crop (serial)
+- reconstruct (parallel)
+- sort (serial)
+- serialize (serial)
+
+Thread synchronization is managed with mutexes and condition variables.
+Data is moved from one deque to another among the stages and finally deleted after it is serialized.
+
+Cropping is a serial process that produces one `BuildingTile` after another.
+
+The reconstructor thread pushes the buildings of a tile onto the reconstruction queue, and each building is submitted as a task onto the reconstruction-thread-pool. The threads are detached, and they run as long as the cropper is running or there are cropped buildings. When a building is finished, the corresponding `Progress` enum is set to `RECONSTRUCTION_SUCCEEDED` or `RECONSTRUCTION_FAILED`.
+
+The reconstructed buildings are finished in random order, so the sorter thread collects the finished (failed or succeeded) buildings of a tile, and place them back into the tile in their original order. A tile is finished when all of its buildings are either `RECONSTRUCTION_SUCCEEDED` or `RECONSTRUCTION_FAILED`.
+
+The complete tiles are serialized by the serializer thread and finally released from memory.
+
 ### Datastructures
 Simple and easy to use types to handle vector geometries (pointcloud, polygons, meshes), simple rasters, nullable attributes (int, float, bool, string, date/time) + common operations on those types.
 
