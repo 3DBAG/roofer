@@ -22,6 +22,15 @@ Currently it is using rerun.io to visualise the result. You need to install the 
 
 ![reconstruct output visualised with Rerun](rerun.png)
 
+### roofer
+
+Combines `crop` and `reconstruct` and serialization.
+
+## Performance
+
+On Linux, we strongly recommend to run `roofer` with the `jemalloc` memory allocator instead of the default `glibc`.
+After installing `jemalloc`, you can enable it by setting `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2`.
+
 ## Compile from source
 
 Building *roofer* requires [vcpkg](https://vcpkg.io).
