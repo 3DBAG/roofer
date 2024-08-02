@@ -230,6 +230,9 @@ void print_help(std::string program_name) {
   std::cout << "   -t, --trace                  Trace the progress. Implies "
                "--verbose."
             << "\n";
+  std::cout << "   --trace-interval <s>         Trace interval in "
+               "seconds [default: 10]."
+            << "\n";
   std::cout << "   -c <file>, --config <file>   Config file." << "\n";
   std::cout << "   -r, --rasters                Output rasterised building "
                "pointclouds."
@@ -505,6 +508,7 @@ inline size_t GetCurrentRSS() {
 
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser({"-c", "--config"});
+  cmdl.add_param("trace-interval");
 
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
@@ -532,11 +536,15 @@ int main(int argc, const char* argv[]) {
     logger.set_level(roofer::logger::LogLevel::warning);
   }
   // Enabling tracing overwrites the log level
+  auto trace_interval = std::chrono::seconds(10);
   if (cmdl[{"-t", "--trace"}]) {
     logger.set_level(roofer::logger::LogLevel::trace);
+    unsigned ti;
+    if (cmdl("trace-interval") >> ti) {
+      trace_interval = std::chrono::seconds(ti);
+    }
+    logger.debug("trace interval is set to {} seconds", trace_interval.count());
   }
-
-  auto trace_interval = std::chrono::seconds(10);
 
   // Read configuration
   std::string config_path;
