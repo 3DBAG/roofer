@@ -133,11 +133,13 @@ void crop_tile(const roofer::TBox<double>& tile,
           roofer::misc::compute_nodata_circle(ipc.building_clouds[i],
                                               footprints[i],
                                               &ipc.nodata_radii[i], &nodata_c);
-        } catch (...) {
+        } catch (const std::exception& e) {
           logger.error(
               "Failed to compute_nodata_circle in crop_tile for {}, setting "
-              "ipc.nodata_radii[i] = 0",
-              ipc.path);
+              "ipc.nodata_radii[i] = 0, what(): {}",
+              ipc.path,
+              e.what()
+              );
           ipc.nodata_radii[i] = 0;
         }
         // if (cfg.write_crop_outputs && cfg.write_index) {

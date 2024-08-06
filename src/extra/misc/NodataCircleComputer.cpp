@@ -10,7 +10,7 @@
 #include <chrono>
 #include <roofer/misc/NodataCircleComputer.hpp>
 
-#include "roofer/logger/logger.h"
+// #include "roofer/logger/logger.h"
 
 static const double PI = 3.141592653589793238462643383279502884;
 
@@ -124,22 +124,22 @@ namespace roofer::misc {
     auto polygon = Polygon_with_holes(poly2, holes.begin(), holes.end());
 
     // double l = 0;
-    try {
+    // try {
       insert_edges(t, polygon.outer_boundary(), polygon_densify);
-    } catch (...) {
-      // Catch CGAL assertion errors when CGAL is compiled in debug mode
-      auto& logger = roofer::logger::Logger::get_logger();
-      logger.error(
-          "Failed the initial insert_edges in compute_nodata_circle and cannot "
-          "continue");
-      throw;
-    }
+    // } catch (...) {
+    //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
+    //   auto& logger = roofer::logger::Logger::get_logger();
+    //   logger.error(
+    //       "Failed the initial insert_edges in compute_nodata_circle and cannot "
+    //       "continue");
+    //   throw;
+    // }
     for (auto& hole : polygon.holes()) {
-      try {
+      // try {
         insert_edges(t, hole, polygon_densify);
-      } catch (...) {
-        // Catch CGAL assertion errors when CGAL is compiled in debug mode
-      }
+      // } catch (...) {
+      //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
+      // }
     }
     // build gridset for point in polygon checks
     auto pip_tester = GridPIPTester(polygon);
@@ -154,7 +154,7 @@ namespace roofer::misc {
       // get the voronoi node
       if (!CGAL::collinear(face->vertex(0)->point(), face->vertex(1)->point(),
                            face->vertex(2)->point())) {
-        try {
+        // try {
           auto c = t.dual(face);
           // check it is inside footprint polygon
           if (pip_tester.test(c)) {
@@ -166,9 +166,9 @@ namespace roofer::misc {
               }
             }
           }
-        } catch (...) {
-          // Catch CGAL assertion errors when CGAL is compiled in debug mode
-        }
+        // } catch (...) {
+        //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
+        // }
       }
     }
     if (nodata_radius) *nodata_radius = std::sqrt(r_max);
