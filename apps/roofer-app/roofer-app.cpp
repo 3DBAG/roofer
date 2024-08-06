@@ -9,7 +9,7 @@
 #include <vector>
 namespace fs = std::filesystem;
 
-#include <malloc.h>
+#include <stdlib.h>
 
 // common
 #include <roofer/logger/logger.h>
@@ -152,6 +152,12 @@ struct BuildingObjectRef {
   size_t building_idx;
   BuildingObject building;
   Progress progress;
+  BuildingObjectRef(size_t tile_id, size_t building_idx, BuildingObject building,
+                    Progress progress)
+      : tile_id(tile_id),
+        building_idx(building_idx),
+        building(building),
+        progress(progress) {}
 };
 
 /**
