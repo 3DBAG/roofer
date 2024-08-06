@@ -620,12 +620,12 @@ int main(int argc, const char* argv[]) {
   logger.debug("Created {} batch tile regions", initial_tiles.size());
 
   // Multithreading setup
-  size_t nthreads = std::thread::hardware_concurrency();
   // -5, because we need one thread for crop, reconstruct, sort, serialize,
   // plus logger. We don't count with the main thread and tracer thread, because
   // all the work is offloaded to the worker threads and the main is not doing
   // much work, tracer either.
   size_t nthreads_reserved = 5;
+  size_t nthreads = std::max(nthreads_reserved+1, std::thread::hardware_concurrency());
   size_t jobs_from_param = 0;
   if (cmdl({"-j", "--jobs"}) >> jobs_from_param) {
     // Limit the parallelism
