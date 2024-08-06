@@ -36,8 +36,8 @@
       ]
     },
     {
-      "name": "libfork",
-      "version>=": "3.8.0"
+      "name": "bshoshany-thread-pool",
+      "version>=": "4.1.0"
     }
   ],
   "overrides": [
