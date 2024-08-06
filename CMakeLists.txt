@@ -47,9 +47,6 @@ find_package(
 find_package(nlohmann_json REQUIRED)
 find_package(GEOS CONFIG REQUIRED)
 find_package(laslib CONFIG REQUIRED)
-add_library(BS_thread_pool INTERFACE)
-target_include_directories(BS_thread_pool
-                           INTERFACE ${BS_thread_pool_SOURCE_DIR}/include)
 
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
