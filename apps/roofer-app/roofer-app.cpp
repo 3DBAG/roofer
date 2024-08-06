@@ -447,7 +447,7 @@ void* operator new(size_t size) {
   heap_allocation_counter.total_allocated += size;
   return malloc(size);
 }
-void operator delete(void* memory, size_t size) {
+void operator delete(void* memory, size_t size) noexcept {
   heap_allocation_counter.total_freed += size;
   free(memory);
 };
