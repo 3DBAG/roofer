@@ -152,8 +152,8 @@ struct BuildingObjectRef {
   size_t building_idx;
   BuildingObject building;
   Progress progress;
-  BuildingObjectRef(size_t tile_id, size_t building_idx, BuildingObject building,
-                    Progress progress)
+  BuildingObjectRef(size_t tile_id, size_t building_idx,
+                    BuildingObject building, Progress progress)
       : tile_id(tile_id),
         building_idx(building_idx),
         building(building),
@@ -625,7 +625,10 @@ int main(int argc, const char* argv[]) {
   // all the work is offloaded to the worker threads and the main is not doing
   // much work, tracer either.
   size_t nthreads_reserved = 5;
-  size_t nthreads = std::max(nthreads_reserved+1, std::thread::hardware_concurrency());
+  size_t nthreads = nthreads_reserved + 1;
+  if (nthreads < std::thread::hardware_concurrency()) {
+    nthreads = std::thread::hardware_concurrency();
+  }
   size_t jobs_from_param = 0;
   if (cmdl({"-j", "--jobs"}) >> jobs_from_param) {
     // Limit the parallelism
