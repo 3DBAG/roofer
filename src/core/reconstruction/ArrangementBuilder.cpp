@@ -5,8 +5,6 @@
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
-#define DEBUGGIE
-
 namespace roofer::reconstruction {
 
   class ArrangementBuilder : public ArrangementBuilderInterface {
