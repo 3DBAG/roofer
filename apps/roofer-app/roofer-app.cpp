@@ -101,6 +101,7 @@ struct BuildingObject {
 
   size_t attribute_index;
   bool reconstruction_success = false;
+  int reconstruction_time = 0;
 
   // set in crop
   std::string jsonl_path;
@@ -792,10 +793,15 @@ int main(int argc, const char* argv[]) {
           //  lvalue of type const BuildingObject".
           BuildingObjectRef building_object_ref = bref;
           try {
+            auto start = std::chrono::high_resolution_clock::now();
             reconstruct_building(building_object_ref.building);
             // TODO: These two seem to be redundant
             building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
             building_object_ref.building.reconstruction_success = true;
+            building_object_ref.building.reconstruction_time = static_cast<int>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - start)
+                    .count());
           } catch (...) {
             building_object_ref.progress = RECONSTRUCTION_FAILED;
             auto& logger = roofer::logger::Logger::get_logger();
@@ -915,6 +921,12 @@ int main(int argc, const char* argv[]) {
           } else {
             attr_status.push_back("unknown");
           }
+        }
+        // create time attribute
+        auto& attr_time =
+            building_tile.attributes.insert_vec<int>("b3_reconstruction_time");
+        for (auto& building : building_tile.buildings) {
+          attr_time.push_back(building.reconstruction_time);
         }
         // output reconstructed buildings
         auto CityJsonWriter =
