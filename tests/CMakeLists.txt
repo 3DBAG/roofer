@@ -1,3 +1,5 @@
+option(RF_TEST_INSTALL "Enable optional tests" OFF)
+
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -77,39 +79,39 @@ if(RF_BUILD_APPS)
   # artifacts were installed. We don't set the TEST_ENVIRONMENT for the
   # installed apps, because the required paths are supposed to be set by the
   # install process.
+  if(RF_TEST_INSTALL)
+    add_test(
+      NAME "installed-crop-version"
+      COMMAND crop --version
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  add_test(
-    NAME "installed-crop-version"
-    COMMAND crop --version
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_test(
+      NAME "installed-crop-wippolder"
+      COMMAND crop --config "${CONFIG_DIR}/crop-wippolder.toml"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  add_test(
-    NAME "installed-crop-wippolder"
-    COMMAND crop --config "${CONFIG_DIR}/crop-wippolder.toml"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_test(
+      NAME "installed-reconstruct-version"
+      COMMAND reconstruct --version
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  add_test(
-    NAME "installed-reconstruct-version"
-    COMMAND reconstruct --version
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_test(
+      NAME "installed-reconstruct-wippolder"
+      COMMAND reconstruct --config "${CONFIG_DIR}/roofer-wippolder.toml"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  add_test(
-    NAME "installed-reconstruct-wippolder"
-    COMMAND reconstruct --config "${CONFIG_DIR}/roofer-wippolder.toml"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-  set(tests_installed
-      "installed-crop-version;installed-reconstruct-version;installed-crop-wippolder;installed-reconstruct-wippolder"
-  )
-  set(WINDOWS_INSTALLED_ENVIRONMENT
-      "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
-  )
-  if(WIN32)
-    set_tests_properties(
-      ${tests_installed} PROPERTIES ENVIRONMENT
-                                    "${WINDOWS_INSTALLED_ENVIRONMENT}")
+    set(tests_installed
+        "installed-crop-version;installed-reconstruct-version;installed-crop-wippolder;installed-reconstruct-wippolder"
+    )
+    set(WINDOWS_INSTALLED_ENVIRONMENT
+        "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
+    )
+    if(WIN32)
+      set_tests_properties(
+        ${tests_installed} PROPERTIES ENVIRONMENT
+                                      "${WINDOWS_INSTALLED_ENVIRONMENT}")
+    endif()
   endif()
-
 endif()
 
 if(RF_BUILD_BINDINGS)
