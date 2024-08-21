@@ -676,7 +676,7 @@ int main(int argc, const char* argv[]) {
   if (do_tracing) {
     tracer_thread.emplace([&] {
       while (crop_running.load() || reconstruction_running.load() ||
-            serialization_running.load()) {
+             serialization_running.load()) {
         logger.trace("heap", heap_allocation_counter.current_usage());
         logger.trace("rss", GetCurrentRSS());
         logger.trace("crop", cropped_buildings_cnt);
@@ -903,6 +903,19 @@ int main(int argc, const char* argv[]) {
 
       while (!pending_serialized.empty()) {
         auto& building_tile = pending_serialized.front();
+
+        // create status attribute
+        auto& attr_status =
+            building_tile.attributes.insert_vec<std::string>("b3_status");
+        for (auto& progress : building_tile.buildings_progresses) {
+          if (progress == RECONSTRUCTION_FAILED) {
+            attr_status.push_back("reconstruction_failed");
+          } else if (progress == RECONSTRUCTION_SUCCEEDED) {
+            attr_status.push_back("reconstruction_succeeded");
+          } else {
+            attr_status.push_back("unknown");
+          }
+        }
         // output reconstructed buildings
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
@@ -930,7 +943,7 @@ int main(int argc, const char* argv[]) {
   reconstructor_thread.join();
   sorter_thread.join();
   serializer_thread.join();
-  if (tracer_thread.has_value()){
+  if (tracer_thread.has_value()) {
     tracer_thread->join();
   }
 
