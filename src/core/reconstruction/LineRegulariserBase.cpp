@@ -164,14 +164,7 @@ namespace roofer::linereg {
         // dereference 3 times! iterator->shared_ptr->heap_handle->heap_value
         // Notice -> is not implemented on the heap_handle, so we must use * for
         // the last dereference here
-        try {
-          (***i).dist =
-              (***i).clusters.first->distance((***i).clusters.second.get());
-        } catch (CGAL::Uncertain_conversion_exception e) {
-          // this happes sometimes, assuming here that this means the distance
-          // was close to 0
-          (***i).dist = 0;
-        }
+        (***i).dist = (***i).clusters.first->distance((***i).clusters.second.get());
         distances.update(*(*i));
         ++i;
       }
