@@ -32,7 +32,7 @@ void print_version() {
 }
 
 int main(int argc, const char* argv[]) {
-  auto cmdl = argh::parser({"-c", "--config"});
+  auto cmdl = argh::parser();
 
   cmdl.parse(argc, argv);
   std::string program_name = cmdl[0];
