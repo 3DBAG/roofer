@@ -160,7 +160,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
 #endif
 
 #ifdef RF_USE_VAL3DITY
-  auto Val3dator = roofer::reconstruction::createVal3dator();
+  auto Val3dator = roofer::misc::createVal3dator();
   Val3dator->compute(ArrangementExtruder->multisolid);
   attr_val3dity.push_back(Val3dator->errors.front());
   logger.info("Completed Val3dator. Errors={}", Val3dator->errors.front());
