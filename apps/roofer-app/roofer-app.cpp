@@ -546,7 +546,8 @@ int main(int argc, const char* argv[]) {
   }
   // Enabling tracing overwrites the log level
   auto trace_interval = std::chrono::seconds(10);
-  if (cmdl[{"-t", "--trace"}]) {
+  bool do_tracing = cmdl[{"-t", "--trace"}];
+  if (do_tracing) {
     logger.set_level(roofer::logger::LogLevel::trace);
     size_t ti;
     if (cmdl("trace-interval") >> ti) {
@@ -670,30 +671,34 @@ int main(int argc, const char* argv[]) {
   std::atomic<size_t> reconstructed_started_cnt = 0;
   std::atomic<size_t> sorted_buildings_cnt = 0;
   std::atomic<size_t> serialized_buildings_cnt = 0;
-  std::thread tracer_thread([&] {
-    while (crop_running.load() || reconstruction_running.load() ||
-           serialization_running.load()) {
+  std::optional<std::thread> tracer_thread;
+
+  if (do_tracing) {
+    tracer_thread.emplace([&] {
+      while (crop_running.load() || reconstruction_running.load() ||
+            serialization_running.load()) {
+        logger.trace("heap", heap_allocation_counter.current_usage());
+        logger.trace("rss", GetCurrentRSS());
+        logger.trace("crop", cropped_buildings_cnt);
+        logger.trace("reconstruct", reconstructed_buildings_cnt);
+        logger.trace("sort", sorted_buildings_cnt);
+        logger.trace("serialize", serialized_buildings_cnt);
+        logger.debug(
+            "[reconstructor] reconstructor_pool nr. tasks waiting in the queue "
+            "== {}",
+            reconstructor_pool.get_tasks_queued());
+        std::this_thread::sleep_for(trace_interval);
+      }
+      // We log once more after all threads have finished, to measure the finaly
+      // memory use
       logger.trace("heap", heap_allocation_counter.current_usage());
       logger.trace("rss", GetCurrentRSS());
       logger.trace("crop", cropped_buildings_cnt);
       logger.trace("reconstruct", reconstructed_buildings_cnt);
       logger.trace("sort", sorted_buildings_cnt);
       logger.trace("serialize", serialized_buildings_cnt);
-      logger.debug(
-          "[reconstructor] reconstructor_pool nr. tasks waiting in the queue "
-          "== {}",
-          reconstructor_pool.get_tasks_queued());
-      std::this_thread::sleep_for(trace_interval);
-    }
-    // We log once more after all threads have finished, to measure the finaly
-    // memory use
-    logger.trace("heap", heap_allocation_counter.current_usage());
-    logger.trace("rss", GetCurrentRSS());
-    logger.trace("crop", cropped_buildings_cnt);
-    logger.trace("reconstruct", reconstructed_buildings_cnt);
-    logger.trace("sort", sorted_buildings_cnt);
-    logger.trace("serialize", serialized_buildings_cnt);
-  });
+    });
+  }
 
   // Process tiles
   std::thread cropper_thread([&]() {
@@ -925,7 +930,9 @@ int main(int argc, const char* argv[]) {
   reconstructor_thread.join();
   sorter_thread.join();
   serializer_thread.join();
-  tracer_thread.join();
+  if (tracer_thread.has_value()){
+    tracer_thread->join();
+  }
 
   if (!cropped_tiles.empty()) {
     logger.error(
