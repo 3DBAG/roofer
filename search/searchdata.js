@@ -10,7 +10,7 @@ var indexSectionsWithContent =
   7: "alop",
   8: "_cdeilmnoptwz",
   9: "egnpstv",
-  10: "egrs"
+  10: "degrs"
 };
 
 var indexSectionNames =
