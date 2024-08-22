@@ -32,7 +32,7 @@ GENERATE_LATEX          = NO
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = ../src ../include
+INPUT                  = ../src/core/ ../include/roofer/reconstruction ../include/roofer/common ../include/roofer/logger
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.cpp \
                          *.h \
