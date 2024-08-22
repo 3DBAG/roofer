@@ -6,7 +6,6 @@ void crop_tile(const roofer::TBox<double>& tile,
   auto& pj = output_building_tile.proj_helper;
   auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
   auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
-  vector_writer->srs = cfg.output_crs;
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
   auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
   auto vector_ops = roofer::misc::createVector2DOpsGEOS();
@@ -137,9 +136,7 @@ void crop_tile(const roofer::TBox<double>& tile,
           logger.error(
               "Failed to compute_nodata_circle in crop_tile for {}, setting "
               "ipc.nodata_radii[i] = 0, what(): {}",
-              ipc.path,
-              e.what()
-              );
+              ipc.path, e.what());
           ipc.nodata_radii[i] = 0;
         }
         // if (cfg.write_crop_outputs && cfg.write_index) {

@@ -33,7 +33,7 @@ namespace roofer::io {
       lasheader.point_data_format = 0;
       lasheader.point_data_record_length = 20;
 
-      auto crs_wkt = pjHelper.get_rev_crs_wkt();
+      auto crs_wkt = pjHelper.crs().wkt;
       // std::cout << crs_wkt << std::endl;
       // std::cout << crs_wkt.size() << std::endl;
       // std::cout << strlen(crs_wkt.c_str()) << std::endl;
@@ -104,11 +104,8 @@ namespace roofer::io {
       delete laswriter;
     }
 
-    void write_pointcloud(PointCollection& pointcloud, std::string path,
-                          std::string output_crs) override {
-      if (!output_crs.empty())
-        pjHelper.set_rev_crs_transform(output_crs.c_str(), true);
-
+    void write_pointcloud(PointCollection& pointcloud,
+                          std::string path) override {
       fs::create_directories(fs::path(path).parent_path());
       write_point_cloud_collection(pointcloud, path);
     }

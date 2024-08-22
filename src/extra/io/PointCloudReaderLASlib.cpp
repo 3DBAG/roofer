@@ -62,6 +62,14 @@ namespace roofer::io {
       if (!lasreader) throw(rooferException("Open failed on " + source));
     }
 
+    ReferenceSystem get_crs() override {
+      ReferenceSystem refSys;
+      std::string wkt;
+      getOgcWkt(&lasreader->header, wkt);
+      refSys.wkt = wkt;
+      return refSys;
+    }
+
     void close() override {
       if (lasreader) {
         lasreader->close();
@@ -80,13 +88,10 @@ namespace roofer::io {
                                 vec1i* order, vec1f* intensities,
                                 vec3f* colors) override {
       auto& logger = logger::Logger::get_logger();
-      logger.debug("Attemting to find OGC CRS WKT...");
-      // std::string wkt = manager.substitute_globals(wkt_);
-      std::string wkt = "";
-      getOgcWkt(&lasreader->header, wkt);
-      if (wkt.size() != 0) {
-        pjHelper.set_fwd_crs_transform(wkt.c_str());
-      }
+
+      // if (wkt.size() != 0) {
+      //   pjHelper.set_fwd_crs_transform(wkt.c_str());
+      // }
 
       size_t i = 0;
       while (lasreader->read_point()) {
@@ -120,7 +125,6 @@ namespace roofer::io {
             lasreader->point.get_x(), lasreader->point.get_y(),
             lasreader->point.get_z()));
       }
-      pjHelper.clear_fwd_crs_transform();
     }
   };
 

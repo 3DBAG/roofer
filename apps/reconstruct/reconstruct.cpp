@@ -233,7 +233,6 @@ int main(int argc, const char* argv[]) {
       "output/wippolder/objects/503100000030812/crop/503100000030812.gpkg";
   std::string path_output_jsonl = "output/output.city.jsonl";
   std::string crs_process = "EPSG:7415";
-  std::string crs_output = "EPSG:7415";
   std::string skip_attribute_name = "kas_warenhuis";
   std::string skip_glass_roof_attribute_name = "is_glass_roof_pointcloud";
   std::string building_bid_attribute = "CCA";
@@ -283,9 +282,6 @@ int main(int argc, const char* argv[]) {
 
     auto tml_crs_process = config["GF_PROCESS_CRS"].value<std::string>();
     if (tml_crs_process.has_value()) crs_process = *tml_crs_process;
-
-    auto tml_crs_output = config["GF_OUTPUT_CRS"].value<std::string>();
-    if (tml_crs_output.has_value()) crs_output = *tml_crs_output;
 
     auto tml_floor_elevation = config["GROUND_ELEVATION"].value<float>();
     if (tml_floor_elevation.has_value()) floor_elevation = *tml_floor_elevation;
@@ -344,7 +340,7 @@ int main(int argc, const char* argv[]) {
   // reconstruction?
   auto pj = roofer::misc::createProjHelper();
   auto CityJsonWriter = roofer::io::createCityJsonWriter(*pj);
-  CityJsonWriter->CRS_ = crs_output;
+  CityJsonWriter->CRS_ = crs_process;
   CityJsonWriter->identifier_attribute = building_bid_attribute;
   CityJsonWriter->translate_x_ = CITYJSON_TRANSLATE_X;
   CityJsonWriter->translate_y_ = CITYJSON_TRANSLATE_Y;
@@ -354,7 +350,7 @@ int main(int argc, const char* argv[]) {
   CityJsonWriter->scale_z_ = CITYJSON_SCALE_Z;
 
   // read inputs
-  pj->set_process_crs(crs_process.c_str());
+  pj->set_crs({.wkt = crs_process});
   roofer::arr3d offset = {offset_x, offset_y, offset_z};
   pj->set_data_offset(offset);
   auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);

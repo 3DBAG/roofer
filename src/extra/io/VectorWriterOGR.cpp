@@ -178,18 +178,12 @@ namespace roofer::io {
       auto write_size = end - begin;
       // spdlog::info("creating {} geometry features", write_size);
 
-      auto CRS = srs;
       if (layer == nullptr) {
         OGRSpatialReference oSRS;
-        if (!srs.empty()) {
-          oSRS.SetFromUserInput(CRS.c_str());
+        if (!pjHelper.crs().wkt.empty()) {
+          oSRS.SetFromUserInput(pjHelper.crs().wkt.c_str());
           layer =
               dataSource->CreateLayer(layername.c_str(), &oSRS, wkbType, lco);
-
-          // We set normalise_for_visualisation to true, becuase it seems that
-          // GDAL expects as the first coordinate easting/longitude when
-          // constructing geometries
-          pjHelper.set_rev_crs_transform(CRS.c_str(), true);
         } else {
           layer =
               dataSource->CreateLayer(layername.c_str(), nullptr, wkbType, lco);

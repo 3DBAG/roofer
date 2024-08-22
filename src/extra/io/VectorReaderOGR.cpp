@@ -258,7 +258,7 @@ namespace roofer::io {
       OGRSpatialReference* layerSRS = poLayer->GetSpatialRef();
       layerSRS->exportToWkt(&pszWKT);
       // printf( "Layer SRS: \n %s\n", pszWKT );
-      pjHelper.set_fwd_crs_transform(pszWKT);
+      pjHelper.set_crs(ReferenceSystem{.wkt = pszWKT});
       CPLFree(pszWKT);
 
       if (attribute_filter_.size()) {
