@@ -146,7 +146,10 @@ namespace roofer::io {
 
       logger.info("Getting layer extent...");
       OGREnvelope extent;
-      poLayer->GetExtent(&extent);
+      auto error = poLayer->GetExtent(&extent);
+      if (error) {
+        throw(rooferException("Could not get the extent of the layer"));
+      }
       logger.info("Layer extent: {} {} {} {}", extent.MinX, extent.MinY,
                   extent.MaxX, extent.MaxY);
       layer_extent = {extent.MinX, extent.MinY, 0, extent.MaxX, extent.MaxY, 0};
