@@ -335,7 +335,7 @@ namespace roofer::io {
                const MeshMap* multisolid_lod22,
                const AttributeVecMap& attributes,
                size_t attribute_index) override {
-      pjHelper.set_rev_crs_transform(CRS_.c_str());
+      // pjHelper.set_rev_crs_transform(CRS_.c_str());
 
       nlohmann::json outputJSON;
 
@@ -371,7 +371,7 @@ namespace roofer::io {
 
       fs::path fname = fs::path(source);
       write_to_file(outputJSON, fname, prettyPrint_);
-      pjHelper.clear_rev_crs_transform();
+      // pjHelper.clear_rev_crs_transform();
     }
   };
 

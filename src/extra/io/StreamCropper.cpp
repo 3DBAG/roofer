@@ -66,8 +66,10 @@ namespace roofer::io {
       for (size_t i = 0; i < polygons.size(); ++i) {
         auto ring = polygons.at(i);
         auto buf_ring = buf_polygons.at(i);
-        poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(ring)));
-        buf_poly_grids.emplace_back(std::move(std::make_unique<GridPIPTester>(buf_ring)));
+        poly_grids.emplace_back(
+            std::move(std::make_unique<GridPIPTester>(ring)));
+        buf_poly_grids.emplace_back(
+            std::move(std::make_unique<GridPIPTester>(buf_ring)));
       }
 
       // build an index grid for the polygons
@@ -452,9 +454,6 @@ namespace roofer::io {
         if (wkt.size() == 0) {
           getOgcWkt(&lasreader->header, wkt);
         }
-        if (wkt.size() != 0) {
-          pjHelper.set_fwd_crs_transform(wkt.c_str());
-        }
 
         if (!lasreader) {
           logger.warning("cannot read las file: {}", lasfile);
@@ -476,10 +475,8 @@ namespace roofer::io {
 
         // tell lasreader our area of interest. It will then use quadtree
         // indexing if available (.lax file created with lasindex)
-        pjHelper.set_rev_crs_transform(wkt.c_str());
         const auto aoi_min = pjHelper.coord_transform_rev(polygon_extent.min());
         const auto aoi_max = pjHelper.coord_transform_rev(polygon_extent.max());
-        pjHelper.clear_rev_crs_transform();
         // std::cout << lasreader->npoints << std::endl;
         // std::cout << lasreader->get_min_x() << " " << lasreader->get_min_y()
         // << " " << lasreader->get_min_z() << std::endl; std::cout <<
@@ -510,7 +507,6 @@ namespace roofer::io {
         logger.info("Point cloud acquisition year: {}",
                     acqusition_year);  // just for debug
 
-        pjHelper.clear_fwd_crs_transform();
         lasreader->close();
         delete lasreader;
       }

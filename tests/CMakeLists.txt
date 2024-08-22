@@ -5,7 +5,7 @@ set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 if(DEFINED VCPKG_TOOLCHAIN)
   set(TEST_ENVIRONMENT
-      "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
+      "GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
   )
 endif()
 
@@ -104,7 +104,7 @@ if(RF_BUILD_APPS)
         "installed-crop-version;installed-reconstruct-version;installed-crop-wippolder;installed-reconstruct-wippolder"
     )
     set(WINDOWS_INSTALLED_ENVIRONMENT
-        "PROJ_DATA=${CMAKE_INSTALL_PREFIX}\\share\\proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
+        "GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
     )
     if(WIN32)
       set_tests_properties(

@@ -25,7 +25,6 @@
     "lastools",
     "cgal",
     "eigen3",
-    "proj",
     "geos",
     "fmt",
     {

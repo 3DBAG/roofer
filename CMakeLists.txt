@@ -50,11 +50,6 @@ find_package(laslib CONFIG REQUIRED)
 
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
-if(WIN32) # vcpkg doesn't work when there is a version number here
-  find_package(PROJ REQUIRED CONFIG)
-else()
-  find_package(PROJ 9.0.0 REQUIRED CONFIG)
-endif()
 
 if(RF_USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")

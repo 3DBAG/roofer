@@ -14,4 +14,10 @@ namespace roofer {
     std::string msg_;
   };
 
+  struct ReferenceSystem {
+    std::string auth_name;
+    std::string code;
+    std::string wkt;
+  };
+
 }  // namespace roofer

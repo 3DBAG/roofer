@@ -13,6 +13,8 @@ namespace roofer::io {
 
     virtual void open(const std::string& source) = 0;
 
+    virtual ReferenceSystem get_crs() = 0;
+
     virtual void close() = 0;
 
     virtual TBox<double> getExtent() = 0;

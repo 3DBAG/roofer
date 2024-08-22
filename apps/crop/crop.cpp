@@ -289,7 +289,6 @@ int main(int argc, const char* argv[]) {
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
   auto VectorWriter = roofer::io::createVectorWriterOGR(*pj);
-  VectorWriter->srs = output_crs;
   auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
   auto VectorOps = roofer::misc::createVector2DOpsGEOS();

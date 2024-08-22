@@ -11,8 +11,8 @@ namespace roofer::io {
         : pjHelper(pjh){};
     virtual ~LASWriterInterface() = default;
 
-    virtual void write_pointcloud(PointCollection& pointcloud, std::string path,
-                                  std::string output_crs = "") = 0;
+    virtual void write_pointcloud(PointCollection& pointcloud,
+                                  std::string path) = 0;
   };
 
   std::unique_ptr<LASWriterInterface> createLASWriter(
