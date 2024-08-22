@@ -28,11 +28,11 @@ namespace roofer {
     std::vector<pGridSet> hole_gridsets;
     int Grid_Resolution = 20;
 
-    public:
+   public:
     GridPIPTester(const LinearRing& polygon);
     GridPIPTester(const GridPIPTester&) = delete;
     ~GridPIPTester();
     bool test(const arr3f& p);
   };
-  
+
 }  // namespace roofer

@@ -127,18 +127,18 @@ namespace roofer::misc {
 
     // double l = 0;
     // try {
-      insert_edges(t, polygon.outer_boundary(), polygon_densify);
+    insert_edges(t, polygon.outer_boundary(), polygon_densify);
     // } catch (...) {
     //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
     //   auto& logger = roofer::logger::Logger::get_logger();
     //   logger.error(
-    //       "Failed the initial insert_edges in compute_nodata_circle and cannot "
-    //       "continue");
+    //       "Failed the initial insert_edges in compute_nodata_circle and
+    //       cannot " "continue");
     //   throw;
     // }
     for (auto& hole : polygon.holes()) {
       // try {
-        insert_edges(t, hole, polygon_densify);
+      insert_edges(t, hole, polygon_densify);
       // } catch (...) {
       //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
       // }
@@ -157,17 +157,17 @@ namespace roofer::misc {
       if (!CGAL::collinear(face->vertex(0)->point(), face->vertex(1)->point(),
                            face->vertex(2)->point())) {
         // try {
-          auto c = t.dual(face);
-          // check it is inside footprint polygon
-          if (pip_tester.test(c)) {
-            for (size_t i = 0; i < 3; ++i) {
-              auto r = CGAL::squared_distance(c, face->vertex(i)->point());
-              if (r > r_max) {
-                r_max = r;
-                c_max = c;
-              }
+        auto c = t.dual(face);
+        // check it is inside footprint polygon
+        if (pip_tester.test(c)) {
+          for (size_t i = 0; i < 3; ++i) {
+            auto r = CGAL::squared_distance(c, face->vertex(i)->point());
+            if (r > r_max) {
+              r_max = r;
+              c_max = c;
             }
           }
+        }
         // } catch (...) {
         //   // Catch CGAL assertion errors when CGAL is compiled in debug mode
         // }
