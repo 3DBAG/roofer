@@ -1,2 +1,4 @@
 add_subdirectory(core)
-add_subdirectory(extra)
+if(RF_BUILD_APPS OR RF_BUILD_TESTING)
+  add_subdirectory(extra)
+endif()
