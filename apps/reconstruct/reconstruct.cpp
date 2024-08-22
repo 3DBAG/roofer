@@ -531,8 +531,9 @@ int main(int argc, const char* argv[]) {
     heightfield_copy.set_nodata(0);
 #ifdef RF_USE_RERUN
     rec.log("world/heightfield",
-            rerun::DepthImage({heightfield_copy.dimy_, heightfield_copy.dimx_},
-                              *heightfield_copy.vals_));
+            rerun::DepthImage(heightfield_copy.vals_->data(),
+                              {static_cast<uint32_t>(heightfield_copy.dimy_),
+                               static_cast<uint32_t>(heightfield_copy.dimx_)}));
 #endif
 
     roofer::Arrangement_2 arrangement;
