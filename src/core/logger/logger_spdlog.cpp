@@ -6,6 +6,7 @@
 #ifdef RF_USE_LOGGER_SPDLOG
 
 #include <roofer/logger/logger.h>
+#include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
