@@ -1,18 +1,24 @@
-// This file is part of gfp-building-reconstruction
-// Copyright (C) 2018-2022 Ravi Peters
+// Copyright (c) 2018-2024 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
+// and Balazs Dukai (3DGI)
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This file is part of geoflow-roofer (https://github.com/3DBAG/geoflow-roofer)
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// geoflow-roofer was created as part of the 3DBAG project by the TU Delft 3D
+// geoinformation group (3d.bk.tudelf.nl) and 3DGI (3dgi.nl)
 
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// geoflow-roofer is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version. geoflow-roofer is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+// Public License for more details. You should have received a copy of the GNU
+// General Public License along with geoflow-roofer. If not, see
+// <https://www.gnu.org/licenses/>.
+
+// Author(s):
+// Ravi Peters
+
 #pragma once
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
