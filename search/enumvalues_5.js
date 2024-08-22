@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['latest_5fwith_5fmutation_2088',['LATEST_WITH_MUTATION',['../namespaceroofer_1_1misc.html#a009f9f0d51a744d5a57a39b4a56370eda86962d7b99292db7b190763683575d56',1,'roofer::misc']]]
+  ['off_1601',['off',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a3262d48df5d75e3452f0f16b313b7808',1,'roofer::logger']]]
 ];

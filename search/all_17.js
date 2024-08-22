@@ -1,14 +1,8 @@
 var searchData=
 [
-  ['wall_5fpt_5fcnt_988',['wall_pt_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a1daaa5ed791f528b446e74dc8b00f529',1,'roofer::reconstruction::PlaneDetectorInterface']]],
-  ['warning_989',['warning',['../classroofer_1_1logger_1_1Logger.html#a6a1d8f8ffb486d251532eac3edf14b26',1,'roofer::logger::Logger::warning()'],['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7b83d3f08fa392b79e3f553b585971cd',1,'roofer::logger::warning()']]],
-  ['what_990',['what',['../classroofer_1_1rooferException.html#ac88eec92fde363f0517e2cfae62f38b6',1,'roofer::rooferException']]],
-  ['wkt_5f_991',['wkt_',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a304ea543a8a6adaca7bd1b3d224e3634',1,'roofer::io::PointCloudCropperConfig']]],
-  ['write_992',['write',['../classroofer_1_1io_1_1CityJsonWriter.html#afa9592a963c60e89344aae1a73c4b5d5',1,'roofer::io::CityJsonWriter::write()'],['../structroofer_1_1io_1_1CityJsonWriterInterface.html#ab86b283f94ba1491f526296794cb9002',1,'roofer::io::CityJsonWriterInterface::write()']]],
-  ['write_5fpending_5fmessage_993',['write_pending_message',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#a9b437dd504303cf74de2fce852cf254b',1,'roofer::logger::Logger::logger_impl']]],
-  ['write_5fpoint_5fcloud_5fcollection_994',['write_point_cloud_collection',['../structroofer_1_1io_1_1LASWriter.html#a5d40bf4ae1ce222ad2d8bf308b6e596e',1,'roofer::io::LASWriter']]],
-  ['write_5fpointcloud_995',['write_pointcloud',['../structroofer_1_1io_1_1LASWriter.html#ae3d12dff5eb3bb91bb8a08e6bcec1155',1,'roofer::io::LASWriter::write_pointcloud()'],['../structroofer_1_1io_1_1LASWriterInterface.html#acb65c82686bf3e75d8fe480121c57594',1,'roofer::io::LASWriterInterface::write_pointcloud()']]],
-  ['writebands_996',['writeBands',['../classroofer_1_1io_1_1RasterWriterGDAL.html#acf555d6020b701506479c50a8da9ddad',1,'roofer::io::RasterWriterGDAL::writeBands()'],['../structroofer_1_1io_1_1RasterWriterInterface.html#acb9f9ab7e8e73f5c28240878eecef8b0',1,'roofer::io::RasterWriterInterface::writeBands()']]],
-  ['writepolygons_997',['writePolygons',['../classroofer_1_1io_1_1VectorWriterOGR.html#af5ad66e3f7659c45f68daf9f1322fec3',1,'roofer::io::VectorWriterOGR::writePolygons()'],['../structroofer_1_1io_1_1VectorWriterInterface.html#a7b345e4e3758646ef58750a283f69cc6',1,'roofer::io::VectorWriterInterface::writePolygons(const std::string &amp;source, const std::vector&lt; LinearRing &gt; &amp;polygons, const AttributeVecMap &amp;attributes, size_t begin, size_t end)=0'],['../structroofer_1_1io_1_1VectorWriterInterface.html#a47ec2d786c9fe78d9161a88a239bbcee',1,'roofer::io::VectorWriterInterface::writePolygons(const std::string &amp;source, const std::vector&lt; LinearRing &gt; &amp;polygons, const AttributeVecMap &amp;attributes)']]],
-  ['writer_5fthread_998',['writer_thread',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#a3fff1d91bcad80580d412d3f57642b2c',1,'roofer::logger::Logger::logger_impl']]]
+  ['y_776',['y',['../structPipoint.html#ab7131f5b326f4e60f000e7c631d405ae',1,'Pipoint']]],
+  ['ya_777',['ya',['../structGridRec.html#ad7f16ee32667748510757f57839376da',1,'GridRec']]],
+  ['ydelta_778',['ydelta',['../structGridSet.html#a5115b7c088895a1a664b2d0df271e3e3',1,'GridSet']]],
+  ['year_779',['year',['../structroofer_1_1Date.html#a99ad371fd342f9581f2d3f5941e7539e',1,'roofer::Date']]],
+  ['yres_780',['yres',['../structGridSet.html#a7df64b9f67a9b7a8012bb905b8bc3964',1,'GridSet']]]
 ];

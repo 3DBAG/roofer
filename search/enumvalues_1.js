@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['ccw_2081',['CCW',['../namespaceroofer_1_1misc.html#a4382e000872ded4d7bc148481b495c87ab3d95165aad18406798f7d7dcba4e761',1,'roofer::misc']]],
-  ['critical_2082',['critical',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a7e85bcb66fb9a809d5ab4f62a8b8bea8',1,'roofer::logger']]],
-  ['cw_2083',['CW',['../namespaceroofer_1_1misc.html#a4382e000872ded4d7bc148481b495c87a8b12e345c9fe842fff4293e7be18a9e3',1,'roofer::misc']]]
+  ['debug_1595',['debug',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047aad42f6697b035b7580e4fef93be20b4d',1,'roofer::logger']]],
+  ['default_5flevel_1596',['default_level',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a6637b88286cba926cc1bb0ef49f9d2e8',1,'roofer::logger']]]
 ];

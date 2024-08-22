@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['error_2086',['error',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047acb5e100e5a9a3e7f6d1fd97512215282',1,'roofer::logger']]]
+  ['info_1598',['info',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047acaf9b6b99962bf5c2264824231d7a40c',1,'roofer::logger']]]
 ];

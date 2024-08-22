@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['debug_2084',['debug',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047aad42f6697b035b7580e4fef93be20b4d',1,'roofer::logger']]],
-  ['default_5flevel_2085',['default_level',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047a6637b88286cba926cc1bb0ef49f9d2e8',1,'roofer::logger']]]
+  ['error_1597',['error',['../namespaceroofer_1_1logger.html#a78852f4f987d2d2adc98bc4232184047acb5e100e5a9a3e7f6d1fd97512215282',1,'roofer::logger']]]
 ];

@@ -1,18 +1,18 @@
 var searchData=
 [
-  ['raster_1515',['Raster',['../classroofer_1_1RasterTools_1_1Raster.html#a609412ec0790901cb76ba1b06d7cf05f',1,'roofer::RasterTools::Raster::Raster(const Raster &amp;)'],['../classroofer_1_1RasterTools_1_1Raster.html#aa76c2037667cef874987a31c87f793e1',1,'roofer::RasterTools::Raster::Raster()'],['../classroofer_1_1RasterTools_1_1Raster.html#a9f807abc1365eb6d986579eb76f60588',1,'roofer::RasterTools::Raster::Raster(double cellsize, double min_x, double max_x, double min_y, double max_y)']]],
-  ['rasterise_5fpolygon_1516',['rasterise_polygon',['../classroofer_1_1RasterTools_1_1Raster.html#af1860d98ddab080578000e3a79395534',1,'roofer::RasterTools::Raster::rasterise_polygon(T &amp;polygon, std::array&lt; double, 2 &gt; cr_min, std::array&lt; double, 2 &gt; cr_max, bool returnNoData=true) const'],['../classroofer_1_1RasterTools_1_1Raster.html#a6745b881259558c0af528ab909ccf76e',1,'roofer::RasterTools::Raster::rasterise_polygon(T &amp;polygon, bool returnNoData=true) const']]],
-  ['rasterisepointcloud_1517',['RasterisePointcloud',['../namespaceroofer_1_1misc.html#a47caf2a16b2dc1afd5d5a04b49b86357',1,'roofer::misc']]],
-  ['rasterwriterinterface_1518',['RasterWriterInterface',['../structroofer_1_1io_1_1RasterWriterInterface.html#a23f26dae219f5a95705ed1831d191580',1,'roofer::io::RasterWriterInterface::RasterWriterInterface()'],['../classroofer_1_1io_1_1RasterWriterGDAL.html#a23f26dae219f5a95705ed1831d191580',1,'roofer::io::RasterWriterGDAL::RasterWriterInterface()']]],
-  ['read_5fpolygon_1519',['read_polygon',['../classroofer_1_1io_1_1VectorReaderOGR.html#a7022b9e9fc35c87485975566a45d4e7d',1,'roofer::io::VectorReaderOGR']]],
-  ['readpointcloud_1520',['readPointCloud',['../structroofer_1_1io_1_1PointCloudReaderLASlib.html#a02569dbfcbd04c4cc8def9f9e97f7561',1,'roofer::io::PointCloudReaderLASlib::readPointCloud()'],['../structroofer_1_1io_1_1PointCloudReaderInterface.html#af451f789b0d3541bdfc7371a7c9dbaa5',1,'roofer::io::PointCloudReaderInterface::readPointCloud()']]],
-  ['readpolygons_1521',['readPolygons',['../structroofer_1_1io_1_1VectorReaderInterface.html#aa5d8f570ac66a6fb12cc63f5e4243782',1,'roofer::io::VectorReaderInterface::readPolygons()'],['../classroofer_1_1io_1_1VectorReaderOGR.html#a979275a17d7178cb220d8d61fab53992',1,'roofer::io::VectorReaderOGR::readPolygons()']]],
-  ['reconstruct_1522',['reconstruct',['../namespaceroofer.html#ada556fac410eae8fb51a72aee06c4e19',1,'roofer::reconstruct(const PointCollection &amp;points_roof, const PointCollection &amp;points_ground, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())'],['../namespaceroofer.html#a9446203815beeb3abcce42ca20a7b6d5',1,'roofer::reconstruct(const PointCollection &amp;points_roof, Footprint &amp;footprint, ReconstructionConfig cfg=ReconstructionConfig())']]],
-  ['reference_5fpoint_1523',['reference_point',['../structroofer_1_1misc_1_1My__triangle__primitive.html#ae9fcc1ca4525eb5f0ce5316c18ae3c0f',1,'roofer::misc::My_triangle_primitive']]],
-  ['region_1524',['Region',['../classroofer_1_1regiongrower_1_1Region.html#a051be6132a0cfaec17f21021ddfcc5e2',1,'roofer::regiongrower::Region']]],
-  ['restore_5fconstraints_1525',['restore_constraints',['../namespaceroofer_1_1reconstruction_1_1arragementsnapper.html#a4324f9e2d6c4b73a3a59796cc2389ecf',1,'roofer::reconstruction::arragementsnapper']]],
-  ['ring_5fsigned_5farea_1526',['ring_signed_area',['../namespaceroofer.html#a8002ff8c34deb3da38a75c548902599b',1,'roofer']]],
-  ['rmse_5fplane_5fpoints_1527',['rmse_plane_points',['../namespaceroofer_1_1reconstruction.html#a6b03a2180ef9da249732b1b66defaa5a',1,'roofer::reconstruction']]],
-  ['rooferexception_1528',['rooferException',['../classroofer_1_1rooferException.html#a0a0750a431cb65fa4defa909d68fdbea',1,'roofer::rooferException']]],
-  ['rtreegeos_1529',['RTreeGEOS',['../structroofer_1_1misc_1_1RTreeGEOS.html#aa6186522690586613d9feaabea4f206b',1,'roofer::misc::RTreeGEOS']]]
+  ['sample_1154',['sample',['../classroofer_1_1RasterTools_1_1Raster.html#a5a39cd1015cab2240bb190ba91d7faf2',1,'roofer::RasterTools::Raster']]],
+  ['segment_1155',['Segment',['../classroofer_1_1Segment.html#a57c54d3dad13a564fd4ad428c47f7a2d',1,'roofer::Segment::Segment()'],['../classroofer_1_1Segment.html#af2fae9f045eb786127a25511a939d67a',1,'roofer::Segment::Segment(arr3f source, arr3f target)']]],
+  ['set_1156',['set',['../structroofer_1_1TBox.html#ae5f4a6e31e92744fb1e96abb7b050a89',1,'roofer::TBox']]],
+  ['set_5fhole_5fmode_1157',['set_hole_mode',['../classroofer_1_1reconstruction_1_1Face__split__observer.html#a8cb2b17643fb37dd5a776946996e6b42',1,'roofer::reconstruction::Face_split_observer']]],
+  ['set_5finterior_1158',['set_interior',['../structroofer_1_1tri__util_1_1FaceInfo.html#a8e502563d66e270acf3aa7a305d06708',1,'roofer::tri_util::FaceInfo']]],
+  ['set_5flevel_1159',['set_level',['../classroofer_1_1logger_1_1Logger.html#abaf92514bcc9039aa8437c6ab6e5150c',1,'roofer::logger::Logger']]],
+  ['set_5fnodata_1160',['set_nodata',['../classroofer_1_1RasterTools_1_1Raster.html#a0643072e451fbc42e1b1aad986bd1615',1,'roofer::RasterTools::Raster']]],
+  ['set_5fpoint_1161',['set_point',['../structroofer_1_1tri__util_1_1VertexInfo.html#ace7c18f2cbd88f84cca545ca4df44388',1,'roofer::tri_util::VertexInfo']]],
+  ['set_5fval_1162',['set_val',['../classroofer_1_1RasterTools_1_1Raster.html#a5bb9f684b4d0c5545221211989287bdb',1,'roofer::RasterTools::Raster']]],
+  ['signed_5farea_1163',['signed_area',['../classroofer_1_1LinearRing.html#a28c2eae9b85117377d02cad6b1059815',1,'roofer::LinearRing']]],
+  ['size_5fx_1164',['size_x',['../structroofer_1_1TBox.html#aab7c0fa9f1b6d2efeaa694dd5f50d5e4',1,'roofer::TBox']]],
+  ['size_5fy_1165',['size_y',['../structroofer_1_1TBox.html#a4350960e8b80d6b298cc512e832a4142',1,'roofer::TBox']]],
+  ['snap_5fobserver_1166',['Snap_observer',['../classroofer_1_1reconstruction_1_1Snap__observer.html#a8f34c52075493fcc15745c76502af4ef',1,'roofer::reconstruction::Snap_observer']]],
+  ['split_5fstring_1167',['split_string',['../namespaceroofer.html#a8d388c308b7371d682030feadb8ee932',1,'roofer']]],
+  ['string_5ffrom_5flog_5flevel_1168',['string_from_log_level',['../namespaceroofer_1_1logger.html#acd6a364fa9dd45d3cb6c922277b26c3f',1,'roofer::logger']]]
 ];

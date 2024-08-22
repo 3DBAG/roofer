@@ -1,20 +1,8 @@
 var searchData=
 [
-  ['pc2meshdistcalculator_2ecpp_1247',['PC2MeshDistCalculator.cpp',['../PC2MeshDistCalculator_8cpp.html',1,'']]],
-  ['pc2meshdistcalculator_2ehpp_1248',['PC2MeshDistCalculator.hpp',['../PC2MeshDistCalculator_8hpp.html',1,'']]],
-  ['planedetector_2ecpp_1249',['PlaneDetector.cpp',['../PlaneDetector_8cpp.html',1,'']]],
-  ['planedetector_2ehpp_1250',['PlaneDetector.hpp',['../PlaneDetector_8hpp.html',1,'']]],
-  ['planedetectorbase_2ehpp_1251',['PlaneDetectorBase.hpp',['../PlaneDetectorBase_8hpp.html',1,'']]],
-  ['planedetectorransac_2ecpp_1252',['PlaneDetectorRANSAC.cpp',['../PlaneDetectorRANSAC_8cpp.html',1,'']]],
-  ['planeintersector_2ecpp_1253',['PlaneIntersector.cpp',['../PlaneIntersector_8cpp.html',1,'']]],
-  ['planeintersector_2ehpp_1254',['PlaneIntersector.hpp',['../PlaneIntersector_8hpp.html',1,'']]],
-  ['pointcloudrasteriser_2ecpp_1255',['PointcloudRasteriser.cpp',['../PointcloudRasteriser_8cpp.html',1,'']]],
-  ['pointcloudrasteriser_2ehpp_1256',['PointcloudRasteriser.hpp',['../PointcloudRasteriser_8hpp.html',1,'']]],
-  ['pointcloudreader_2ehpp_1257',['PointCloudReader.hpp',['../PointCloudReader_8hpp.html',1,'']]],
-  ['pointcloudreaderlaslib_2ecpp_1258',['PointCloudReaderLASlib.cpp',['../PointCloudReaderLASlib_8cpp.html',1,'']]],
-  ['pointcloudwriter_2ehpp_1259',['PointCloudWriter.hpp',['../PointCloudWriter_8hpp.html',1,'']]],
-  ['pointcloudwriterlaslib_2ecpp_1260',['PointCloudWriterLASlib.cpp',['../PointCloudWriterLASlib_8cpp.html',1,'']]],
-  ['projhelper_2ecpp_1261',['projHelper.cpp',['../projHelper_8cpp.html',1,'']]],
-  ['projhelper_2ehpp_1262',['projHelper.hpp',['../projHelper_8hpp.html',1,'']]],
-  ['ptinpoly_2eh_1263',['ptinpoly.h',['../ptinpoly_8h.html',1,'']]]
+  ['raster_2ecpp_972',['Raster.cpp',['../Raster_8cpp.html',1,'']]],
+  ['raster_2ehpp_973',['Raster.hpp',['../Raster_8hpp.html',1,'']]],
+  ['regiongrower_2ehpp_974',['RegionGrower.hpp',['../RegionGrower_8hpp.html',1,'']]],
+  ['regiongrower_5fds_5fcgal_2ehpp_975',['RegionGrower_DS_CGAL.hpp',['../RegionGrower__DS__CGAL_8hpp.html',1,'']]],
+  ['roofer_2eh_976',['roofer.h',['../roofer_8h.html',1,'']]]
 ];

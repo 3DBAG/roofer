@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['wall_5fpt_5fcnt_1908',['wall_pt_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a1daaa5ed791f528b446e74dc8b00f529',1,'roofer::reconstruction::PlaneDetectorInterface']]],
-  ['wkt_5f_1909',['wkt_',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#a304ea543a8a6adaca7bd1b3d224e3634',1,'roofer::io::PointCloudCropperConfig']]],
-  ['writer_5fthread_1910',['writer_thread',['../structroofer_1_1logger_1_1Logger_1_1logger__impl.html#a3fff1d91bcad80580d412d3f57642b2c',1,'roofer::logger::Logger::logger_impl']]]
+  ['x_1435',['x',['../structPipoint.html#a21c0436e0d9770ed8a60aec6f4c439e6',1,'Pipoint']]],
+  ['xa_1436',['xa',['../structGridRec.html#a5302d169adbe32355a7b828dd0572dce',1,'GridRec']]],
+  ['xdelta_1437',['xdelta',['../structGridSet.html#a44084fa05423b557c0fe25eb450a9928',1,'GridSet']]],
+  ['xres_1438',['xres',['../structGridSet.html#afcaccc5f633823cc60fc3097c94ef862',1,'GridSet']]]
 ];

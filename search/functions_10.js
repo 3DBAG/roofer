@@ -1,13 +1,7 @@
 var searchData=
 [
-  ['tbox_1551',['TBox',['../structroofer_1_1TBox.html#a3257428e13fb641f0bc8fa10fc036abb',1,'roofer::TBox::TBox()'],['../structroofer_1_1TBox.html#a993b722d331970584a6e0477343daaee',1,'roofer::TBox::TBox(std::initializer_list&lt; T &gt; initList)']]],
-  ['test_1552',['test',['../classroofer_1_1misc_1_1GridPIPTester.html#a08679db8cbb5d30a315fcbadf52dd274',1,'roofer::misc::GridPIPTester::test()'],['../classroofer_1_1GridPIPTester.html#a55db358f95ea029fad450cc588aeb792',1,'roofer::GridPIPTester::test()']]],
-  ['testforglassroof_1553',['testForGlassRoof',['../namespaceroofer_1_1misc.html#ad722b417371cddb15e82cf4ca34527ff',1,'roofer::misc']]],
-  ['to_5fgeos_5flinear_5fring_1554',['to_geos_linear_ring',['../namespaceroofer_1_1misc.html#a19c3dccf4777aa6e75e7c489ee6516c1',1,'roofer::misc']]],
-  ['to_5fgeos_5fpolygon_1555',['to_geos_polygon',['../namespaceroofer_1_1misc.html#a2a87afaf0e6330591dfdd20df71189ef',1,'roofer::misc']]],
-  ['to_5ftime_5ft_1556',['to_time_t',['../structroofer_1_1Date.html#aa15c5f702b1c961ecab2bae9eebf255b',1,'roofer::Date::to_time_t()'],['../structroofer_1_1DateTime.html#ae05c9a4186614eb6f696b796fca4b4d4',1,'roofer::DateTime::to_time_t()']]],
-  ['trace_1557',['trace',['../classroofer_1_1logger_1_1Logger.html#a6ba7c91594ebe389afc332e1aa8615d3',1,'roofer::logger::Logger']]],
-  ['tri_5fat_1558',['tri_at',['../classroofer_1_1MultiTriangleCollection.html#a504f862c44cb396bbd0f7ec1f1e9b0d2',1,'roofer::MultiTriangleCollection::tri_at(size_t i)'],['../classroofer_1_1MultiTriangleCollection.html#a45cea4dbdef6d3f5bd660850f1a48399',1,'roofer::MultiTriangleCollection::tri_at(size_t i) const']]],
-  ['tri_5fsize_1559',['tri_size',['../classroofer_1_1MultiTriangleCollection.html#a16d23ca0725ef2770e388b1d1332e62e',1,'roofer::MultiTriangleCollection']]],
-  ['triangulate_5fmesh_1560',['triangulate_mesh',['../namespaceroofer.html#ae54a8795137063a4c8cb423124bb633f',1,'roofer']]]
+  ['v2p_1176',['v2p',['../namespaceroofer_1_1reconstruction.html#aa596f25c5fab83d00484aa57ac7a1c72',1,'roofer::reconstruction']]],
+  ['vertex_5fcount_1177',['vertex_count',['../classroofer_1_1Geometry.html#a5801593a148dc423137d8698858ff36a',1,'roofer::Geometry::vertex_count()'],['../classroofer_1_1LinearRing.html#a50b5a35b736d2197ec6b8f3a5c7d58c5',1,'roofer::LinearRing::vertex_count()'],['../classroofer_1_1Segment.html#ae274585526b8efb9c8ec83721fe97ae3',1,'roofer::Segment::vertex_count()'],['../classroofer_1_1LineString.html#a72e8646180fc55dbba5f10438fd84593',1,'roofer::LineString::vertex_count()'],['../classroofer_1_1TriangleCollection.html#a99a2a43128fce0945492d7fd88696ec8',1,'roofer::TriangleCollection::vertex_count()'],['../classroofer_1_1SegmentCollection.html#a5314de80d017c52d160aed480b118552',1,'roofer::SegmentCollection::vertex_count()'],['../classroofer_1_1PointCollection.html#a4107f7adbed28fc88761ef9051cecef9',1,'roofer::PointCollection::vertex_count()'],['../classroofer_1_1LineStringCollection.html#a5c80ef429ab6a495ec270d0cab101d1e',1,'roofer::LineStringCollection::vertex_count()'],['../classroofer_1_1LinearRingCollection.html#a03c18228721629901843d1aa6ea166db',1,'roofer::LinearRingCollection::vertex_count()']]],
+  ['vertexinfo_1178',['VertexInfo',['../structroofer_1_1tri__util_1_1VertexInfo.html#a7a52c2db134089a68bce76a5554c5b93',1,'roofer::tri_util::VertexInfo']]],
+  ['volume_5fto_5fplane_1179',['volume_to_plane',['../namespaceroofer_1_1reconstruction.html#a5674a89902493324a0db6e16080695a7',1,'roofer::reconstruction']]]
 ];

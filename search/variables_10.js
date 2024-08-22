@@ -1,4 +1,22 @@
 var searchData=
 [
-  ['quality_1833',['quality',['../structroofer_1_1misc_1_1CandidatePointCloud.html#a3acf58f304c250fed9e5843192c8b009',1,'roofer::misc::CandidatePointCloud']]]
+  ['refit_5fcounter_1379',['refit_counter',['../classroofer_1_1planedect_1_1DistAndNormalTester.html#a9574f27573386cd123f481f7ccfba928',1,'roofer::planedect::DistAndNormalTester']]],
+  ['reg_5fsegment_1380',['reg_segment',['../structroofer_1_1linereg_1_1linetype.html#ac96d8b37b18e1d292c738603e078af4d',1,'roofer::linereg::linetype']]],
+  ['region_5fids_1381',['region_ids',['../classroofer_1_1regiongrower_1_1RegionGrower.html#a7e8ba57b58ba18c5e72d19f1330c3ddc',1,'roofer::regiongrower::RegionGrower']]],
+  ['region_5fmap_1382',['region_map',['../classroofer_1_1reconstruction_1_1AlphaShapeRegionGrower.html#ac0238ba17d8ee70975c2a21cf5a043f9',1,'roofer::reconstruction::AlphaShapeRegionGrower']]],
+  ['regions_1383',['regions',['../classroofer_1_1regiongrower_1_1RegionGrower.html#a5bfb55b373fe599f8bc9a8a45347aed7',1,'roofer::regiongrower::RegionGrower']]],
+  ['regularised_5fedges_1384',['regularised_edges',['../structroofer_1_1reconstruction_1_1LineRegulariserInterface.html#ae723cd38583e7a722b1223bde5ccf262',1,'roofer::reconstruction::LineRegulariserInterface']]],
+  ['regularize_5faxis_5fsymmetry_5f_1385',['regularize_axis_symmetry_',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#ac8f422bc26012ce42af407793f65c3a7',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['regularize_5fcoplanarity_5f_1386',['regularize_coplanarity_',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#aa27b2b6e2f751b8c5f8e77d257b45e5c',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['regularize_5forthogonality_5f_1387',['regularize_orthogonality_',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#af44e837aaba6d396e624e38d3384b23a',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['regularize_5fparallelism_5f_1388',['regularize_parallelism_',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a19bba44b43e0179a40e4924b0ffd24dd',1,'roofer::reconstruction::PlaneDetectorConfig']]],
+  ['remove_5foverlap_1389',['remove_overlap',['../structroofer_1_1reconstruction_1_1LineDetectorConfig.html#a57431441773df893f85dd6a2820e5cd4',1,'roofer::reconstruction::LineDetectorConfig']]],
+  ['ring_5fids_1390',['ring_ids',['../structroofer_1_1reconstruction_1_1MeshTriangulatorInterface.html#a00e9d8b63b5441284a0df531dc00b497',1,'roofer::reconstruction::MeshTriangulatorInterface']]],
+  ['rms_5ferror_5fto_5favg_1391',['rms_error_to_avg',['../structroofer_1_1FaceInfo.html#a43efa7eb0fe576598264e84605194bd8',1,'roofer::FaceInfo']]],
+  ['roof_5felevation_5f50p_1392',['roof_elevation_50p',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a280580f324d56b433740a680daf4fc0f',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['roof_5felevation_5f70p_1393',['roof_elevation_70p',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a44ac0655d8ed4385f71f2500ffcde823',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['roof_5felevation_5fmax_1394',['roof_elevation_max',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#ad1301c9eb74da483ed556cab940a93a7',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['roof_5felevation_5fmin_1395',['roof_elevation_min',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a61560c1457fcecd88e2dd389df2821d4',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['roof_5ftype_1396',['roof_type',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#a952eef185715365a6057be0a1ef9b977',1,'roofer::reconstruction::PlaneDetectorInterface']]],
+  ['roofplane_5fids_1397',['roofplane_ids',['../structroofer_1_1reconstruction_1_1AlphaShaperInterface.html#ab926bcfb97c4bc07f7eb313259202127',1,'roofer::reconstruction::AlphaShaperInterface']]]
 ];

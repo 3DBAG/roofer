@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['unsegmented_5fpt_5fcnt_1898',['unsegmented_pt_cnt',['../structroofer_1_1reconstruction_1_1PlaneDetectorInterface.html#abe2363b3a6fcefb3e168e8e99ec285e5',1,'roofer::reconstruction::PlaneDetectorInterface']]],
-  ['use_5facquisition_5fyear_1899',['use_acquisition_year',['../structroofer_1_1io_1_1PointCloudCropperConfig.html#af3678f6d00487a75dca43334590eede2',1,'roofer::io::PointCloudCropperConfig']]],
-  ['use_5fground_1900',['use_ground',['../structroofer_1_1reconstruction_1_1ArrangementOptimiserConfig.html#a0816fb56ac1f1e29b8216bc8a4cc4fbe',1,'roofer::reconstruction::ArrangementOptimiserConfig::use_ground()'],['../structroofer_1_1reconstruction_1_1SegmentRasteriserConfig.html#a3509416c92099b89da44b35d66d77ac8',1,'roofer::reconstruction::SegmentRasteriserConfig::use_ground()']]],
-  ['use_5fransac_1901',['use_ransac',['../structroofer_1_1reconstruction_1_1PlaneDetectorConfig.html#a9ac5edaf738daa6e6fafeb3575c33972',1,'roofer::reconstruction::PlaneDetectorConfig']]]
+  ['v_5findex_1426',['v_index',['../structroofer_1_1FaceInfo.html#a0b4b77200e549c244f619bde1fbf01b0',1,'roofer::FaceInfo']]],
+  ['vals_5f_1427',['vals_',['../classroofer_1_1RasterTools_1_1Raster.html#a58cebf9183415e0b982bf992140d3fc3',1,'roofer::RasterTools::Raster']]],
+  ['value_1428',['value',['../structroofer_1_1linereg_1_1Cluster.html#ab5d1c2fe787d9c1b66e316fb52b93c7e',1,'roofer::linereg::Cluster']]],
+  ['vertex_5flabel_5fcost_1429',['vertex_label_cost',['../structroofer_1_1FaceInfo.html#afbf1e4f846c2bfb6756f87ba502cfefe',1,'roofer::FaceInfo']]],
+  ['visited_1430',['visited',['../structroofer_1_1tri__util_1_1FaceInfo.html#a4401bfb03ef7ef03abad5c06c6823f98',1,'roofer::tri_util::FaceInfo']]],
+  ['volumes_1431',['volumes',['../structroofer_1_1reconstruction_1_1MeshTriangulatorInterface.html#a0c7b8ff7830c9be764b0075a74fe8554',1,'roofer::reconstruction::MeshTriangulatorInterface']]]
 ];
