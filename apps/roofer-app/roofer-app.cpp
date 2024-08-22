@@ -462,8 +462,8 @@ void operator delete(void* memory, size_t size) noexcept {
  * https://lemire.me/blog/2022/11/10/measuring-the-memory-usage-of-your-c-program/
  */
 #if defined(IS_WINDOWS)
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 
 #elif defined(IS_LINUX) || defined(IS_MACOS)
 #include <sys/resource.h>
