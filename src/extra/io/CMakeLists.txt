@@ -17,6 +17,12 @@ set(LIBRARY_HEADERS
 set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
 
+find_package(nlohmann_json REQUIRED)
+find_package(laslib CONFIG REQUIRED)
+
+# GDAL
+find_package(GDAL CONFIG REQUIRED)
+
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
 target_link_libraries("io" PUBLIC GDAL::GDAL LASlib)

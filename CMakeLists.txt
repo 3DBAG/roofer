@@ -18,6 +18,9 @@ endif()
 if(RF_BUILD_TESTING)
   list(APPEND VCPKG_MANIFEST_FEATURES "test")
 endif()
+if(RF_BUILD_APPS)
+  list(APPEND VCPKG_MANIFEST_FEATURES "apps")
+endif()
 
 # TODO: add version number
 project(roofer LANGUAGES C CXX)
@@ -44,12 +47,6 @@ find_package(
   CGAL 5.4 QUIET
   COMPONENTS Core
   REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(GEOS CONFIG REQUIRED)
-find_package(laslib CONFIG REQUIRED)
-
-# GDAL
-find_package(GDAL CONFIG REQUIRED)
 
 if(RF_USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")

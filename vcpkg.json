@@ -13,44 +13,39 @@
       "dependencies": [
         "catch2"
       ]
+    },
+    "apps": {
+      "description": "Build apps.",
+      "dependencies": [
+        "geos",
+        "lastools",
+        {
+          "name": "gdal",
+          "features": [
+            "recommended-features",
+            "postgresql"
+          ]
+        },
+        {
+          "name": "bshoshany-thread-pool",
+          "version>=": "4.1.0"
+        },
+        {
+          "name": "nlohmann-json",
+          "version>=": "3.11.3"
+        }
+      ]
     }
   },
   "dependencies": [
-    {
-      "name": "nlohmann-json",
-      "version>=": "3.11.3"
-    },
-    "boost-geometry",
-    "boost-format",
-    "lastools",
     "cgal",
     "eigen3",
-    "geos",
-    "fmt",
-    {
-      "name": "gdal",
-      "features": [
-        "recommended-features",
-        "postgresql"
-      ]
-    },
-    {
-      "name": "bshoshany-thread-pool",
-      "version>=": "4.1.0"
-    }
+    "fmt"
   ],
   "overrides": [
     {
       "name": "nlohmann-json",
       "version": "3.11.3"
-    },
-    {
-      "name": "boost-geometry",
-      "version": "1.84.0"
-    },
-    {
-      "name": "boost-format",
-      "version": "1.84.0"
     }
   ],
   "builtin-baseline": "9224b3bbd8df24999d85720b1d005dd6f969ade0"

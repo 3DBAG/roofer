@@ -21,6 +21,8 @@ endif()
 set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
 
+find_package(GEOS CONFIG REQUIRED)
+
 add_library("misc" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
 
