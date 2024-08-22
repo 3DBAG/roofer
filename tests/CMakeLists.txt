@@ -12,7 +12,7 @@ endif()
 FetchContent_Declare(
   wippolder
   URL "${DATA_URL_ROOT}/wippolder.zip"
-  URL_HASH MD5=8efc0a7cfb48d3d17f1dc834e3350efe
+  URL_HASH MD5=872f74080ba8946fe2e9f7840a4dc78c
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
