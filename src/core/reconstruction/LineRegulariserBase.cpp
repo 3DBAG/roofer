@@ -164,7 +164,8 @@ namespace roofer::linereg {
         // dereference 3 times! iterator->shared_ptr->heap_handle->heap_value
         // Notice -> is not implemented on the heap_handle, so we must use * for
         // the last dereference here
-        (***i).dist = (***i).clusters.first->distance((***i).clusters.second.get());
+        (***i).dist =
+            (***i).clusters.first->distance((***i).clusters.second.get());
         distances.update(*(*i));
         ++i;
       }
