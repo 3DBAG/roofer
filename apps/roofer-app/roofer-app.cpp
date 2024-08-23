@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 // common
 #include <roofer/logger/logger.h>
-
+#include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
 
 // crop
@@ -48,14 +48,10 @@ namespace fs = std::filesystem;
 #include <roofer/misc/NodataCircleComputer.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
 #include <roofer/misc/Vector2DOps.hpp>
-#include <roofer/misc/projHelper.hpp>
 #include <roofer/misc/select_pointcloud.hpp>
 
 // reconstruct
-// #include <roofer/io/PointCloudReader.hpp>
-// #include <roofer/io/VectorReader.hpp>
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
-// #include <roofer/misc/projHelper.hpp>
 #include <roofer/reconstruction/AlphaShaper.hpp>
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
@@ -77,9 +73,6 @@ namespace fs = std::filesystem;
 #include "argh.h"
 #include "git.h"
 #include "toml.hpp"
-// roofer crop
-// roofer reconstruct
-// roofer tile
 
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
@@ -97,6 +90,7 @@ struct InputPointcloud {
   roofer::vec1f nodata_fractions;
   roofer::vec1f pt_densities;
   roofer::vec1b is_mutated;
+  roofer::vec1b is_glass_roof;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
