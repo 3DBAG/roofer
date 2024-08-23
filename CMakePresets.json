@@ -7,12 +7,13 @@
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_SHARED_LIBS": "ON",
+        "BUILD_SHARED_LIBS": "OFF",
         "RF_USE_VAL3DITY": "ON",
-        "RF_USE_RERUN": "ON",
+        "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "ON",
         "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
@@ -26,7 +27,8 @@
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
         "RF_BUILD_TESTING": "OFF",
-        "RF_BUILD_APPS": "ON"
+        "RF_BUILD_APPS": "ON",
+        "RF_BUILD_BINDINGS": "OFF"
       }
     },
     {
@@ -64,34 +66,16 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-minimal-test"
+      "inherits": "vcpkg-full-test"
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS configure",
-      "inherits": "vcpkg-minimal-test"
+      "inherits": "vcpkg-full-test"
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows configure",
-      "inherits": "vcpkg-minimal-test",
-      "cacheVariables": {
-        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
-      }
-    },
-    {
-      "name": "gh-Linux-full",
-      "description": "Preset for github actions CI Linux configure with all options",
-      "inherits": "vcpkg-full-test"
-    },
-    {
-      "name": "gh-macOS-full",
-      "description": "Preset for github actions CI macOS configure with all options",
-      "inherits": "vcpkg-full-test"
-    },
-    {
-      "name": "gh-Windows-full",
-      "description": "Preset for github actions CI Windows configure with all options",
       "inherits": "vcpkg-full-test",
       "cacheVariables": {
         "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
@@ -115,25 +99,6 @@
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows build",
       "configurePreset": "gh-Windows",
-      "jobs": 4,
-      "configuration": "Release"
-    },
-        {
-      "name": "gh-Linux-full",
-      "description": "Preset for github actions CI Linux build with all options",
-      "configurePreset": "gh-Linux-full",
-      "jobs": 4
-    },
-    {
-      "name": "gh-macOS-full",
-      "description": "Preset for github actions CI macOS build with all options",
-      "configurePreset": "gh-macOS-full",
-      "jobs": 3
-    },
-    {
-      "name": "gh-Windows-full",
-      "description": "Preset for github actions CI Windows build with all options",
-      "configurePreset": "gh-Windows-full",
       "jobs": 4,
       "configuration": "Release"
     }
