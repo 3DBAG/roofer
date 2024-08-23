@@ -58,12 +58,10 @@ namespace roofer::logger {
   struct Logger::logger_impl {
     LogLevel level = LogLevel::default_level;
 
-    std::shared_ptr<
-        spdlog::sinks::ansicolor_stdout_sink<spdlog::details::console_mutex>>
-        stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    std::shared_ptr<
-        spdlog::sinks::ansicolor_stderr_sink<spdlog::details::console_mutex>>
-        stderr_sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+    std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> stdout_sink =
+        std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    std::shared_ptr<spdlog::sinks::stderr_color_sink_mt> stderr_sink =
+        std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
     std::shared_ptr<spdlog::sinks::basic_file_sink<std::mutex>> file_sink =
         std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile_path_,
                                                             true);
