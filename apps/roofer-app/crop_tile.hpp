@@ -119,6 +119,7 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
+    ipc.is_glass_roof.reserve(N_fp);
     if (cfg.write_crop_outputs && cfg.write_index)
       ipc.nodata_circles.resize(N_fp);
 
@@ -131,9 +132,13 @@ void crop_tile(const roofer::TBox<double>& tile,
           roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
       ipc.pt_densities[i] =
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
+      ipc.is_glass_roof[i] =
+          roofer::misc::testForGlassRoof(ipc.building_rasters[i]);
 
       auto target_density = cfg.max_point_density;
-      bool low_lod = *(*low_lod_vec)[i] || ipc.force_low_lod;
+      bool low_lod =
+          *(*low_lod_vec)[i] || ipc.force_low_lod || ipc.is_glass_roof[i];
+
       if (low_lod) {
         target_density = cfg.max_point_density_low_lod;
         logger.info(
@@ -176,13 +181,17 @@ void crop_tile(const roofer::TBox<double>& tile,
     auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
     auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
     auto& pt_density = attributes.insert_vec<float>("pt_density_" + ipc.name);
+    auto& is_glass_roof =
+        attributes.insert_vec<bool>("is_glass_roof_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
+    is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
+      is_glass_roof.push_back(ipc.is_glass_roof[i]);
     }
   }
 
