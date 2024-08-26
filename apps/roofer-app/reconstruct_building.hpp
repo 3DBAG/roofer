@@ -160,7 +160,7 @@ void reconstruct_building(BuildingObject& building) {
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
                                  PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
-    building.was_skipped = true;
+    // building.was_skipped = true;
     // TODO: return building status pointcloud_insufficient
     // CityJsonWriter->write(path_output_jsonl, footprints, nullptr, nullptr,
     //                       nullptr, attributes);
@@ -182,10 +182,9 @@ void reconstruct_building(BuildingObject& building) {
 #endif
 
   // check skip_attribute
-  building.was_skipped = building.skip;
-  logger.info("Skip = {}", building.skip);
+  logger.info("force LoD1.1 = {}", building.force_lod11);
 
-  if (building.skip) {
+  if (building.force_lod11) {
     auto SimplePolygonExtruder =
         roofer::reconstruction::createSimplePolygonExtruder();
     SimplePolygonExtruder->compute(building.footprint, building.h_ground,

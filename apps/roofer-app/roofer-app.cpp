@@ -83,7 +83,7 @@ struct InputPointcloud {
   int date = 0;
   int bld_class = 6;
   int grnd_class = 2;
-  bool force_low_lod = false;
+  bool force_lod11 = false;
   bool select_only_for_date = false;
 
   roofer::vec1f nodata_radii;
@@ -91,6 +91,7 @@ struct InputPointcloud {
   roofer::vec1f pt_densities;
   roofer::vec1b is_mutated;
   roofer::vec1b is_glass_roof;
+  roofer::vec1b lod11_forced;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
@@ -122,7 +123,7 @@ struct BuildingObject {
   // set in crop
   std::string jsonl_path;
   float h_ground;
-  bool skip;  // kas_warenhuis / low_lod
+  bool force_lod11;  // force_lod11 / fallback_lod11
 
   // set in reconstruction
   std::string roof_type;
@@ -133,7 +134,7 @@ struct BuildingObject {
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
-  bool was_skipped;  // b3_reconstructie_onvolledig;
+  // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 
 /**
@@ -200,15 +201,15 @@ struct BuildingTile {
 struct RooferConfig {
   // footprint source parameters
   std::string source_footprints;
-  std::string building_bid_attribute;
-  std::string low_lod_attribute = "kas_warenhuis";
-  std::string year_of_construction_attribute;
+  std::string id_attribute;                // -> attr_building_id
+  std::string force_lod11_attribute = "";  // -> attr_force_blockmodel
+  std::string yoc_attribute;               // -> attr_year_of_construction
 
   // crop parameters
-  float max_point_density = 20;
+  float ceil_point_density = 20;
   float cellsize = 0.5;
-  int low_lod_area = 69000;
-  float max_point_density_low_lod = 5;
+  int lod11_fallback_area = 69000;
+  float lod11_fallback_density = 5;
   float tilesize_x = 1000;
   float tilesize_y = 1000;
 
@@ -293,15 +294,15 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
 
   auto id_attribute_ =
       config["input"]["footprint"]["id_attribute"].value<std::string>();
-  if (id_attribute_.has_value()) cfg.building_bid_attribute = *id_attribute_;
-  auto low_lod_attribute_ =
-      config["input"]["low_lod_attribute"].value<std::string>();
-  if (low_lod_attribute_.has_value())
-    cfg.low_lod_attribute = *low_lod_attribute_;
-  auto year_of_construction_attribute_ =
-      config["input"]["year_of_construction_attribute"].value<std::string>();
-  if (year_of_construction_attribute_.has_value())
-    cfg.year_of_construction_attribute = *year_of_construction_attribute_;
+  if (id_attribute_.has_value()) cfg.id_attribute = *id_attribute_;
+
+  auto force_lod11_attribute_ =
+      config["input"]["force_lod11_attribute"].value<std::string>();
+  if (force_lod11_attribute_.has_value())
+    cfg.force_lod11_attribute = *force_lod11_attribute_;
+
+  auto yoc_attribute_ = config["input"]["yoc_attribute"].value<std::string>();
+  if (yoc_attribute_.has_value()) cfg.yoc_attribute = *yoc_attribute_;
 
   auto tml_pointclouds = config["input"]["pointclouds"];
   if (toml::array* arr = tml_pointclouds.as_array()) {
@@ -319,8 +320,8 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       if (auto n = (*tb)["date"].value<int>(); n.has_value()) {
         pc.date = *n;
       }
-      if (auto n = (*tb)["force_low_lod"].value<bool>(); n.has_value()) {
-        pc.force_low_lod = *n;
+      if (auto n = (*tb)["force_lod11"].value<bool>(); n.has_value()) {
+        pc.force_lod11 = *n;
       }
       if (auto n = (*tb)["select_only_for_date"].value<bool>(); n.has_value()) {
         pc.select_only_for_date = *n;
@@ -340,10 +341,10 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
     };
   }
 
-  auto max_point_density_ =
-      config["parameters"]["max_point_density"].value<float>();
-  if (max_point_density_.has_value())
-    cfg.max_point_density = *max_point_density_;
+  auto ceil_point_density_ =
+      config["parameters"]["ceil_point_density"].value<float>();
+  if (ceil_point_density_.has_value())
+    cfg.ceil_point_density = *ceil_point_density_;
 
   auto tilesize_x_ = config["parameters"]["tilesize_x"].value<float>();
   if (tilesize_x_.has_value()) cfg.tilesize_x = *tilesize_x_;
@@ -353,8 +354,10 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   auto cellsize_ = config["parameters"]["cellsize"].value<float>();
   if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
 
-  auto low_lod_area_ = config["parameters"]["low_lod_area"].value<int>();
-  if (low_lod_area_.has_value()) cfg.low_lod_area = *low_lod_area_;
+  auto lod11_fallback_area_ =
+      config["parameters"]["lod11_fallback_area"].value<int>();
+  if (lod11_fallback_area_.has_value())
+    cfg.lod11_fallback_area = *lod11_fallback_area_;
 
   if (toml::array* region_of_interest_ =
           config["parameters"]["region_of_interest"].as_array()) {

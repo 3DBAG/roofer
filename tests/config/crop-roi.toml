@@ -6,6 +6,7 @@ id_attribute = "identificatie"
 name = "pointcloud"
 quality = 1
 path = "data/wippolder/wippolder.las"
+force_lod11_attribute = "kas_warenhuis"
 
 [parameters]
 cellsize = 0.5
