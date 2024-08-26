@@ -1,12 +1,13 @@
 [input.footprint]
 path = "data/wateringen/wateringen.gpkg"
 id_attribute = "identificatie"
+force_lod11_attribute = "kas_warenhuis"
 
 [[input.pointclouds]]
 name = "ahn4"
 quality = 1
 path = "data/wateringen"
-force_low_lod = true
+force_lod11 = true
 
 [parameters]
 cellsize = 0.5

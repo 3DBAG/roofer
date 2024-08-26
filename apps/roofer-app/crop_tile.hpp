@@ -42,28 +42,13 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   const unsigned N_fp = footprints.size();
 
-  // check if low_lod_attribute exists, if not then create it
-  if (!attributes.get_if<bool>(cfg.low_lod_attribute)) {
-    auto& vec = attributes.insert_vec<bool>(cfg.low_lod_attribute);
-    vec.resize(N_fp, false);
-  }
-  auto low_lod_vec = attributes.get_if<bool>(cfg.low_lod_attribute);
-  for (size_t i = 0; i < N_fp; ++i) {
-    // need dereference operator here for dereferencing pointer and getting
-    // std::option value
-    (*low_lod_vec)[i] =
-        *(*low_lod_vec)[i] ||
-        std::fabs(footprints[i].signed_area()) > cfg.low_lod_area;
-  }
-
   // get yoc attribute vector (nullptr if it does not exist)
   bool use_acquisition_year = true;
-  auto yoc_vec = attributes.get_if<int>(cfg.year_of_construction_attribute);
+  auto yoc_vec = attributes.get_if<int>(cfg.yoc_attribute);
   if (!yoc_vec) {
     use_acquisition_year = false;
-    logger.warning(
-        "year_of_construction_attribute '{}' not found in input footprints",
-        cfg.year_of_construction_attribute);
+    logger.warning("yoc_attribute '{}' not found in input footprints",
+                   cfg.yoc_attribute);
   }
 
   // simplify + buffer footprints
@@ -110,6 +95,20 @@ void crop_tile(const roofer::TBox<double>& tile,
     }
   }
 
+  // create force_lod11 vector, initialize with user input and area check
+  auto& force_lod11_vec = attributes.insert_vec<bool>("b3_force_lod11");
+  force_lod11_vec.resize(N_fp, false);
+
+  if (auto user_force_lod11_vec =
+          attributes.get_if<bool>(cfg.force_lod11_attribute)) {
+    force_lod11_vec = *user_force_lod11_vec;
+  }
+  for (size_t i = 0; i < N_fp; ++i) {
+    force_lod11_vec[i] =
+        *force_lod11_vec[i] ||
+        std::fabs(footprints[i].signed_area()) > cfg.lod11_fallback_area;
+  }
+
   // compute rasters
   // thin
   // compute nodata maxcircle
@@ -120,6 +119,7 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
     ipc.is_glass_roof.reserve(N_fp);
+    ipc.lod11_forced.reserve(N_fp);
     if (cfg.write_crop_outputs && cfg.write_index)
       ipc.nodata_circles.resize(N_fp);
 
@@ -135,23 +135,24 @@ void crop_tile(const roofer::TBox<double>& tile,
       ipc.is_glass_roof[i] =
           roofer::misc::testForGlassRoof(ipc.building_rasters[i]);
 
-      auto target_density = cfg.max_point_density;
-      bool low_lod =
-          *(*low_lod_vec)[i] || ipc.force_low_lod || ipc.is_glass_roof[i];
+      auto target_density = cfg.ceil_point_density;
+      bool do_force_lod11 =
+          *force_lod11_vec[i] || ipc.force_lod11 || ipc.is_glass_roof[i];
+      ipc.lod11_forced[i] = do_force_lod11;
 
-      if (low_lod) {
-        target_density = cfg.max_point_density_low_lod;
+      if (do_force_lod11) {
+        target_density = cfg.lod11_fallback_density;
         logger.info(
             "Applying extra thinning and skipping nodata circle calculation "
-            "[low_lod_attribute = {}]",
-            low_lod);
+            "[force_lod11 = {}]",
+            do_force_lod11);
       }
 
       roofer::misc::gridthinPointcloud(ipc.building_clouds[i],
                                        ipc.building_rasters[i]["cnt"],
                                        target_density);
 
-      if (low_lod) {
+      if (do_force_lod11) {
         ipc.nodata_radii[i] = 0;
       } else {
         try {
@@ -215,7 +216,7 @@ void crop_tile(const roofer::TBox<double>& tile,
   // select pointcloud and write out geoflow config + pointcloud / fp for each
   // building
   logger.info("Selecting and writing pointclouds");
-  auto bid_vec = attributes.get_if<std::string>(cfg.building_bid_attribute);
+  auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
   auto& pc_select = attributes.insert_vec<std::string>("pc_select");
   auto& pc_source = attributes.insert_vec<std::string>("pc_source");
   auto& pc_year = attributes.insert_vec<int>("pc_year");
@@ -307,6 +308,8 @@ void crop_tile(const roofer::TBox<double>& tile,
     pc_year.push_back(selected->date);
 
     // output to BuildingTile
+    // set force_lod11 on building (for reconstruct) and attribute vec (for
+    // output)
     {
       BuildingObject& building = output_building_tile.buildings.emplace_back();
       building.attribute_index = i;
@@ -317,6 +320,7 @@ void crop_tile(const roofer::TBox<double>& tile,
       building.h_ground =
           input_pointclouds[selected->index].ground_elevations[i] +
           (*pj->data_offset)[2];
+      building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
 
       output_building_tile.attributes = attributes;
       building.jsonl_path = fmt::format(
@@ -324,11 +328,11 @@ void crop_tile(const roofer::TBox<double>& tile,
           fmt::arg("pc_name", input_pointclouds[selected->index].name),
           fmt::arg("path", cfg.crop_output_path));
     }
+    if (input_pointclouds[selected->index].lod11_forced[i]) {
+      force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
+    }
 
     if (cfg.write_crop_outputs) {
-      if (input_pointclouds[selected->index].force_low_lod) {
-        (*low_lod_vec)[i] = true;
-      }
       {
         // fs::create_directories(fs::path(fname).parent_path());
         std::string fp_path = fmt::format(
@@ -382,8 +386,8 @@ void crop_tile(const roofer::TBox<double>& tile,
               {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0]},
               {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1]},
               {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
-              {"skip_attribute_name", cfg.low_lod_attribute},
-              {"id_attribute", cfg.building_bid_attribute},
+              {"skip_attribute_name", "b3_force_lod11"},
+              {"id_attribute", cfg.id_attribute},
           };
 
           if (cfg.write_metadata) {

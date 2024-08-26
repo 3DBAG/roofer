@@ -1,8 +1,8 @@
 [input.footprint]
 path = '/home/ravi/git/roofer/roofer_data/yoc-2022-low-coverage_kas_warenhuis.gpkg'
 id_attribute = "identificatie"
-low_lod_attribute = 'kas_warenhuis'
-year_of_construction_attribute = 'oorspronkelijkbouwjaar'
+yoc_attribute = 'oorspronkelijkbouwjaar'
+force_lod11_attribute = 'kas_warenhuis'
 
 [[input.pointclouds]]
 name = "AHN3"
@@ -18,13 +18,13 @@ path = '/home/ravi/git/roofer/roofer_data/yoc-2022-low-coverage-ahn4.laz'
 name = "KAD2020"
 date = 2020
 quality = 2
-force_low_lod = false
+force_lod11 = false
 select_only_for_date = true
 path = '/home/ravi/git/roofer/roofer_data/yoc-2022-low-coverage-kadaster.laz'
 
 [parameters]
 cellsize = 0.5
-max_point_density = 20
+ceil_point_density = 20
 
 [output]
 path = '/mnt/Data/LocalData/temp/yoc-2022-low-coverage_kas_warenhuis'

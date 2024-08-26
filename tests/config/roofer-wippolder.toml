@@ -1,6 +1,7 @@
 [input.footprint]
 path = "data/wippolder/wippolder.gpkg"
 id_attribute = "identificatie"
+force_lod11_attribute = "kas_warenhuis"
 
 [[input.pointclouds]]
 name = "pointcloud"
