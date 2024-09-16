@@ -52,6 +52,10 @@ jobs:
           --preset vcpkg-docs
           -S ${{ github.workspace }}
 
+      - name: Build bindings
+        # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+        run: cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
+
       - name: Generate Docs
         run: |
           sudo apt-get install doxygen graphviz
