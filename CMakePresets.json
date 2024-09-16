@@ -63,6 +63,7 @@
     {
       "name" : "vcpkg-docs",
       "description": "Build python bindings needed for documentation generation",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "RF_USE_VAL3DITY": "OFF",
