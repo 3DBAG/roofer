@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Roofer Introduction" href="introduction.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference C++" href="api_cpp.html" /><link rel="prev" title="Building reconstruction algorithm" href="reconstruction_algo.html" />
 
     <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
-        <title>Roofer 1.0 documentation</title>
+        <title>Roofer CLI App - Roofer 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -166,7 +166,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">Roofer 1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">Roofer 1.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -187,7 +187,7 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
   <span class="sidebar-brand-text">Roofer 1.0 documentation</span>
@@ -199,10 +199,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Roofer Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reconstruction_algo.html">Building reconstruction algorithm</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
 </ul>
@@ -225,7 +225,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/index.rst.txt" title="View this page">
+  <a class="muted-link" href="_sources/cli_application.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -245,29 +245,11 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="roofer-documentation">
-<h1>Roofer documentation<a class="headerlink" href="#roofer-documentation" title="Link to this heading">¶</a></h1>
+          <section id="roofer-cli-app">
+<h1>Roofer CLI App<a class="headerlink" href="#roofer-cli-app" title="Link to this heading">¶</a></h1>
 <p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
 documentation for details.</p>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Roofer Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruction_algo.html">Building reconstruction algorithm</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api_cpp.html#_CPPv46roofer"><code class="docutils literal notranslate"><span class="pre">roofer</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api_py.html#rooferpy.ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_py.html#rooferpy.reconstruct"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_py.html#rooferpy.triangulate_mesh"><code class="docutils literal notranslate"><span class="pre">triangulate_mesh()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
 </section>
 
         </article>
@@ -275,16 +257,26 @@ documentation for details.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="introduction.html">
+          <a class="next-page" href="api_cpp.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Roofer Introduction</div>
+                <div class="title">API Reference C++</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          
+          <a class="prev-page" href="reconstruction_algo.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Building reconstruction algorithm</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
