@@ -60,7 +60,7 @@ jobs:
         run: |
           sudo apt-get install doxygen graphviz
           mkdir docs/rooferpy
-          cp Build/rooferpy/*.so docs/rooferpy
+          cp build/rooferpy/*.so docs/rooferpy
           cd docs
           make html
 
