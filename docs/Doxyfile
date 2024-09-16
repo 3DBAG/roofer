@@ -24,9 +24,12 @@ INCLUDE_GRAPH          = YES
 #---------------------------------------------------------------------------
 # Build related configuration options
 #---------------------------------------------------------------------------
-EXTRACT_ALL             = YES
-RECURSIVE               = YES
-GENERATE_HTML           = YES
+EXTRACT_ALL = YES
+EXTRACT_NAMESPACE = YES
+RECURSIVE               = NO
+GENERATE_XML            = YES
+XML_OUTPUT              = xml
+GENERATE_HTML           = NO
 GENERATE_LATEX          = NO
 
 #---------------------------------------------------------------------------

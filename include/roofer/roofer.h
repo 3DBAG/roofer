@@ -41,32 +41,37 @@
 namespace roofer {
   /**
    * @brief Configuration parameters for single instance building reconstruction
-   *
-   * @param lambda Complexity factor for the optimisation
-   * @param clip_ground Enable clipping parts off the footprint where ground
-   * planes are detected
-   * @param lod Requested Level of Detail
-   *         - 12: LoD12
-   *         - 13: LoD13
-   *         - 22: LoD22
-   * @param lod13_step_height Step height used for LoD13 generalisation
-   * @param floor_elevation Floor elevation in case it is not provided by the
-   * footprint
-   * @param override_with_floor_elevation Force flat floor instead of using the
-   * elevation of the footprint
    */
   struct ReconstructionConfig {
-    // control optimisation
+    /**
+     * @brief Complexity factor for the optimisation
+     */
     float lambda = 0.7;
-    // enable clipping parts off the footprint where ground planes are detected
+    /**
+     * @brief Enable clipping parts off the footprint where ground
+     * planes are detected
+     */
     bool clip_ground = true;
-    // requested LoD
+    /**
+     * @brief Requested Level of Detail
+     *         - 12: LoD12
+     *         - 13: LoD13
+     *         - 22: LoD22
+     */
     int lod = 22;
-    // step height used for LoD13 generalisation
+    /**
+     * @brief Step height used for LoD13 generalisation
+     */
     float lod13_step_height = 3.;
-    // floor elevation
+    /**
+     * @brief Floor elevation in case it is not provided by the
+     * footprint
+     */
     float floor_elevation = 0.;
-    // force flat floor
+    /**
+     * @brief Force flat floor instead of using the
+     * elevation of the footprint
+     */
     bool override_with_floor_elevation = false;
 
     bool is_valid() {

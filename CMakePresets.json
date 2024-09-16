@@ -7,7 +7,6 @@
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_SHARED_LIBS": "OFF",
         "RF_USE_VAL3DITY": "ON",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "ON",
@@ -22,7 +21,6 @@
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_SHARED_LIBS": "OFF",
         "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
@@ -46,7 +44,6 @@
       "description": "Build with system packages without any optional dependencies, in order to get the quickest build possible for running tests.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_SHARED_LIBS": "OFF",
         "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "OFF",
@@ -60,6 +57,19 @@
       "description": "Build python bindings using vcpkg and pybind as a dependency",
       "inherits": "vcpkg-minimal",
       "cacheVariables": {
+        "RF_BUILD_BINDINGS": "ON"
+      }
+    },
+    {
+      "name" : "vcpkg-docs",
+      "description": "Build python bindings needed for documentation generation",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "RF_USE_VAL3DITY": "OFF",
+        "RF_USE_RERUN": "OFF",
+        "RF_USE_LOGGER_SPDLOG": "OFF",
+        "RF_BUILD_TESTING": "OFF",
+        "RF_BUILD_APPS": "OFF",
         "RF_BUILD_BINDINGS": "ON"
       }
     },
