@@ -15,6 +15,9 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
