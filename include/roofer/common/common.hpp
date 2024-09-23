@@ -86,22 +86,22 @@ namespace roofer {
 
   // Attribute types
   typedef std::variant<bool, int, std::string, float, Date, DateTime, Time>
-      attribute_value;
-  typedef std::unordered_map<std::string, std::vector<attribute_value>>
+      AttributeValue;
+  typedef std::unordered_map<std::string, std::vector<AttributeValue>>
       AttributeMap;
 
   typedef std::variant<veco1b, veco1i, veco1s, veco1f, veco3f, veco1D, veco1T,
                        veco1DT>
-      attribute_vec;
-  typedef std::unordered_map<std::string, attribute_vec> attribute_vec_map;
+      AttributeVec;
+  typedef std::unordered_map<std::string, AttributeVec> AttributeVecMapDS;
   // missing:
   // - maintain equal size for all vectors in map
   // - size() member
   class AttributeVecMap {
-    attribute_vec_map attribs_;
+    AttributeVecMapDS attribs_;
 
    public:
-    typedef attribute_vec_map::const_iterator const_iterator;
+    typedef AttributeVecMapDS::const_iterator const_iterator;
     template <typename T>
     bool holds_alternative(const std::string& name) const;
     template <typename T>
@@ -111,12 +111,29 @@ namespace roofer {
     template <typename T>
     std::vector<std::optional<T>>& insert_vec(const std::string& name);
 
-    attribute_vec_map& get_attributes();
-    const attribute_vec_map& get_attributes() const;
+    AttributeVecMapDS& get_attributes();
+    const AttributeVecMapDS& get_attributes() const;
     bool has_attributes() const;
 
     const_iterator begin() const;
     const_iterator end() const;
+  };
+
+  struct AttributeMapRow {
+    AttributeVecMap& attribs_;
+    size_t index_;
+
+    AttributeMapRow(AttributeVecMap& attribs, size_t index);
+
+    template <typename T>
+    bool holds_alternative(const std::string& name) const;
+    template <typename T>
+    const std::optional<T>* get_if(const std::string& name) const;
+    template <typename T>
+    std::optional<T>* get_if(const std::string& name);
+
+    AttributeVecMapDS& get_attributes();
+    const AttributeVecMapDS& get_attributes() const;
   };
 
   class Geometry {

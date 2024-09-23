@@ -26,7 +26,7 @@ namespace roofer::misc {
 
   struct projHelper : public projHelperInterface {
     using projHelperInterface::projHelperInterface;
-    ReferenceSystem project_crs;
+    // roofer::io::SpatialReferenceSystemInterface project_crs;
 
     void proj_clear() override { data_offset.reset(); };
 
@@ -53,8 +53,8 @@ namespace roofer::misc {
     arr3d coord_transform_rev(const arr3f& p) override {
       return coord_transform_rev(p[0], p[1], p[2]);
     };
-    const ReferenceSystem& crs() override { return project_crs; };
-    void set_crs(const ReferenceSystem& crs) override { project_crs = crs; };
+    // const ReferenceSystem& crs() override { return project_crs; };
+    // void set_crs(const ReferenceSystem& crs) override { project_crs = crs; };
 
     void set_data_offset(arr3d& offset) override { data_offset = offset; }
   };

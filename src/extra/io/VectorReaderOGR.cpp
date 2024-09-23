@@ -261,13 +261,15 @@ namespace roofer::io {
       // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <
       // 0)
       //   throw rooferException("Illegal feature_select value");
-
-      char* pszWKT = NULL;
       OGRSpatialReference* layerSRS = poLayer->GetSpatialRef();
-      layerSRS->exportToWkt(&pszWKT);
+
       // printf( "Layer SRS: \n %s\n", pszWKT );
-      pjHelper.set_crs(ReferenceSystem{.wkt = pszWKT});
-      CPLFree(pszWKT);
+      if (layerSRS->Validate() && !pjHelper.srs->is_valid()) {
+        char* pszWKT = NULL;
+        layerSRS->exportToWkt(&pszWKT);
+        pjHelper.srs->import_wkt(pszWKT);
+        CPLFree(pszWKT);
+      }
 
       if (attribute_filter_.size()) {
         auto attribute_filter = attribute_filter_;

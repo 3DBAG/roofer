@@ -370,7 +370,7 @@ int main(int argc, const char* argv[]) {
   CityJsonWriter->scale_z_ = CITYJSON_SCALE_Z;
 
   // read inputs
-  pj->set_crs({.wkt = crs_process});
+  pj->srs->import(crs_process);
   roofer::arr3d offset = {offset_x, offset_y, offset_z};
   pj->set_data_offset(offset);
   auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
@@ -442,8 +442,13 @@ int main(int argc, const char* argv[]) {
                                  PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
     attr_skip.push_back(true);
-    CityJsonWriter->write(path_output_jsonl, footprints[fp_i], nullptr, nullptr,
-                          nullptr, attributes, fp_i);
+    fs::create_directories(fs::path(path_output_jsonl).parent_path());
+    std::ofstream ofs;
+    ofs.open(path_output_jsonl);
+    CityJsonWriter->write_feature(ofs, footprints[fp_i], nullptr, nullptr,
+                                  nullptr,
+                                  roofer::AttributeMapRow(attributes, fp_i));
+    ofs.close();
   }
 
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
@@ -483,10 +488,14 @@ int main(int argc, const char* argv[]) {
         roofer::reconstruction::createSimplePolygonExtruder();
     SimplePolygonExtruder->compute(footprints[fp_i], floor_elevation,
                                    PlaneDetector->roof_elevation_70p);
-    CityJsonWriter->write(path_output_jsonl, footprints[fp_i],
-                          &SimplePolygonExtruder->multisolid,
-                          &SimplePolygonExtruder->multisolid,
-                          &SimplePolygonExtruder->multisolid, attributes, fp_i);
+    fs::create_directories(fs::path(path_output_jsonl).parent_path());
+    std::ofstream ofs;
+    ofs.open(path_output_jsonl);
+    CityJsonWriter->write_feature(
+        ofs, footprints[fp_i], &SimplePolygonExtruder->multisolid,
+        &SimplePolygonExtruder->multisolid, &SimplePolygonExtruder->multisolid,
+        roofer::AttributeMapRow(attributes, fp_i));
+    ofs.close();
     logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
@@ -610,9 +619,13 @@ int main(int argc, const char* argv[]) {
                                      attr_rmse_lod22, SegmentRasteriser.get(),
                                      PlaneDetector.get(), LOD22);
 
-    CityJsonWriter->write(path_output_jsonl, footprints[0], &multisolids_lod12,
-                          &multisolids_lod13, &multisolids_lod22, attributes,
-                          fp_i);
+    fs::create_directories(fs::path(path_output_jsonl).parent_path());
+    std::ofstream ofs;
+    ofs.open(path_output_jsonl);
+    CityJsonWriter->write_feature(ofs, footprints[0], &multisolids_lod12,
+                                  &multisolids_lod13, &multisolids_lod22,
+                                  roofer::AttributeMapRow(attributes, fp_i));
+    ofs.close();
     logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
   }
   // end LoD2
