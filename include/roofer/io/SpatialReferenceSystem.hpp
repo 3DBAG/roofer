@@ -18,36 +18,30 @@
 
 // Author(s):
 // Ravi Peters
-
 #pragma once
+
 #include <memory>
-#include <roofer/common/datastructures.hpp>
-#include <roofer/misc/projHelper.hpp>
-#include <roofer/io/SpatialReferenceSystem.hpp>
+#include <string>
 
 namespace roofer::io {
-  struct PointCloudReaderInterface {
-    roofer::misc::projHelperInterface& pjHelper;
+  struct SpatialReferenceSystemInterface {
+    // std::string auth_name;
+    // std::string code;
+    // std::string wkt;
+    virtual ~SpatialReferenceSystemInterface() = default;
 
-    PointCloudReaderInterface(roofer::misc::projHelperInterface& pjh)
-        : pjHelper(pjh){};
-    virtual ~PointCloudReaderInterface() = default;
+    virtual bool is_valid() const = 0;
+    virtual void clear() = 0;
 
-    virtual void open(const std::string& source) = 0;
+    virtual void import(const std::string& user_input) = 0;
+    virtual void import_epsg(const int epsg) = 0;
+    virtual void import_wkt(const std::string& wkt) = 0;
+    virtual std::string export_wkt() const = 0;
 
-    virtual void get_crs(SpatialReferenceSystemInterface* srs) = 0;
-
-    virtual void close() = 0;
-
-    virtual TBox<double> getExtent() = 0;
-
-    virtual void readPointCloud(PointCollection& points,
-                                vec1i* classification = nullptr,
-                                vec1i* order = nullptr,
-                                vec1f* intensities = nullptr,
-                                vec3f* colors = nullptr) = 0;
+    virtual std::string get_auth_name() const = 0;
+    virtual std::string get_auth_code() const = 0;
   };
 
-  std::unique_ptr<PointCloudReaderInterface> createPointCloudReaderLASlib(
-      roofer::misc::projHelperInterface& pjh);
+  std::unique_ptr<SpatialReferenceSystemInterface>
+  createSpatialReferenceSystemOGR();
 }  // namespace roofer::io

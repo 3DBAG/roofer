@@ -27,6 +27,7 @@
 #include <nlohmann/json.hpp>
 #include <roofer/io/CityJsonWriter.hpp>
 #include <set>
+#include <sstream>
 
 namespace roofer::io {
 
@@ -118,17 +119,16 @@ namespace roofer::io {
       return geometry;
     }
 
-    void write_to_file(const nlohmann::json& outputJSON, fs::path& fname,
-                       bool prettyPrint_) {
-      fs::create_directories(fname.parent_path());
-      std::ofstream ofs;
-      ofs.open(fname);
-      ofs << std::fixed << std::setprecision(2);
+    void write_to_stream(const nlohmann::json& outputJSON,
+                         std::ostream& output_stream, bool prettyPrint_) {
+      output_stream << std::fixed << std::setprecision(2);
       try {
         if (prettyPrint_)
-          ofs << outputJSON.dump(2);
+          output_stream << outputJSON.dump(2);
         else
-          ofs << outputJSON;
+          output_stream << outputJSON;
+
+        output_stream << std::endl;
       } catch (const std::exception& e) {
         throw(rooferException(e.what()));
       }
@@ -136,7 +136,8 @@ namespace roofer::io {
 
     // Computes the geographicalExtent array from a geoflow::Box and the
     // data_offset from the NodeManager
-    nlohmann::json::array_t compute_geographical_extent(TBox<double>& bbox) {
+    nlohmann::json::array_t compute_geographical_extent(
+        const TBox<double>& bbox) {
       auto minp = bbox.min();
       auto maxp = bbox.max();
       return {minp[0], minp[1], minp[2], maxp[0], maxp[1], maxp[2]};
@@ -146,7 +147,7 @@ namespace roofer::io {
     void write_cityobject(
         const LinearRing& footprint, const MeshMap* multisolid_lod12,
         const MeshMap* multisolid_lod13, const MeshMap* multisolid_lod22,
-        const AttributeVecMap& attributes, size_t i, nlohmann::json& outputJSON,
+        const AttributeMapRow& attributes, nlohmann::json& outputJSON,
         std::vector<arr3d>& vertex_vec, std::string& identifier_attribute,
         StrMap& output_attribute_names, bool& only_output_renamed) {
       std::map<arr3d, size_t> vertex_map;
@@ -180,35 +181,35 @@ namespace roofer::io {
           }
 
           if (auto vec = attributes.get_if<bool>(name)) {
-            if ((*vec)[i].has_value()) {
-              jattributes[name] = (*vec)[i].value();
+            if (vec->has_value()) {
+              jattributes[name] = vec->value();
             } else {
               jattributes[name] = j_null;
             }
           } else if (auto vec = attributes.get_if<float>(name)) {
-            if ((*vec)[i].has_value()) {
-              jattributes[name] = (*vec)[i].value();
+            if (vec->has_value()) {
+              jattributes[name] = vec->value();
               if (name == identifier_attribute) {
-                b_id = std::to_string((*vec)[i].value());
+                b_id = std::to_string(vec->value());
               }
             } else {
               jattributes[name] = j_null;
             }
           } else if (auto vec = attributes.get_if<int>(name)) {
-            if ((*vec)[i].has_value()) {
-              jattributes[name] = (*vec)[i].value();
+            if (vec->has_value()) {
+              jattributes[name] = vec->value();
               if (name == identifier_attribute) {
-                b_id = std::to_string((*vec)[i].value());
+                b_id = std::to_string(vec->value());
                 id_from_attr = true;
               }
             } else {
               jattributes[name] = j_null;
             }
           } else if (auto vec = attributes.get_if<std::string>(name)) {
-            if ((*vec)[i].has_value()) {
-              jattributes[name] = (*vec)[i].value();
+            if (vec->has_value()) {
+              jattributes[name] = vec->value();
               if (name == identifier_attribute) {
-                b_id = (*vec)[i].value();
+                b_id = vec->value();
                 id_from_attr = true;
               }
             } else {
@@ -216,16 +217,16 @@ namespace roofer::io {
             }
             // for date/time we follow https://en.wikipedia.org/wiki/ISO_8601
           } else if (auto vec = attributes.get_if<Date>(name)) {
-            if ((*vec)[i].has_value()) {
-              auto t = (*vec)[i].value();
+            if (vec->has_value()) {
+              auto t = vec->value();
               std::string date = t.format_to_ietf();
               jattributes[name] = date;
             } else {
               jattributes[name] = j_null;
             }
           } else if (auto vec = attributes.get_if<Time>(name)) {
-            if ((*vec)[i].has_value()) {
-              auto t = (*vec)[i].value();
+            if (vec->has_value()) {
+              auto t = vec->value();
               std::string time = std::to_string(t.hour) + ":" +
                                  std::to_string(t.minute) + ":" +
                                  std::to_string(t.second) + "Z";
@@ -234,8 +235,8 @@ namespace roofer::io {
               jattributes[name] = j_null;
             }
           } else if (auto vec = attributes.get_if<DateTime>(name)) {
-            if ((*vec)[i].has_value()) {
-              auto t = (*vec)[i].value();
+            if (vec->has_value()) {
+              auto t = vec->value();
               std::string datetime = t.format_to_ietf();
               jattributes[name] = datetime;
             } else {
@@ -352,13 +353,80 @@ namespace roofer::io {
 
    public:
     using CityJsonWriterInterface::CityJsonWriterInterface;
-    void write(const std::string& source, const LinearRing& footprint,
-               const MeshMap* multisolid_lod12, const MeshMap* multisolid_lod13,
-               const MeshMap* multisolid_lod22,
-               const AttributeVecMap& attributes,
-               size_t attribute_index) override {
-      // pjHelper.set_rev_crs_transform(CRS_.c_str());
 
+    void write_metadata(std::ostream& output_stream,
+                        const roofer::TBox<double>& extent,
+                        CityJSONMetadataProperties props) override {
+      // metadata
+      nlohmann::json outputJSON;
+      outputJSON["type"] = "CityJSON";
+      outputJSON["version"] = "2.0";
+      outputJSON["CityObjects"] = nlohmann::json::object();
+      outputJSON["vertices"] = nlohmann::json::array();
+
+      outputJSON["transform"] = {
+          {"scale", {scale_x_, scale_y_, scale_z_}},
+          {"translate", {translate_x_, translate_y_, translate_z_}}};
+
+      auto metadata = nlohmann::json::object();
+      metadata["geographicalExtent"] = compute_geographical_extent(extent);
+
+      if (props.identifier.size()) metadata["identifier"] = props.identifier;
+
+      // metadata.datasetPointOfContact - only add it if at least one of the
+      // parameters is filled
+      auto contact = nlohmann::json::object();
+
+      if (props.poc_contactName.size()) {
+        contact["contactName"] = props.poc_contactName;
+      }
+      if (props.poc_emailAddress.size()) {
+        contact["emailAddress"] = props.poc_emailAddress;
+      }
+      if (props.poc_phone.size()) {
+        contact["phone"] = props.poc_phone;
+      }
+      // if (props.poc_address.size()) { contact["address"] = props.poc_address;
+      // }
+      if (props.poc_contactType.size()) {
+        contact["contactType"] = props.poc_contactType;
+      }
+      if (props.poc_website.size()) {
+        contact["website"] = props.poc_website;
+      }
+
+      if (contact.size()) metadata["pointOfContact"] = contact;
+
+      if (props.referenceDate.empty()) {
+        // find current date if none provided
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%Y-%m-%d");
+        props.referenceDate = oss.str();
+      }
+      metadata["referenceDate"] = props.referenceDate;
+
+      // metadata["referenceSystem"] =
+      // manager.substitute_globals(meta_referenceSystem_);
+      if (pjHelper.srs->is_valid()) {
+        metadata["referenceSystem"] = "https://www.opengis.net/def/crs/" +
+                                      pjHelper.srs->get_auth_name() + "/0/" +
+                                      pjHelper.srs->get_auth_code();
+      }
+
+      if (props.title.size()) metadata["title"] = props.title;
+
+      if (metadata.size()) outputJSON["metadata"] = metadata;
+
+      write_to_stream(outputJSON, output_stream, prettyPrint_);
+    }
+
+    void write_feature(std::ostream& output_stream, const LinearRing& footprint,
+                       const MeshMap* multisolid_lod12,
+                       const MeshMap* multisolid_lod13,
+                       const MeshMap* multisolid_lod22,
+                       const AttributeMapRow attributes) override {
       nlohmann::json outputJSON;
 
       outputJSON["type"] = "CityJSONFeature";
@@ -366,9 +434,9 @@ namespace roofer::io {
 
       std::vector<arr3d> vertex_vec;
       write_cityobject(footprint, multisolid_lod12, multisolid_lod13,
-                       multisolid_lod22, attributes, attribute_index,
-                       outputJSON, vertex_vec, identifier_attribute,
-                       output_attribute_names, only_output_renamed_);
+                       multisolid_lod22, attributes, outputJSON, vertex_vec,
+                       identifier_attribute, output_attribute_names,
+                       only_output_renamed_);
 
       // The main Building is the parent object.
       // Bit of a hack. Ideally we would know exactly which ID we set,
@@ -391,9 +459,7 @@ namespace roofer::io {
       }
       outputJSON["vertices"] = vertices_int;
 
-      fs::path fname = fs::path(source);
-      write_to_file(outputJSON, fname, prettyPrint_);
-      // pjHelper.clear_rev_crs_transform();
+      write_to_stream(outputJSON, output_stream, prettyPrint_);
     }
   };
 

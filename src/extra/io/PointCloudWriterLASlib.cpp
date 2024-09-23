@@ -54,12 +54,13 @@ namespace roofer::io {
       lasheader.point_data_format = 0;
       lasheader.point_data_record_length = 20;
 
-      auto crs_wkt = pjHelper.crs().wkt;
       // std::cout << crs_wkt << std::endl;
       // std::cout << crs_wkt.size() << std::endl;
       // std::cout << strlen(crs_wkt.c_str()) << std::endl;
-      if (!crs_wkt.empty())
+      if (pjHelper.srs->is_valid()) {
+        auto crs_wkt = pjHelper.srs->export_wkt();
         lasheader.set_geo_ogc_wkt(crs_wkt.size(), crs_wkt.c_str());
+      }
       // lasheader.set_global_encoding_bit(LAS_TOOLS_GLOBAL_ENCODING_BIT_OGC_WKT_CRS);
 
       LASpoint laspoint;

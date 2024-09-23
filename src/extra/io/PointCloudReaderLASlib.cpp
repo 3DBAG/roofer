@@ -35,8 +35,19 @@ namespace roofer::io {
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();
 
+      logger.debug("LAS Version: {}.{}", lasheader->version_major,
+                   lasheader->version_minor);
+      logger.debug("Point Format: {}", lasheader->point_data_format);
+      logger.debug("Number of Points: {}", lasheader->number_of_point_records);
+      logger.debug("Generating Software: {}", lasheader->generating_software);
+      logger.debug("Number of VLRs: {}",
+                   lasheader->number_of_variable_length_records);
+      logger.debug("Number of EVLRs: {}",
+                   lasheader->number_of_extended_variable_length_records);
       for (int i = 0; i < (int)lasheader->number_of_variable_length_records;
            i++) {
+        logger.debug("Found VLR with Record ID: {}",
+                     lasheader->vlrs[i].record_id);
         if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
         {
           logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
@@ -67,7 +78,7 @@ namespace roofer::io {
           }
         }
       }
-      logger.debug("{}", wkt);
+      logger.debug("LAS Wkt: {}", wkt);
     }
 
     LASreader* lasreader;
@@ -80,15 +91,15 @@ namespace roofer::io {
       LASreadOpener lasreadopener;
       lasreadopener.set_file_name(source.c_str());
       lasreader = lasreadopener.open();
-      if (!lasreader) throw(rooferException("Open failed on " + source));
+      if (lasreader == nullptr) {
+        throw(rooferException("Open failed on " + source));
+      }
     }
 
-    ReferenceSystem get_crs() override {
-      ReferenceSystem refSys;
+    void get_crs(SpatialReferenceSystemInterface* srs) override {
       std::string wkt;
       getOgcWkt(&lasreader->header, wkt);
-      refSys.wkt = wkt;
-      return refSys;
+      srs->import_wkt(wkt);
     }
 
     void close() override {

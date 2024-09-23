@@ -184,9 +184,9 @@ namespace roofer::io {
       // spdlog::info("creating {} geometry features", write_size);
 
       if (layer == nullptr) {
-        OGRSpatialReference oSRS;
-        if (!pjHelper.crs().wkt.empty()) {
-          oSRS.SetFromUserInput(pjHelper.crs().wkt.c_str());
+        if (pjHelper.srs->is_valid()) {
+          OGRSpatialReference oSRS;
+          oSRS.SetFromUserInput(pjHelper.srs->export_wkt().c_str());
           layer =
               dataSource->CreateLayer(layername.c_str(), &oSRS, wkbType, lco);
         } else {

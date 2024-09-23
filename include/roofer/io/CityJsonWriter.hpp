@@ -21,11 +21,25 @@
 
 #pragma once
 #include <cstddef>
+#include <ostream>
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
+
+  struct CityJSONMetadataProperties {
+    std::string poc_name;
+    std::string poc_emailAddress;
+    std::string poc_phone;
+    std::string poc_contactType;
+    std::string poc_contactName;
+    std::string poc_website;
+    std::string title;
+    std::string identifier;
+    std::string referenceDate;
+  };
+
   struct CityJsonWriterInterface {
     // parameter variables
     std::string CRS_ = "EPSG:7415";
@@ -51,18 +65,26 @@ namespace roofer::io {
         : pjHelper(pjh){};
     virtual ~CityJsonWriterInterface() = default;
 
-    // add_poly_input("part_attributes", {typeid(bool), typeid(int),
-    // typeid(float), typeid(std::string), typeid(Date), typeid(Time),
-    // typeid(DateTime)}); add_poly_input("attributes", {typeid(bool),
-    // typeid(int), typeid(float), typeid(std::string), typeid(std::string),
-    // typeid(Date), typeid(Time), typeid(DateTime)});
+    // write metadata
+    // write features
 
-    virtual void write(const std::string& source, const LinearRing& footprints,
-                       const std::unordered_map<int, Mesh>* geometry_lod12,
-                       const std::unordered_map<int, Mesh>* geometry_lod13,
-                       const std::unordered_map<int, Mesh>* geometry_lod22,
-                       const AttributeVecMap& attributes,
-                       const size_t attribute_index) = 0;
+    virtual void write_metadata(std::ostream& output_stream,
+                                const roofer::TBox<double>& extent,
+                                CityJSONMetadataProperties props) = 0;
+    virtual void write_feature(
+        std::ostream& output_stream, const LinearRing& footprint,
+        const std::unordered_map<int, Mesh>* geometry_lod12,
+        const std::unordered_map<int, Mesh>* geometry_lod13,
+        const std::unordered_map<int, Mesh>* geometry_lod22,
+        const AttributeMapRow attributes) = 0;
+
+    // virtual void write(const std::string& source, const LinearRing&
+    // footprints,
+    //                    const std::unordered_map<int, Mesh>* geometry_lod12,
+    //                    const std::unordered_map<int, Mesh>* geometry_lod13,
+    //                    const std::unordered_map<int, Mesh>* geometry_lod22,
+    //                    const AttributeVecMap& attributes,
+    //                    const size_t attribute_index) = 0;
   };
 
   std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(

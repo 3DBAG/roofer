@@ -121,7 +121,7 @@ struct BuildingObject {
   int reconstruction_time = 0;
 
   // set in crop
-  std::string jsonl_path;
+  fs::path jsonl_path;
   float h_ground;
   bool force_lod11;  // force_lod11 / fallback_lod11
 
@@ -224,6 +224,7 @@ struct RooferConfig {
   std::string output_crs;
 
   // crop output
+  bool write_separate_jsonl = false;
   std::string building_toml_file_spec;
   std::string building_las_file_spec;
   std::string building_gpkg_file_spec;
@@ -428,6 +429,7 @@ void get_las_extents(InputPointcloud& ipc) {
        roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
     auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
     PointReader->open(fp);
+    if (!pj->srs->is_valid()) PointReader->get_crs(pj->srs.get());
     ipc.file_extents.push_back(std::make_pair(fp, PointReader->getExtent()));
   }
 }
@@ -825,7 +827,7 @@ int main(int argc, const char* argv[]) {
             building_object_ref.progress = RECONSTRUCTION_FAILED;
             auto& logger = roofer::logger::Logger::get_logger();
             logger.warning("[reconstructor] reconstruction failed for: {}",
-                           building_object_ref.building.jsonl_path);
+                           building_object_ref.building.jsonl_path.string());
           }
           {
             std::scoped_lock lock_reconstructed{reconstructed_buildings_mutex};
@@ -950,18 +952,51 @@ int main(int argc, const char* argv[]) {
         // output reconstructed buildings
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+        CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
+        CityJsonWriter->translate_x_ =
+            (*building_tile.proj_helper->data_offset)[0];
+        CityJsonWriter->translate_y_ =
+            (*building_tile.proj_helper->data_offset)[1];
+        CityJsonWriter->translate_z_ =
+            (*building_tile.proj_helper->data_offset)[2];
+        CityJsonWriter->scale_x_ = 0.01;
+        CityJsonWriter->scale_y_ = 0.01;
+        CityJsonWriter->scale_z_ = 0.01;
+
+        std::ofstream ofs;
+        if (!roofer_cfg.write_separate_jsonl) {
+          auto jsonl_tile_path =
+              fs::path(roofer_cfg.crop_output_path) / "tiles" /
+              fmt::format("tile_{:04d}.jsonl", building_tile.id);
+          fs::create_directories(jsonl_tile_path.parent_path());
+          ofs.open(jsonl_tile_path);
+          CityJsonWriter->write_metadata(
+              ofs, building_tile.extent,
+              {.identifier = std::to_string(building_tile.id)});
+        }
+
         for (auto& building : building_tile.buildings) {
+          if (roofer_cfg.write_separate_jsonl) {
+            fs::create_directories(building.jsonl_path.parent_path());
+            ofs.open(building.jsonl_path);
+          }
           try {
-            CityJsonWriter->write(
-                building.jsonl_path, building.footprint,
-                &building.multisolids_lod12, &building.multisolids_lod13,
-                &building.multisolids_lod22, building_tile.attributes,
-                building.attribute_index);
+            CityJsonWriter->write_feature(
+                ofs, building.footprint, &building.multisolids_lod12,
+                &building.multisolids_lod13, &building.multisolids_lod22,
+                roofer::AttributeMapRow(building_tile.attributes,
+                                        building.attribute_index));
+            if (roofer_cfg.write_separate_jsonl) {
+              ofs.close();
+            }
             ++serialized_buildings_cnt;
           } catch (...) {
             logger.error("[serializer] Failed to serialize {}",
-                         building.jsonl_path);
+                         building.jsonl_path.string());
           }
+        }
+        if (!roofer_cfg.write_separate_jsonl) {
+          ofs.close();
         }
         pending_serialized.pop_front();
       }

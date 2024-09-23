@@ -174,7 +174,7 @@ namespace roofer::reconstruction {
         auto mesh = meshes[mi];
         TriangleCollection mesh_triangles;
         AttributeMap mesh_attributes;
-        std::vector<attribute_value> tri_labels;
+        std::vector<AttributeValue> tri_labels;
         for (size_t ri = 0; ri < mesh.get_polygons().size(); ++ri) {
           TriangleCollection tc;
           triangulate_polygon(mesh.get_polygons()[ri], normals, tc, ri,
@@ -218,7 +218,7 @@ namespace roofer::reconstruction {
       for (auto& [sid, mesh] : multisolid) {
         TriangleCollection mesh_triangles;
         AttributeMap mesh_attributes;
-        std::vector<attribute_value> tri_labels;
+        std::vector<AttributeValue> tri_labels;
         for (size_t ri = 0; ri < mesh.get_polygons().size(); ++ri) {
           TriangleCollection tc;
           triangulate_polygon(mesh.get_polygons()[ri], normals, tc, ri,
