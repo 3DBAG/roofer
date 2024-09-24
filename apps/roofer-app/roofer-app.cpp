@@ -222,10 +222,10 @@ struct RooferConfig {
 
   // general parameters
   std::optional<roofer::TBox<double>> region_of_interest;
-  std::string output_crs;
+  std::string srs_override;
 
   // crop output
-  bool write_separate_jsonl = false;
+  bool split_cjseq = false;
   std::string building_toml_file_spec;
   std::string building_las_file_spec;
   std::string building_gpkg_file_spec;
@@ -377,6 +377,8 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       logger.error("Failed to read parameter.region_of_interest");
     }
   }
+  auto split_cjseq_ = config["output"]["split_cjseq"].value<bool>();
+  if (split_cjseq_.has_value()) cfg.split_cjseq = *split_cjseq_;
   auto building_toml_file_spec_ =
       config["output"]["building_toml_file"].value<std::string>();
   if (building_toml_file_spec_.has_value())
@@ -420,8 +422,8 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   auto output_path_ = config["output"]["path"].value<std::string>();
   if (output_path_.has_value()) cfg.crop_output_path = *output_path_;
 
-  auto output_crs_ = config["output"]["crs"].value<std::string>();
-  if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
+  auto srs_override_ = config["output"]["crs"].value<std::string>();
+  if (srs_override_.has_value()) cfg.srs_override = *srs_override_;
 }
 
 void get_las_extents(InputPointcloud& ipc,
@@ -605,6 +607,14 @@ int main(int argc, const char* argv[]) {
   // precomputation for tiling
   std::deque<BuildingTile> initial_tiles;
   auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
+
+  if (!roofer_cfg.srs_override.empty()) {
+    project_srs->import(roofer_cfg.srs_override);
+    if (!project_srs->is_valid()) {
+      logger.error("Invalid user override SRS: {}", roofer_cfg.srs_override);
+      return EXIT_FAILURE;
+    }
+  }
 
   for (auto& ipc : input_pointclouds) {
     get_las_extents(ipc, project_srs.get());
@@ -969,10 +979,10 @@ int main(int argc, const char* argv[]) {
         CityJsonWriter->scale_z_ = 0.01;
 
         std::ofstream ofs;
-        if (!roofer_cfg.write_separate_jsonl) {
+        if (!roofer_cfg.split_cjseq) {
           auto jsonl_tile_path =
               fs::path(roofer_cfg.crop_output_path) / "tiles" /
-              fmt::format("tile_{:04d}.jsonl", building_tile.id);
+              fmt::format("tile_{:04d}.city.jsonl", building_tile.id);
           fs::create_directories(jsonl_tile_path.parent_path());
           ofs.open(jsonl_tile_path);
           CityJsonWriter->write_metadata(
@@ -981,7 +991,7 @@ int main(int argc, const char* argv[]) {
         }
 
         for (auto& building : building_tile.buildings) {
-          if (roofer_cfg.write_separate_jsonl) {
+          if (roofer_cfg.split_cjseq) {
             fs::create_directories(building.jsonl_path.parent_path());
             ofs.open(building.jsonl_path);
           }
@@ -991,7 +1001,7 @@ int main(int argc, const char* argv[]) {
                 &building.multisolids_lod13, &building.multisolids_lod22,
                 roofer::AttributeMapRow(building_tile.attributes,
                                         building.attribute_index));
-            if (roofer_cfg.write_separate_jsonl) {
+            if (roofer_cfg.split_cjseq) {
               ofs.close();
             }
             ++serialized_buildings_cnt;
@@ -1000,7 +1010,7 @@ int main(int argc, const char* argv[]) {
                          building.jsonl_path.string());
           }
         }
-        if (!roofer_cfg.write_separate_jsonl) {
+        if (!roofer_cfg.split_cjseq) {
           ofs.close();
         }
         pending_serialized.pop_front();
