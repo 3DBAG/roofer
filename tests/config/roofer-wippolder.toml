@@ -12,6 +12,7 @@ path = "data/wippolder/wippolder_epsg7415.laz"
 cellsize = 0.5
 
 [output]
+split_cjseq = true
 path = 'output/wippolder'
 
 building_toml_file = '{path}/objects/{bid}/config_{pc_name}.toml'
