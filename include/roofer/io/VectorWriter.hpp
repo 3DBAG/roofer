@@ -24,6 +24,7 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 
 namespace roofer::io {
   struct VectorWriterInterface {
@@ -43,14 +44,16 @@ namespace roofer::io {
     virtual ~VectorWriterInterface() = default;
 
     virtual void writePolygons(const std::string& source,
+                               const SpatialReferenceSystemInterface* srs,
                                const std::vector<LinearRing>& polygons,
                                const AttributeVecMap& attributes, size_t begin,
                                size_t end) = 0;
 
     void writePolygons(const std::string& source,
+                       const SpatialReferenceSystemInterface* srs,
                        const std::vector<LinearRing>& polygons,
                        const AttributeVecMap& attributes) {
-      writePolygons(source, polygons, attributes, 0, polygons.size());
+      writePolygons(source, srs, polygons, attributes, 0, polygons.size());
     };
   };
 

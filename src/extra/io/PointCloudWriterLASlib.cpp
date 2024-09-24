@@ -33,8 +33,9 @@ namespace roofer::io {
   struct LASWriter : public LASWriterInterface {
     using LASWriterInterface::LASWriterInterface;
 
-    void write_point_cloud_collection(const PointCollection& point_cloud,
-                                      std::string path) {
+    void write_point_cloud_collection(
+        const PointCollection& point_cloud,
+        const SpatialReferenceSystemInterface* srs, std::string path) {
       LASwriteOpener laswriteopener;
       laswriteopener.set_file_name(path.c_str());
 
@@ -57,8 +58,8 @@ namespace roofer::io {
       // std::cout << crs_wkt << std::endl;
       // std::cout << crs_wkt.size() << std::endl;
       // std::cout << strlen(crs_wkt.c_str()) << std::endl;
-      if (pjHelper.srs->is_valid()) {
-        auto crs_wkt = pjHelper.srs->export_wkt();
+      if (srs->is_valid()) {
+        auto crs_wkt = srs->export_wkt();
         lasheader.set_geo_ogc_wkt(crs_wkt.size(), crs_wkt.c_str());
       }
       // lasheader.set_global_encoding_bit(LAS_TOOLS_GLOBAL_ENCODING_BIT_OGC_WKT_CRS);
@@ -127,9 +128,10 @@ namespace roofer::io {
     }
 
     void write_pointcloud(PointCollection& pointcloud,
+                          const SpatialReferenceSystemInterface* srs,
                           std::string path) override {
       fs::create_directories(fs::path(path).parent_path());
-      write_point_cloud_collection(pointcloud, path);
+      write_point_cloud_collection(pointcloud, srs, path);
     }
   };
 

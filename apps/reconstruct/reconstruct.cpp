@@ -52,6 +52,7 @@
 #include <roofer/logger/logger.h>
 
 #include <roofer/io/CityJsonWriter.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 
 #include "git.h"
 
@@ -370,7 +371,8 @@ int main(int argc, const char* argv[]) {
   CityJsonWriter->scale_z_ = CITYJSON_SCALE_Z;
 
   // read inputs
-  pj->srs->import(crs_process);
+  auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
+  project_srs->import(crs_process);
   roofer::arr3d offset = {offset_x, offset_y, offset_z};
   pj->set_data_offset(offset);
   auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);

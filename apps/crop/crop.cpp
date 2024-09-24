@@ -32,6 +32,7 @@
 #include <roofer/io/StreamCropper.hpp>
 #include <roofer/io/VectorReader.hpp>
 #include <roofer/io/VectorWriter.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 #include <roofer/misc/NodataCircleComputer.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
 #include <roofer/misc/Vector2DOps.hpp>
@@ -315,8 +316,10 @@ int main(int argc, const char* argv[]) {
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
   auto VectorOps = roofer::misc::createVector2DOpsGEOS();
   auto LASWriter = roofer::io::createLASWriter(*pj);
+  auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
 
   VectorReader->open(path_footprint);
+  VectorReader->get_crs(project_srs.get());
   logger.info("region_of_interest.has_value()? {}",
               region_of_interest.has_value());
   if (region_of_interest.has_value())
@@ -577,7 +580,8 @@ int main(int argc, const char* argv[]) {
       std::string fp_path =
           fmt::format(fmt::runtime(building_gpkg_file_spec),
                       fmt::arg("bid", bid), fmt::arg("path", output_path));
-      VectorWriter->writePolygons(fp_path, footprints, attributes, i, i + 1);
+      VectorWriter->writePolygons(fp_path, project_srs.get(), footprints,
+                                  attributes, i, i + 1);
 
       size_t j = 0;
       for (auto& ipc : input_pointclouds) {
@@ -601,7 +605,7 @@ int main(int argc, const char* argv[]) {
         }
 
         LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
-                                    pc_path);
+                                    project_srs.get(), pc_path);
 
         // Correct ground height for offset, NB this ignores crs transformation
         double h_ground =
@@ -676,7 +680,8 @@ int main(int argc, const char* argv[]) {
   if (write_index) {
     std::string index_file = fmt::format(fmt::runtime(index_file_spec),
                                          fmt::arg("path", output_path));
-    VectorWriter->writePolygons(index_file, footprints, attributes);
+    VectorWriter->writePolygons(index_file, project_srs.get(), footprints,
+                                attributes);
 
     // write nodata circles
     // for (auto& ipc : input_pointclouds) {
