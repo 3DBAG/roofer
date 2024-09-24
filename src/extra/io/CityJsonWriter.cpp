@@ -355,6 +355,7 @@ namespace roofer::io {
     using CityJsonWriterInterface::CityJsonWriterInterface;
 
     void write_metadata(std::ostream& output_stream,
+                        const SpatialReferenceSystemInterface* srs,
                         const roofer::TBox<double>& extent,
                         CityJSONMetadataProperties props) override {
       // metadata
@@ -409,10 +410,10 @@ namespace roofer::io {
 
       // metadata["referenceSystem"] =
       // manager.substitute_globals(meta_referenceSystem_);
-      if (pjHelper.srs->is_valid()) {
+      if (srs->is_valid()) {
         metadata["referenceSystem"] = "https://www.opengis.net/def/crs/" +
-                                      pjHelper.srs->get_auth_name() + "/0/" +
-                                      pjHelper.srs->get_auth_code();
+                                      srs->get_auth_name() + "/0/" +
+                                      srs->get_auth_code();
       }
 
       if (props.title.size()) metadata["title"] = props.title;

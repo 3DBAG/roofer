@@ -23,6 +23,7 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 
 namespace roofer::io {
   struct LASWriterInterface {
@@ -33,6 +34,7 @@ namespace roofer::io {
     virtual ~LASWriterInterface() = default;
 
     virtual void write_pointcloud(PointCollection& pointcloud,
+                                  const SpatialReferenceSystemInterface* srs,
                                   std::string path) = 0;
   };
 

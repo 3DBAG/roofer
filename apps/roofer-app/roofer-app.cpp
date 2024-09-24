@@ -37,6 +37,7 @@ namespace fs = std::filesystem;
 #include <roofer/logger/logger.h>
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 
 // crop
 #include <roofer/io/PointCloudReader.hpp>
@@ -423,13 +424,14 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   if (output_crs_.has_value()) cfg.output_crs = *output_crs_;
 }
 
-void get_las_extents(InputPointcloud& ipc) {
+void get_las_extents(InputPointcloud& ipc,
+                     roofer::io::SpatialReferenceSystemInterface* srs) {
   auto pj = roofer::misc::createProjHelper();
   for (auto& fp :
        roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
     auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
     PointReader->open(fp);
-    if (!pj->srs->is_valid()) PointReader->get_crs(pj->srs.get());
+    if (!srs->is_valid()) PointReader->get_crs(srs);
     ipc.file_extents.push_back(std::make_pair(fp, PointReader->getExtent()));
   }
 }
@@ -602,9 +604,10 @@ int main(int argc, const char* argv[]) {
 
   // precomputation for tiling
   std::deque<BuildingTile> initial_tiles;
+  auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
 
   for (auto& ipc : input_pointclouds) {
-    get_las_extents(ipc);
+    get_las_extents(ipc, project_srs.get());
     ipc.rtree = roofer::misc::createRTreeGEOS();
     for (auto& item : ipc.file_extents) {
       ipc.rtree->insert(item.second, &item);
@@ -616,6 +619,7 @@ int main(int argc, const char* argv[]) {
     auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
     VectorReader->open(roofer_cfg.source_footprints);
+    if (!project_srs->is_valid()) VectorReader->get_crs(project_srs.get());
     logger.info("region_of_interest.has_value()? {}",
                 roofer_cfg.region_of_interest.has_value());
     logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
@@ -732,7 +736,8 @@ int main(int argc, const char* argv[]) {
         crop_tile(building_tile.extent,  // tile extent
                   input_pointclouds,     // input pointclouds
                   building_tile,         // output building data
-                  roofer_cfg);           // configuration parameters
+                  roofer_cfg,
+                  project_srs.get());  // configuration parameters
         building_tile.buildings_cnt = building_tile.buildings.size();
         building_tile.buildings_progresses.resize(building_tile.buildings_cnt);
         std::ranges::fill(building_tile.buildings_progresses, CROP_SUCCEEDED);
@@ -971,7 +976,7 @@ int main(int argc, const char* argv[]) {
           fs::create_directories(jsonl_tile_path.parent_path());
           ofs.open(jsonl_tile_path);
           CityJsonWriter->write_metadata(
-              ofs, building_tile.extent,
+              ofs, project_srs.get(), building_tile.extent,
               {.identifier = std::to_string(building_tile.id)});
         }
 

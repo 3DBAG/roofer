@@ -23,6 +23,7 @@
 #include <memory>
 #include <optional>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 #include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
@@ -36,6 +37,8 @@ namespace roofer::io {
     virtual ~VectorReaderInterface() = default;
 
     virtual void open(const std::string& source) = 0;
+
+    virtual void get_crs(roofer::io::SpatialReferenceSystemInterface* srs) = 0;
 
     virtual void readPolygons(std::vector<LinearRing>&,
                               AttributeVecMap* attributes = nullptr) = 0;

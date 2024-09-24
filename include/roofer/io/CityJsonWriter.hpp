@@ -25,6 +25,7 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
+#include <roofer/io/SpatialReferenceSystem.hpp>
 
 namespace roofer::io {
 
@@ -69,6 +70,7 @@ namespace roofer::io {
     // write features
 
     virtual void write_metadata(std::ostream& output_stream,
+                                const SpatialReferenceSystemInterface* srs,
                                 const roofer::TBox<double>& extent,
                                 CityJSONMetadataProperties props) = 0;
     virtual void write_feature(

@@ -23,21 +23,18 @@
 #include <memory>
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
-#include <roofer/io/SpatialReferenceSystem.hpp>
 
 namespace roofer::misc {
 
   struct projHelperInterface {
     std::optional<arr3d> data_offset;
-    std::unique_ptr<roofer::io::SpatialReferenceSystemInterface> srs;
 
-    projHelperInterface()
-        : srs(roofer::io::createSpatialReferenceSystemOGR()){};
+    projHelperInterface(){};
     virtual ~projHelperInterface() = default;
 
     // virtual void proj_construct() = 0;
     // virtual void proj_clone_from(const projHelperInterface&) = 0;
-    virtual void proj_clear() = 0;
+    virtual void clear() = 0;
 
     virtual arr3f coord_transform_fwd(const double& x, const double& y,
                                       const double& z) = 0;

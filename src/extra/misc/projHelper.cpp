@@ -28,7 +28,7 @@ namespace roofer::misc {
     using projHelperInterface::projHelperInterface;
     // roofer::io::SpatialReferenceSystemInterface project_crs;
 
-    void proj_clear() override { data_offset.reset(); };
+    void clear() override { data_offset.reset(); };
 
     arr3f coord_transform_fwd(const double& x, const double& y,
                               const double& z) override {

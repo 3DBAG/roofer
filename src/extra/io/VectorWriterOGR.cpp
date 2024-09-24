@@ -84,6 +84,7 @@ namespace roofer::io {
     using VectorWriterInterface::VectorWriterInterface;
 
     void writePolygons(const std::string& source,
+                       const SpatialReferenceSystemInterface* srs,
                        const std::vector<LinearRing>& polygons,
                        const AttributeVecMap& attributes, size_t begin,
                        size_t end) override {
@@ -184,9 +185,9 @@ namespace roofer::io {
       // spdlog::info("creating {} geometry features", write_size);
 
       if (layer == nullptr) {
-        if (pjHelper.srs->is_valid()) {
+        if (srs->is_valid()) {
           OGRSpatialReference oSRS;
-          oSRS.SetFromUserInput(pjHelper.srs->export_wkt().c_str());
+          oSRS.SetFromUserInput(srs->export_wkt().c_str());
           layer =
               dataSource->CreateLayer(layername.c_str(), &oSRS, wkbType, lco);
         } else {

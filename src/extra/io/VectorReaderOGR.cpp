@@ -160,6 +160,22 @@ namespace roofer::io {
       layer_extent = {extent.MinX, extent.MinY, 0, extent.MaxX, extent.MaxY, 0};
     }
 
+    void get_crs(SpatialReferenceSystemInterface* srs) override {
+      if (poLayer == nullptr) {
+        throw(rooferException("Layer is not open"));
+      }
+
+      // printf( "Layer SRS: \n %s\n", pszWKT );
+      if (OGRSpatialReference* layerSRS = poLayer->GetSpatialRef()) {
+        if (layerSRS->Validate() && !srs->is_valid()) {
+          char* pszWKT = NULL;
+          layerSRS->exportToWkt(&pszWKT);
+          srs->import_wkt(pszWKT);
+          CPLFree(pszWKT);
+        }
+      }
+    }
+
     void read_polygon(OGRPolygon* poPolygon,
                       std::vector<LinearRing>& polygons) {
       LinearRing gf_polygon;
@@ -261,15 +277,6 @@ namespace roofer::io {
       // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <
       // 0)
       //   throw rooferException("Illegal feature_select value");
-      OGRSpatialReference* layerSRS = poLayer->GetSpatialRef();
-
-      // printf( "Layer SRS: \n %s\n", pszWKT );
-      if (layerSRS->Validate() && !pjHelper.srs->is_valid()) {
-        char* pszWKT = NULL;
-        layerSRS->exportToWkt(&pszWKT);
-        pjHelper.srs->import_wkt(pszWKT);
-        CPLFree(pszWKT);
-      }
 
       if (attribute_filter_.size()) {
         auto attribute_filter = attribute_filter_;

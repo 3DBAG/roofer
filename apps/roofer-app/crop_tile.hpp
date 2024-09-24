@@ -21,7 +21,8 @@
 
 void crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
-               BuildingTile& output_building_tile, RooferConfig& cfg) {
+               BuildingTile& output_building_tile, RooferConfig& cfg,
+               roofer::io::SpatialReferenceSystemInterface* srs) {
   auto& logger = roofer::logger::Logger::get_logger();
 
   auto& pj = output_building_tile.proj_helper;
@@ -338,7 +339,8 @@ void crop_tile(const roofer::TBox<double>& tile,
         std::string fp_path = fmt::format(
             fmt::runtime(cfg.building_gpkg_file_spec), fmt::arg("bid", bid),
             fmt::arg("path", cfg.crop_output_path));
-        vector_writer->writePolygons(fp_path, footprints, attributes, i, i + 1);
+        vector_writer->writePolygons(fp_path, srs, footprints, attributes, i,
+                                     i + 1);
 
         size_t j = 0;
         for (auto& ipc : input_pointclouds) {
@@ -365,7 +367,7 @@ void crop_tile(const roofer::TBox<double>& tile,
           }
 
           LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
-                                      pc_path);
+                                      srs, pc_path);
 
           // Correct ground height for offset, NB this ignores crs
           // transformation
@@ -447,7 +449,7 @@ void crop_tile(const roofer::TBox<double>& tile,
       std::string index_file =
           fmt::format(fmt::runtime(cfg.index_file_spec),
                       fmt::arg("path", cfg.crop_output_path));
-      vector_writer->writePolygons(index_file, footprints, attributes);
+      vector_writer->writePolygons(index_file, srs, footprints, attributes);
 
       // write nodata circles
       // for (auto& ipc : input_pointclouds) {
