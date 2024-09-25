@@ -35,50 +35,11 @@
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
+#include <roofer/ReconstructionConfig.hpp>
 
 #include "CGAL/Polygon_with_holes_2.h"
 
 namespace roofer {
-  /**
-   * @brief Configuration parameters for single instance building reconstruction
-   */
-  struct ReconstructionConfig {
-    /**
-     * @brief Complexity factor for the optimisation
-     */
-    float lambda = 0.7;
-    /**
-     * @brief Enable clipping parts off the footprint where ground
-     * planes are detected
-     */
-    bool clip_ground = true;
-    /**
-     * @brief Requested Level of Detail
-     *         - 12: LoD12
-     *         - 13: LoD13
-     *         - 22: LoD22
-     */
-    int lod = 22;
-    /**
-     * @brief Step height used for LoD13 generalisation
-     */
-    float lod13_step_height = 3.;
-    /**
-     * @brief Floor elevation in case it is not provided by the
-     * footprint
-     */
-    float floor_elevation = 0.;
-    /**
-     * @brief Force flat floor instead of using the
-     * elevation of the footprint
-     */
-    bool override_with_floor_elevation = false;
-
-    bool is_valid() {
-      return (lambda >= 0 && lambda <= 1.0) && lod == 12 || lod == 13 ||
-             lod == 22 && lod13_step_height > 0;
-    }
-  };
 
   /**
    * @brief Reconstructs a single instance of a building from a point cloud
@@ -197,12 +158,13 @@ namespace roofer {
 
       auto ArrangementOptimiser =
           roofer::reconstruction::createArrangementOptimiser();
-      ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
-                                    PlaneDetector->pts_per_roofplane,
-                                    PlaneDetector_ground->pts_per_roofplane,
-                                    {.data_multiplier = cfg.lambda,
-                                     .smoothness_multiplier = (1 - cfg.lambda),
-                                     .use_ground = cfg.clip_ground});
+      ArrangementOptimiser->compute(
+          arrangement, SegmentRasteriser->heightfield,
+          PlaneDetector->pts_per_roofplane,
+          PlaneDetector_ground->pts_per_roofplane,
+          {.data_multiplier = cfg.complexity_factor,
+           .smoothness_multiplier = (1 - cfg.complexity_factor),
+           .use_ground = cfg.clip_ground});
 
       auto ArrangementDissolver =
           roofer::reconstruction::createArrangementDissolver();
