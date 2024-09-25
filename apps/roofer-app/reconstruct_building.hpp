@@ -28,7 +28,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
 #endif
     float& rmse,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
-    roofer::reconstruction::PlaneDetectorInterface* PlaneDetector, LOD lod) {
+    roofer::reconstruction::PlaneDetectorInterface* PlaneDetector, LOD lod,
+    roofer::ReconstructionConfig* cfg) {
   bool dissolve_step_edges = false;
   bool dissolve_all_interior = false;
   bool extrude_LoD2 = true;
@@ -49,7 +50,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
   ArrangementDissolver->compute(
       arrangement, SegmentRasteriser->heightfield,
       {.dissolve_step_edges = dissolve_step_edges,
-       .dissolve_all_interior = dissolve_all_interior});
+       .dissolve_all_interior = dissolve_all_interior,
+       .step_height_threshold = cfg->lod13_step_height});
   logger.info("Completed ArrangementDissolver");
   logger.info("Roof partition has {} faces", arrangement.number_of_faces());
 #ifdef RF_USE_RERUN
@@ -109,7 +111,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
   return ArrangementExtruder->multisolid;
 }
 
-void reconstruct_building(BuildingObject& building) {
+void reconstruct_building(BuildingObject& building,
+                          roofer::ReconstructionConfig* cfg) {
   auto& logger = roofer::logger::Logger::get_logger();
   // split into ground and roof points
   roofer::PointCollection points, points_ground, points_roof;
@@ -147,7 +150,14 @@ void reconstruct_building(BuildingObject& building) {
 #endif
 
   auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector->detect(points_roof);
+  PlaneDetector->detect(
+      points_roof,
+      {
+          .metrics_plane_k = cfg->plane_detect_k,
+          .metrics_plane_min_points = cfg->plane_detect_min_points,
+          .metrics_plane_epsilon = cfg->plane_detect_epsilon,
+          .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
+      });
   logger.info("Completed PlaneDetector (roof), found {} roofplanes",
               PlaneDetector->pts_per_roofplane.size());
 
@@ -201,7 +211,8 @@ void reconstruct_building(BuildingObject& building) {
     // logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
-    AlphaShaper->compute(PlaneDetector->pts_per_roofplane);
+    AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
+                         {.thres_alpha = cfg->thres_alpha});
     logger.info("Completed AlphaShaper (roof), found {} rings, {} labels",
                 AlphaShaper->alpha_rings.size(),
                 AlphaShaper->roofplane_ids.size());
@@ -224,7 +235,8 @@ void reconstruct_building(BuildingObject& building) {
 
     auto LineDetector = roofer::reconstruction::createLineDetector();
     LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
-                         PlaneDetector->pts_per_roofplane);
+                         PlaneDetector->pts_per_roofplane,
+                         {.dist_thres = cfg->line_detect_epsilon});
     logger.info("Completed LineDetector");
 #ifdef RF_USE_RERUN
     rec.log("world/boundary_lines",
@@ -242,7 +254,9 @@ void reconstruct_building(BuildingObject& building) {
 
     auto LineRegulariser = roofer::reconstruction::createLineRegulariser();
     LineRegulariser->compute(LineDetector->edge_segments,
-                             PlaneIntersector->segments);
+                             PlaneIntersector->segments,
+                             {.dist_threshold = cfg->thres_reg_line_dist,
+                              .extension = cfg->thres_reg_line_ext});
     logger.info("Completed LineRegulariser");
 #ifdef RF_USE_RERUN
     rec.log("world/regularised_lines",
@@ -250,8 +264,9 @@ void reconstruct_building(BuildingObject& building) {
 #endif
 
     auto SegmentRasteriser = roofer::reconstruction::createSegmentRasteriser();
-    SegmentRasteriser->compute(AlphaShaper->alpha_triangles,
-                               AlphaShaper_ground->alpha_triangles);
+    SegmentRasteriser->compute(
+        AlphaShaper->alpha_triangles, AlphaShaper_ground->alpha_triangles,
+        {.use_ground = !points_ground.empty() && cfg->clip_ground});
     logger.info("Completed SegmentRasteriser");
 
 #ifdef RF_USE_RERUN
@@ -277,47 +292,61 @@ void reconstruct_building(BuildingObject& building) {
 
     auto ArrangementOptimiser =
         roofer::reconstruction::createArrangementOptimiser();
-    ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
-                                  PlaneDetector->pts_per_roofplane,
-                                  PlaneDetector_ground->pts_per_roofplane);
+    ArrangementOptimiser->compute(
+        arrangement, SegmentRasteriser->heightfield,
+        PlaneDetector->pts_per_roofplane,
+        PlaneDetector_ground->pts_per_roofplane,
+        {
+            .data_multiplier = cfg->complexity_factor,
+            .smoothness_multiplier = float(1. - cfg->complexity_factor),
+            .use_ground = !points_ground.empty() && cfg->clip_ground,
+        });
     logger.info("Completed ArrangementOptimiser");
-// rec.log("world/optimised_partition", rerun::LineStrips3D(
-// roofer::reconstruction::arr2polygons(arrangement) ));
+    // rec.log("world/optimised_partition", rerun::LineStrips3D(
+    // roofer::reconstruction::arr2polygons(arrangement) ));
 
-// LoDs
-// attributes to be filled during reconstruction
+    // LoDs
+    // attributes to be filled during reconstruction
+    if (cfg->lod == 0 || cfg->lod == 12) {
 #ifdef RF_USE_VAL3DITY
-    auto& attr_val3dity_lod12 =
-        attributes.insert_vec<std::string>("b3_val3dity_lod12");
+      auto& attr_val3dity_lod12 =
+          attributes.insert_vec<std::string>("b3_val3dity_lod12");
 #endif
-    building.multisolids_lod12 =
-        extrude(arrangement, building.h_ground,
+      building.multisolids_lod12 =
+          extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                attr_val3dity_lod12,
+                  attr_val3dity_lod12,
 #endif
-                building.rmse_lod12, SegmentRasteriser.get(),
-                PlaneDetector.get(), LOD12);
+                  building.rmse_lod12, SegmentRasteriser.get(),
+                  PlaneDetector.get(), LOD12, cfg);
+    }
+
+    if (cfg->lod == 0 || cfg->lod == 13) {
 #ifdef RF_USE_VAL3DITY
-    auto& attr_val3dity_lod13 =
-        attributes.insert_vec<std::string>("b3_val3dity_lod13");
+      auto& attr_val3dity_lod13 =
+          attributes.insert_vec<std::string>("b3_val3dity_lod13");
 #endif
-    building.multisolids_lod13 =
-        extrude(arrangement, building.h_ground,
+      building.multisolids_lod13 =
+          extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                attr_val3dity_lod13,
+                  attr_val3dity_lod13,
 #endif
-                building.rmse_lod13, SegmentRasteriser.get(),
-                PlaneDetector.get(), LOD13);
+                  building.rmse_lod13, SegmentRasteriser.get(),
+                  PlaneDetector.get(), LOD13, cfg);
+    }
+
+    if (cfg->lod == 0 || cfg->lod == 22) {
 #ifdef RF_USE_VAL3DITY
-    auto& attr_val3dity_lod22 =
-        attributes.insert_vec<std::string>("b3_val3dity_lod22");
+      auto& attr_val3dity_lod22 =
+          attributes.insert_vec<std::string>("b3_val3dity_lod22");
 #endif
-    building.multisolids_lod22 =
-        extrude(arrangement, building.h_ground,
+      building.multisolids_lod22 =
+          extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                attr_val3dity_lod22,
+                  attr_val3dity_lod22,
 #endif
-                building.rmse_lod22, SegmentRasteriser.get(),
-                PlaneDetector.get(), LOD22);
+                  building.rmse_lod22, SegmentRasteriser.get(),
+                  PlaneDetector.get(), LOD22, cfg);
+    }
   }
 }

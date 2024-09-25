@@ -66,6 +66,7 @@ namespace fs = std::filesystem;
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
 #include <roofer/reconstruction/SimplePolygonExtruder.hpp>
+#include <roofer/ReconstructionConfig.hpp>
 
 // serialisation
 #include <roofer/io/CityJsonWriter.hpp>
@@ -237,7 +238,7 @@ struct RooferConfig {
   std::string crop_output_path;
 
   // reconstruct
-  //...
+  roofer::ReconstructionConfig rec;
 };
 
 #include "crop_tile.hpp"
@@ -343,6 +344,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
     };
   }
 
+  // paramaters
   auto ceil_point_density_ =
       config["parameters"]["ceil_point_density"].value<float>();
   if (ceil_point_density_.has_value())
@@ -377,6 +379,52 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       logger.error("Failed to read parameter.region_of_interest");
     }
   }
+
+  // reconstruction parameters
+  auto complexity_factor_ =
+      config["reconstruction"]["complexity_factor"].value<int>();
+  if (complexity_factor_.has_value())
+    cfg.rec.complexity_factor = *complexity_factor_;
+  auto clip_ground_ = config["reconstruction"]["clip_ground"].value<bool>();
+  if (clip_ground_.has_value()) cfg.rec.clip_ground = *clip_ground_;
+  auto lod_ = config["reconstruction"]["lod"].value<bool>();
+  if (lod_.has_value()) cfg.rec.lod = *lod_;
+  auto lod13_step_height_ =
+      config["reconstruction"]["lod13_step_height"].value<float>();
+  if (lod13_step_height_.has_value())
+    cfg.rec.lod13_step_height = *lod13_step_height_;
+
+  auto plane_detect_k_ =
+      config["reconstruction"]["plane_detect_k"].value<int>();
+  if (plane_detect_k_.has_value()) cfg.rec.plane_detect_k = *plane_detect_k_;
+  auto plane_detect_min_points_ =
+      config["reconstruction"]["plane_detect_min_points"].value<int>();
+  if (plane_detect_min_points_.has_value())
+    cfg.rec.plane_detect_min_points = *plane_detect_min_points_;
+  auto plane_detect_epsilon_ =
+      config["reconstruction"]["plane_detect_epsilon"].value<float>();
+  if (plane_detect_epsilon_.has_value())
+    cfg.rec.plane_detect_epsilon = *plane_detect_epsilon_;
+  auto plane_detect_normal_angle_ =
+      config["reconstruction"]["plane_detect_normal_angle"].value<float>();
+  if (plane_detect_normal_angle_.has_value())
+    cfg.rec.plane_detect_normal_angle = *plane_detect_normal_angle_;
+  auto line_detect_epsilon_ =
+      config["reconstruction"]["line_detect_epsilon"].value<float>();
+  if (line_detect_epsilon_.has_value())
+    cfg.rec.line_detect_epsilon = *line_detect_epsilon_;
+  auto thres_alpha_ = config["reconstruction"]["thres_alpha"].value<float>();
+  if (thres_alpha_.has_value()) cfg.rec.thres_alpha = *thres_alpha_;
+  auto thres_reg_line_dist_ =
+      config["reconstruction"]["thres_reg_line_dist"].value<float>();
+  if (thres_reg_line_dist_.has_value())
+    cfg.rec.thres_reg_line_dist = *thres_reg_line_dist_;
+  auto thres_reg_line_ext_ =
+      config["reconstruction"]["thres_reg_line_ext"].value<float>();
+  if (thres_reg_line_ext_.has_value())
+    cfg.rec.thres_reg_line_ext = *thres_reg_line_ext_;
+
+  // output
   auto split_cjseq_ = config["output"]["split_cjseq"].value<bool>();
   if (split_cjseq_.has_value()) cfg.split_cjseq = *split_cjseq_;
   auto building_toml_file_spec_ =
@@ -551,6 +599,7 @@ int main(int argc, const char* argv[]) {
 
   // read cmdl options
   RooferConfig roofer_cfg;
+  roofer_cfg.rec.lod = 0;
 
   roofer_cfg.output_all = cmdl[{"-a", "--all"}];
   roofer_cfg.write_rasters = cmdl[{"-r", "--rasters"}];
@@ -819,7 +868,7 @@ int main(int argc, const char* argv[]) {
         ++reconstructed_started_cnt;
 
         reconstructor_pool.detach_task([bref = std::move(building_ref),
-                                        &reconstructed_buildings,
+                                        &roofer_cfg, &reconstructed_buildings,
                                         &reconstructed_buildings_cnt,
                                         &reconstructed_buildings_mutex] {
           // TODO: It seems that I need to assign the moved 'building_ref' to a
@@ -830,7 +879,7 @@ int main(int argc, const char* argv[]) {
           BuildingObjectRef building_object_ref = bref;
           try {
             auto start = std::chrono::high_resolution_clock::now();
-            reconstruct_building(building_object_ref.building);
+            reconstruct_building(building_object_ref.building, &roofer_cfg.rec);
             // TODO: These two seem to be redundant
             building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
             building_object_ref.building.reconstruction_success = true;
@@ -996,9 +1045,20 @@ int main(int argc, const char* argv[]) {
             ofs.open(building.jsonl_path);
           }
           try {
+            std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
+            std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
+            std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
+            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
+              ms12 = &building.multisolids_lod12;
+            }
+            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
+              ms13 = &building.multisolids_lod13;
+            }
+            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
+              ms22 = &building.multisolids_lod22;
+            }
             CityJsonWriter->write_feature(
-                ofs, building.footprint, &building.multisolids_lod12,
-                &building.multisolids_lod13, &building.multisolids_lod22,
+                ofs, building.footprint, ms12, ms13, ms22,
                 roofer::AttributeMapRow(building_tile.attributes,
                                         building.attribute_index));
             if (roofer_cfg.split_cjseq) {
