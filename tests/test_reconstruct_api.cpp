@@ -43,7 +43,7 @@ void print_help(std::string program_name) {
   std::cout << "   -V, --version                Show version" << "\n";
   std::cout << "   -v, --verbose                Be more verbose" << "\n";
 }
-
+// ... get the input pointcloud and footprint polygon for your building
 void print_version() {
   std::cout << fmt::format(
       "roofer {} ({}{}{})\n", git_Describe(),
