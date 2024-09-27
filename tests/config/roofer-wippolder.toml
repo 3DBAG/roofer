@@ -12,9 +12,8 @@ path = "data/wippolder/wippolder_epsg7415.laz"
 cellsize = 0.5
 
 [reconstruction]
-lambda = 0.1
-lod = 0
-plane_detect_min_points=100
+complexity_factor = 0.99
+lod = 22
 
 [output]
 split_cjseq = false

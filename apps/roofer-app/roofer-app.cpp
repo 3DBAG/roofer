@@ -387,7 +387,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
     cfg.rec.complexity_factor = *complexity_factor_;
   auto clip_ground_ = config["reconstruction"]["clip_ground"].value<bool>();
   if (clip_ground_.has_value()) cfg.rec.clip_ground = *clip_ground_;
-  auto lod_ = config["reconstruction"]["lod"].value<bool>();
+  auto lod_ = config["reconstruction"]["lod"].value<int>();
   if (lod_.has_value()) cfg.rec.lod = *lod_;
   auto lod13_step_height_ =
       config["reconstruction"]["lod13_step_height"].value<float>();

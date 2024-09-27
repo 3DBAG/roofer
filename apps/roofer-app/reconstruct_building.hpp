@@ -307,6 +307,7 @@ void reconstruct_building(BuildingObject& building,
 
     // LoDs
     // attributes to be filled during reconstruction
+    logger.info("LoD={}", cfg->lod);
     if (cfg->lod == 0 || cfg->lod == 12) {
 #ifdef RF_USE_VAL3DITY
       auto& attr_val3dity_lod12 =
