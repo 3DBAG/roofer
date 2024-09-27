@@ -47,10 +47,8 @@ void crop_tile(const roofer::TBox<double>& tile,
   const unsigned N_fp = footprints.size();
 
   // get yoc attribute vector (nullptr if it does not exist)
-  bool use_acquisition_year = true;
   auto yoc_vec = attributes.get_if<int>(cfg.yoc_attribute);
-  if (!yoc_vec) {
-    use_acquisition_year = false;
+  if (!cfg.yoc_attribute.empty() && !yoc_vec) {
     logger.warning("yoc_attribute '{}' not found in input footprints",
                    cfg.yoc_attribute);
   }
@@ -86,12 +84,12 @@ void crop_tile(const roofer::TBox<double>& tile,
       lasfiles.push_back(file_extent->first);
     }
 
-    PointCloudCropper->process(lasfiles, footprints, buffered_footprints,
-                               ipc.building_clouds, ipc.ground_elevations,
-                               ipc.acquisition_years, polygon_extent,
-                               {.ground_class = ipc.grnd_class,
-                                .building_class = ipc.bld_class,
-                                .use_acquisition_year = use_acquisition_year});
+    PointCloudCropper->process(
+        lasfiles, footprints, buffered_footprints, ipc.building_clouds,
+        ipc.ground_elevations, ipc.acquisition_years, polygon_extent,
+        {.ground_class = ipc.grnd_class,
+         .building_class = ipc.bld_class,
+         .use_acquisition_year = static_cast<bool>(yoc_vec)});
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),

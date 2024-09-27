@@ -304,7 +304,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   toml::table config;
   config = toml::parse_file(config_path);
 
-  get_param(config["input"]["footprint"], "path", cfg.source_footprints);
+  get_param(config["input"]["footprint"], "source", cfg.source_footprints);
   get_param(config["input"]["footprint"], "layer_name", cfg.layer_name);
   get_param(config["input"]["footprint"], "layer_id", cfg.layer_id);
   get_param(config["input"]["footprint"], "attribute_filter",
@@ -329,20 +329,19 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       get_param(*tb, "select_only_for_date", pc.select_only_for_date);
       get_param(*tb, "building_class", pc.bld_class);
       get_param(*tb, "ground_class", pc.grnd_class);
-      get_param(*tb, "path", pc.path);
+      get_param(*tb, "source", pc.path);
     };
   }
 
   // parameters
-  get_param(config["parameters"], "ceil_point_density", cfg.ceil_point_density);
-  get_param(config["parameters"], "tilesize_x", cfg.tilesize_x);
-  get_param(config["parameters"], "tilesize_y", cfg.tilesize_y);
-  get_param(config["parameters"], "cellsize", cfg.cellsize);
-  get_param(config["parameters"], "lod11_fallback_area",
-            cfg.lod11_fallback_area);
+  get_param(config["crop"], "ceil_point_density", cfg.ceil_point_density);
+  get_param(config["crop"], "tilesize_x", cfg.tilesize_x);
+  get_param(config["crop"], "tilesize_y", cfg.tilesize_y);
+  get_param(config["crop"], "cellsize", cfg.cellsize);
+  get_param(config["crop"], "lod11_fallback_area", cfg.lod11_fallback_area);
 
   if (toml::array* region_of_interest_ =
-          config["parameters"]["region_of_interest"].as_array()) {
+          config["crop"]["region_of_interest"].as_array()) {
     if (region_of_interest_->size() == 4 &&
         (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
          region_of_interest_->is_homogeneous(toml::node_type::integer))) {
@@ -359,30 +358,30 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   }
 
   // reconstruction parameters
-  get_param(config["reconstruction"], "complexity_factor",
+  get_param(config["reconstruct"], "complexity_factor",
             cfg.rec.complexity_factor);
-  get_param(config["reconstruction"], "clip_ground", cfg.rec.clip_ground);
-  get_param(config["reconstruction"], "lod", cfg.rec.lod);
-  get_param(config["reconstruction"], "lod13_step_height",
+  get_param(config["reconstruct"], "clip_ground", cfg.rec.clip_ground);
+  get_param(config["reconstruct"], "lod", cfg.rec.lod);
+  get_param(config["reconstruct"], "lod13_step_height",
             cfg.rec.lod13_step_height);
-  get_param(config["reconstruction"], "plane_detect_k", cfg.rec.plane_detect_k);
-  get_param(config["reconstruction"], "plane_detect_min_points",
+  get_param(config["reconstruct"], "plane_detect_k", cfg.rec.plane_detect_k);
+  get_param(config["reconstruct"], "plane_detect_min_points",
             cfg.rec.plane_detect_min_points);
-  get_param(config["reconstruction"], "plane_detect_epsilon",
+  get_param(config["reconstruct"], "plane_detect_epsilon",
             cfg.rec.plane_detect_epsilon);
-  get_param(config["reconstruction"], "plane_detect_normal_angle",
+  get_param(config["reconstruct"], "plane_detect_normal_angle",
             cfg.rec.plane_detect_normal_angle);
-  get_param(config["reconstruction"], "line_detect_epsilon",
+  get_param(config["reconstruct"], "line_detect_epsilon",
             cfg.rec.line_detect_epsilon);
-  get_param(config["reconstruction"], "thres_alpha", cfg.rec.thres_alpha);
-  get_param(config["reconstruction"], "thres_reg_line_dist",
+  get_param(config["reconstruct"], "thres_alpha", cfg.rec.thres_alpha);
+  get_param(config["reconstruct"], "thres_reg_line_dist",
             cfg.rec.thres_reg_line_dist);
-  get_param(config["reconstruction"], "thres_reg_line_ext",
+  get_param(config["reconstruct"], "thres_reg_line_ext",
             cfg.rec.thres_reg_line_ext);
 
   // output
   get_param(config["output"], "split_cjseq", cfg.split_cjseq);
-  get_param(config["output"], "path", cfg.crop_output_path);
+  get_param(config["output"], "folder", cfg.crop_output_path);
   get_param(config["output"], "srs", cfg.srs_override);
 }
 

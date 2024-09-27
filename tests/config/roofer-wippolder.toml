@@ -1,23 +1,20 @@
 [input.footprint]
-path = "data/wippolder/wippolder.gpkg"
+source = "data/wippolder/wippolder.gpkg"
 id_attribute = "identificatie"
 force_lod11_attribute = "kas_warenhuis"
 
 [[input.pointclouds]]
 name = "pointcloud"
 quality = 1
-path = "data/wippolder/wippolder_epsg7415.laz"
+source = "data/wippolder/wippolder_epsg7415.laz"
 
-[parameters]
+[crop]
 cellsize = 0.5
 
-[reconstruction]
+[reconstruct]
 complexity_factor = 0.99
 lod = 22
 
 [output]
 split_cjseq = false
-path = 'output/wippolder'
-
-# these get passed through to the geoflow config files that are generated for each building
-[output.reconstruction_parameters]
+folder = 'output/wippolder'
