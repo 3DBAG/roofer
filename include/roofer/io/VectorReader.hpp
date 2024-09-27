@@ -32,6 +32,10 @@ namespace roofer::io {
     std::optional<roofer::TBox<double>> region_of_interest;
     roofer::TBox<double> layer_extent;
 
+    int layer_id = 0;
+    std::string layer_name = "";
+    std::string attribute_filter = "";
+
     VectorReaderInterface(roofer::misc::projHelperInterface& pjh)
         : pjHelper(pjh){};
     virtual ~VectorReaderInterface() = default;

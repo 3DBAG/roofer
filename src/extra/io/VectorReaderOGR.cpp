@@ -41,9 +41,6 @@ namespace roofer::io {
     OGRLayer* poLayer;
 
     int layer_count = 0;
-    int layer_id = 0;
-    std::string layer_name_ = "";
-    std::string attribute_filter_ = "";
     float base_elevation = 0;
     bool output_fid_ = false;
 
@@ -130,7 +127,7 @@ namespace roofer::io {
       layer_count = poDS->GetLayerCount();
       logger.info("Layer count: {}", layer_count);
 
-      poLayer = poDS->GetLayerByName(layer_name_.c_str());
+      poLayer = poDS->GetLayerByName(layer_name.c_str());
       if (poLayer == nullptr) {
         if (layer_id >= layer_count) {
           throw(rooferException(
@@ -278,8 +275,7 @@ namespace roofer::io {
       // 0)
       //   throw rooferException("Illegal feature_select value");
 
-      if (attribute_filter_.size()) {
-        auto attribute_filter = attribute_filter_;
+      if (attribute_filter.size()) {
         auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
         if (OGRERR_NONE != error_code) {
           throw(rooferException(

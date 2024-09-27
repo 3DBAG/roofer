@@ -206,7 +206,7 @@ struct RooferConfig {
   std::string id_attribute;                // -> attr_building_id
   std::string force_lod11_attribute = "";  // -> attr_force_blockmodel
   std::string yoc_attribute;               // -> attr_year_of_construction
-  std::string layername;
+  std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
 
@@ -230,14 +230,18 @@ struct RooferConfig {
 
   // crop output
   bool split_cjseq = false;
-  std::string building_toml_file_spec;
-  std::string building_las_file_spec;
-  std::string building_gpkg_file_spec;
-  std::string building_raster_file_spec;
-  std::string building_jsonl_file_spec;
-  std::string jsonl_list_file_spec;
-  std::string index_file_spec;
-  std::string metadata_json_file_spec;
+  std::string building_toml_file_spec =
+      "{path}/objects/{bid}/config_{pc_name}.toml";
+  std::string building_las_file_spec =
+      "{path}/objects/{bid}/crop/{bid}_{pc_name}.las";
+  std::string building_gpkg_file_spec = "{path}/objects/{bid}/crop/{bid}.gpkg";
+  std::string building_raster_file_spec =
+      "{path}/objects/{bid}/crop/{bid}_{pc_name}.tif";
+  std::string building_jsonl_file_spec =
+      "{path}/objects/{bid}/reconstruct/{bid}.city.jsonl";
+  std::string jsonl_list_file_spec = "{path}/features.txt";
+  std::string index_file_spec = "{path}/index.gpkg";
+  std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string crop_output_path;
 
   // reconstruct
@@ -267,8 +271,8 @@ void print_help(std::string program_name) {
   std::cout << "   -r, --rasters                Output rasterised building "
                "pointclouds."
             << "\n";
-  std::cout << "   -m, --metadata               Output metadata.json file."
-            << "\n";
+  // std::cout << "   -m, --metadata               Output metadata.json file."
+  //           << "\n";
   std::cout << "   -i, --index                  Output index.gpkg file."
             << "\n";
   std::cout << "   -a, --all                    Output files for each "
@@ -287,28 +291,29 @@ void print_version() {
       git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
 }
 
+template <typename T, typename node>
+void get_param(const node& config, const std::string& key, T& result) {
+  if (auto tml_value = config[key].template value<T>(); tml_value.has_value()) {
+    result = *tml_value;
+  }
+}
+
 void read_config(const std::string& config_path, RooferConfig& cfg,
                  std::vector<InputPointcloud>& input_pointclouds) {
   auto& logger = roofer::logger::Logger::get_logger();
   toml::table config;
   config = toml::parse_file(config_path);
 
-  auto tml_source_footprints =
-      config["input"]["footprint"]["path"].value<std::string>();
-  if (tml_source_footprints.has_value())
-    cfg.source_footprints = *tml_source_footprints;
-
-  auto id_attribute_ =
-      config["input"]["footprint"]["id_attribute"].value<std::string>();
-  if (id_attribute_.has_value()) cfg.id_attribute = *id_attribute_;
-
-  auto force_lod11_attribute_ =
-      config["input"]["force_lod11_attribute"].value<std::string>();
-  if (force_lod11_attribute_.has_value())
-    cfg.force_lod11_attribute = *force_lod11_attribute_;
-
-  auto yoc_attribute_ = config["input"]["yoc_attribute"].value<std::string>();
-  if (yoc_attribute_.has_value()) cfg.yoc_attribute = *yoc_attribute_;
+  get_param(config["input"]["footprint"], "path", cfg.source_footprints);
+  get_param(config["input"]["footprint"], "layer_name", cfg.layer_name);
+  get_param(config["input"]["footprint"], "layer_id", cfg.layer_id);
+  get_param(config["input"]["footprint"], "attribute_filter",
+            cfg.attribute_filter);
+  get_param(config["input"]["footprint"], "id_attribute", cfg.id_attribute);
+  get_param(config["input"]["footprint"], "force_lod11_attribute",
+            cfg.force_lod11_attribute);
+  get_param(config["input"]["footprint"], "year_of_construction_attribute",
+            cfg.yoc_attribute);
 
   auto tml_pointclouds = config["input"]["pointclouds"];
   if (toml::array* arr = tml_pointclouds.as_array()) {
@@ -317,54 +322,24 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
       toml::table* tb = el.as_table();
       auto& pc = input_pointclouds.emplace_back();
 
-      if (auto n = (*tb)["name"].value<std::string>(); n.has_value()) {
-        pc.name = *n;
-      }
-      if (auto n = (*tb)["quality"].value<int>(); n.has_value()) {
-        pc.quality = *n;
-      }
-      if (auto n = (*tb)["date"].value<int>(); n.has_value()) {
-        pc.date = *n;
-      }
-      if (auto n = (*tb)["force_lod11"].value<bool>(); n.has_value()) {
-        pc.force_lod11 = *n;
-      }
-      if (auto n = (*tb)["select_only_for_date"].value<bool>(); n.has_value()) {
-        pc.select_only_for_date = *n;
-      }
-
-      if (auto n = (*tb)["building_class"].value<int>(); n.has_value()) {
-        pc.bld_class = *n;
-      }
-      if (auto n = (*tb)["ground_class"].value<int>(); n.has_value()) {
-        pc.grnd_class = *n;
-      }
-
-      auto tml_path = (*tb)["path"].value<std::string>();
-      if (tml_path.has_value()) {
-        pc.path = *tml_path;
-      }
+      get_param(*tb, "name", pc.name);
+      get_param(*tb, "quality", pc.quality);
+      get_param(*tb, "date", pc.date);
+      get_param(*tb, "force_lod11", pc.force_lod11);
+      get_param(*tb, "select_only_for_date", pc.select_only_for_date);
+      get_param(*tb, "building_class", pc.bld_class);
+      get_param(*tb, "ground_class", pc.grnd_class);
+      get_param(*tb, "path", pc.path);
     };
   }
 
-  // paramaters
-  auto ceil_point_density_ =
-      config["parameters"]["ceil_point_density"].value<float>();
-  if (ceil_point_density_.has_value())
-    cfg.ceil_point_density = *ceil_point_density_;
-
-  auto tilesize_x_ = config["parameters"]["tilesize_x"].value<float>();
-  if (tilesize_x_.has_value()) cfg.tilesize_x = *tilesize_x_;
-  auto tilesize_y_ = config["parameters"]["tilesize_y"].value<float>();
-  if (tilesize_y_.has_value()) cfg.tilesize_y = *tilesize_y_;
-
-  auto cellsize_ = config["parameters"]["cellsize"].value<float>();
-  if (cellsize_.has_value()) cfg.cellsize = *cellsize_;
-
-  auto lod11_fallback_area_ =
-      config["parameters"]["lod11_fallback_area"].value<int>();
-  if (lod11_fallback_area_.has_value())
-    cfg.lod11_fallback_area = *lod11_fallback_area_;
+  // parameters
+  get_param(config["parameters"], "ceil_point_density", cfg.ceil_point_density);
+  get_param(config["parameters"], "tilesize_x", cfg.tilesize_x);
+  get_param(config["parameters"], "tilesize_y", cfg.tilesize_y);
+  get_param(config["parameters"], "cellsize", cfg.cellsize);
+  get_param(config["parameters"], "lod11_fallback_area",
+            cfg.lod11_fallback_area);
 
   if (toml::array* region_of_interest_ =
           config["parameters"]["region_of_interest"].as_array()) {
@@ -384,97 +359,31 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   }
 
   // reconstruction parameters
-  auto complexity_factor_ =
-      config["reconstruction"]["complexity_factor"].value<int>();
-  if (complexity_factor_.has_value())
-    cfg.rec.complexity_factor = *complexity_factor_;
-  auto clip_ground_ = config["reconstruction"]["clip_ground"].value<bool>();
-  if (clip_ground_.has_value()) cfg.rec.clip_ground = *clip_ground_;
-  auto lod_ = config["reconstruction"]["lod"].value<int>();
-  if (lod_.has_value()) cfg.rec.lod = *lod_;
-  auto lod13_step_height_ =
-      config["reconstruction"]["lod13_step_height"].value<float>();
-  if (lod13_step_height_.has_value())
-    cfg.rec.lod13_step_height = *lod13_step_height_;
-
-  auto plane_detect_k_ =
-      config["reconstruction"]["plane_detect_k"].value<int>();
-  if (plane_detect_k_.has_value()) cfg.rec.plane_detect_k = *plane_detect_k_;
-  auto plane_detect_min_points_ =
-      config["reconstruction"]["plane_detect_min_points"].value<int>();
-  if (plane_detect_min_points_.has_value())
-    cfg.rec.plane_detect_min_points = *plane_detect_min_points_;
-  auto plane_detect_epsilon_ =
-      config["reconstruction"]["plane_detect_epsilon"].value<float>();
-  if (plane_detect_epsilon_.has_value())
-    cfg.rec.plane_detect_epsilon = *plane_detect_epsilon_;
-  auto plane_detect_normal_angle_ =
-      config["reconstruction"]["plane_detect_normal_angle"].value<float>();
-  if (plane_detect_normal_angle_.has_value())
-    cfg.rec.plane_detect_normal_angle = *plane_detect_normal_angle_;
-  auto line_detect_epsilon_ =
-      config["reconstruction"]["line_detect_epsilon"].value<float>();
-  if (line_detect_epsilon_.has_value())
-    cfg.rec.line_detect_epsilon = *line_detect_epsilon_;
-  auto thres_alpha_ = config["reconstruction"]["thres_alpha"].value<float>();
-  if (thres_alpha_.has_value()) cfg.rec.thres_alpha = *thres_alpha_;
-  auto thres_reg_line_dist_ =
-      config["reconstruction"]["thres_reg_line_dist"].value<float>();
-  if (thres_reg_line_dist_.has_value())
-    cfg.rec.thres_reg_line_dist = *thres_reg_line_dist_;
-  auto thres_reg_line_ext_ =
-      config["reconstruction"]["thres_reg_line_ext"].value<float>();
-  if (thres_reg_line_ext_.has_value())
-    cfg.rec.thres_reg_line_ext = *thres_reg_line_ext_;
+  get_param(config["reconstruction"], "complexity_factor",
+            cfg.rec.complexity_factor);
+  get_param(config["reconstruction"], "clip_ground", cfg.rec.clip_ground);
+  get_param(config["reconstruction"], "lod", cfg.rec.lod);
+  get_param(config["reconstruction"], "lod13_step_height",
+            cfg.rec.lod13_step_height);
+  get_param(config["reconstruction"], "plane_detect_k", cfg.rec.plane_detect_k);
+  get_param(config["reconstruction"], "plane_detect_min_points",
+            cfg.rec.plane_detect_min_points);
+  get_param(config["reconstruction"], "plane_detect_epsilon",
+            cfg.rec.plane_detect_epsilon);
+  get_param(config["reconstruction"], "plane_detect_normal_angle",
+            cfg.rec.plane_detect_normal_angle);
+  get_param(config["reconstruction"], "line_detect_epsilon",
+            cfg.rec.line_detect_epsilon);
+  get_param(config["reconstruction"], "thres_alpha", cfg.rec.thres_alpha);
+  get_param(config["reconstruction"], "thres_reg_line_dist",
+            cfg.rec.thres_reg_line_dist);
+  get_param(config["reconstruction"], "thres_reg_line_ext",
+            cfg.rec.thres_reg_line_ext);
 
   // output
-  auto split_cjseq_ = config["output"]["split_cjseq"].value<bool>();
-  if (split_cjseq_.has_value()) cfg.split_cjseq = *split_cjseq_;
-  auto building_toml_file_spec_ =
-      config["output"]["building_toml_file"].value<std::string>();
-  if (building_toml_file_spec_.has_value())
-    cfg.building_toml_file_spec = *building_toml_file_spec_;
-
-  auto building_las_file_spec_ =
-      config["output"]["building_las_file"].value<std::string>();
-  if (building_las_file_spec_.has_value())
-    cfg.building_las_file_spec = *building_las_file_spec_;
-
-  auto building_gpkg_file_spec_ =
-      config["output"]["building_gpkg_file"].value<std::string>();
-  if (building_gpkg_file_spec_.has_value())
-    cfg.building_gpkg_file_spec = *building_gpkg_file_spec_;
-
-  auto building_raster_file_spec_ =
-      config["output"]["building_raster_file"].value<std::string>();
-  if (building_raster_file_spec_.has_value())
-    cfg.building_raster_file_spec = *building_raster_file_spec_;
-
-  if (cfg.write_metadata) {
-    auto metadata_json_file_spec_ =
-        config["output"]["metadata_json_file"].value<std::string>();
-    if (metadata_json_file_spec_.has_value())
-      cfg.metadata_json_file_spec = *metadata_json_file_spec_;
-  }
-
-  auto building_jsonl_file_spec_ =
-      config["output"]["building_jsonl_file"].value<std::string>();
-  if (building_jsonl_file_spec_.has_value())
-    cfg.building_jsonl_file_spec = *building_jsonl_file_spec_;
-
-  auto index_file_spec_ = config["output"]["index_file"].value<std::string>();
-  if (index_file_spec_.has_value()) cfg.index_file_spec = *index_file_spec_;
-
-  auto jsonl_list_file_spec_ =
-      config["output"]["jsonl_list_file"].value<std::string>();
-  if (jsonl_list_file_spec_.has_value())
-    cfg.jsonl_list_file_spec = *jsonl_list_file_spec_;
-
-  auto output_path_ = config["output"]["path"].value<std::string>();
-  if (output_path_.has_value()) cfg.crop_output_path = *output_path_;
-
-  auto srs_override_ = config["output"]["crs"].value<std::string>();
-  if (srs_override_.has_value()) cfg.srs_override = *srs_override_;
+  get_param(config["output"], "split_cjseq", cfg.split_cjseq);
+  get_param(config["output"], "path", cfg.crop_output_path);
+  get_param(config["output"], "srs", cfg.srs_override);
 }
 
 void get_las_extents(InputPointcloud& ipc,
@@ -606,7 +515,7 @@ int main(int argc, const char* argv[]) {
 
   roofer_cfg.output_all = cmdl[{"-a", "--all"}];
   roofer_cfg.write_rasters = cmdl[{"-r", "--rasters"}];
-  roofer_cfg.write_metadata = cmdl[{"-m", "--metadata"}];
+  // roofer_cfg.write_metadata = cmdl[{"-m", "--metadata"}];
   roofer_cfg.write_index = cmdl[{"-i", "--index"}];
 
   if (cmdl[{"-h", "--help"}]) {
@@ -680,6 +589,9 @@ int main(int argc, const char* argv[]) {
   {
     auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
+    VectorReader->layer_name = roofer_cfg.layer_name;
+    VectorReader->layer_id = roofer_cfg.layer_id;
+    VectorReader->attribute_filter = roofer_cfg.attribute_filter;
     VectorReader->open(roofer_cfg.source_footprints);
     if (!project_srs->is_valid()) VectorReader->get_crs(project_srs.get());
     logger.info("region_of_interest.has_value()? {}",
