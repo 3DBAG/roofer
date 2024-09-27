@@ -951,6 +951,16 @@ int main(int argc, const char* argv[]) {
           CityJsonWriter->write_metadata(
               ofs, project_srs.get(), building_tile.extent,
               {.identifier = std::to_string(building_tile.id)});
+        } else {
+          std::string metadata_json_file =
+              fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
+                          fmt::arg("path", roofer_cfg.crop_output_path));
+          fs::create_directories(fs::path(metadata_json_file).parent_path());
+          ofs.open(metadata_json_file);
+          CityJsonWriter->write_metadata(
+              ofs, project_srs.get(), building_tile.extent,
+              {.identifier = std::to_string(building_tile.id)});
+          ofs.close();
         }
 
         for (auto& building : building_tile.buildings) {
