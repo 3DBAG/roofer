@@ -5,7 +5,7 @@ include(FetchContent)
 enable_testing()
 
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
-set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
+set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 if(DEFINED VCPKG_TOOLCHAIN)
   set(TEST_ENVIRONMENT
