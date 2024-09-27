@@ -393,19 +393,6 @@ void crop_tile(const roofer::TBox<double>& tile,
               {"id_attribute", cfg.id_attribute},
           };
 
-          if (cfg.write_metadata) {
-            // gf_config.insert("GF_PROCESS_OFFSET_OVERRIDE", true);
-            gf_config.insert("CITYJSON_TRANSLATE_X", (*pj->data_offset)[0]);
-            gf_config.insert("CITYJSON_TRANSLATE_Y", (*pj->data_offset)[1]);
-            gf_config.insert("CITYJSON_TRANSLATE_Z", (*pj->data_offset)[2]);
-            gf_config.insert("CITYJSON_SCALE_X", 0.001);
-            gf_config.insert("CITYJSON_SCALE_Y", 0.001);
-            gf_config.insert("CITYJSON_SCALE_Z", 0.001);
-          }
-          // auto tbl_gfparams =
-          //     config["output"]["reconstruction_parameters"].as_table();
-          // gf_config.insert(tbl_gfparams->begin(), tbl_gfparams->end());
-
           if (!only_write_selected) {
             std::ofstream ofs;
             std::string config_path =
@@ -476,43 +463,6 @@ void crop_tile(const roofer::TBox<double>& tile,
           ofs.close();
         }
       }
-    }
-
-    // Write metadata.json for json features
-    if (cfg.write_metadata) {
-      auto md_scale = roofer::arr3d{0.001, 0.001, 0.001};
-      auto md_trans = *pj->data_offset;
-
-      auto metadatajson = toml::table{
-          {"type", "CityJSON"},
-          {"version", "2.0"},
-          {"CityObjects", toml::table{}},
-          {"vertices", toml::array{}},
-          {"transform",
-           toml::table{
-               {"scale", toml::array{md_scale[0], md_scale[1], md_scale[2]}},
-               {"translate",
-                toml::array{md_trans[0], md_trans[1], md_trans[2]}},
-           }},
-          {"metadata",
-           toml::table{{"referenceSystem",
-                        "https://www.opengis.net/def/crs/EPSG/0/7415"}}}};
-      // serializing as JSON using toml::json_formatter:
-      std::string metadata_json_file =
-          fmt::format(fmt::runtime(cfg.metadata_json_file_spec),
-                      fmt::arg("path", cfg.crop_output_path));
-
-      // minimize json
-      std::stringstream ss;
-      ss << toml::json_formatter{metadatajson};
-      auto s = ss.str();
-      s.erase(std::remove(s.begin(), s.end(), '\n'), s.cend());
-      s.erase(std::remove(s.begin(), s.end(), ' '), s.cend());
-
-      std::ofstream ofs;
-      ofs.open(metadata_json_file);
-      ofs << s;
-      ofs.close();
     }
   }
   // clear input_pointclouds data
