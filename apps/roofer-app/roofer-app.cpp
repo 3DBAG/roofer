@@ -206,6 +206,9 @@ struct RooferConfig {
   std::string id_attribute;                // -> attr_building_id
   std::string force_lod11_attribute = "";  // -> attr_force_blockmodel
   std::string yoc_attribute;               // -> attr_year_of_construction
+  std::string layername;
+  int layer_id = 0;
+  std::string attribute_filter;
 
   // crop parameters
   float ceil_point_density = 20;

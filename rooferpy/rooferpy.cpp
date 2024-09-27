@@ -157,7 +157,8 @@ namespace roofer {
 PYBIND11_MODULE(rooferpy, m) {
   py::class_<roofer::ReconstructionConfig>(m, "ReconstructionConfig")
       .def(py::init<>())
-      .def_readwrite("complexity_factor", &roofer::ReconstructionConfig::lambda)
+      .def_readwrite("complexity_factor",
+                     &roofer::ReconstructionConfig::complexity_factor)
       .def_readwrite("clip_ground", &roofer::ReconstructionConfig::clip_ground)
       .def_readwrite("lod", &roofer::ReconstructionConfig::lod)
       .def_readwrite("lod13_step_height",
