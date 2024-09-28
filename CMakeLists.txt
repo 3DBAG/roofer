@@ -21,9 +21,9 @@ endif()
 if(RF_BUILD_APPS)
   list(APPEND VCPKG_MANIFEST_FEATURES "apps")
 endif()
-if(RF_BUILD_BINDINGS)
-  list(APPEND VCPKG_MANIFEST_FEATURES "python")
-endif()
+# if(RF_BUILD_BINDINGS)
+#   list(APPEND VCPKG_MANIFEST_FEATURES "python")
+# endif()
 
 # TODO: add version number
 project(roofer LANGUAGES C CXX)
