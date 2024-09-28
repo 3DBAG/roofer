@@ -35,12 +35,6 @@
           "version>=": "3.11.3"
         }
       ]
-    },
-    "python": {
-      "description": "Build Python bindings.",
-      "dependencies": [
-        "pybind11"
-      ]
     }
   },
   "dependencies": [
