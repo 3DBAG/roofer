@@ -154,7 +154,7 @@ namespace roofer {
 
 }  // namespace roofer
 
-PYBIND11_MODULE(rooferpy, m) {
+PYBIND11_MODULE(roofer, m) {
   py::class_<roofer::ReconstructionConfig>(m, "ReconstructionConfig")
       .def(py::init<>())
       .def_readwrite("complexity_factor",

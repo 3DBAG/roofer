@@ -19,7 +19,7 @@
 # Author(s):
 # Ivan Paden
 
-import rooferpy
+import roofer
 import laspy
 import numpy as np
 from shapely import wkt
@@ -101,16 +101,16 @@ footprint_str = read_wkt_from_file(input_polygon)
 footprint = wkt_polygon_to_rings(footprint_str, x_offset, y_offset)
 
 # Set the reconstruction configuration
-roofer_config = rooferpy.ReconstructionConfig()
+roofer_config = roofer.ReconstructionConfig()
 roofer_config.complexity_factor = 0.7
 
 # Reconstruct
 print("Reconstructing building...")
-roofer_meshes = rooferpy.reconstruct(building_pts, ground_pts, footprint, roofer_config)
+roofer_meshes = roofer.reconstruct(building_pts, ground_pts, footprint, roofer_config)
 
 # Triangulate the mesh
 print("Triangulating mesh...")
-vertices, faces = rooferpy.triangulate_mesh(roofer_meshes[0])
+vertices, faces = roofer.triangulate_mesh(roofer_meshes[0])
 
 # For visualisation, install rerun and uncomment line 5 and lines below
 #rr.init("Reconstruction results", spawn=True)
