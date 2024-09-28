@@ -6,10 +6,11 @@ pybind11_add_module("rooferpy" ${APP_SOURCES})
 
 set(RECONSTRUCT_LINK_LIBS
   roofer-core
-  cmake_git_version_tracking
 )
 
 target_link_libraries(
   "rooferpy"
   PRIVATE ${RECONSTRUCT_LINK_LIBS}
   pybind11::module)
+
+  set_target_properties(rooferpy PROPERTIES OUTPUT_NAME "roofer")
