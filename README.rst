@@ -1,12 +1,12 @@
 
-roofer -- automatic building reconstruction from pointclouds
-============================================================
+roofer - automatic building reconstruction from pointclouds
+===========================================================
 
 **roofer** performs fully automatic LoD2 building reconstruction from a pointcloud and a building footprint polygon. It was originally developed, and is still used, for the `3DBAG project <https://3dbag.nl>`_.
 
-.. image:: _static/img/banner.png
+.. image:: https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/docs/_static/img/banner.png
   :width: 800
-  :alt: The roofer reconsruction algorithm
+  :alt: Building reconstruction with roofer
 
 Highlights:
 
@@ -16,3 +16,5 @@ Highlights:
 + It can output different Level of Details: LoD1.2, LoD1.3, LoD2.2. See `the refined Levef of Details by the 3D geoinformation research group <https://3d.bk.tudelft.nl/lod/>`_.
 + Usable either as a command line application or as a library with C++ and Python bindings.
 + With the CLI application the building models are outputted to a `CityJSONSequence <https://www.cityjson.org/cityjsonseq/>`_ file.
+
+Documentation is provided at https://3dbag.github.io/roofer/.
