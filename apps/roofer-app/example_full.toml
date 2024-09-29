@@ -1,0 +1,9 @@
+[input.footprint]
+source = "data/wippolder/wippolder.gpkg"
+
+[[input.pointclouds]]
+name = "pointcloud"
+source = "data/wippolder/wippolder.laz"
+
+[output]
+folder = 'output/wippolder'
