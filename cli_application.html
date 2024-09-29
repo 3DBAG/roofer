@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference C++" href="api_cpp.html" /><link rel="prev" title="Building reconstruction algorithm" href="reconstruction_algo.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference C++" href="api_cpp.html" /><link rel="prev" title="Reconstruction algorithm and parameters" href="reconstruct_params.html" />
 
     <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
-        <title>Roofer CLI App - Roofer 1.0 documentation</title>
+        <title>Roofer CLI App - roofer documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -166,7 +166,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">Roofer 1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">roofer  documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -190,7 +190,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">Roofer 1.0 documentation</span>
+  <span class="sidebar-brand-text">roofer  documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -200,8 +200,8 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Roofer Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruction_algo.html">Building reconstruction algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
@@ -225,12 +225,16 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/cli_application.rst.txt" title="View this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/cli_application.rst?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
-</div>
-<div class="theme-toggle-container theme-toggle-content">
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/cli_application.rst" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
@@ -239,7 +243,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -247,9 +251,64 @@
         <article role="main" id="furo-main-content">
           <section id="roofer-cli-app">
 <h1>Roofer CLI App<a class="headerlink" href="#roofer-cli-app" title="Link to this heading">¶</a></h1>
-<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
-documentation for details.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">roofer</span> <span class="o">-</span><span class="n">c</span> <span class="o">&lt;</span><span class="n">file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>Show this help message.</p>
+</dd>
+<dt><kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></dt>
+<dd><p>Show version.</p>
+</dd>
+<dt><kbd><span class="option">-v</span>, <span class="option">--verbose</span></kbd></dt>
+<dd><p>Be more verbose.</p>
+</dd>
+<dt><kbd><span class="option">-t</span>, <span class="option">--trace</span></kbd></dt>
+<dd><p>Trace the progress. Implies –verbose.</p>
+</dd>
+<dt><kbd><span class="option">--trace-interval <var>&lt;s&gt;</var></span></kbd></dt>
+<dd><p>Trace interval in seconds [default: 10].</p>
+</dd>
+<dt><kbd><span class="option">-c <var>&lt;file&gt;</var></span>, <span class="option">--config <var>&lt;file&gt;</var></span></kbd></dt>
+<dd><p>Config file.</p>
+</dd>
+<dt><kbd><span class="option">-j <var>&lt;n&gt;</var></span>, <span class="option">--jobs <var>&lt;n&gt;</var></span></kbd></dt>
+<dd><p>Limit the number of threads used by roofer. Default is to use all available resources.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<section id="minimum-example-config-file">
+<h2>Minimum example config file<a class="headerlink" href="#minimum-example-config-file" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="nb">input</span><span class="o">.</span><span class="n">footprint</span><span class="p">]</span>
+<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
+
+<span class="p">[[</span><span class="nb">input</span><span class="o">.</span><span class="n">pointclouds</span><span class="p">]]</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;pointcloud&quot;</span>
+<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.laz&quot;</span>
+
+<span class="p">[</span><span class="n">output</span><span class="p">]</span>
+<span class="n">folder</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="full-example-config-file">
+<h2>Full example config file<a class="headerlink" href="#full-example-config-file" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="nb">input</span><span class="o">.</span><span class="n">footprint</span><span class="p">]</span>
+<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
+
+<span class="p">[[</span><span class="nb">input</span><span class="o">.</span><span class="n">pointclouds</span><span class="p">]]</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;pointcloud&quot;</span>
+<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.laz&quot;</span>
+
+<span class="p">[</span><span class="n">output</span><span class="p">]</span>
+<span class="n">folder</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -266,14 +325,14 @@ documentation for details.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="reconstruction_algo.html">
+          <a class="prev-page" href="reconstruct_params.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Building reconstruction algorithm</div>
+                <div class="title">Reconstruction algorithm and parameters</div>
                 
               </div>
             </a>
@@ -281,7 +340,7 @@ documentation for details.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2024, Ravi Peters
+                Copyright &#169; 2024 Ravi Peters, Balazs Dukai and TU Delft 3D geoinformation group
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -289,19 +348,46 @@ documentation for details.</p>
             
           </div>
           <div class="right-details">
-            
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/3DBAG/roofer" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
           </div>
         </div>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Roofer CLI App</a><ul>
+<li><a class="reference internal" href="#minimum-example-config-file">Minimum example config file</a></li>
+<li><a class="reference internal" href="#full-example-config-file">Full example config file</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=f2a433a1"></script>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
