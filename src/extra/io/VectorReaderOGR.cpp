@@ -161,10 +161,8 @@ namespace roofer::io {
       if (poLayer == nullptr) {
         throw(rooferException("Layer is not open"));
       }
-
-      // printf( "Layer SRS: \n %s\n", pszWKT );
       if (OGRSpatialReference* layerSRS = poLayer->GetSpatialRef()) {
-        if (layerSRS->Validate() && !srs->is_valid()) {
+        if (!srs->is_valid()) {
           char* pszWKT = NULL;
           layerSRS->exportToWkt(&pszWKT);
           srs->import_wkt(pszWKT);
