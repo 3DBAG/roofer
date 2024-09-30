@@ -1,6 +1,6 @@
 API Reference Python
 ====================
 
-.. automodule:: rooferpy
+.. automodule:: roofer
    :members:
    :undoc-members:

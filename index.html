@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -243,7 +243,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -254,7 +254,8 @@
 <p><strong>roofer</strong> performs fully automatic LoD2 building reconstruction from a pointcloud and a building footprint polygon. It was originally developed, and is still used, for the <a class="reference external" href="https://3dbag.nl">3DBAG project</a>.</p>
 <a class="reference internal image-reference" href="https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/docs/_static/img/banner.png"><img alt="Building reconstruction with roofer" src="https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/docs/_static/img/banner.png" style="width: 800px;" />
 </a>
-<p>Highlights:</p>
+<section id="highlights">
+<h2>Highlights<a class="headerlink" href="#highlights" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>It reconstructs a 3D building model from a pointcloud and a 2D footprint polygon</p></li>
 <li><p>It is a fully automated process, there is no manual modelling required.</p></li>
@@ -263,7 +264,25 @@
 <li><p>Usable either as a command line application or as a library with C++ and Python bindings.</p></li>
 <li><p>With the CLI application the building models are outputted to a <a class="reference external" href="https://www.cityjson.org/cityjsonseq/">CityJSONSequence</a> file.</p></li>
 </ul>
-<p>Documentation is provided at <a class="reference external" href="https://3dbag.github.io/roofer/">https://3dbag.github.io/roofer/</a>.</p>
+<p>Documentation is provided at <a class="reference external" href="https://3dbag.github.io/roofer/">https://3dbag.github.io/roofer/</a>. The source code is available at <a class="reference external" href="https://github.com/3DBAG/roofer">https://github.com/3DBAG/roofer</a>.</p>
+</section>
+<section id="origin">
+<h2>Origin<a class="headerlink" href="#origin" title="Link to this heading">¶</a></h2>
+<p>The building reconstruction algorithms underpinning roofer were originally developed within the <a class="reference external" href="https://3d.bk.tudelft.nl/">3D geoinformation research group</a> at the Technical University of Delft.
+From 2022 onwards, <a class="reference external" href="https://3dgi.nl">3DGI</a>, a spinoff company from the aforementioned research group, joined the development efforts.</p>
+<dl class="simple">
+<dt>This project has received funding from the European Research Council (ERC):</dt><dd><ul class="simple">
+<li><p><em>2016-2022</em> under the European Unions Horizon2020 Research &amp; Innovation Programme (grant agreement no. 677312 UMnD: Urban modelling in higher dimensions).</p></li>
+<li><p><em>2022-2024</em> under the Horizon Europe Research &amp; Innovation Programme (grant agreement no. 101068452 3DBAG: detailed 3D Building models Automatically Generated for very large areas).</p></li>
+</ul>
+</dd>
+</dl>
+<p>In <em>2024</em> this project has received funding from Kadaster, the Dutch Land Registry Office.</p>
+<p>Prior to 2024 the building reconstruction algorithms were developed as part of <em>Geoflow</em> and the <em>gfp-building-reconstruction plugin</em>. During the summer of 2024 the code was refactored and the <em>roofer</em> project was born.</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
+<p>The roofer project is licensed under the GPLv3 license.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -299,9 +318,15 @@
 <li class="toctree-l2"><a class="reference internal" href="api_cpp.html#_CPPv46roofer"><code class="docutils literal notranslate"><span class="pre">roofer</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_py.html#roofer.ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_py.html#roofer.reconstruct"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_py.html#roofer.triangulate_mesh"><code class="docutils literal notranslate"><span class="pre">triangulate_mesh()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
+</section>
 </section>
 
         </article>
@@ -344,8 +369,29 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">roofer - automatic building reconstruction from pointclouds</a><ul>
+<li><a class="reference internal" href="#highlights">Highlights</a></li>
+<li><a class="reference internal" href="#origin">Origin</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
