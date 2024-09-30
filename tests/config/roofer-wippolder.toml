@@ -18,3 +18,4 @@ lod = 22
 [output]
 split_cjseq = false
 folder = 'output/wippolder'
+# srs_override = "EPSG:7415"

@@ -382,7 +382,7 @@ void read_config(const std::string& config_path, RooferConfig& cfg,
   // output
   get_param(config["output"], "split_cjseq", cfg.split_cjseq);
   get_param(config["output"], "folder", cfg.crop_output_path);
-  get_param(config["output"], "srs", cfg.srs_override);
+  get_param(config["output"], "srs_override", cfg.srs_override);
 }
 
 void get_las_extents(InputPointcloud& ipc,
@@ -573,6 +573,8 @@ int main(int argc, const char* argv[]) {
     if (!project_srs->is_valid()) {
       logger.error("Invalid user override SRS: {}", roofer_cfg.srs_override);
       return EXIT_FAILURE;
+    } else {
+      logger.info("Using user override SRS: {}", roofer_cfg.srs_override);
     }
   }
 
@@ -592,9 +594,11 @@ int main(int argc, const char* argv[]) {
     VectorReader->layer_id = roofer_cfg.layer_id;
     VectorReader->attribute_filter = roofer_cfg.attribute_filter;
     VectorReader->open(roofer_cfg.source_footprints);
-    if (!project_srs->is_valid()) VectorReader->get_crs(project_srs.get());
-    logger.info("region_of_interest.has_value()? {}",
-                roofer_cfg.region_of_interest.has_value());
+    if (!project_srs->is_valid()) {
+      VectorReader->get_crs(project_srs.get());
+    }
+    // logger.info("region_of_interest.has_value()? {}",
+    //             roofer_cfg.region_of_interest.has_value());
     logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
 
     roofer::TBox<double> roi;
