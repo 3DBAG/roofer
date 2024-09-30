@@ -271,9 +271,6 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
 </pre></div>
 </div>
 </section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-</section>
 <section id="requirements-on-the-input-data">
 <h2>Requirements on the input data<a class="headerlink" href="#requirements-on-the-input-data" title="Link to this heading">¶</a></h2>
 <section id="point-cloud">
@@ -282,7 +279,7 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
 <li><p>Acquired through aerial scanning, either Lidar or Dense Image Matching. But Lidar is preferred, because it is often of higher quality. Thus point clouds with only building facades eg. mobile mapping surveys are not supported.</p></li>
 <li><p>The fewer outliers the better.</p></li>
 <li><p>Classified, with at least <em>ground</em> and <em>building</em> classes.</p></li>
-<li><p>Has sufficient point density. We achieve good results with 8-10 pts/m2 in the [3D BAG](<a class="reference external" href="https://3dbag.nl">https://3dbag.nl</a>).</p></li>
+<li><p>Has sufficient point density. We achieve good results with 8-10 pts/m2 in the <a class="reference external" href="https://3dbag.nl">3D BAG</a>.</p></li>
 <li><p>Well aligned with the 2D building polygon.</p></li>
 <li><p>Do include some ground points around the building so that the software can determine the ground floor elevation.</p></li>
 <li><p>Pointcloud is automatically cropped to the extent of the 2D building polygon.</p></li>
@@ -365,7 +362,6 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
             <ul>
 <li><a class="reference internal" href="#">Getting started</a><ul>
 <li><a class="reference internal" href="#compilation-from-source">Compilation from source</a></li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#requirements-on-the-input-data">Requirements on the input data</a><ul>
 <li><a class="reference internal" href="#point-cloud">Point cloud</a></li>
 <li><a class="reference internal" href="#d-building-polygon">2D building polygon</a></li>
