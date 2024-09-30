@@ -28,9 +28,6 @@ Clone this repository and use one of the CMake presets to build the roofer.
    # Optionally, install roofer
    cmake --install build
 
-Usage
------
-
 Requirements on the input data
 ------------------------------
 
@@ -40,7 +37,7 @@ Point cloud
 + Acquired through aerial scanning, either Lidar or Dense Image Matching. But Lidar is preferred, because it is often of higher quality. Thus point clouds with only building facades eg. mobile mapping surveys are not supported.
 + The fewer outliers the better.
 + Classified, with at least *ground* and *building* classes.
-+ Has sufficient point density. We achieve good results with 8-10 pts/m2 in the [3D BAG](https://3dbag.nl).
++ Has sufficient point density. We achieve good results with 8-10 pts/m2 in the `3D BAG <https://3dbag.nl>`_.
 + Well aligned with the 2D building polygon.
 + Do include some ground points around the building so that the software can determine the ground floor elevation.
 + Pointcloud is automatically cropped to the extent of the 2D building polygon.

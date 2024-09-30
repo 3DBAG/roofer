@@ -29,7 +29,7 @@ From 2022 onwards, `3DGI <https://3dgi.nl>`_, a spinoff company from the aforeme
 This project has received funding from the European Research Council (ERC):
     - *2016-2022* under the European Unions Horizon2020 Research & Innovation Programme (grant agreement no. 677312 UMnD: Urban modelling in higher dimensions).
     - *2022-2024* under the Horizon Europe Research & Innovation Programme (grant agreement no. 101068452 3DBAG: detailed 3D Building models Automatically Generated for very large areas).
-In *2024* this project has received funding from Kadaster, the Dutch Land Registry Office.
+In *2024* this project has received funding from Kadaster, the Netherlands' Cadastre, Land Registry and Mapping Agency.
 
 Prior to 2024 the building reconstruction algorithms were developed as part of *Geoflow* and the *gfp-building-reconstruction plugin*. During the summer of 2024 the code was refactored and the *roofer* project was born.
 
