@@ -41,13 +41,15 @@ namespace roofer::io {
     };
 
     std::string export_wkt() const override {
-      char** wkt_ptr;
-      srs.exportToWkt(wkt_ptr);
-      std::string wkt = *wkt_ptr;
+      char* wkt_ptr = nullptr;
+      srs.exportToWkt(&wkt_ptr);
+      std::string wkt{wkt_ptr};
       return wkt;
     };
 
-    bool is_valid() const override { return srs.Validate() == OGRERR_NONE; };
+    bool is_valid() const override {
+      return (!srs.IsEmpty()) && (srs.Validate() == OGRERR_NONE);
+    };
 
     void clear() override { srs.Clear(); };
 

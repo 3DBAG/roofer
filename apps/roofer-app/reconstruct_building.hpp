@@ -52,8 +52,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
       {.dissolve_step_edges = dissolve_step_edges,
        .dissolve_all_interior = dissolve_all_interior,
        .step_height_threshold = cfg->lod13_step_height});
-  logger.info("Completed ArrangementDissolver");
-  logger.info("Roof partition has {} faces", arrangement.number_of_faces());
+  logger.debug("Completed ArrangementDissolver");
+  // logger.debug("Roof partition has {} faces", arrangement.number_of_faces());
 #ifdef RF_USE_RERUN
   rec.log(
       worldname + "ArrangementDissolver",
@@ -61,7 +61,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
 #endif
   auto ArrangementSnapper = roofer::reconstruction::createArrangementSnapper();
   ArrangementSnapper->compute(arrangement);
-  logger.info("Completed ArrangementSnapper");
+  logger.debug("Completed ArrangementSnapper");
 #ifdef RF_USE_RERUN
 // rec.log(worldname+"ArrangementSnapper", rerun::LineStrips3D(
 // roofer::reconstruction::arr2polygons(arrangement) ));
@@ -71,7 +71,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
       roofer::reconstruction::createArrangementExtruder();
   ArrangementExtruder->compute(arrangement, floor_elevation,
                                {.LoD2 = extrude_LoD2});
-  logger.info("Completed ArrangementExtruder");
+  logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
   rec.log(worldname + "ArrangementExtruder",
           rerun::LineStrips3D(ArrangementExtruder->faces)
@@ -81,7 +81,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
   auto MeshTriangulator =
       roofer::reconstruction::createMeshTriangulatorLegacy();
   MeshTriangulator->compute(ArrangementExtruder->multisolid);
-  logger.info("Completed MeshTriangulator");
+  logger.debug("Completed MeshTriangulator");
 #ifdef RF_USE_RERUN
   rec.log(worldname + "MeshTriangulator",
           rerun::Mesh3D(MeshTriangulator->triangles)
@@ -94,8 +94,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
                                  MeshTriangulator->multitrianglecol,
                                  MeshTriangulator->ring_ids);
   rmse = PC2MeshDistCalculator->rms_error;
-  logger.info("Completed PC2MeshDistCalculator. RMSE={}",
-              PC2MeshDistCalculator->rms_error);
+  logger.debug("Completed PC2MeshDistCalculator. RMSE={}",
+               PC2MeshDistCalculator->rms_error);
 #ifdef RF_USE_RERUN
 // rec.log(worldname+"PC2MeshDistCalculator",
 // rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
@@ -105,7 +105,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
   auto Val3dator = roofer::reconstruction::createVal3dator();
   Val3dator->compute(ArrangementExtruder->multisolid);
   attr_val3dity.push_back(Val3dator->errors.front());
-  logger.info("Completed Val3dator. Errors={}", Val3dator->errors.front());
+  logger.debug("Completed Val3dator. Errors={}", Val3dator->errors.front());
 #endif
 
   return ArrangementExtruder->multisolid;
@@ -125,8 +125,8 @@ void reconstruct_building(BuildingObject& building,
       points_roof.push_back(building.pointcloud[i]);
     }
   }
-  logger.info("{} ground points and {} roof points", points_ground.size(),
-              points_roof.size());
+  logger.debug("{} ground points and {} roof points", points_ground.size(),
+               points_roof.size());
 
 #ifdef RF_USE_RERUN
   // Create a new `RecordingStream` which sends data over TCP to the viewer
@@ -158,8 +158,8 @@ void reconstruct_building(BuildingObject& building,
           .metrics_plane_epsilon = cfg->plane_detect_epsilon,
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
       });
-  logger.info("Completed PlaneDetector (roof), found {} roofplanes",
-              PlaneDetector->pts_per_roofplane.size());
+  logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
+               PlaneDetector->pts_per_roofplane.size());
 
   building.roof_type = PlaneDetector->roof_type;
   building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
@@ -179,8 +179,8 @@ void reconstruct_building(BuildingObject& building,
 
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
   PlaneDetector_ground->detect(points_ground);
-  logger.info("Completed PlaneDetector (ground), found {} groundplanes",
-              PlaneDetector_ground->pts_per_roofplane.size());
+  logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
+               PlaneDetector_ground->pts_per_roofplane.size());
 
 #ifdef RF_USE_RERUN
   rec.log("world/segmented_points",
@@ -192,7 +192,7 @@ void reconstruct_building(BuildingObject& building,
 #endif
 
   // check skip_attribute
-  logger.info("force LoD1.1 = {}", building.force_lod11);
+  logger.debug("force LoD1.1 = {}", building.force_lod11);
 
   if (building.force_lod11) {
     auto SimplePolygonExtruder =
@@ -208,14 +208,14 @@ void reconstruct_building(BuildingObject& building,
     // multisolidvec.push_back(SimplePolygonExtruder->multisolid);
     // CityJsonWriter->write(path_output_jsonl, footprints, &multisolidvec,
     //                       &multisolidvec, &multisolidvec, attributes);
-    // logger.info("Completed CityJsonWriter to {}", path_output_jsonl);
+    // logger.debug("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
                          {.thres_alpha = cfg->thres_alpha});
-    logger.info("Completed AlphaShaper (roof), found {} rings, {} labels",
-                AlphaShaper->alpha_rings.size(),
-                AlphaShaper->roofplane_ids.size());
+    logger.debug("Completed AlphaShaper (roof), found {} rings, {} labels",
+                 AlphaShaper->alpha_rings.size(),
+                 AlphaShaper->roofplane_ids.size());
 #ifdef RF_USE_RERUN
     rec.log("world/alpha_rings_roof",
             rerun::LineStrips3D(AlphaShaper->alpha_rings)
@@ -224,9 +224,9 @@ void reconstruct_building(BuildingObject& building,
 
     auto AlphaShaper_ground = roofer::reconstruction::createAlphaShaper();
     AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
-    logger.info("Completed AlphaShaper (ground), found {} rings, {} labels",
-                AlphaShaper_ground->alpha_rings.size(),
-                AlphaShaper_ground->roofplane_ids.size());
+    logger.debug("Completed AlphaShaper (ground), found {} rings, {} labels",
+                 AlphaShaper_ground->alpha_rings.size(),
+                 AlphaShaper_ground->roofplane_ids.size());
 #ifdef RF_USE_RERUN
     rec.log("world/alpha_rings_ground",
             rerun::LineStrips3D(AlphaShaper_ground->alpha_rings)
@@ -237,7 +237,7 @@ void reconstruct_building(BuildingObject& building,
     LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
                          PlaneDetector->pts_per_roofplane,
                          {.dist_thres = cfg->line_detect_epsilon});
-    logger.info("Completed LineDetector");
+    logger.debug("Completed LineDetector");
 #ifdef RF_USE_RERUN
     rec.log("world/boundary_lines",
             rerun::LineStrips3D(LineDetector->edge_segments));
@@ -246,7 +246,7 @@ void reconstruct_building(BuildingObject& building,
     auto PlaneIntersector = roofer::reconstruction::createPlaneIntersector();
     PlaneIntersector->compute(PlaneDetector->pts_per_roofplane,
                               PlaneDetector->plane_adjacencies);
-    logger.info("Completed PlaneIntersector");
+    logger.debug("Completed PlaneIntersector");
 #ifdef RF_USE_RERUN
     rec.log("world/intersection_lines",
             rerun::LineStrips3D(PlaneIntersector->segments));
@@ -257,7 +257,7 @@ void reconstruct_building(BuildingObject& building,
                              PlaneIntersector->segments,
                              {.dist_threshold = cfg->thres_reg_line_dist,
                               .extension = cfg->thres_reg_line_ext});
-    logger.info("Completed LineRegulariser");
+    logger.debug("Completed LineRegulariser");
 #ifdef RF_USE_RERUN
     rec.log("world/regularised_lines",
             rerun::LineStrips3D(LineRegulariser->regularised_edges));
@@ -267,7 +267,7 @@ void reconstruct_building(BuildingObject& building,
     SegmentRasteriser->compute(
         AlphaShaper->alpha_triangles, AlphaShaper_ground->alpha_triangles,
         {.use_ground = !points_ground.empty() && cfg->clip_ground});
-    logger.info("Completed SegmentRasteriser");
+    logger.debug("Completed SegmentRasteriser");
 
 #ifdef RF_USE_RERUN
     auto heightfield_copy = SegmentRasteriser->heightfield;
@@ -282,8 +282,8 @@ void reconstruct_building(BuildingObject& building,
         roofer::reconstruction::createArrangementBuilder();
     ArrangementBuilder->compute(arrangement, building.footprint,
                                 LineRegulariser->exact_regularised_edges);
-    logger.info("Completed ArrangementBuilder");
-    logger.info("Roof partition has {} faces", arrangement.number_of_faces());
+    logger.debug("Completed ArrangementBuilder");
+    logger.debug("Roof partition has {} faces", arrangement.number_of_faces());
 #ifdef RF_USE_RERUN
     rec.log(
         "world/initial_partition",
@@ -301,13 +301,13 @@ void reconstruct_building(BuildingObject& building,
             .smoothness_multiplier = float(1. - cfg->complexity_factor),
             .use_ground = !points_ground.empty() && cfg->clip_ground,
         });
-    logger.info("Completed ArrangementOptimiser");
+    logger.debug("Completed ArrangementOptimiser");
     // rec.log("world/optimised_partition", rerun::LineStrips3D(
     // roofer::reconstruction::arr2polygons(arrangement) ));
 
     // LoDs
     // attributes to be filled during reconstruction
-    logger.info("LoD={}", cfg->lod);
+    logger.debug("LoD={}", cfg->lod);
     if (cfg->lod == 0 || cfg->lod == 12) {
 #ifdef RF_USE_VAL3DITY
       auto& attr_val3dity_lod12 =
