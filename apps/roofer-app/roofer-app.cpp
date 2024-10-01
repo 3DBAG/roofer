@@ -514,7 +514,7 @@ int main(int argc, const char* argv[]) {
 
   roofer_cfg.output_all = cmdl[{"-a", "--all"}];
   roofer_cfg.write_rasters = cmdl[{"-r", "--rasters"}];
-  // roofer_cfg.write_metadata = cmdl[{"-m", "--metadata"}];
+  roofer_cfg.write_crop_outputs = cmdl[{"-C", "--write-crop-outputs"}];
   roofer_cfg.write_index = cmdl[{"-i", "--index"}];
 
   if (cmdl[{"-h", "--help"}]) {
@@ -526,6 +526,8 @@ int main(int argc, const char* argv[]) {
     return EXIT_SUCCESS;
   }
   if (cmdl[{"-v", "--verbose"}]) {
+    logger.set_level(roofer::logger::LogLevel::info);
+  } else if (cmdl[{"--debug"}]) {
     logger.set_level(roofer::logger::LogLevel::debug);
   } else {
     logger.set_level(roofer::logger::LogLevel::warning);

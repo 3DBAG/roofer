@@ -122,8 +122,7 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.pt_densities.resize(N_fp);
     ipc.is_glass_roof.reserve(N_fp);
     ipc.lod11_forced.reserve(N_fp);
-    if (cfg.write_crop_outputs && cfg.write_index)
-      ipc.nodata_circles.resize(N_fp);
+    if (cfg.write_index) ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
     roofer::arr2f nodata_c;
@@ -168,13 +167,10 @@ void crop_tile(const roofer::TBox<double>& tile,
               ipc.path, e.what());
           ipc.nodata_radii[i] = 0;
         }
-        // if (cfg.write_crop_outputs && cfg.write_index) {
-        //   roofer::draw_circle(
-        //     ipc.nodata_circles[i],
-        //     ipc.nodata_radii[i],
-        //     nodata_c
-        //   );
-        // }
+        if (cfg.write_index) {
+          roofer::misc::draw_circle(ipc.nodata_circles[i], ipc.nodata_radii[i],
+                                    nodata_c);
+        }
       }
     }
   }
@@ -431,37 +427,35 @@ void crop_tile(const roofer::TBox<double>& tile,
     }
   }
 
-  if (cfg.write_crop_outputs) {
-    // Write index output
-    if (cfg.write_index) {
-      std::string index_file =
-          fmt::format(fmt::runtime(cfg.index_file_spec),
-                      fmt::arg("path", cfg.crop_output_path));
-      vector_writer->writePolygons(index_file, srs, footprints, attributes);
+  // Write index output
+  if (cfg.write_index) {
+    std::string index_file =
+        fmt::format(fmt::runtime(cfg.index_file_spec),
+                    fmt::arg("path", cfg.crop_output_path));
+    vector_writer->writePolygons(index_file, srs, footprints, attributes);
 
-      // write nodata circles
-      // for (auto& ipc : input_pointclouds) {
-      //   VectorWriter->writePolygons(index_file+"_"+ipc.name+"_nodatacircle.gpkg",
-      //   ipc.nodata_circles, attributes);
-      // }
+    // write nodata circles
+    for (auto& ipc : input_pointclouds) {
+      vector_writer->writePolygons(
+          index_file + "_" + ipc.name + "_nodatacircle.gpkg", srs,
+          ipc.nodata_circles, attributes);
     }
+  }
 
-    // write the txt containing paths to all jsonl features to be written by
-    // reconstruct
-    {
-      for (auto& [name, pathsvec] : jsonl_paths) {
-        if (pathsvec.size() != 0) {
-          std::string jsonl_list_file =
-              fmt::format(fmt::runtime(cfg.jsonl_list_file_spec),
-                          fmt::arg("path", cfg.crop_output_path),
-                          fmt::arg("pc_name", name));
-          std::ofstream ofs;
-          ofs.open(jsonl_list_file);
-          for (auto& jsonl_p : pathsvec) {
-            ofs << jsonl_p << "\n";
-          }
-          ofs.close();
+  // write the txt containing paths to all jsonl features to be written by
+  // reconstruct
+  if (cfg.write_crop_outputs) {
+    for (auto& [name, pathsvec] : jsonl_paths) {
+      if (pathsvec.size() != 0) {
+        std::string jsonl_list_file = fmt::format(
+            fmt::runtime(cfg.jsonl_list_file_spec),
+            fmt::arg("path", cfg.crop_output_path), fmt::arg("pc_name", name));
+        std::ofstream ofs;
+        ofs.open(jsonl_list_file);
+        for (auto& jsonl_p : pathsvec) {
+          ofs << jsonl_p << "\n";
         }
+        ofs.close();
       }
     }
   }
