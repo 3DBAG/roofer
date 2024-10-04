@@ -105,7 +105,6 @@ namespace roofer::reconstruction {
           elevation(elevation),
           plane(plane) {
       CGAL_precondition(arr.is_empty());
-      auto it = arr.unbounded_faces_begin();
       for (auto uf = arr.unbounded_faces_begin();
            uf != arr.unbounded_faces_end(); ++uf) {
         uf->data().is_finite = false;
