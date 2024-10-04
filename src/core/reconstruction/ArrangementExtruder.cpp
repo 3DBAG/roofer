@@ -326,7 +326,7 @@ namespace roofer::reconstruction {
             auto l_b = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1b),
                                      EPECK::Point_3(p2.x(), p2.y(), h2b));
             auto result = CGAL::intersection(l_a, l_b);
-            auto px = boost::get<typename EPECK::Point_3>(&*result);
+            auto px = std::get_if<typename EPECK::Point_3>(&*result);
 
             // TODO: check if distance from px to p1 and p2 is longer than
             // snap_tolerance?
@@ -371,7 +371,7 @@ namespace roofer::reconstruction {
             auto l_b = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1b),
                                      EPECK::Point_3(p2.x(), p2.y(), h2b));
             auto result = CGAL::intersection(l_a, l_b);
-            auto px = boost::get<typename EPECK::Point_3>(&*result);
+            auto px = std::get_if<typename EPECK::Point_3>(&*result);
 
             // TODO: check if distance from px to p1 and p2 is longer than
             // snap_tolerance?

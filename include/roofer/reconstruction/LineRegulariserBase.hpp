@@ -255,7 +255,7 @@ namespace roofer::linereg {
     Segment_2 s(a_2d.target(), b_2d.source());
     auto result = CGAL::intersection(l_a, l_b);
     if (result) {
-      if (auto p = boost::get<Point_2>(&*result)) {
+      if (auto p = std::get_if<Point_2>(&*result)) {
         if (CGAL::squared_distance(*p, s) < snap_threshold) {
           double z = -plane.a() / plane.c() * p->x() -
                      plane.b() / plane.c() * p->y() - plane.d() / plane.c();
