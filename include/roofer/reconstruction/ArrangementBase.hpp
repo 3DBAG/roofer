@@ -105,7 +105,12 @@ namespace roofer::reconstruction {
           elevation(elevation),
           plane(plane) {
       CGAL_precondition(arr.is_empty());
-      arr.unbounded_face()->data().is_finite = false;
+      auto it = arr.unbounded_faces_begin();
+      for (auto uf = arr.unbounded_faces_begin();
+           uf != arr.unbounded_faces_end(); ++uf) {
+        uf->data().is_finite = false;
+      }
+      // arr.unbounded_face()->data().is_finite = false;
       n_faces++;
     };
     virtual void after_split_face(Face_handle old_face, Face_handle new_face,
@@ -128,7 +133,10 @@ namespace roofer::reconstruction {
     Face_split_observer(Arrangement_2& arr)
         : CGAL::Arr_observer<Arrangement_2>(arr), n_faces(0) {
       CGAL_precondition(arr.is_empty());
-      arr.unbounded_face()->data().in_footprint = false;
+      for (auto uf = arr.unbounded_faces_begin();
+           uf != arr.unbounded_faces_end(); ++uf) {
+        uf->data().in_footprint = false;
+      }
       n_faces++;
     }
     virtual void after_split_face(Face_handle old_face, Face_handle new_face,
