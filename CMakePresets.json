@@ -77,17 +77,17 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-full-test"
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS configure",
-      "inherits": "vcpkg-full-test"
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows configure",
-      "inherits": "vcpkg-full-test",
+      "inherits": "vcpkg-minimal-test",
       "cacheVariables": {
         "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
