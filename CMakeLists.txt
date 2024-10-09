@@ -47,7 +47,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 find_package(fmt REQUIRED)
 find_package(
-  CGAL 5.4 QUIET
+  CGAL 6.0 QUIET
   COMPONENTS Core
   REQUIRED)
 
