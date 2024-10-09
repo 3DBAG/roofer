@@ -28,7 +28,6 @@ target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
 
 set(MISC_LINK_LIBS
     CGAL::CGAL
-    CGAL::CGAL_Core # Eigen3::Eigen
     GEOS::geos_c
 )
 if(RF_USE_VAL3DITY)

@@ -38,7 +38,10 @@
     }
   },
   "dependencies": [
-    "cgal",
+    {
+      "name": "cgal",
+      "version>=": "6.0"
+    },
     "eigen3",
     "fmt"
   ],
@@ -48,5 +51,5 @@
       "version": "3.11.3"
     }
   ],
-  "builtin-baseline": "9224b3bbd8df24999d85720b1d005dd6f969ade0"
+  "builtin-baseline": "0104b799f55b33a4e1b97ecc3a975da664540b71"
 }
