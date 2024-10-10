@@ -2,7 +2,6 @@ option(RF_TEST_INSTALL "Enable optional tests" OFF)
 
 find_package(Catch2 3 REQUIRED)
 include(FetchContent)
-enable_testing()
 
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
