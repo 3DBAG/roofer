@@ -87,11 +87,20 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: "Install vcpkg"
+        shell: bash
         run: |
           git clone https://github.com/microsoft/vcpkg.git
-          cd vcpkg && ./bootstrap-vcpkg.sh
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
           echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+
+      - if: runner.os == 'windows-2022'
+        name: "Bootstrap vcpkg"
+        run: |
+          vcpkg/bootstrap-vcpkg.bat
+      - if: runner.os != 'windows-2022'
+        name: "Bootstrap vcpkg"
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Update vcpkg baseline
         run: vcpkg x-update-baseline
