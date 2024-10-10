@@ -97,14 +97,12 @@ jobs:
         name: "Bootstrap vcpkg"
         run: |
           vcpkg/bootstrap-vcpkg.bat
+          vcpkg/vcpkg.exe x-update-baseline
       - if: runner.os != 'windows-2022'
         name: "Bootstrap vcpkg"
         run: |
           ./vcpkg/bootstrap-vcpkg.sh
-
-      - name: Update vcpkg baseline
-        shell: bash
-        run: ./vcpkg/vcpkg x-update-baseline
+          ./vcpkg/vcpkg x-update-baseline
 
       - if: runner.os == 'macOS'
         name: "Install additional macOS build tools"
