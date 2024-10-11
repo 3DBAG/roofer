@@ -90,6 +90,7 @@ endif()
 set(ROOFER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(src)
 if(RF_BUILD_TESTING)
+  enable_testing()
   add_subdirectory(tests)
 endif()
 
