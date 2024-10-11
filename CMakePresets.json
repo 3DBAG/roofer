@@ -7,7 +7,7 @@
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "RF_USE_VAL3DITY": "ON",
+        "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "ON",
         "RF_BUILD_TESTING": "ON",

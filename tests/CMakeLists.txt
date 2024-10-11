@@ -8,7 +8,7 @@ set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 if(DEFINED VCPKG_TOOLCHAIN)
   set(TEST_ENVIRONMENT
-      "GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
+      "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
   )
 endif()
 
