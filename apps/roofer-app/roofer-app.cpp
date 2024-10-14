@@ -939,6 +939,35 @@ int main(int argc, const char* argv[]) {
         for (auto& building : building_tile.buildings) {
           attr_time.push_back(building.reconstruction_time);
         }
+// create val3dity attribute
+#if RF_USE_VAL3DITY
+        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
+          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod12");
+        }
+        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
+          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod13");
+        }
+        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
+          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod22");
+        }
+        auto b3_val3dity_lod12 =
+            building_tile.attributes.get_if<std::string>("b3_val3dity_lod12");
+        auto b3_val3dity_lod13 =
+            building_tile.attributes.get_if<std::string>("b3_val3dity_lod13");
+        auto b3_val3dity_lod22 =
+            building_tile.attributes.get_if<std::string>("b3_val3dity_lod22");
+        for (auto& building : building_tile.buildings) {
+          if (b3_val3dity_lod12) {
+            b3_val3dity_lod12->push_back(building.val3dity_lod12);
+          }
+          if (b3_val3dity_lod13) {
+            b3_val3dity_lod13->push_back(building.val3dity_lod13);
+          }
+          if (b3_val3dity_lod22) {
+            b3_val3dity_lod22->push_back(building.val3dity_lod22);
+          }
+        }
+#endif
         // output reconstructed buildings
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
