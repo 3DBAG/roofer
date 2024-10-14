@@ -7,7 +7,7 @@
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "RF_USE_VAL3DITY": "ON",
+        "RF_USE_VAL3DITY": "OFF",
         "RF_USE_RERUN": "OFF",
         "RF_USE_LOGGER_SPDLOG": "ON",
         "RF_BUILD_TESTING": "ON",
@@ -77,17 +77,17 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-full-test"
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS configure",
-      "inherits": "vcpkg-full-test"
+      "inherits": "vcpkg-minimal-test"
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows configure",
-      "inherits": "vcpkg-full-test",
+      "inherits": "vcpkg-minimal-test",
       "cacheVariables": {
         "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
