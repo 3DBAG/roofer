@@ -67,10 +67,6 @@ cpmaddpackage(
 )
 set(GIT_IGNORE_UNTRACKED TRUE)
 
-if(RF_USE_VAL3DITY)
-  cpmaddpackage("gh:Ylannl/val3dity#gfp")
-endif()
-
 if(RF_USE_RERUN)
   cpmaddpackage(
     NAME rerun_sdk URL
