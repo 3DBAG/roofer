@@ -16,6 +16,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   target_compile_definitions("roofer" PUBLIC "IS_WINDOWS")
 endif()
 
+if(RF_USE_VAL3DITY)
+  target_compile_definitions("roofer" PRIVATE RF_USE_VAL3DITY)
+endif()
+
 install(
   TARGETS "roofer"
   ARCHIVE DESTINATION lib

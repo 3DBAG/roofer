@@ -31,6 +31,11 @@ set(MISC_LINK_LIBS
     GEOS::geos_c
 )
 if(RF_USE_VAL3DITY)
+    cpmaddpackage(
+        NAME val3dity
+        GITHUB_REPOSITORY "tudelft3d/val3dity"
+        GIT_TAG "main"
+        OPTIONS "VAL3DITY_LIBRARY ON")
     list(APPEND MISC_LINK_LIBS val3dity)
 endif()
 

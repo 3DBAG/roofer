@@ -50,6 +50,9 @@ namespace fs = std::filesystem;
 #include <roofer/misc/PointcloudRasteriser.hpp>
 #include <roofer/misc/Vector2DOps.hpp>
 #include <roofer/misc/select_pointcloud.hpp>
+#if RF_USE_VAL3DITY
+#include <roofer/misc/Val3dator.hpp>
+#endif
 
 // reconstruct
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
@@ -136,6 +139,9 @@ struct BuildingObject {
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
+  std::string val3dity_lod12;
+  std::string val3dity_lod13;
+  std::string val3dity_lod22;
   // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 

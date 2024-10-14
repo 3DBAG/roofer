@@ -41,8 +41,8 @@ namespace roofer::misc {
     virtual ~Val3datorInterface() = default;
     virtual void compute(const std::unordered_map<int, Mesh>& mesh,
                          Val3datorConfig config = Val3datorConfig()) = 0;
-    virtual void compute(const TriangleCollection& triangles,
-                         Val3datorConfig config = Val3datorConfig()) = 0;
+    // virtual void compute(const TriangleCollection& triangles,
+    //                      Val3datorConfig config = Val3datorConfig()) = 0;
   };
 
   std::unique_ptr<Val3datorInterface> createVal3dator();

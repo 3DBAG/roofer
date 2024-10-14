@@ -24,7 +24,7 @@ enum LOD { LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 std::unordered_map<int, roofer::Mesh> extrude(
     roofer::Arrangement_2 arrangement, const float& floor_elevation,
 #ifdef RF_USE_VAL3DITY
-    std::vector<std::optional<std::string> >& attr_val3dity,
+    std::string& attr_val3dity,
 #endif
     float& rmse,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
@@ -102,9 +102,9 @@ std::unordered_map<int, roofer::Mesh> extrude(
 #endif
 
 #ifdef RF_USE_VAL3DITY
-  auto Val3dator = roofer::reconstruction::createVal3dator();
+  auto Val3dator = roofer::misc::createVal3dator();
   Val3dator->compute(ArrangementExtruder->multisolid);
-  attr_val3dity.push_back(Val3dator->errors.front());
+  attr_val3dity = Val3dator->errors.front();
   logger.debug("Completed Val3dator. Errors={}", Val3dator->errors.front());
 #endif
 
@@ -309,42 +309,30 @@ void reconstruct_building(BuildingObject& building,
     // attributes to be filled during reconstruction
     logger.debug("LoD={}", cfg->lod);
     if (cfg->lod == 0 || cfg->lod == 12) {
-#ifdef RF_USE_VAL3DITY
-      auto& attr_val3dity_lod12 =
-          attributes.insert_vec<std::string>("b3_val3dity_lod12");
-#endif
       building.multisolids_lod12 =
           extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                  attr_val3dity_lod12,
+                  building.val3dity_lod12,
 #endif
                   building.rmse_lod12, SegmentRasteriser.get(),
                   PlaneDetector.get(), LOD12, cfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 13) {
-#ifdef RF_USE_VAL3DITY
-      auto& attr_val3dity_lod13 =
-          attributes.insert_vec<std::string>("b3_val3dity_lod13");
-#endif
       building.multisolids_lod13 =
           extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                  attr_val3dity_lod13,
+                  building.val3dity_lod13,
 #endif
                   building.rmse_lod13, SegmentRasteriser.get(),
                   PlaneDetector.get(), LOD13, cfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 22) {
-#ifdef RF_USE_VAL3DITY
-      auto& attr_val3dity_lod22 =
-          attributes.insert_vec<std::string>("b3_val3dity_lod22");
-#endif
       building.multisolids_lod22 =
           extrude(arrangement, building.h_ground,
 #ifdef RF_USE_VAL3DITY
-                  attr_val3dity_lod22,
+                  building.val3dity_lod22,
 #endif
                   building.rmse_lod22, SegmentRasteriser.get(),
                   PlaneDetector.get(), LOD22, cfg);
