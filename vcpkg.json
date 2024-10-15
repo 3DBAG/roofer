@@ -28,6 +28,11 @@
         "geos",
         "lastools",
         {
+          "name": "mimalloc",
+          "features": [
+          ]
+        },
+        {
           "name": "gdal",
           "features": [
             "recommended-features",
