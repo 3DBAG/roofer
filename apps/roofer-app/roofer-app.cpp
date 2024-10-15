@@ -79,7 +79,12 @@ namespace fs = std::filesystem;
 #include "git.h"
 #include "toml.hpp"
 
+#if defined(IS_LINUX) || defined(IS_MACOS)
+#include <new>
 #include <mimalloc-override.h>
+#else
+#undef RF_ENABLE_HEAP_TRACING
+#endif
 
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
@@ -443,10 +448,10 @@ namespace {
  * https://github.com/microsoft/mimalloc/blob/dev/include/mimalloc-new-delete.h
  * and modified to work with the roofer trace feature for heap memory usage.
  */
-
+#if defined(IS_LINUX) || defined(IS_MACOS)
 #if defined(_MSC_VER) && defined(_Ret_notnull_) && \
     defined(_Post_writable_byte_size_)
-// stay consistent with VCRT definitions
+   // stay consistent with VCRT definitions
 #define mi_decl_new(n) \
   mi_decl_nodiscard mi_decl_restrict _Ret_notnull_ _Post_writable_byte_size_(n)
 #define mi_decl_new_nothrow(n)                                                 \
@@ -563,7 +568,7 @@ void* operator new[](std::size_t n, std::align_val_t al,
   return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
 }
 #endif
-
+#endif
 /*
  * Author:  David Robert Nadeau
  * Site:    http://NadeauSoftware.com/
