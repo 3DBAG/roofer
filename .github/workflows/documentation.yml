@@ -38,6 +38,14 @@ jobs:
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           echo "pybind11_ROOT=$(python -m pybind11 --cmakedir)" >> $GITHUB_ENV
 
+      - name: "Install vcpkg"
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+
       - uses: actions/github-script@v7
         with:
           script: |
