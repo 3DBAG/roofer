@@ -137,7 +137,7 @@ namespace roofer::io {
 
       OGRwkbGeometryType wkbType;
       // if (geom_term.is_connected_type(typeid(LinearRing))) {
-      wkbType = wkbPolygon;
+      wkbType = wkbPolygon25D;
       // } else if (geom_term.is_connected_type(typeid(LineString))) {
       //   wkbType = wkbLineString25D;
       // } else if (geom_term.is_connected_type(typeid(Mesh))) {
