@@ -10,6 +10,7 @@ option(RF_BUILD_APPS "Build applications in addition to library" ON)
 option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
+option(RF_ENABLE_HEAP_TRACING "Enable heap allocation overloads" OFF)
 
 # Enable the vcpkg features that are required by the options
 if(RF_USE_LOGGER_SPDLOG)

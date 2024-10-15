@@ -79,6 +79,8 @@ namespace fs = std::filesystem;
 #include "git.h"
 #include "toml.hpp"
 
+#include <mimalloc-override.h>
+
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
 struct InputPointcloud {
@@ -421,6 +423,7 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
+#ifdef RF_ENABLE_HEAP_TRACING
 // Overrides for heap allocation counting
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
 namespace {
@@ -433,15 +436,133 @@ namespace {
   };
   HeapAllocationCounter heap_allocation_counter;
 }  // namespace
+#endif
 
-void* operator new(size_t size) {
-  heap_allocation_counter.total_allocated += size;
-  return malloc(size);
+/*
+ * Code snippet below is taken from
+ * https://github.com/microsoft/mimalloc/blob/dev/include/mimalloc-new-delete.h
+ * and modified to work with the roofer trace feature for heap memory usage.
+ */
+
+#if defined(_MSC_VER) && defined(_Ret_notnull_) && \
+    defined(_Post_writable_byte_size_)
+// stay consistent with VCRT definitions
+#define mi_decl_new(n) \
+  mi_decl_nodiscard mi_decl_restrict _Ret_notnull_ _Post_writable_byte_size_(n)
+#define mi_decl_new_nothrow(n)                                                 \
+  mi_decl_nodiscard mi_decl_restrict _Ret_maybenull_ _Success_(return != NULL) \
+      _Post_writable_byte_size_(n)
+#else
+#define mi_decl_new(n) mi_decl_nodiscard mi_decl_restrict
+#define mi_decl_new_nothrow(n) mi_decl_nodiscard mi_decl_restrict
+#endif
+
+void operator delete(void* p) noexcept { mi_free(p); };
+void operator delete[](void* p) noexcept { mi_free(p); };
+
+void operator delete(void* p, const std::nothrow_t&) noexcept { mi_free(p); }
+void operator delete[](void* p, const std::nothrow_t&) noexcept { mi_free(p); }
+
+mi_decl_new(n) void* operator new(std::size_t n) noexcept(false) {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new(n);
 }
-void operator delete(void* memory, size_t size) noexcept {
-  heap_allocation_counter.total_freed += size;
-  free(memory);
+mi_decl_new(n) void* operator new[](std::size_t n) noexcept(false) {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new(n);
+}
+
+mi_decl_new_nothrow(n) void* operator new(std::size_t n,
+                                          const std::nothrow_t& tag) noexcept {
+  (void)(tag);
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_nothrow(n);
+}
+mi_decl_new_nothrow(n) void* operator new[](
+    std::size_t n, const std::nothrow_t& tag) noexcept {
+  (void)(tag);
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_nothrow(n);
+}
+
+#if (__cplusplus >= 201402L || _MSC_VER >= 1916)
+void operator delete(void* p, std::size_t n) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_freed += n;
+#endif
+  mi_free_size(p, n);
 };
+void operator delete[](void* p, std::size_t n) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_freed += n;
+#endif
+  mi_free_size(p, n);
+};
+#endif
+
+#if (__cplusplus > 201402L || defined(__cpp_aligned_new))
+void operator delete(void* p, std::align_val_t al) noexcept {
+  mi_free_aligned(p, static_cast<size_t>(al));
+}
+void operator delete[](void* p, std::align_val_t al) noexcept {
+  mi_free_aligned(p, static_cast<size_t>(al));
+}
+void operator delete(void* p, std::size_t n, std::align_val_t al) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_freed += n;
+#endif
+  mi_free_size_aligned(p, n, static_cast<size_t>(al));
+};
+void operator delete[](void* p, std::size_t n, std::align_val_t al) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_freed += n;
+#endif
+  mi_free_size_aligned(p, n, static_cast<size_t>(al));
+};
+void operator delete(void* p, std::align_val_t al,
+                     const std::nothrow_t&) noexcept {
+  mi_free_aligned(p, static_cast<size_t>(al));
+}
+void operator delete[](void* p, std::align_val_t al,
+                       const std::nothrow_t&) noexcept {
+  mi_free_aligned(p, static_cast<size_t>(al));
+}
+
+void* operator new(std::size_t n, std::align_val_t al) noexcept(false) {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_aligned(n, static_cast<size_t>(al));
+}
+void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_aligned(n, static_cast<size_t>(al));
+}
+void* operator new(std::size_t n, std::align_val_t al,
+                   const std::nothrow_t&) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
+}
+void* operator new[](std::size_t n, std::align_val_t al,
+                     const std::nothrow_t&) noexcept {
+#ifdef RF_ENABLE_HEAP_TRACING
+  heap_allocation_counter.total_allocated += n;
+#endif
+  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
+}
+#endif
 
 /*
  * Author:  David Robert Nadeau
@@ -688,7 +809,9 @@ int main(int argc, const char* argv[]) {
     tracer_thread.emplace([&] {
       while (crop_running.load() || reconstruction_running.load() ||
              serialization_running.load()) {
+#ifdef RF_ENABLE_HEAP_TRACING
         logger.trace("heap", heap_allocation_counter.current_usage());
+#endif
         logger.trace("rss", GetCurrentRSS());
         logger.trace("crop", cropped_buildings_cnt);
         logger.trace("reconstruct", reconstructed_buildings_cnt);
@@ -700,9 +823,11 @@ int main(int argc, const char* argv[]) {
             reconstructor_pool.get_tasks_queued());
         std::this_thread::sleep_for(trace_interval);
       }
-      // We log once more after all threads have finished, to measure the finaly
-      // memory use
+// We log once more after all threads have finished, to measure the finaly
+// memory use
+#ifdef RF_ENABLE_HEAP_TRACING
       logger.trace("heap", heap_allocation_counter.current_usage());
+#endif
       logger.trace("rss", GetCurrentRSS());
       logger.trace("crop", cropped_buildings_cnt);
       logger.trace("reconstruct", reconstructed_buildings_cnt);
