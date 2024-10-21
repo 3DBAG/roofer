@@ -1,6 +1,8 @@
 set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/roofer-app.cpp")
 
-find_package(mimalloc CONFIG REQUIRED)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  find_package(mimalloc CONFIG REQUIRED)
+endif()
 
 add_executable("roofer" ${APP_SOURCES})
 set_target_properties("roofer" PROPERTIES CXX_STANDARD 20)
