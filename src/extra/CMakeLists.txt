@@ -1,3 +1,5 @@
+find_package(nlohmann_json CONFIG REQUIRED)
+
 add_subdirectory(io)
 add_subdirectory(misc)
 
