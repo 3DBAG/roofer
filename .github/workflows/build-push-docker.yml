@@ -40,4 +40,4 @@ jobs:
           cache-from: type=registry,ref=3dgi/roofer:buildcache
           cache-to: type=registry,ref=3dgi/roofer:buildcache,mode=max
       - name: Test image
-        run: docker run --rm -v $(pwd):/tmp -w /tmp 3dgi/roofer:${{ env.DOCKER_TAG }}roofer --config /tmp/config/roofer-wippolder.toml --verbose
+        run: docker run --rm -v $(pwd):/tmp -w /tmp 3dgi/roofer:${{ env.DOCKER_TAG }} roofer --config /tmp/config/roofer-wippolder.toml --verbose
