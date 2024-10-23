@@ -35,26 +35,27 @@ namespace roofer::io {
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();
 
-      //logger.debug("LAS Version: {}.{}", lasheader->version_major,
-      //             lasheader->version_minor);
-      //logger.debug("Point Format: {}", lasheader->point_data_format);
-      //logger.debug("Number of Points: {}", lasheader->number_of_point_records);
-      //logger.debug("Generating Software: {}", lasheader->generating_software);
-      //logger.debug("Number of VLRs: {}",
-      //             lasheader->number_of_variable_length_records);
-      //logger.debug("Number of EVLRs: {}",
-      //             lasheader->number_of_extended_variable_length_records);
+      // logger.debug("LAS Version: {}.{}", lasheader->version_major,
+      //              lasheader->version_minor);
+      // logger.debug("Point Format: {}", lasheader->point_data_format);
+      // logger.debug("Number of Points: {}",
+      // lasheader->number_of_point_records); logger.debug("Generating Software:
+      // {}", lasheader->generating_software); logger.debug("Number of VLRs:
+      // {}",
+      //              lasheader->number_of_variable_length_records);
+      // logger.debug("Number of EVLRs: {}",
+      //              lasheader->number_of_extended_variable_length_records);
       for (int i = 0; i < (int)lasheader->number_of_variable_length_records;
            i++) {
-        //logger.debug("Found VLR with Record ID: {}",
-        //             lasheader->vlrs[i].record_id);
+        // logger.debug("Found VLR with Record ID: {}",
+        //              lasheader->vlrs[i].record_id);
         if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
         {
-          //logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
+          // logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
         } else if (lasheader->vlrs[i].record_id ==
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
-          //logger.debug("Found: OGC COORDINATE SYSTEM WKT");
+          // logger.debug("Found: OGC COORDINATE SYSTEM WKT");
           wkt = (char*)(lasheader->vlrs[i].data);
         } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
         {
@@ -73,12 +74,12 @@ namespace roofer::io {
           } else if (lasheader->evlrs[i].record_id ==
                      2112)  // OGC COORDINATE SYSTEM WKT
           {
-            //logger.debug("Found: OGC COORDINATE SYSTEM WKT");
+            // logger.debug("Found: OGC COORDINATE SYSTEM WKT");
             wkt = (char*)(lasheader->evlrs[i].data);
           }
         }
       }
-      //logger.debug("LAS Wkt: {}", wkt);
+      // logger.debug("LAS Wkt: {}", wkt);
     }
 
     LASreader* lasreader;

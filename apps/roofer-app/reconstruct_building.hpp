@@ -95,7 +95,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
                                  MeshTriangulator->ring_ids);
   rmse = PC2MeshDistCalculator->rms_error;
   // logger.debug("Completed PC2MeshDistCalculator. RMSE={}",
-              //  PC2MeshDistCalculator->rms_error);
+  //  PC2MeshDistCalculator->rms_error);
 #ifdef RF_USE_RERUN
 // rec.log(worldname+"PC2MeshDistCalculator",
 // rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
@@ -128,7 +128,7 @@ void reconstruct_building(BuildingObject& building,
     }
   }
   // logger.debug("{} ground points and {} roof points", points_ground.size(),
-              //  points_roof.size());
+  //  points_roof.size());
 
 #ifdef RF_USE_RERUN
   // Create a new `RecordingStream` which sends data over TCP to the viewer
@@ -161,7 +161,7 @@ void reconstruct_building(BuildingObject& building,
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
       });
   // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
-              //  PlaneDetector->pts_per_roofplane.size());
+  //  PlaneDetector->pts_per_roofplane.size());
 
   building.roof_type = PlaneDetector->roof_type;
   building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
@@ -170,7 +170,7 @@ void reconstruct_building(BuildingObject& building,
   building.roof_elevation_max = PlaneDetector->roof_elevation_max;
 
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
-                                PlaneDetector->roof_type == "no planes";
+                                 PlaneDetector->roof_type == "no planes";
   if (pointcloud_insufficient) {
     // building.was_skipped = true;
     // TODO: return building status pointcloud_insufficient
@@ -182,7 +182,7 @@ void reconstruct_building(BuildingObject& building,
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
   PlaneDetector_ground->detect(points_ground);
   // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
-              //  PlaneDetector_ground->pts_per_roofplane.size());
+  //  PlaneDetector_ground->pts_per_roofplane.size());
 
 #ifdef RF_USE_RERUN
   rec.log("world/segmented_points",
@@ -216,8 +216,8 @@ void reconstruct_building(BuildingObject& building,
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
                          {.thres_alpha = cfg->thres_alpha});
     // logger.debug("Completed AlphaShaper (roof), found {} rings, {} labels",
-                //  AlphaShaper->alpha_rings.size(),
-                //  AlphaShaper->roofplane_ids.size());
+    //  AlphaShaper->alpha_rings.size(),
+    //  AlphaShaper->roofplane_ids.size());
 #ifdef RF_USE_RERUN
     rec.log("world/alpha_rings_roof",
             rerun::LineStrips3D(AlphaShaper->alpha_rings)
@@ -227,8 +227,8 @@ void reconstruct_building(BuildingObject& building,
     auto AlphaShaper_ground = roofer::reconstruction::createAlphaShaper();
     AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
     // logger.debug("Completed AlphaShaper (ground), found {} rings, {} labels",
-                //  AlphaShaper_ground->alpha_rings.size(),
-                //  AlphaShaper_ground->roofplane_ids.size());
+    //  AlphaShaper_ground->alpha_rings.size(),
+    //  AlphaShaper_ground->roofplane_ids.size());
 #ifdef RF_USE_RERUN
     rec.log("world/alpha_rings_ground",
             rerun::LineStrips3D(AlphaShaper_ground->alpha_rings)
@@ -285,7 +285,8 @@ void reconstruct_building(BuildingObject& building,
     ArrangementBuilder->compute(arrangement, building.footprint,
                                 LineRegulariser->exact_regularised_edges);
     // logger.debug("Completed ArrangementBuilder");
-    // logger.debug("Roof partition has {} faces", arrangement.number_of_faces());
+    // logger.debug("Roof partition has {} faces",
+    // arrangement.number_of_faces());
 #ifdef RF_USE_RERUN
     rec.log(
         "world/initial_partition",
