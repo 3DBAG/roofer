@@ -718,6 +718,8 @@ int main(int argc, const char* argv[]) {
       auto& building_tile = initial_tiles.front();
       try {
         // crop each tile
+        logger.debug("[cropper] Cropping tile {}", building_tile.id);
+        logger.debug("[cropper] Tile extent: {} {}, {} {}", building_tile.extent.pmin[0], building_tile.extent.pmin[1], building_tile.extent.pmax[0], building_tile.extent.pmax[1]);
         crop_tile(building_tile.extent,  // tile extent
                   input_pointclouds,     // input pointclouds
                   building_tile,         // output building data
@@ -804,8 +806,13 @@ int main(int argc, const char* argv[]) {
           //  lvalue of type const BuildingObject".
           BuildingObjectRef building_object_ref = bref;
           try {
+            auto& logger = roofer::logger::Logger::get_logger();
             auto start = std::chrono::high_resolution_clock::now();
+            logger.debug("[reconstructor] starting reconstruction for: {}",
+                           building_object_ref.building.jsonl_path.string());
             reconstruct_building(building_object_ref.building, &roofer_cfg.rec);
+            logger.debug("[reconstructor] finished reconstruction for: {}",
+                           building_object_ref.building.jsonl_path.string());
             // TODO: These two seem to be redundant
             building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
             building_object_ref.building.reconstruction_success = true;
