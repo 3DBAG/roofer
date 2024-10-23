@@ -33,8 +33,8 @@ set(MISC_LINK_LIBS
 if(RF_USE_VAL3DITY)
     cpmaddpackage(
         NAME val3dity
-        GITHUB_REPOSITORY "tudelft3d/val3dity"
-        GIT_TAG "main"
+        GITHUB_REPOSITORY "ylannl/val3dity"
+        GIT_TAG "master"
         OPTIONS "VAL3DITY_LIBRARY ON"
                 "VAL3DITY_USE_INTERNAL_DEPS OFF")
     list(APPEND MISC_LINK_LIBS val3dity)
