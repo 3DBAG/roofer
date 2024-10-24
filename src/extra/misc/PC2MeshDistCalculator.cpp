@@ -19,7 +19,7 @@
 // Author(s):
 // Ravi Peters
 
-#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_traits_3.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Search_traits_3.h>
@@ -179,8 +179,8 @@ namespace roofer::misc {
 
       // do not run if one of the inputs is empty
       if (points.size() == 0 || trin.size() == 0) {
-        std::cout << "Either input points or triangles are empty. Stopping "
-                     "execution.";
+        // std::cout << "Either input points or triangles are empty. Stopping "
+        //              "execution.";
         return;
       }
 
