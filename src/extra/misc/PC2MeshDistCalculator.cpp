@@ -165,7 +165,7 @@ namespace roofer::misc {
                  const MultiTriangleCollection& mtcs,
                  const roofer::vec1i& face_ids,
                  PC2MeshDistCalculatorConfig cfg) {
-      typedef CGAL::AABB_traits<SCK, My_triangle_primitive> My_AABB_traits;
+      typedef CGAL::AABB_traits_3<SCK, My_triangle_primitive> My_AABB_traits;
       typedef CGAL::AABB_tree<My_AABB_traits> Tree;
 
       TriangleCollection trin;
