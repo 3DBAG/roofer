@@ -26,7 +26,6 @@
 
 namespace roofer::io {
   struct PointCloudCropperConfig {
-    std::string filepaths_ = "";
     float cellsize = 50.0;
     float buffer = 1.0;
     float ground_percentile = 0.05;
@@ -53,12 +52,12 @@ namespace roofer::io {
         std::vector<PointCollection>& point_clouds, vec1f& ground_elevations,
         vec1i& acquisition_years, const Box& polygon_extent,
         PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
-    virtual void process(
-        std::string filepaths, std::vector<LinearRing>& polygons,
-        std::vector<LinearRing>& buf_polygons,
-        std::vector<PointCollection>& point_clouds, vec1f& ground_elevations,
-        vec1i& acquisition_years, const Box& polygon_extent,
-        PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
+    // virtual void process(
+    //     std::string filepaths, std::vector<LinearRing>& polygons,
+    //     std::vector<LinearRing>& buf_polygons,
+    //     std::vector<PointCollection>& point_clouds, vec1f& ground_elevations,
+    //     vec1i& acquisition_years, const Box& polygon_extent,
+    //     PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
   };
 
   std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(

@@ -69,7 +69,6 @@ namespace fs = std::filesystem;
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 #include <roofer/reconstruction/SegmentRasteriser.hpp>
 #include <roofer/reconstruction/SimplePolygonExtruder.hpp>
-#include <roofer/ReconstructionConfig.hpp>
 
 // serialisation
 #include <roofer/io/CityJsonWriter.hpp>
@@ -77,7 +76,6 @@ namespace fs = std::filesystem;
 #include "BS_thread_pool.hpp"
 #include "argh.h"
 #include "git.h"
-#include "toml.hpp"
 
 #if defined(IS_LINUX) || defined(IS_MACOS)
 #include <new>
@@ -89,7 +87,7 @@ namespace fs = std::filesystem;
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
 struct InputPointcloud {
-  std::string path;
+  std::vector<std::string> paths;
   std::string name;
   int quality;
   int date = 0;
@@ -113,6 +111,8 @@ struct InputPointcloud {
   std::unique_ptr<roofer::misc::RTreeInterface> rtree;
   std::vector<fileExtent> file_extents;
 };
+
+#include "config.hpp"
 
 /**
  * @brief A single building object
@@ -213,196 +213,13 @@ struct BuildingTile {
   roofer::TBox<double> extent;
 };
 
-struct RooferConfig {
-  // footprint source parameters
-  std::string source_footprints;
-  std::string id_attribute;                // -> attr_building_id
-  std::string force_lod11_attribute = "";  // -> attr_force_blockmodel
-  std::string yoc_attribute;               // -> attr_year_of_construction
-  std::string layer_name;
-  int layer_id = 0;
-  std::string attribute_filter;
-
-  // crop parameters
-  float ceil_point_density = 20;
-  float cellsize = 0.5;
-  int lod11_fallback_area = 69000;
-  float lod11_fallback_density = 5;
-  float tilesize_x = 1000;
-  float tilesize_y = 1000;
-
-  bool write_crop_outputs = false;
-  bool output_all = false;
-  bool write_rasters = false;
-  bool write_metadata = false;
-  bool write_index = false;
-
-  // general parameters
-  std::optional<roofer::TBox<double>> region_of_interest;
-  std::string srs_override;
-
-  // crop output
-  bool split_cjseq = false;
-  std::string building_toml_file_spec =
-      "{path}/objects/{bid}/config_{pc_name}.toml";
-  std::string building_las_file_spec =
-      "{path}/objects/{bid}/crop/{bid}_{pc_name}.las";
-  std::string building_gpkg_file_spec = "{path}/objects/{bid}/crop/{bid}.gpkg";
-  std::string building_raster_file_spec =
-      "{path}/objects/{bid}/crop/{bid}_{pc_name}.tif";
-  std::string building_jsonl_file_spec =
-      "{path}/objects/{bid}/reconstruct/{bid}.city.jsonl";
-  std::string jsonl_list_file_spec = "{path}/features.txt";
-  std::string index_file_spec = "{path}/index.gpkg";
-  std::string metadata_json_file_spec = "{path}/metadata.json";
-  std::string crop_output_path;
-
-  // reconstruct
-  roofer::ReconstructionConfig rec;
-};
-
 #include "crop_tile.hpp"
 #include "reconstruct_building.hpp"
-
-void print_help(std::string program_name) {
-  // see http://docopt.org/
-  std::cout << "Usage:" << "\n";
-  std::cout << "   " << program_name;
-  std::cout << " -c <file>" << "\n";
-  std::cout << "Options:" << "\n";
-  std::cout << "   -h, --help                   Show this help message."
-            << "\n";
-  std::cout << "   -V, --version                Show version." << "\n";
-  std::cout << "   -v, --verbose                Be more verbose." << "\n";
-  std::cout << "   -t, --trace                  Trace the progress. Implies "
-               "--verbose."
-            << "\n";
-  std::cout << "   --trace-interval <s>         Trace interval in "
-               "seconds [default: 10]."
-            << "\n";
-  std::cout << "   -c <file>, --config <file>   Config file." << "\n";
-  std::cout << "   -r, --rasters                Output rasterised building "
-               "pointclouds."
-            << "\n";
-  // std::cout << "   -m, --metadata               Output metadata.json file."
-  //           << "\n";
-  std::cout << "   -i, --index                  Output index.gpkg file."
-            << "\n";
-  std::cout << "   -a, --all                    Output files for each "
-               "candidate point cloud instead of only the optimal candidate."
-            << "\n";
-  std::cout << "   -j <n>, --jobs <n>           Limit the number of threads "
-               "used by roofer. Default is to use all available resources."
-            << "\n";
-}
-
-void print_version() {
-  std::cout << fmt::format(
-      "roofer {} ({}{}{})\n", git_Describe(),
-      std::strcmp(git_Branch(), "main") ? ""
-                                        : fmt::format("{}, ", git_Branch()),
-      git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
-}
-
-template <typename T, typename node>
-void get_param(const node& config, const std::string& key, T& result) {
-  if (auto tml_value = config[key].template value<T>(); tml_value.has_value()) {
-    result = *tml_value;
-  }
-}
-
-void read_config(const std::string& config_path, RooferConfig& cfg,
-                 std::vector<InputPointcloud>& input_pointclouds) {
-  auto& logger = roofer::logger::Logger::get_logger();
-  toml::table config;
-  config = toml::parse_file(config_path);
-
-  get_param(config["input"]["footprint"], "source", cfg.source_footprints);
-  get_param(config["input"]["footprint"], "layer_name", cfg.layer_name);
-  get_param(config["input"]["footprint"], "layer_id", cfg.layer_id);
-  get_param(config["input"]["footprint"], "attribute_filter",
-            cfg.attribute_filter);
-  get_param(config["input"]["footprint"], "id_attribute", cfg.id_attribute);
-  get_param(config["input"]["footprint"], "force_lod11_attribute",
-            cfg.force_lod11_attribute);
-  get_param(config["input"]["footprint"], "year_of_construction_attribute",
-            cfg.yoc_attribute);
-
-  auto tml_pointclouds = config["input"]["pointclouds"];
-  if (toml::array* arr = tml_pointclouds.as_array()) {
-    // visitation with for_each() helps deal with heterogeneous data
-    for (auto& el : *arr) {
-      toml::table* tb = el.as_table();
-      auto& pc = input_pointclouds.emplace_back();
-
-      get_param(*tb, "name", pc.name);
-      get_param(*tb, "quality", pc.quality);
-      get_param(*tb, "date", pc.date);
-      get_param(*tb, "force_lod11", pc.force_lod11);
-      get_param(*tb, "select_only_for_date", pc.select_only_for_date);
-      get_param(*tb, "building_class", pc.bld_class);
-      get_param(*tb, "ground_class", pc.grnd_class);
-      get_param(*tb, "source", pc.path);
-    };
-  }
-
-  // parameters
-  get_param(config["crop"], "ceil_point_density", cfg.ceil_point_density);
-  get_param(config["crop"], "tilesize_x", cfg.tilesize_x);
-  get_param(config["crop"], "tilesize_y", cfg.tilesize_y);
-  get_param(config["crop"], "cellsize", cfg.cellsize);
-  get_param(config["crop"], "lod11_fallback_area", cfg.lod11_fallback_area);
-
-  if (toml::array* region_of_interest_ =
-          config["crop"]["region_of_interest"].as_array()) {
-    if (region_of_interest_->size() == 4 &&
-        (region_of_interest_->is_homogeneous(toml::node_type::floating_point) ||
-         region_of_interest_->is_homogeneous(toml::node_type::integer))) {
-      cfg.region_of_interest =
-          roofer::TBox<double>{*region_of_interest_->get(0)->value<double>(),
-                               *region_of_interest_->get(1)->value<double>(),
-                               0,
-                               *region_of_interest_->get(2)->value<double>(),
-                               *region_of_interest_->get(3)->value<double>(),
-                               0};
-    } else {
-      logger.error("Failed to read parameter.region_of_interest");
-    }
-  }
-
-  // reconstruction parameters
-  get_param(config["reconstruct"], "complexity_factor",
-            cfg.rec.complexity_factor);
-  get_param(config["reconstruct"], "clip_ground", cfg.rec.clip_ground);
-  get_param(config["reconstruct"], "lod", cfg.rec.lod);
-  get_param(config["reconstruct"], "lod13_step_height",
-            cfg.rec.lod13_step_height);
-  get_param(config["reconstruct"], "plane_detect_k", cfg.rec.plane_detect_k);
-  get_param(config["reconstruct"], "plane_detect_min_points",
-            cfg.rec.plane_detect_min_points);
-  get_param(config["reconstruct"], "plane_detect_epsilon",
-            cfg.rec.plane_detect_epsilon);
-  get_param(config["reconstruct"], "plane_detect_normal_angle",
-            cfg.rec.plane_detect_normal_angle);
-  get_param(config["reconstruct"], "line_detect_epsilon",
-            cfg.rec.line_detect_epsilon);
-  get_param(config["reconstruct"], "thres_alpha", cfg.rec.thres_alpha);
-  get_param(config["reconstruct"], "thres_reg_line_dist",
-            cfg.rec.thres_reg_line_dist);
-  get_param(config["reconstruct"], "thres_reg_line_ext",
-            cfg.rec.thres_reg_line_ext);
-
-  // output
-  get_param(config["output"], "split_cjseq", cfg.split_cjseq);
-  get_param(config["output"], "folder", cfg.crop_output_path);
-  get_param(config["output"], "srs_override", cfg.srs_override);
-}
 
 void get_las_extents(InputPointcloud& ipc,
                      roofer::io::SpatialReferenceSystemInterface* srs) {
   auto pj = roofer::misc::createProjHelper();
-  for (auto& fp :
-       roofer::find_filepaths(ipc.path, {".las", ".LAS", ".laz", ".LAZ"})) {
+  for (auto& fp : ipc.paths) {
     auto PointReader = roofer::io::createPointCloudReaderLASlib(*pj);
     PointReader->open(fp);
     if (!srs->is_valid()) PointReader->get_crs(srs);
@@ -633,69 +450,85 @@ inline size_t GetCurrentRSS() {
 }
 
 int main(int argc, const char* argv[]) {
-  auto cmdl = argh::parser({"-c", "--config"});
-  cmdl.add_params({"trace-interval", "-j", "--jobs"});
+  // auto cmdl = argh::parser({"-c", "--config"});
+  // cmdl.add_params({"trace-interval", "-j", "--jobs"});
 
-  cmdl.parse(argc, argv);
-  std::string program_name = cmdl[0];
+  // cmdl.parse(argc, argv);
   auto& logger = roofer::logger::Logger::get_logger();
 
   // read cmdl options
   RooferConfig roofer_cfg;
+  std::vector<InputPointcloud> input_pointclouds;
+  CLIArgs cli_args(argc, argv);
+  RooferConfigHandler roofer_cfg_handler(roofer_cfg, input_pointclouds);
   roofer_cfg.rec.lod = 0;
 
-  roofer_cfg.output_all = cmdl[{"-a", "--all"}];
-  roofer_cfg.write_rasters = cmdl[{"-r", "--rasters"}];
-  roofer_cfg.write_crop_outputs = cmdl[{"-C", "--write-crop-outputs"}];
-  roofer_cfg.write_index = cmdl[{"-i", "--index"}];
+  // Parse basic command line arguments (not yet the configuration parameters)
+  try {
+    roofer_cfg_handler.parse_cli_first_pass(cli_args);
+  } catch (const std::exception& e) {
+    logger.error("Failed to parse command line arguments.");
+    logger.error("{}", e.what());
+    roofer_cfg_handler.print_help(cli_args.program_name);
+    return EXIT_FAILURE;
+  }
+  if (roofer_cfg_handler._print_help) {
+    roofer_cfg_handler.print_help(cli_args.program_name);
+    return EXIT_SUCCESS;
+  }
+  if (roofer_cfg_handler._print_version) {
+    roofer_cfg_handler.print_version();
+    return EXIT_SUCCESS;
+  }
 
-  if (cmdl[{"-h", "--help"}]) {
-    print_help(program_name);
-    return EXIT_SUCCESS;
+  // Read configuration file, config path has already been checked for existence
+  if (roofer_cfg_handler._config_path.size()) {
+    logger.info("Reading configuration from file {}",
+                roofer_cfg_handler._config_path);
+    try {
+      roofer_cfg_handler.parse_config_file();
+    } catch (const std::exception& e) {
+      logger.error("Unable to parse config file {}. {}",
+                   roofer_cfg_handler._config_path, e.what());
+      return EXIT_FAILURE;
+    }
   }
-  if (cmdl[{"-V", "--version"}]) {
-    print_version();
-    return EXIT_SUCCESS;
+
+  // Parse further command line arguments, those will override values from
+  // config file
+  try {
+    roofer_cfg_handler.parse_cli_second_pass(cli_args);
+  } catch (const std::exception& e) {
+    logger.error("Failed to parse command line arguments.");
+    logger.error("{}", e.what());
+    roofer_cfg_handler.print_help(cli_args.program_name);
+    return EXIT_FAILURE;
   }
-  if (cmdl[{"-v", "--verbose"}]) {
+
+  // validate configuration parameters
+  try {
+    roofer_cfg_handler.validate();
+  } catch (const std::exception& e) {
+    logger.error("Failed to validate parameter values.");
+    logger.error("{}", e.what());
+    roofer_cfg_handler.print_help(cli_args.program_name);
+    return EXIT_FAILURE;
+  }
+
+  bool do_tracing = false;
+  auto trace_interval =
+      std::chrono::seconds(roofer_cfg_handler._trace_interval);
+  if (roofer_cfg_handler._loglevel == "info") {
     logger.set_level(roofer::logger::LogLevel::info);
-  } else if (cmdl[{"--debug"}]) {
+  } else if (roofer_cfg_handler._loglevel == "debug") {
     logger.set_level(roofer::logger::LogLevel::debug);
+  } else if (roofer_cfg_handler._loglevel == "trace") {
+    logger.set_level(roofer::logger::LogLevel::trace);
+    trace_interval = std::chrono::seconds(roofer_cfg_handler._trace_interval);
+    do_tracing = true;
+    logger.debug("trace interval is set to {} seconds", trace_interval.count());
   } else {
     logger.set_level(roofer::logger::LogLevel::warning);
-  }
-  // Enabling tracing overwrites the log level
-  auto trace_interval = std::chrono::seconds(10);
-  bool do_tracing = cmdl[{"-t", "--trace"}];
-  if (do_tracing) {
-    logger.set_level(roofer::logger::LogLevel::trace);
-    size_t ti;
-    if (cmdl("trace-interval") >> ti) {
-      trace_interval = std::chrono::seconds(ti);
-    }
-    logger.debug("trace interval is set to {} seconds", trace_interval.count());
-  }
-
-  // Read configuration
-  std::string config_path;
-  std::vector<InputPointcloud> input_pointclouds;
-  if (cmdl({"-c", "--config"}) >> config_path) {
-    if (!fs::exists(config_path)) {
-      logger.error("No such config file: {}", config_path);
-      print_help(program_name);
-      return EXIT_FAILURE;
-    }
-    logger.info("Reading configuration from file {}", config_path);
-    try {
-      read_config(config_path, roofer_cfg, input_pointclouds);
-    } catch (const std::exception& e) {
-      logger.error("Unable to parse config file {}.\n{}", config_path,
-                   e.what());
-      return EXIT_FAILURE;
-    }
-  } else {
-    logger.error("No config file specified");
-    return EXIT_FAILURE;
   }
 
   // precomputation for tiling
@@ -745,7 +578,7 @@ int main(int argc, const char* argv[]) {
 
     // actual tiling
     auto tile_extents =
-        create_tiles(roi, roofer_cfg.tilesize_x, roofer_cfg.tilesize_y);
+        create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
 
     for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
       auto& tile = tile_extents[tid];
@@ -767,21 +600,21 @@ int main(int argc, const char* argv[]) {
   if (nthreads < std::thread::hardware_concurrency()) {
     nthreads = std::thread::hardware_concurrency();
   }
-  size_t jobs_from_param = 0;
-  if (cmdl({"-j", "--jobs"}) >> jobs_from_param) {
-    // Limit the parallelism
-    if (jobs_from_param < nthreads_reserved + 1) {
-      // Only one thread will be available for the reconstructor pool
-      nthreads = nthreads_reserved + 1;
-    } else {
-      nthreads = jobs_from_param;
-    }
+
+  // Limit the parallelism
+  if (roofer_cfg_handler._jobs < nthreads_reserved + 1) {
+    // Only one thread will be available for the reconstructor pool
+    nthreads = nthreads_reserved + 1;
+  } else {
+    nthreads = roofer_cfg_handler._jobs;
   }
+
   size_t nthreads_reconstructor_pool = nthreads - nthreads_reserved;
-  logger.debug(
-      "Using {} threads for the reconstructor pool, {} threads in total",
-      nthreads_reconstructor_pool, nthreads);
-  BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
+  logger.info(
+      "Using {} threads for the reconstructor pool, {} threads in total "
+      "(system offers {})",
+      nthreads_reconstructor_pool, nthreads,
+      std::thread::hardware_concurrency());
 
   std::atomic crop_running{true};
   std::deque<BuildingTile> cropped_tiles;
@@ -822,10 +655,11 @@ int main(int argc, const char* argv[]) {
         logger.trace("reconstruct", reconstructed_buildings_cnt);
         logger.trace("sort", sorted_buildings_cnt);
         logger.trace("serialize", serialized_buildings_cnt);
-        logger.debug(
-            "[reconstructor] reconstructor_pool nr. tasks waiting in the queue "
-            "== {}",
-            reconstructor_pool.get_tasks_queued());
+        // logger.debug(
+        //     "[reconstructor] reconstructor_pool nr. tasks waiting in the
+        //     queue "
+        //     "== {}",
+        //     reconstructor_pool.get_tasks_queued());
         std::this_thread::sleep_for(trace_interval);
       }
 // We log once more after all threads have finished, to measure the finaly
@@ -880,6 +714,11 @@ int main(int argc, const char* argv[]) {
     cropped_pending.notify_one();
   });
 
+  // std::thread reconstructor_thread;
+  // std::thread serializer_thread;
+  // std::thread sorter_thread;
+  // if (!roofer_cfg_handler._crop_only) {
+  BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
   std::thread reconstructor_thread([&]() {
     while (crop_running.load() || !cropped_tiles.empty()) {
       logger.debug("[reconstructor] before lock cropped_tiles_mutex");
@@ -1045,8 +884,7 @@ int main(int argc, const char* argv[]) {
   });
 
   std::thread serializer_thread([&]() {
-    logger.info("[serializer] Writing output to {}",
-                roofer_cfg.crop_output_path);
+    logger.info("[serializer] Writing output to {}", roofer_cfg.output_path);
     while (sorting_running.load() || !sorted_tiles.empty()) {
       logger.debug("[serializer] before lock sorted_tiles_mutex");
       std::unique_lock lock{sorted_tiles_mutex};
@@ -1125,7 +963,7 @@ int main(int argc, const char* argv[]) {
         std::ofstream ofs;
         if (!roofer_cfg.split_cjseq) {
           auto jsonl_tile_path =
-              fs::path(roofer_cfg.crop_output_path) / "tiles" /
+              fs::path(roofer_cfg.output_path) / "tiles" /
               fmt::format("tile_{:04d}.city.jsonl", building_tile.id);
           fs::create_directories(jsonl_tile_path.parent_path());
           ofs.open(jsonl_tile_path);
@@ -1135,7 +973,7 @@ int main(int argc, const char* argv[]) {
         } else {
           std::string metadata_json_file =
               fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
-                          fmt::arg("path", roofer_cfg.crop_output_path));
+                          fmt::arg("path", roofer_cfg.output_path));
           fs::create_directories(fs::path(metadata_json_file).parent_path());
           ofs.open(metadata_json_file);
           CityJsonWriter->write_metadata(
@@ -1186,9 +1024,11 @@ int main(int argc, const char* argv[]) {
   });
 
   cropper_thread.join();
+  // if (!roofer_cfg_handler._crop_only) {
   reconstructor_thread.join();
   sorter_thread.join();
   serializer_thread.join();
+  // }
   if (tracer_thread.has_value()) {
     tracer_thread->join();
   }

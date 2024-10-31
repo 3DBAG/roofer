@@ -445,32 +445,6 @@ namespace roofer {
     return parts;
   }
 
-  std::vector<std::string> find_filepaths(
-      const std::string& filepaths,
-      std::initializer_list<std::string> extensions) {
-    std::vector<std::string> files;
-    std::vector<std::string> filepath_parts = split_string(filepaths, " ");
-    for (const auto& filepath_part : filepath_parts) {
-      if (fs::is_directory(filepath_part)) {
-        for (auto& p : fs::directory_iterator(filepath_part)) {
-          auto ext = p.path().extension();
-          for (auto& filter_ext : extensions) {
-            if (filter_ext == ext) {
-              files.push_back(p.path().string());
-            }
-          }
-        }
-      } else {
-        if (fs::exists(filepath_part)) {
-          files.push_back(filepath_part);
-        } else {
-          throw std::runtime_error("File not found: " + filepath_part);
-        }
-      }
-    }
-    return files;
-  }
-
   bool has_duplicates_ring(const vec3f& poly, const float& dupe_threshold) {
     auto pl = *poly.rbegin();
     for (auto& p : poly) {
