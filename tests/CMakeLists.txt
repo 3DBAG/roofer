@@ -70,7 +70,7 @@ if(RF_BUILD_APPS)
 
   add_test(
     NAME "roofer-wippolder"
-    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml" output
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml" output-roofer-test
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   set(tests_built "reconstruct-wippolder;roofer-wippolder")

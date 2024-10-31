@@ -255,16 +255,16 @@ std::vector<std::string> find_filepaths(
 }
 
 class ConfigParameter {
-  // std::string _name;
-  std::string _help;
-
  public:
+  std::string _help;
   ConfigParameter(std::string help) : _help(help){};
   virtual ~ConfigParameter() = default;
 
   virtual std::optional<std::string> validate() = 0;
   virtual std::list<std::string>::iterator set(
       std::list<std::string>& args, std::list<std::string>::iterator it) = 0;
+  std::string description() { return _help; }
+  virtual std::string type_description() = 0;
 };
 
 // template <typename T>
@@ -305,12 +305,11 @@ class ConfigParameterByReference : public ConfigParameter {
       std::list<std::string>::iterator it) override {
     if (it == args.end()) {
       throw std::runtime_error("Missing argument for parameter");
-    }
-    if constexpr (std::is_same_v<T, bool>) {
-      _value = true;
-    }
-    if constexpr (std::is_same_v<T, int> ||
-                  std::is_same_v<T, std::optional<int>>) {
+    } else if constexpr (std::is_same_v<T, bool>) {
+      _value = !(_value);
+      return it;
+    } else if constexpr (std::is_same_v<T, int> ||
+                         std::is_same_v<T, std::optional<int>>) {
       _value = std::stoi(*it);
       return args.erase(it);
     } else if constexpr (std::is_same_v<T, float> ||
@@ -323,7 +322,6 @@ class ConfigParameterByReference : public ConfigParameter {
       return args.erase(it);
     } else if constexpr (std::is_same_v<T, std::string>) {
       _value = *it;
-      std::cout << "set " << _value << "\n";
       return args.erase(it);
       ;
     } else if constexpr (std::is_same_v<T,
@@ -357,6 +355,28 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       _value = arr;
       return it;
+    } else {
+      static_assert(!std::is_same_v<T, T>,
+                    "Unsupported type for ConfigParameterByReference::set()");
+    }
+  }
+
+  std::string type_description() override {
+    if constexpr (std::is_same_v<T, bool>) {
+      return "";
+    } else if constexpr (std::is_same_v<T, int>) {
+      return "<int>";
+    } else if constexpr (std::is_same_v<T, float>) {
+      return "<float>";
+    } else if constexpr (std::is_same_v<T, double>) {
+      return "<double>";
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      return "<str>";
+    } else if constexpr (std::is_same_v<T,
+                                        std::optional<roofer::TBox<double>>>) {
+      return "<xmin ymin xmax ymax>";
+    } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
+      return "<x y>";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for ConfigParameterByReference::set()");
@@ -399,28 +419,34 @@ struct RooferConfigHandler {
     // {"config_path", ConfigParameterByReference{"path to the config file",
     //                  _config_path,
     //                  {roofer::v::PathExists}},
-    add("source-footprints", "source of the footprints", _cfg.source_footprints,
-        {});
-    add("id-attribute", "attribute for building id", _cfg.id_attribute, {});
-    add("force-lod11-attribute", "attribute for forcing lod11",
+    // add("source-footprints", "source of the footprints",
+    // _cfg.source_footprints,
+    // {});
+    add("id-attribute", "Building ID attribute", _cfg.id_attribute, {});
+    add("force-lod11-attribute", "Building attribute for forcing lod11",
         _cfg.force_lod11_attribute, {});
-    add("yoc-attribute", "attribute for year of construction",
-        _cfg.yoc_attribute, {});
-    add("layer", "name of layer", _cfg.layer_name, {});
+    // add("yoc-attribute", "Attribute containing building year of
+    // construction",
+    //     _cfg.yoc_attribute, {});
+    add("layer",
+        "Load this layer from <footprint-source> [default: first layer]",
+        _cfg.layer_name, {});
     // add("layer_id", "id of layer", _cfg.layer_id,
     // {roofer::v::HigherOrEqualTo<int>(0)}});
     add("filter", "Attribute filter", _cfg.attribute_filter, {});
     // add("ceil_point_density", "ceiling point density",
     // _cfg.ceil_point_density, {roofer::v::HigherThan<float>(0)}});
-    add("cellsize", "cellsize", _cfg.cellsize,
-        {roofer::v::HigherThan<float>(0)});
+    add("cellsize", "Cellsize used for quick pointcloud analysis",
+        _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
     // add("lod11_fallback_area", "lod11 fallback area",
     // _cfg.lod11_fallback_area, {roofer::v::HigherThan<int>(0)}});
     // add("lod11_fallback_density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
-    add("tilesize", "tilesize", _cfg.tilesize,
+    add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,
         {roofer::v::HigherThan<roofer::arr2f>({0, 0})});
-    add("box", "Region of interest", _cfg.region_of_interest,
+    add("box",
+        "Region of interest. Data outside of this region will be ignored",
+        _cfg.region_of_interest,
         {[](const std::optional<roofer::TBox<double>>& box)
              -> std::optional<std::string> {
           if (box.has_value()) {
@@ -432,18 +458,26 @@ struct RooferConfigHandler {
           return std::nullopt;
         }});
 
-    addr("lod", "lod", _cfg.rec.lod, {roofer::v::OneOf<int>({0, 12, 13, 22})});
-    addr("complexity-factor", "complexity factor", _cfg.rec.complexity_factor,
-         {roofer::v::InRange<float>(0, 1)});
+    addr("lod",
+         "Which LoDs to generate, possible values: 12, 13, 22 [default: all]",
+         _cfg.rec.lod, {roofer::v::OneOf<int>({0, 12, 13, 22})});
+    addr("complexity-factor", "Complexity factor building reconstruction",
+         _cfg.rec.complexity_factor, {roofer::v::InRange<float>(0, 1)});
     // addr("clip-ground", "clip ground", _cfg.rec.clip_ground, {});
-    addr("lod13-step-height", "lod13 step height", _cfg.rec.lod13_step_height,
-         {roofer::v::HigherThan<float>(0)});
-    addr("plane-detect_k", "plane detect k", _cfg.rec.plane_detect_k,
-         {roofer::v::HigherThan<int>(0)});
-    addr("plane-detect-min-points", "plane detect min points",
-         _cfg.rec.plane_detect_min_points, {roofer::v::HigherThan<int>(2)});
-    addr("plane-detect-epsilon", "plane detect epsilon",
-         _cfg.rec.plane_detect_epsilon, {roofer::v::HigherThan<float>(0)});
+    addr("lod13-step-height", "Step height used for LoD1.3 generation",
+         _cfg.rec.lod13_step_height, {roofer::v::HigherThan<float>(0)});
+    add("srs", "Override SRS for both inputs and outputs", _cfg.srs_override,
+        {});
+    add("split-cjseq",
+        "Output CityJSONSequence file for each building [default: one file per "
+        "output tile]",
+        _cfg.split_cjseq, {});
+    // addr("plane-detect_k", "plane detect k", _cfg.rec.plane_detect_k,
+    //      {roofer::v::HigherThan<int>(0)});
+    // addr("plane-detect-min-points", "plane detect min points",
+    //      _cfg.rec.plane_detect_min_points, {roofer::v::HigherThan<int>(2)});
+    // addr("plane-detect-epsilon", "plane detect epsilon",
+    //      _cfg.rec.plane_detect_epsilon, {roofer::v::HigherThan<float>(0)});
   };
 
   template <typename T>
@@ -502,37 +536,51 @@ struct RooferConfigHandler {
     std::cout << "   " << program_name;
     std::cout << " -h | --help" << "\n";
     std::cout << "   " << program_name;
-    std::cout << " --version" << "\n";
-    std::cout << "Positionsal arguments:" << "\n";
+    std::cout << " -v | --version" << "\n";
+    std::cout << "\n";
+    std::cout << "Positional arguments:" << "\n";
     std::cout << "   <pointcloud-path>            Path to pointcloud file "
                  "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
     std::cout
         << "   <footprint-source>           Path to footprint source. Can be "
            "an OGR supported file (eg. GPKG) or database connection string.\n";
     std::cout << "   <output-directory>           Output directory.\n";
+    std::cout << "\n";
     std::cout << "Optional arguments:\n";
-    std::cout << "   -h, --help                   Show this help message."
-              << "\n";
-    std::cout << "   --version                    Show version." << "\n";
-    std::cout << "   --verbose                    Be more verbose." << "\n";
-    std::cout << "   -t, --trace                  Trace the progress. Implies "
-                 "--verbose."
+    std::cout << "   -h, --help                   Show this help message.\n";
+    std::cout << "   -v, --version                Show version." << "\n";
+    std::cout << "   -l, --loglevel <level>       Specify loglevel. Can be "
+                 "trace, debug, info, warning [default: info]"
               << "\n";
     std::cout << "   --trace-interval <s>         Trace interval in "
-                 "seconds [default: 10]."
+                 "seconds. Implies --loglevel trace [default: 10].\n";
+    std::cout << "   -c <file>, --config <file>   TOML configuration file."
               << "\n";
-    std::cout << "   -c <file>, --config <file>   Config file." << "\n";
-    std::cout << "   ---rasters                   Output rasterised building "
-                 "pointclouds."
-              << "\n";
-    std::cout << "   -i, --index                  Output index.gpkg file."
-              << "\n";
-    std::cout << "   -a, --all                    Output files for each "
-                 "candidate point cloud instead of only the optimal candidate."
-              << "\n";
-    std::cout << "   -j <n>, --jobs <n>           Limit the number of threads "
-                 "used by roofer. Default is to use all available resources."
-              << "\n";
+    std::cout << "   -j <n>, --jobs <n>           Number of threads to use. "
+                 "[default: number of cores]\n";
+    // std::cout << "   --crop-only                  Only crop pointclouds. Skip
+    // reconstruction.\n";
+    std::cout << "   --crop-output                Output cropped building "
+                 "pointclouds.\n";
+    std::cout << "   --crop-output-all            Output files for each "
+                 "candidate pointcloud instead of only the optimal candidate. "
+                 "Implies --crop-output.\n";
+    std::cout << "   --crop-rasters               Output rasterised crop "
+                 "pointclouds. Implies --crop-output.\n";
+    std::cout << "   --index                      Output index.gpkg file with "
+                 "crop analytics.\n";
+    std::cout << "\n";
+    for (auto& [name, param] : _pmap) {
+      std::cout << "   --" << std::setw(33) << std::left
+                << (name + " " + param->type_description())
+                << param->description() << "\n";
+    }
+    std::cout << "\n";
+    for (auto& [name, param] : _rmap) {
+      std::cout << "   --" << std::setw(33) << std::left
+                << (name + " " + param->type_description())
+                << param->description() << "\n";
+    }
   }
 
   void print_version() {
@@ -560,8 +608,7 @@ struct RooferConfigHandler {
         if (next_it != c.args.end() && !next_it->starts_with("-")) {
           _loglevel = *next_it;
           if (auto error_msg = roofer::v::OneOf<std::string>(
-                  {"trace", "debug", "info", "warning", "error", "critical"})(
-                  _loglevel)) {
+                  {"trace", "debug", "info", "warning"})(_loglevel)) {
             throw std::runtime_error(
                 fmt::format("Invalid argument for --loglevel. {}", *error_msg));
           }
@@ -618,6 +665,7 @@ struct RooferConfigHandler {
         _cfg.output_all = true;
         it = c.args.erase(it);
       } else if (arg == "--crop-rasters") {
+        _cfg.write_crop_outputs = true;
         _cfg.write_rasters = true;
         it = c.args.erase(it);
       } else if (arg == "--index") {
