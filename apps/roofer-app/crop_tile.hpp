@@ -161,10 +161,10 @@ void crop_tile(const roofer::TBox<double>& tile,
                                               footprints[i],
                                               &ipc.nodata_radii[i], &nodata_c);
         } catch (const std::exception& e) {
-          logger.error(
-              "Failed to compute_nodata_circle in crop_tile for {}, setting "
-              "ipc.nodata_radii[i] = 0, what(): {}",
-              ipc.path, e.what());
+          // logger.error(
+          //     "Failed to compute_nodata_circle in crop_tile for {}, setting "
+          //     "ipc.nodata_radii[i] = 0, what(): {}",
+          //     ipc.paths, e.what());
           ipc.nodata_radii[i] = 0;
         }
         if (cfg.write_index) {
@@ -324,7 +324,7 @@ void crop_tile(const roofer::TBox<double>& tile,
       building.jsonl_path = fmt::format(
           fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
           fmt::arg("pc_name", input_pointclouds[selected->index].name),
-          fmt::arg("path", cfg.crop_output_path));
+          fmt::arg("path", cfg.output_path));
     }
     if (input_pointclouds[selected->index].lod11_forced[i]) {
       force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
@@ -335,7 +335,7 @@ void crop_tile(const roofer::TBox<double>& tile,
         // fs::create_directories(fs::path(fname).parent_path());
         std::string fp_path = fmt::format(
             fmt::runtime(cfg.building_gpkg_file_spec), fmt::arg("bid", bid),
-            fmt::arg("path", cfg.crop_output_path));
+            fmt::arg("path", cfg.output_path));
         vector_writer->writePolygons(fp_path, srs, footprints, attributes, i,
                                      i + 1);
 
@@ -346,18 +346,15 @@ void crop_tile(const roofer::TBox<double>& tile,
             continue;
           };
 
-          std::string pc_path =
-              fmt::format(fmt::runtime(cfg.building_las_file_spec),
-                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                          fmt::arg("path", cfg.crop_output_path));
-          std::string raster_path =
-              fmt::format(fmt::runtime(cfg.building_raster_file_spec),
-                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                          fmt::arg("path", cfg.crop_output_path));
-          std::string jsonl_path =
-              fmt::format(fmt::runtime(cfg.building_jsonl_file_spec),
-                          fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                          fmt::arg("path", cfg.crop_output_path));
+          std::string pc_path = fmt::format(
+              fmt::runtime(cfg.building_las_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.output_path));
+          std::string raster_path = fmt::format(
+              fmt::runtime(cfg.building_raster_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.output_path));
+          std::string jsonl_path = fmt::format(
+              fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
+              fmt::arg("pc_name", ipc.name), fmt::arg("path", cfg.output_path));
 
           if (cfg.write_rasters) {
             RasterWriter->writeBands(raster_path, ipc.building_rasters[i]);
@@ -394,7 +391,7 @@ void crop_tile(const roofer::TBox<double>& tile,
             std::string config_path =
                 fmt::format(fmt::runtime(cfg.building_toml_file_spec),
                             fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                            fmt::arg("path", cfg.crop_output_path));
+                            fmt::arg("path", cfg.output_path));
             ofs.open(config_path);
             ofs << gf_config;
             ofs.close();
@@ -406,16 +403,15 @@ void crop_tile(const roofer::TBox<double>& tile,
             std::string jsonl_path =
                 fmt::format(fmt::runtime(cfg.building_jsonl_file_spec),
                             fmt::arg("bid", bid), fmt::arg("pc_name", ""),
-                            fmt::arg("path", cfg.crop_output_path));
+                            fmt::arg("path", cfg.output_path));
             gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
             jsonl_paths[""].push_back(jsonl_path);
 
             // write optimal config
             std::ofstream ofs;
-            std::string config_path =
-                fmt::format(fmt::runtime(cfg.building_toml_file_spec),
-                            fmt::arg("bid", bid), fmt::arg("pc_name", ""),
-                            fmt::arg("path", cfg.crop_output_path));
+            std::string config_path = fmt::format(
+                fmt::runtime(cfg.building_toml_file_spec), fmt::arg("bid", bid),
+                fmt::arg("pc_name", ""), fmt::arg("path", cfg.output_path));
             ofs.open(config_path);
             ofs << gf_config;
             ofs.close();
@@ -429,9 +425,8 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // Write index output
   if (cfg.write_index) {
-    std::string index_file =
-        fmt::format(fmt::runtime(cfg.index_file_spec),
-                    fmt::arg("path", cfg.crop_output_path));
+    std::string index_file = fmt::format(fmt::runtime(cfg.index_file_spec),
+                                         fmt::arg("path", cfg.output_path));
     vector_writer->writePolygons(index_file, srs, footprints, attributes);
 
     // write nodata circles
@@ -449,7 +444,7 @@ void crop_tile(const roofer::TBox<double>& tile,
       if (pathsvec.size() != 0) {
         std::string jsonl_list_file = fmt::format(
             fmt::runtime(cfg.jsonl_list_file_spec),
-            fmt::arg("path", cfg.crop_output_path), fmt::arg("pc_name", name));
+            fmt::arg("path", cfg.output_path), fmt::arg("pc_name", name));
         std::ofstream ofs;
         ofs.open(jsonl_list_file);
         for (auto& jsonl_p : pathsvec) {

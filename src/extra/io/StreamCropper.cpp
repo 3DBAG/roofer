@@ -538,16 +538,17 @@ namespace roofer::io {
           poly_pt_counts_grd, poly_ptcoverage_class, poly_densities);
     }
 
-    void process(std::string source, std::vector<LinearRing>& polygons,
-                 std::vector<LinearRing>& buf_polygons,
-                 std::vector<PointCollection>& point_clouds,
-                 vec1f& ground_elevations, vec1i& acquisition_years,
-                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
-      std::vector<std::string> lasfiles =
-          roofer::find_filepaths(source, {".las", ".LAS", ".laz", ".LAZ"});
-      process(lasfiles, polygons, buf_polygons, point_clouds, ground_elevations,
-              acquisition_years, polygon_extent, cfg);
-    }
+    // void process(std::string source, std::vector<LinearRing>& polygons,
+    //              std::vector<LinearRing>& buf_polygons,
+    //              std::vector<PointCollection>& point_clouds,
+    //              vec1f& ground_elevations, vec1i& acquisition_years,
+    //              const Box& polygon_extent, PointCloudCropperConfig cfg) {
+    //   std::vector<std::string> lasfiles =
+    //       roofer::find_filepaths(source, {".las", ".LAS", ".laz", ".LAZ"});
+    //   process(lasfiles, polygons, buf_polygons, point_clouds,
+    //   ground_elevations,
+    //           acquisition_years, polygon_extent, cfg);
+    // }
   };
 
   std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(

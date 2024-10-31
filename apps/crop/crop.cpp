@@ -369,7 +369,7 @@ int main(int argc, const char* argv[]) {
   for (auto& ipc : input_pointclouds) {
     logger.info("Cropping pointcloud {}...", ipc.name);
 
-    PointCloudCropper->process(ipc.path, footprints, buffered_footprints,
+    PointCloudCropper->process(ipc.paths, footprints, buffered_footprints,
                                ipc.building_clouds, ipc.ground_elevations,
                                ipc.acquisition_years, polygon_extent,
                                {.ground_class = ipc.grnd_class,

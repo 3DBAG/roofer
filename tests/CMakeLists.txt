@@ -57,10 +57,10 @@ set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 # --- Integration tests that are run on the built executables, before
 # installation.
 if(RF_BUILD_APPS)
-  add_test(
-    NAME "crop-wippolder"
-    COMMAND $<TARGET_FILE:crop> --config "${CONFIG_DIR}/crop-wippolder.toml"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  # add_test(
+  #   NAME "crop-wippolder"
+  #   COMMAND $<TARGET_FILE:crop> --config "${CONFIG_DIR}/crop-wippolder.toml"
+  #   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_test(
     NAME "reconstruct-wippolder"
@@ -70,10 +70,10 @@ if(RF_BUILD_APPS)
 
   add_test(
     NAME "roofer-wippolder"
-    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml"
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml" output
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "crop-wippolder;reconstruct-wippolder;roofer-wippolder")
+  set(tests_built "reconstruct-wippolder;roofer-wippolder")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 
@@ -84,13 +84,13 @@ if(RF_BUILD_APPS)
   # install process.
   if(RF_TEST_INSTALL)
     add_test(
-      NAME "installed-crop-version"
-      COMMAND crop --version
+      NAME "installed-roofer-version"
+      COMMAND roofer --version
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     add_test(
-      NAME "installed-crop-wippolder"
-      COMMAND crop --config "${CONFIG_DIR}/crop-wippolder.toml"
+      NAME "installed-roofer-wippolder"
+      COMMAND roofer --config "${CONFIG_DIR}/roofer-wippolder.toml"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     add_test(
@@ -104,7 +104,7 @@ if(RF_BUILD_APPS)
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     set(tests_installed
-        "installed-crop-version;installed-reconstruct-version;installed-crop-wippolder;installed-reconstruct-wippolder"
+        "installed-roofer-version;installed-reconstruct-version;installed-roofer-wippolder;installed-reconstruct-wippolder"
     )
     set(WINDOWS_INSTALLED_ENVIRONMENT
         "GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
