@@ -119,7 +119,6 @@ jobs:
 
       - name: Show error logs
         if: ${{ failure() }}
-        shell: bash
         run: >
           cat D:\a\roofer\roofer\vcpkg\buildtrees\gmp\build-x64-windows-dbg-out.log
           cat D:\a\roofer\roofer\vcpkg\buildtrees\gmp\build-x64-windows-dbg-err.log
