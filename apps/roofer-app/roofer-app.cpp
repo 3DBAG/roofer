@@ -468,8 +468,8 @@ int main(int argc, const char* argv[]) {
     roofer_cfg_handler.parse_cli_first_pass(cli_args);
   } catch (const std::exception& e) {
     logger.error("Failed to parse command line arguments.");
-    logger.error("{}", e.what());
-    roofer_cfg_handler.print_help(cli_args.program_name);
+    logger.error("{} Use '-h' to print usage information.", e.what());
+    // roofer_cfg_handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
   if (roofer_cfg_handler._print_help) {
@@ -488,8 +488,10 @@ int main(int argc, const char* argv[]) {
     try {
       roofer_cfg_handler.parse_config_file();
     } catch (const std::exception& e) {
-      logger.error("Unable to parse config file {}. {}",
-                   roofer_cfg_handler._config_path, e.what());
+      logger.error(
+          "Unable to parse config file {}. {} Use '-h' to print usage "
+          "information.",
+          roofer_cfg_handler._config_path, e.what());
       return EXIT_FAILURE;
     }
   }
@@ -499,9 +501,11 @@ int main(int argc, const char* argv[]) {
   try {
     roofer_cfg_handler.parse_cli_second_pass(cli_args);
   } catch (const std::exception& e) {
-    logger.error("Failed to parse command line arguments.");
-    logger.error("{}", e.what());
-    roofer_cfg_handler.print_help(cli_args.program_name);
+    logger.error(
+        "Failed to parse command line arguments. {} Use '-h' to print usage "
+        "information.",
+        e.what());
+    // roofer_cfg_handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
 
@@ -509,9 +513,11 @@ int main(int argc, const char* argv[]) {
   try {
     roofer_cfg_handler.validate();
   } catch (const std::exception& e) {
-    logger.error("Failed to validate parameter values.");
-    logger.error("{}", e.what());
-    roofer_cfg_handler.print_help(cli_args.program_name);
+    logger.error(
+        "Failed to validate parameter values. {} Use '-h' to print usage "
+        "information.",
+        e.what());
+    // roofer_cfg_handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
 

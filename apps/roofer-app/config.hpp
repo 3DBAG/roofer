@@ -123,7 +123,7 @@ namespace roofer::v {
   auto HigherOrEqualTo(T min) {
     return [min](const T& val) -> std::optional<std::string> {
       if (val >= min) {
-        return fmt::format("Value must be higher than or equal to {}", min);
+        return fmt::format("Value must be higher than or equal to {}.", min);
       }
       return std::nullopt;
     };
@@ -135,7 +135,7 @@ namespace roofer::v {
   auto OneOf(std::vector<T> values) {
     return [values](const T& val) -> std::optional<std::string> {
       if (std::find(values.begin(), values.end(), val) == values.end()) {
-        return fmt::format("Value {} is not one of the allowed values", val);
+        return fmt::format("Value {} is not one of the allowed values.", val);
       }
       return std::nullopt;
     };
@@ -145,7 +145,7 @@ namespace roofer::v {
   auto ValidBox =
       [](const roofer::TBox<double>& box) -> std::optional<std::string> {
     if (box.pmin[0] >= box.pmax[0] || box.pmin[1] >= box.pmax[1]) {
-      return "Box is invalid";
+      return "Box is invalid.";
     }
     return std::nullopt;
   };
@@ -153,79 +153,46 @@ namespace roofer::v {
   // Path exists validator
   auto PathExists = [](const std::string& path) -> std::optional<std::string> {
     if (!std::filesystem::exists(path)) {
-      return fmt::format("Path {} does not exist", path);
+      return fmt::format("Path {} does not exist.", path);
     }
     return std::nullopt;
   };
 
-  // Helper function to check if a directory is writable
-  bool isDirectoryWritable(const std::filesystem::path& path) {
-    if (!std::filesystem::exists(path)) {
-      return false;
+  // Create a validator for file path writeability
+  auto DirIsWritable =
+      [](const std::string& path) -> std::optional<std::string> {
+    std::filesystem::path fs_path(path);
+
+    // convert to absolute path
+    auto abs_path = std::filesystem::absolute(fs_path);
+
+    // find the first parent folders that already exists
+    auto parent = abs_path;
+    while (!std::filesystem::exists(parent)) {
+      parent = parent.parent_path();
     }
 
-    // Try to create a temporary file in the directory
-    auto testPath = path / "write_test_tmp";
+    // check if parent is a directory
+    if (!std::filesystem::is_directory(parent)) {
+      return fmt::format("Path {} is not a directory.", parent.string());
+    }
+
+    // Try to create a temporary file in parent
+    auto testPath = parent / "write_test_tmp";
     try {
       std::ofstream test_file(testPath);
       if (test_file) {
         test_file.close();
         std::filesystem::remove(testPath);
-        return true;
+        return std::nullopt;
       }
     } catch (...) {
       if (std::filesystem::exists(testPath)) {
         std::filesystem::remove(testPath);
       }
     }
-    return false;
-  }
-
-  // Create a validator for file path writeability
-  auto PathIsWritable =
-      [](const std::string& path) -> std::optional<std::string> {
-    try {
-      std::filesystem::path fs_path(path);
-
-      // Check if path is empty
-      if (path.empty()) {
-        return "Path cannot be empty";
-      }
-
-      // Get the parent directory
-      auto parent_path = fs_path.parent_path();
-      if (parent_path.empty()) {
-        parent_path = std::filesystem::current_path();
-      }
-
-      // If file exists, check if it's writable
-      if (std::filesystem::exists(fs_path)) {
-        std::ofstream test_file(fs_path, std::ios::app);
-        if (!test_file) {
-          return fmt::format("Existing file '{}' is not writable", path);
-        }
-      }
-      // If file doesn't exist, check if we can create it
-      else {
-        // Check if parent directory exists and is writable
-        if (!std::filesystem::exists(parent_path)) {
-          return fmt::format("Directory '{}' does not exist",
-                             parent_path.string());
-        }
-
-        if (!isDirectoryWritable(parent_path)) {
-          return fmt::format("Directory '{}' is not writable",
-                             parent_path.string());
-        }
-      }
-
-      return std::nullopt;
-
-    } catch (const std::filesystem::filesystem_error& e) {
-      return fmt::format("Filesystem error: {}", e.what());
-    } catch (const std::exception& e) {
-      return fmt::format("Error checking path: {}", e.what());
-    }
+    return fmt::format("Could not write to directory {}.", parent.string());
+    ;
   };
 }  // namespace roofer::v
 
@@ -247,7 +214,7 @@ std::vector<std::string> find_filepaths(
       if (fs::exists(filepath_part)) {
         files.push_back(filepath_part);
       } else {
-        throw std::runtime_error("File not found: " + filepath_part);
+        throw std::runtime_error("File not found: " + filepath_part + ".");
       }
     }
   }
@@ -304,7 +271,7 @@ class ConfigParameterByReference : public ConfigParameter {
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
     if (it == args.end()) {
-      throw std::runtime_error("Missing argument for parameter");
+      throw std::runtime_error("Missing argument for parameter.");
     } else if constexpr (std::is_same_v<T, bool>) {
       _value = !(_value);
       return it;
@@ -329,7 +296,7 @@ class ConfigParameterByReference : public ConfigParameter {
       roofer::TBox<double> box;
       // Check if there are enough arguments
       if (std::distance(it, args.end()) < 4) {
-        throw std::runtime_error("Not enough arguments, need 4");
+        throw std::runtime_error("Not enough arguments, need 4.");
       }
 
       // Extract the values safely
@@ -347,7 +314,7 @@ class ConfigParameterByReference : public ConfigParameter {
       roofer::arr2f arr;
       // Check if there are enough arguments
       if (std::distance(it, args.end()) < 2) {
-        throw std::runtime_error("Not enough arguments, need 2");
+        throw std::runtime_error("Not enough arguments, need 2.");
       }
       arr[0] = std::stof(*it);
       it = args.erase(it);
@@ -379,7 +346,8 @@ class ConfigParameterByReference : public ConfigParameter {
       return "<x y>";
     } else {
       static_assert(!std::is_same_v<T, T>,
-                    "Unsupported type for ConfigParameterByReference::set()");
+                    "Unsupported type for "
+                    "ConfigParameterByReference::type_description()");
     }
   }
 };
@@ -507,9 +475,18 @@ struct RooferConfigHandler {
                         name, *error_msg));
       }
     }
-    if (auto error_msg = roofer::v::PathIsWritable(_cfg.output_path)) {
+    if (auto error_msg = roofer::v::DirIsWritable(_cfg.output_path)) {
       throw std::runtime_error(
           fmt::format("Check output path. {}", *error_msg));
+    }
+    if (_input_pointclouds.empty()) {
+      throw std::runtime_error("No input pointclouds specified.");
+    }
+    for (auto& ipc : _input_pointclouds) {
+      if (ipc.paths.empty()) {
+        throw std::runtime_error(
+            "No files found for one of the input pointclouds.");
+      }
     }
   }
 
@@ -616,7 +593,7 @@ struct RooferConfigHandler {
           it = c.args.erase(it);  // Erase the option
           it = c.args.erase(it);  // Erase the argument
         } else {
-          throw std::runtime_error("Missing argument for --loglevel");
+          throw std::runtime_error("Missing argument for --loglevel.");
         }
       } else if (arg == "-j" || arg == "--jobs") {
         auto next_it = std::next(it);
@@ -637,7 +614,7 @@ struct RooferConfigHandler {
           it = c.args.erase(it);
           it = c.args.erase(it);
         } else {
-          throw std::runtime_error("Missing argument for --trace-interval");
+          throw std::runtime_error("Missing argument for --trace-interval.");
         }
       } else if (arg == "-c" || arg == "--config") {
         auto next_it = std::next(it);
@@ -651,7 +628,7 @@ struct RooferConfigHandler {
           it = c.args.erase(it);
           it = c.args.erase(it);
         } else {
-          throw std::runtime_error("Missing argument for --config");
+          throw std::runtime_error("Missing argument for --config.");
         }
       } else if (arg == "--crop-only") {
         _crop_only = true;
@@ -689,7 +666,7 @@ struct RooferConfigHandler {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
-            throw std::runtime_error(fmt::format("Unknown argument: {}", arg));
+            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
           }
 
         } else if (arg.starts_with("-R")) {
@@ -698,14 +675,14 @@ struct RooferConfigHandler {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
-            throw std::runtime_error(fmt::format("Unknown argument: {}", arg));
+            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
           }
         } else {
           ++it;
         }
       } catch (const std::exception& e) {
         throw std::runtime_error(
-            fmt::format("Error parsing argument: {}. {}", arg, e.what()));
+            fmt::format("Error parsing argument: {}. {}.", arg, e.what()));
       }
     }
 
@@ -770,6 +747,10 @@ struct RooferConfigHandler {
           for (auto& pc_path : *pc_paths) {
             input_paths.push_back(*pc_path.value<std::string>());
           }
+        } else {
+          throw std::runtime_error(
+              "Failed to read pointclouds.source. Make sure it is a list of "
+              "strings.");
         }
         pc.paths =
             find_filepaths(input_paths, {".las", ".LAS", ".laz", ".LAZ"});
@@ -797,7 +778,7 @@ struct RooferConfigHandler {
                                  *region_of_interest_->get(3)->value<double>(),
                                  0};
       } else {
-        logger.error("Failed to read parameter.region_of_interest");
+        logger.error("Failed to read parameter.region_of_interest.");
       }
     }
 

@@ -6,7 +6,7 @@ force_lod11_attribute = "kas_warenhuis"
 [[input.pointclouds]]
 name = "pointcloud"
 quality = 1
-source = "data/wippolder/wippolder.las"
+source = ["data/wippolder/wippolder.las"]
 
 [crop]
 cellsize = 0.5
