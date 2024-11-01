@@ -119,9 +119,10 @@ jobs:
 
       - name: Show error logs
         if: ${{ failure() }}
+        shell: bash
         run: >
-          cat D:\a\roofer\roofer\vcpkg\buildtrees\gmp\build-x64-windows-dbg-out.log
-          cat D:\a\roofer\roofer\vcpkg\buildtrees\gmp\build-x64-windows-dbg-err.log
+          cat D:/a/roofer/roofer/vcpkg/buildtrees/gmp/build-x64-windows-dbg-out.log
+          cat D:/a/roofer/roofer/vcpkg/buildtrees/gmp/build-x64-windows-dbg-err.log
 
       - name: Build
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
