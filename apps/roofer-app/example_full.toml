@@ -1,9 +1,6 @@
-[input.footprint]
-source = "data/wippolder/wippolder.gpkg"
+polygon-source = "data/wippolder/wippolder.gpkg"
+output-directory = 'output/wippolder'
 
-[[input.pointclouds]]
-name = "pointcloud"
+[[pointclouds]]
+name = "AHN3"
 source = "data/wippolder/wippolder.laz"
-
-[output]
-folder = 'output/wippolder'
