@@ -71,6 +71,23 @@ struct RooferConfig {
 
   // reconstruct
   roofer::ReconstructionConfig rec;
+
+  // output attribute names
+  std::unordered_map<std::string, std::string> n = {
+      {"status", "rf_status"},
+      {"reconstruction_time", "rf_reconstruction_time"},
+      {"val3dity_lod12", "rf_val3dity_lod12"},
+      {"val3dity_lod13", "rf_val3dity_lod13"},
+      {"val3dity_lod22", "rf_val3dity_lod22"},
+      {"is_glass_roof", "rf_is_glass_roof"},
+      {"nodata_frac", "rf_nodata_frac"},
+      {"nodata_r", "rf_nodata_r"},
+      {"pt_density", "rf_pt_density"},
+      {"is_mutated", "rf_is_mutated"},
+      {"pc_select", "rf_pc_select"},
+      {"pc_source", "rf_pc_source"},
+      {"pc_year", "rf_pc_year"},
+      {"force_lod11", "rf_force_lod11"}};
 };
 
 template <typename T>
@@ -526,7 +543,7 @@ struct RooferConfigHandler {
   }
 
   template <typename T, typename node>
-  void get_param(const node& config, const std::string& key, T& result) {
+  void get_toml_value(const node& config, const std::string& key, T& result) {
     if (auto tml_value = config[key].template value<T>();
         tml_value.has_value()) {
       result = *tml_value;
@@ -758,72 +775,90 @@ struct RooferConfigHandler {
     // iterate config table
     for (const auto& [key, value] : config) {
       if (key == "polygon-source") {
-        get_param(config, "polygon-source", _cfg.source_footprints);
+        get_toml_value(config, "polygon-source", _cfg.source_footprints);
       } else if (key == "output-directory") {
-        get_param(config, "output-directory", _cfg.output_path);
+        get_toml_value(config, "output-directory", _cfg.output_path);
       } else if (auto p = _pmap.find(key.data()); p != _pmap.end()) {
         p->second->set_from_toml(config, key.data());
       } else if (auto p = _rmap.find(key.data()); p != _rmap.end()) {
         p->second->set_from_toml(config, key.data());
-      } else if (key != "pointclouds") {
+      } else if (key == "pointclouds") {
+        if (toml::array* arr = config["pointclouds"].as_array()) {
+          // visitation with for_each() helps deal with heterogeneous data
+          for (auto& el : *arr) {
+            toml::table* tb = el.as_table();
+            auto& pc = _input_pointclouds.emplace_back();
+
+            get_toml_value(*tb, "name", pc.name);
+            get_toml_value(*tb, "quality", pc.quality);
+            get_toml_value(*tb, "date", pc.date);
+            get_toml_value(*tb, "force_lod11", pc.force_lod11);
+            get_toml_value(*tb, "select_only_for_date",
+                           pc.select_only_for_date);
+            get_toml_value(*tb, "building_class", pc.bld_class);
+            get_toml_value(*tb, "ground_class", pc.grnd_class);
+            std::list<std::string> input_paths;
+            if (toml::array* pc_paths = tb->at("source").as_array()) {
+              for (auto& pc_path : *pc_paths) {
+                input_paths.push_back(*pc_path.value<std::string>());
+              }
+            } else {
+              throw std::runtime_error(
+                  "Failed to read pointclouds.source. Make sure it is a list "
+                  "of "
+                  "strings.");
+            }
+            pc.paths =
+                find_filepaths(input_paths, {".las", ".LAS", ".laz", ".LAZ"});
+          };
+        }
+      } else if (key == "output-attributes") {
+        if (toml::table* tb = config["output-attributes"].as_table()) {
+          for (const auto& [key, value] : *tb) {
+            if (auto p = _cfg.n.find(key.data()); p != _cfg.n.end()) {
+              std::string name = "";
+              get_toml_value(*tb, key.data(), name);
+              if (!name.empty()) {
+                p->second = name;
+              }
+            } else {
+              throw std::runtime_error(
+                  fmt::format("Unknown output attribute: {}.", key.data()));
+            }
+          }
+        }
+      } else {
         throw std::runtime_error(
             fmt::format("Unknown parameter in config file: {}.", key.data()));
       }
     }
 
-    auto tml_pointclouds = config["pointclouds"];
-    if (toml::array* arr = tml_pointclouds.as_array()) {
-      // visitation with for_each() helps deal with heterogeneous data
-      for (auto& el : *arr) {
-        toml::table* tb = el.as_table();
-        auto& pc = _input_pointclouds.emplace_back();
-
-        get_param(*tb, "name", pc.name);
-        get_param(*tb, "quality", pc.quality);
-        get_param(*tb, "date", pc.date);
-        get_param(*tb, "force_lod11", pc.force_lod11);
-        get_param(*tb, "select_only_for_date", pc.select_only_for_date);
-        get_param(*tb, "building_class", pc.bld_class);
-        get_param(*tb, "ground_class", pc.grnd_class);
-        std::list<std::string> input_paths;
-        if (toml::array* pc_paths = tb->at("source").as_array()) {
-          for (auto& pc_path : *pc_paths) {
-            input_paths.push_back(*pc_path.value<std::string>());
-          }
-        } else {
-          throw std::runtime_error(
-              "Failed to read pointclouds.source. Make sure it is a list of "
-              "strings.");
-        }
-        pc.paths =
-            find_filepaths(input_paths, {".las", ".LAS", ".laz", ".LAZ"});
-      };
-    }
-
     // parameters
-    // get_param(config["crop"], "ceil_point_density", _cfg.ceil_point_density);
+    // get_toml_value(config["crop"], "ceil_point_density",
+    // _cfg.ceil_point_density);
 
     // reconstruction parameters
-    // get_param(config["reconstruct"], "complexity_factor",
+    // get_toml_value(config["reconstruct"], "complexity_factor",
     //           _cfg.rec.complexity_factor);
-    // get_param(config["reconstruct"], "clip_ground", _cfg.rec.clip_ground);
-    // get_param(config["reconstruct"], "lod", _cfg.rec.lod);
-    // get_param(config["reconstruct"], "lod13_step_height",
+    // get_toml_value(config["reconstruct"], "clip_ground",
+    // _cfg.rec.clip_ground); get_toml_value(config["reconstruct"], "lod",
+    // _cfg.rec.lod); get_toml_value(config["reconstruct"], "lod13_step_height",
     //           _cfg.rec.lod13_step_height);
-    // get_param(config["reconstruct"], "plane_detect_k",
-    // _cfg.rec.plane_detect_k); get_param(config["reconstruct"],
+    // get_toml_value(config["reconstruct"], "plane_detect_k",
+    // _cfg.rec.plane_detect_k); get_toml_value(config["reconstruct"],
     // "plane_detect_min_points",
     //           _cfg.rec.plane_detect_min_points);
-    // get_param(config["reconstruct"], "plane_detect_epsilon",
+    // get_toml_value(config["reconstruct"], "plane_detect_epsilon",
     //           _cfg.rec.plane_detect_epsilon);
-    // get_param(config["reconstruct"], "plane_detect_normal_angle",
+    // get_toml_value(config["reconstruct"], "plane_detect_normal_angle",
     //           _cfg.rec.plane_detect_normal_angle);
-    // get_param(config["reconstruct"], "line_detect_epsilon",
+    // get_toml_value(config["reconstruct"], "line_detect_epsilon",
     //           _cfg.rec.line_detect_epsilon);
-    // get_param(config["reconstruct"], "thres_alpha", _cfg.rec.thres_alpha);
-    // get_param(config["reconstruct"], "thres_reg_line_dist",
+    // get_toml_value(config["reconstruct"], "thres_alpha",
+    // _cfg.rec.thres_alpha); get_toml_value(config["reconstruct"],
+    // "thres_reg_line_dist",
     //           _cfg.rec.thres_reg_line_dist);
-    // get_param(config["reconstruct"], "thres_reg_line_ext",
+    // get_toml_value(config["reconstruct"], "thres_reg_line_ext",
     //           _cfg.rec.thres_reg_line_ext);
   }
 };

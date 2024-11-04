@@ -98,7 +98,7 @@ void crop_tile(const roofer::TBox<double>& tile,
   }
 
   // create force_lod11 vector, initialize with user input and area check
-  auto& force_lod11_vec = attributes.insert_vec<bool>("b3_force_lod11");
+  auto& force_lod11_vec = attributes.insert_vec<bool>(cfg.n["force_lod11"]);
   force_lod11_vec.resize(N_fp, false);
 
   if (auto user_force_lod11_vec =
@@ -177,11 +177,14 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
-    auto& nodata_r = attributes.insert_vec<float>("nodata_r_" + ipc.name);
-    auto& nodata_frac = attributes.insert_vec<float>("nodata_frac_" + ipc.name);
-    auto& pt_density = attributes.insert_vec<float>("pt_density_" + ipc.name);
+    auto& nodata_r =
+        attributes.insert_vec<float>(cfg.n["nodata_r"] + "_" + ipc.name);
+    auto& nodata_frac =
+        attributes.insert_vec<float>(cfg.n["nodata_frac"] + "_" + ipc.name);
+    auto& pt_density =
+        attributes.insert_vec<float>(cfg.n["pt_density"] + "_" + ipc.name);
     auto& is_glass_roof =
-        attributes.insert_vec<bool>("is_glass_roof_" + ipc.name);
+        attributes.insert_vec<bool>(cfg.n["is_glass_roof"] + "_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
@@ -198,9 +201,9 @@ void crop_tile(const roofer::TBox<double>& tile,
   // attributes
   roofer::misc::selectPointCloudConfig select_pc_cfg;
   if (input_pointclouds.size() > 1) {
-    auto& is_mutated =
-        attributes.insert_vec<bool>("is_mutated_" + input_pointclouds[0].name +
-                                    "_" + input_pointclouds[1].name);
+    auto& is_mutated = attributes.insert_vec<bool>(
+        cfg.n["is_mutated"] + "_" + input_pointclouds[0].name + "_" +
+        input_pointclouds[1].name);
     is_mutated.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
       is_mutated[i] =
@@ -215,9 +218,9 @@ void crop_tile(const roofer::TBox<double>& tile,
   // building
   logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
-  auto& pc_select = attributes.insert_vec<std::string>("pc_select");
-  auto& pc_source = attributes.insert_vec<std::string>("pc_source");
-  auto& pc_year = attributes.insert_vec<int>("pc_year");
+  auto& pc_select = attributes.insert_vec<std::string>(cfg.n["pc_select"]);
+  auto& pc_source = attributes.insert_vec<std::string>(cfg.n["pc_source"]);
+  auto& pc_year = attributes.insert_vec<int>(cfg.n["pc_year"]);
   std::unordered_map<std::string, roofer::vec1s> jsonl_paths;
   std::string bid;
   bool only_write_selected = !cfg.output_all;
@@ -382,7 +385,7 @@ void crop_tile(const roofer::TBox<double>& tile,
               {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0]},
               {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1]},
               {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
-              {"skip_attribute_name", "b3_force_lod11"},
+              {"skip_attribute_name", cfg.n["force_lod11"]},
               {"id_attribute", cfg.id_attribute},
           };
 
