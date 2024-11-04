@@ -120,20 +120,41 @@ namespace roofer {
   };
 
   struct AttributeMapRow {
-    AttributeVecMap& attribs_;
-    size_t index_;
+    using amrmap =
+        std::unordered_map<std::string,
+                           std::variant<std::monostate, bool, int, std::string,
+                                        float, arr3f, Date, Time, DateTime>>;
+    amrmap _attributes;
 
+    AttributeMapRow(){};
     AttributeMapRow(AttributeVecMap& attribs, size_t index);
+
+    // begin() and end() for iterating over the attributes
+    amrmap::iterator begin();
+    amrmap::iterator end();
+    amrmap::const_iterator begin() const;
+    amrmap::const_iterator end() const;
+
+    template <typename T>
+    void insert(const std::string& name, T value) {
+      _attributes[name] = value;
+    };
+
+    void set_null(const std::string& name);
+    bool is_null(const std::string& name) const;
+    template <typename T>
+    void set(const std::string& name, T value);
+    bool has_name(const std::string& name) const;
 
     template <typename T>
     bool holds_alternative(const std::string& name) const;
     template <typename T>
-    const std::optional<T>* get_if(const std::string& name) const;
+    const T* get_if(const std::string& name) const;
     template <typename T>
-    std::optional<T>* get_if(const std::string& name);
+    T* get_if(const std::string& name);
 
-    AttributeVecMapDS& get_attributes();
-    const AttributeVecMapDS& get_attributes() const;
+    // AttributeVecMapDS& get_attributes();
+    // const AttributeVecMapDS& get_attributes() const;
   };
 
   class Geometry {

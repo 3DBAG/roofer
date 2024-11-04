@@ -213,12 +213,82 @@ namespace roofer {
     return attribs_.end();
   };
 
-  AttributeMapRow::AttributeMapRow(AttributeVecMap& attribs, size_t index)
-      : attribs_(attribs), index_(index) {}
+  AttributeMapRow::AttributeMapRow(AttributeVecMap& attribs, size_t index) {
+    for (auto& [name, vec] : attribs.get_attributes()) {
+      if (auto vec_bool = std::get_if<veco1b>(&vec)) {
+        if (vec_bool->at(index).has_value())
+          _attributes[name] = *(*vec_bool)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_int = std::get_if<veco1i>(&vec)) {
+        if (vec_int->at(index).has_value())
+          _attributes[name] = *(*vec_int)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_float = std::get_if<veco1f>(&vec)) {
+        if (vec_float->at(index).has_value())
+          _attributes[name] = *(*vec_float)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_string = std::get_if<veco1s>(&vec)) {
+        if (vec_string->at(index).has_value())
+          _attributes[name] = *(*vec_string)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_arr3f = std::get_if<veco3f>(&vec)) {
+        if (vec_arr3f->at(index).has_value())
+          _attributes[name] = *(*vec_arr3f)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_date = std::get_if<veco1D>(&vec)) {
+        if (vec_date->at(index).has_value())
+          _attributes[name] = *(*vec_date)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_time = std::get_if<veco1T>(&vec)) {
+        if (vec_time->at(index).has_value())
+          _attributes[name] = *(*vec_time)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else if (auto vec_datetime = std::get_if<veco1DT>(&vec)) {
+        if (vec_datetime->at(index).has_value())
+          _attributes[name] = *(*vec_datetime)[index];
+        else
+          _attributes[name] = std::monostate();
+      } else {
+        throw std::runtime_error("Unsupported type for AttributeMapRow.");
+      }
+    }
+  }
+
+  AttributeMapRow::amrmap::iterator AttributeMapRow::begin() {
+    return _attributes.begin();
+  }
+  AttributeMapRow::amrmap::iterator AttributeMapRow::end() {
+    return _attributes.end();
+  }
+  AttributeMapRow::amrmap::const_iterator AttributeMapRow::begin() const {
+    return _attributes.cbegin();
+  }
+  AttributeMapRow::amrmap::const_iterator AttributeMapRow::end() const {
+    return _attributes.cend();
+  }
+
+  void AttributeMapRow::set_null(const std::string& name) {
+    _attributes[name] = std::monostate();
+  }
+
+  bool AttributeMapRow::is_null(const std::string& name) const {
+    return std::holds_alternative<std::monostate>(_attributes.at(name));
+  }
+
+  bool AttributeMapRow::has_name(const std::string& name) const {
+    return _attributes.find(name) != _attributes.end();
+  }
 
   template <typename T>
   bool AttributeMapRow::holds_alternative(const std::string& name) const {
-    return attribs_.holds_alternative<T>(name);
+    return std::holds_alternative<T>(_attributes.at(name));
   }
   template bool AttributeMapRow::holds_alternative<bool>(
       const std::string& name) const;
@@ -238,64 +308,46 @@ namespace roofer {
       const std::string& name) const;
 
   template <typename T>
-  const std::optional<T>* AttributeMapRow::get_if(
-      const std::string& name) const {
-    auto vec = attribs_.get_if<T>(name);
-    if (vec) {
-      return &vec->at(index_);
-    } else {
-      return nullptr;
-    }
+  const T* AttributeMapRow::get_if(const std::string& name) const {
+    return std::get_if<T>(&_attributes.at(name));
   }
-  template const std::optional<bool>* AttributeMapRow::get_if<bool>(
+  template const bool* AttributeMapRow::get_if<bool>(
       const std::string& name) const;
-  template const std::optional<int>* AttributeMapRow::get_if<int>(
+  template const int* AttributeMapRow::get_if<int>(
       const std::string& name) const;
-  template const std::optional<float>* AttributeMapRow::get_if<float>(
+  template const float* AttributeMapRow::get_if<float>(
       const std::string& name) const;
-  template const std::optional<std::string>*
-  AttributeMapRow::get_if<std::string>(const std::string& name) const;
-  template const std::optional<arr3f>* AttributeMapRow::get_if<arr3f>(
+  template const std::string* AttributeMapRow::get_if<std::string>(
       const std::string& name) const;
-  template const std::optional<DateTime>* AttributeMapRow::get_if<DateTime>(
+  template const arr3f* AttributeMapRow::get_if<arr3f>(
       const std::string& name) const;
-  template const std::optional<Date>* AttributeMapRow::get_if<Date>(
+  template const DateTime* AttributeMapRow::get_if<DateTime>(
       const std::string& name) const;
-  template const std::optional<Time>* AttributeMapRow::get_if<Time>(
+  template const Date* AttributeMapRow::get_if<Date>(
+      const std::string& name) const;
+  template const Time* AttributeMapRow::get_if<Time>(
       const std::string& name) const;
 
   template <typename T>
-  std::optional<T>* AttributeMapRow::get_if(const std::string& name) {
-    auto vec = attribs_.get_if<T>(name);
-    if (vec) {
-      return &vec->at(index_);
-    } else {
-      return nullptr;
-    }
+  T* AttributeMapRow::get_if(const std::string& name) {
+    return std::get_if<T>(&_attributes.at(name));
   }
-  template std::optional<bool>* AttributeMapRow::get_if<bool>(
+  template bool* AttributeMapRow::get_if<bool>(const std::string& name);
+  template int* AttributeMapRow::get_if<int>(const std::string& name);
+  template float* AttributeMapRow::get_if<float>(const std::string& name);
+  template std::string* AttributeMapRow::get_if<std::string>(
       const std::string& name);
-  template std::optional<int>* AttributeMapRow::get_if<int>(
-      const std::string& name);
-  template std::optional<float>* AttributeMapRow::get_if<float>(
-      const std::string& name);
-  template std::optional<std::string>* AttributeMapRow::get_if<std::string>(
-      const std::string& name);
-  template std::optional<arr3f>* AttributeMapRow::get_if<arr3f>(
-      const std::string& name);
-  template std::optional<DateTime>* AttributeMapRow::get_if<DateTime>(
-      const std::string& name);
-  template std::optional<Date>* AttributeMapRow::get_if<Date>(
-      const std::string& name);
-  template std::optional<Time>* AttributeMapRow::get_if<Time>(
-      const std::string& name);
+  template arr3f* AttributeMapRow::get_if<arr3f>(const std::string& name);
+  template DateTime* AttributeMapRow::get_if<DateTime>(const std::string& name);
+  template Date* AttributeMapRow::get_if<Date>(const std::string& name);
+  template Time* AttributeMapRow::get_if<Time>(const std::string& name);
 
-  AttributeVecMapDS& AttributeMapRow::get_attributes() {
-    return attribs_.get_attributes();
-  }
-  const AttributeVecMapDS& AttributeMapRow::get_attributes() const {
-    return attribs_.get_attributes();
-  }
+  // AttributeVecMapDS& AttributeMapRow::get_attributes() {
+  //   return attribs_.get_attributes();
+  // }
+  // const AttributeVecMapDS& AttributeMapRow::get_attributes() const {
+  //   return attribs_.get_attributes();
+  // }
 
   size_t TriangleCollection::vertex_count() const { return size() * 3; }
   void TriangleCollection::compute_box() {
