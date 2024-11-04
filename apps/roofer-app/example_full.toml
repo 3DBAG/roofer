@@ -4,3 +4,19 @@ output-directory = 'output/wippolder'
 [[pointclouds]]
 name = "AHN3"
 source = "data/wippolder/wippolder.laz"
+
+[output-attributes]
+status = "rf_status"
+reconstruction_time = "rf_reconstruction_time"
+val3dity_lod12 = "rf_val3dity_lod12"
+val3dity_lod13 = "rf_val3dity_lod13"
+val3dity_lod22 = "rf_val3dity_lod22"
+is_glass_roof = "rf_is_glass_roof"
+nodata_frac = "rf_nodata_frac"
+nodata_r = "rf_nodata_r"
+pt_density = "rf_pt_density"
+is_mutated = "rf_is_mutated"
+pc_select = "rf_pc_select"
+pc_source = "rf_pc_source"
+pc_year = "rf_pc_year"
+force_lod11 = "rf_force_lod11"

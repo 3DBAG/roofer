@@ -906,8 +906,8 @@ int main(int argc, const char* argv[]) {
         auto& building_tile = pending_serialized.front();
 
         // create status attribute
-        auto& attr_status =
-            building_tile.attributes.insert_vec<std::string>("b3_status");
+        auto& attr_status = building_tile.attributes.insert_vec<std::string>(
+            roofer_cfg.n["rf_status"]);
         for (auto& progress : building_tile.buildings_progresses) {
           if (progress == RECONSTRUCTION_FAILED) {
             attr_status.push_back("reconstruction_failed");
@@ -918,28 +918,31 @@ int main(int argc, const char* argv[]) {
           }
         }
         // create time attribute
-        auto& attr_time =
-            building_tile.attributes.insert_vec<int>("b3_reconstruction_time");
+        auto& attr_time = building_tile.attributes.insert_vec<int>(
+            roofer_cfg.n["rf_reconstruction_time"]);
         for (auto& building : building_tile.buildings) {
           attr_time.push_back(building.reconstruction_time);
         }
 // create val3dity attribute
 #if RF_USE_VAL3DITY
         if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
-          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod12");
+          building_tile.attributes.insert_vec<std::string>(
+              roofer_cfg.n["val3dity_lod12"]);
         }
         if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
-          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod13");
+          building_tile.attributes.insert_vec<std::string>(
+              roofer_cfg.n["val3dity_lod13"]);
         }
         if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
-          building_tile.attributes.insert_vec<std::string>("b3_val3dity_lod22");
+          building_tile.attributes.insert_vec<std::string>(
+              roofer_cfg.n["val3dity_lod22"]);
         }
-        auto b3_val3dity_lod12 =
-            building_tile.attributes.get_if<std::string>("b3_val3dity_lod12");
-        auto b3_val3dity_lod13 =
-            building_tile.attributes.get_if<std::string>("b3_val3dity_lod13");
-        auto b3_val3dity_lod22 =
-            building_tile.attributes.get_if<std::string>("b3_val3dity_lod22");
+        auto b3_val3dity_lod12 = building_tile.attributes.get_if<std::string>(
+            roofer_cfg.n["val3dity_lod12"]);
+        auto b3_val3dity_lod13 = building_tile.attributes.get_if<std::string>(
+            roofer_cfg.n["val3dity_lod13"]);
+        auto b3_val3dity_lod22 = building_tile.attributes.get_if<std::string>(
+            roofer_cfg.n["val3dity_lod22"]);
         for (auto& building : building_tile.buildings) {
           if (b3_val3dity_lod12) {
             b3_val3dity_lod12->push_back(building.val3dity_lod12);
@@ -970,7 +973,7 @@ int main(int argc, const char* argv[]) {
         if (!roofer_cfg.split_cjseq) {
           auto jsonl_tile_path =
               fs::path(roofer_cfg.output_path) / "tiles" /
-              fmt::format("tile_{:04d}.city.jsonl", building_tile.id);
+              fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
           fs::create_directories(jsonl_tile_path.parent_path());
           ofs.open(jsonl_tile_path);
           CityJsonWriter->write_metadata(
