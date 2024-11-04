@@ -169,7 +169,7 @@ namespace roofer::io {
         // Building atributes
         bool id_from_attr = false;
         auto jattributes = nlohmann::json::object();
-        for (auto& [name_, vecvar] : attributes.get_attributes()) {
+        for (const auto& [name_, val] : attributes) {
           std::string name = name_;
           // see if we need to rename this attribute
           auto search = output_attribute_names.find(name);
@@ -180,68 +180,42 @@ namespace roofer::io {
             continue;
           }
 
-          if (auto vec = attributes.get_if<bool>(name)) {
-            if (vec->has_value()) {
-              jattributes[name] = vec->value();
-            } else {
-              jattributes[name] = j_null;
+          if (attributes.is_null(name)) {
+            jattributes[name] = j_null;
+          } else if (auto val = attributes.get_if<bool>(name)) {
+            jattributes[name] = *val;
+          } else if (auto val = attributes.get_if<float>(name)) {
+            jattributes[name] = *val;
+            if (name == identifier_attribute) {
+              b_id = std::to_string(*val);
             }
-          } else if (auto vec = attributes.get_if<float>(name)) {
-            if (vec->has_value()) {
-              jattributes[name] = vec->value();
-              if (name == identifier_attribute) {
-                b_id = std::to_string(vec->value());
-              }
-            } else {
-              jattributes[name] = j_null;
+          } else if (auto val = attributes.get_if<int>(name)) {
+            jattributes[name] = *val;
+            if (name == identifier_attribute) {
+              b_id = std::to_string(*val);
+              id_from_attr = true;
             }
-          } else if (auto vec = attributes.get_if<int>(name)) {
-            if (vec->has_value()) {
-              jattributes[name] = vec->value();
-              if (name == identifier_attribute) {
-                b_id = std::to_string(vec->value());
-                id_from_attr = true;
-              }
-            } else {
-              jattributes[name] = j_null;
-            }
-          } else if (auto vec = attributes.get_if<std::string>(name)) {
-            if (vec->has_value()) {
-              jattributes[name] = vec->value();
-              if (name == identifier_attribute) {
-                b_id = vec->value();
-                id_from_attr = true;
-              }
-            } else {
-              jattributes[name] = j_null;
+          } else if (auto val = attributes.get_if<std::string>(name)) {
+            jattributes[name] = *val;
+            if (name == identifier_attribute) {
+              b_id = *val;
+              id_from_attr = true;
             }
             // for date/time we follow https://en.wikipedia.org/wiki/ISO_8601
-          } else if (auto vec = attributes.get_if<Date>(name)) {
-            if (vec->has_value()) {
-              auto t = vec->value();
-              std::string date = t.format_to_ietf();
-              jattributes[name] = date;
-            } else {
-              jattributes[name] = j_null;
-            }
-          } else if (auto vec = attributes.get_if<Time>(name)) {
-            if (vec->has_value()) {
-              auto t = vec->value();
-              std::string time = std::to_string(t.hour) + ":" +
-                                 std::to_string(t.minute) + ":" +
-                                 std::to_string(t.second) + "Z";
-              jattributes[name] = time;
-            } else {
-              jattributes[name] = j_null;
-            }
-          } else if (auto vec = attributes.get_if<DateTime>(name)) {
-            if (vec->has_value()) {
-              auto t = vec->value();
-              std::string datetime = t.format_to_ietf();
-              jattributes[name] = datetime;
-            } else {
-              jattributes[name] = j_null;
-            }
+          } else if (auto val = attributes.get_if<Date>(name)) {
+            auto t = *val;
+            std::string date = t.format_to_ietf();
+            jattributes[name] = date;
+          } else if (auto val = attributes.get_if<Time>(name)) {
+            auto t = *val;
+            std::string time = std::to_string(t.hour) + ":" +
+                               std::to_string(t.minute) + ":" +
+                               std::to_string(t.second) + "Z";
+            jattributes[name] = time;
+          } else if (auto val = attributes.get_if<DateTime>(name)) {
+            auto t = *val;
+            std::string datetime = t.format_to_ietf();
+            jattributes[name] = datetime;
           }
         }
 

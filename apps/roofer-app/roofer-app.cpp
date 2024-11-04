@@ -923,38 +923,6 @@ int main(int argc, const char* argv[]) {
         for (auto& building : building_tile.buildings) {
           attr_time.push_back(building.reconstruction_time);
         }
-// create val3dity attribute
-#if RF_USE_VAL3DITY
-        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
-          building_tile.attributes.insert_vec<std::string>(
-              roofer_cfg.n["val3dity_lod12"]);
-        }
-        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
-          building_tile.attributes.insert_vec<std::string>(
-              roofer_cfg.n["val3dity_lod13"]);
-        }
-        if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
-          building_tile.attributes.insert_vec<std::string>(
-              roofer_cfg.n["val3dity_lod22"]);
-        }
-        auto b3_val3dity_lod12 = building_tile.attributes.get_if<std::string>(
-            roofer_cfg.n["val3dity_lod12"]);
-        auto b3_val3dity_lod13 = building_tile.attributes.get_if<std::string>(
-            roofer_cfg.n["val3dity_lod13"]);
-        auto b3_val3dity_lod22 = building_tile.attributes.get_if<std::string>(
-            roofer_cfg.n["val3dity_lod22"]);
-        for (auto& building : building_tile.buildings) {
-          if (b3_val3dity_lod12) {
-            b3_val3dity_lod12->push_back(building.val3dity_lod12);
-          }
-          if (b3_val3dity_lod13) {
-            b3_val3dity_lod13->push_back(building.val3dity_lod13);
-          }
-          if (b3_val3dity_lod22) {
-            b3_val3dity_lod22->push_back(building.val3dity_lod22);
-          }
-        }
-#endif
         // output reconstructed buildings
         auto CityJsonWriter =
             roofer::io::createCityJsonWriter(*building_tile.proj_helper);
@@ -997,22 +965,48 @@ int main(int argc, const char* argv[]) {
             ofs.open(building.jsonl_path);
           }
           try {
+            auto attrow = roofer::AttributeMapRow(building_tile.attributes,
+                                                  building.attribute_index);
+
+            attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
+            attrow.insert(roofer_cfg.n["roof_elevation_50p"],
+                          building.roof_elevation_50p);
+            attrow.insert(roofer_cfg.n["roof_elevation_70p"],
+                          building.roof_elevation_70p);
+            attrow.insert(roofer_cfg.n["roof_elevation_min"],
+                          building.roof_elevation_min);
+            attrow.insert(roofer_cfg.n["roof_elevation_max"],
+                          building.roof_elevation_max);
+
             std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
             std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
             std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
             if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
               ms12 = &building.multisolids_lod12;
+              attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
+#if RF_USE_VAL3DITY
+              attrow.insert(roofer_cfg.n["val3dity_lod12"],
+                            building.val3dity_lod12);
+#endif
             }
             if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
               ms13 = &building.multisolids_lod13;
+              attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
+#if RF_USE_VAL3DITY
+              attrow.insert(roofer_cfg.n["val3dity_lod13"],
+                            building.val3dity_lod13);
+#endif
             }
             if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
               ms22 = &building.multisolids_lod22;
+              attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
+#if RF_USE_VAL3DITY
+              attrow.insert(roofer_cfg.n["val3dity_lod22"],
+                            building.val3dity_lod22);
+#endif
             }
-            CityJsonWriter->write_feature(
-                ofs, building.footprint, ms12, ms13, ms22,
-                roofer::AttributeMapRow(building_tile.attributes,
-                                        building.attribute_index));
+            CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
+                                          ms22, attrow);
             if (roofer_cfg.split_cjseq) {
               ofs.close();
             }
