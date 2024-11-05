@@ -297,15 +297,37 @@
 </section>
 <section id="full-example-config-file">
 <h2>Full example config file<a class="headerlink" href="#full-example-config-file" title="Link to this heading">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="nb">input</span><span class="o">.</span><span class="n">footprint</span><span class="p">]</span>
-<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
+<span class="n">output</span><span class="o">-</span><span class="n">directory</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
 
-<span class="p">[[</span><span class="nb">input</span><span class="o">.</span><span class="n">pointclouds</span><span class="p">]]</span>
-<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;pointcloud&quot;</span>
+<span class="p">[[</span><span class="n">pointclouds</span><span class="p">]]</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;AHN3&quot;</span>
 <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.laz&quot;</span>
 
-<span class="p">[</span><span class="n">output</span><span class="p">]</span>
-<span class="n">folder</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
+<span class="p">[</span><span class="n">output</span><span class="o">-</span><span class="n">attributes</span><span class="p">]</span>
+<span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;rf_status&quot;</span>
+<span class="n">reconstruction_time</span> <span class="o">=</span> <span class="s2">&quot;rf_reconstruction_time&quot;</span>
+<span class="n">val3dity_lod12</span> <span class="o">=</span> <span class="s2">&quot;rf_val3dity_lod12&quot;</span>
+<span class="n">val3dity_lod13</span> <span class="o">=</span> <span class="s2">&quot;rf_val3dity_lod13&quot;</span>
+<span class="n">val3dity_lod22</span> <span class="o">=</span> <span class="s2">&quot;rf_val3dity_lod22&quot;</span>
+<span class="n">is_glass_roof</span> <span class="o">=</span> <span class="s2">&quot;rf_is_glass_roof&quot;</span>
+<span class="n">nodata_frac</span> <span class="o">=</span> <span class="s2">&quot;rf_nodata_frac&quot;</span>
+<span class="n">nodata_r</span> <span class="o">=</span> <span class="s2">&quot;rf_nodata_r&quot;</span>
+<span class="n">pt_density</span> <span class="o">=</span> <span class="s2">&quot;rf_pt_density&quot;</span>
+<span class="n">is_mutated</span> <span class="o">=</span> <span class="s2">&quot;rf_is_mutated&quot;</span>
+<span class="n">pc_select</span> <span class="o">=</span> <span class="s2">&quot;rf_pc_select&quot;</span>
+<span class="n">pc_source</span> <span class="o">=</span> <span class="s2">&quot;rf_pc_source&quot;</span>
+<span class="n">pc_year</span> <span class="o">=</span> <span class="s2">&quot;rf_pc_year&quot;</span>
+<span class="n">force_lod11</span> <span class="o">=</span> <span class="s2">&quot;rf_force_lod11&quot;</span>
+<span class="n">roof_type</span> <span class="o">=</span> <span class="s2">&quot;rf_roof_type&quot;</span>
+<span class="n">roof_elevation_50p</span> <span class="o">=</span> <span class="s2">&quot;rf_roof_elevation_50p&quot;</span>
+<span class="n">roof_elevation_70p</span> <span class="o">=</span> <span class="s2">&quot;rf_roof_elevation_70p&quot;</span>
+<span class="n">roof_elevation_min</span> <span class="o">=</span> <span class="s2">&quot;rf_roof_elevation_min&quot;</span>
+<span class="n">roof_elevation_max</span> <span class="o">=</span> <span class="s2">&quot;rf_roof_elevation_max&quot;</span>
+<span class="n">rmse_lod12</span> <span class="o">=</span> <span class="s2">&quot;rf_rmse_lod12&quot;</span>
+<span class="n">rmse_lod13</span> <span class="o">=</span> <span class="s2">&quot;rf_rmse_lod13&quot;</span>
+<span class="n">rmse_lod22</span> <span class="o">=</span> <span class="s2">&quot;rf_rmse_lod22&quot;</span>
+<span class="n">h_ground</span> <span class="o">=</span> <span class="s2">&quot;rf_h_ground&quot;</span>
 </pre></div>
 </div>
 </section>
