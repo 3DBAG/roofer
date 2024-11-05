@@ -251,88 +251,194 @@
         <article role="main" id="furo-main-content">
           <section id="roofer-cli-app">
 <h1>Roofer CLI App<a class="headerlink" href="#roofer-cli-app" title="Link to this heading">¶</a></h1>
-<p>Usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">roofer</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">pointcloud</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;...</span> <span class="o">&lt;</span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span>
-<span class="n">roofer</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="p">(</span><span class="o">-</span><span class="n">c</span> <span class="o">|</span> <span class="o">--</span><span class="n">config</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">config</span><span class="o">-</span><span class="n">file</span><span class="o">&gt;</span> <span class="p">[(</span><span class="o">&lt;</span><span class="n">pointcloud</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;...</span> <span class="o">&lt;</span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span><span class="o">&gt;</span><span class="p">)]</span> <span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span>
-<span class="n">roofer</span> <span class="o">-</span><span class="n">h</span> <span class="o">|</span> <span class="o">--</span><span class="n">help</span>
-<span class="n">roofer</span> <span class="o">-</span><span class="n">v</span> <span class="o">|</span> <span class="o">--</span><span class="n">version</span>
+<p><strong class="program">roofer</strong> is a command line application for generating LoD1.2, LoD1.3 and LoD2 building models from pointclouds.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>roofer [options] &lt;pointcloud-path&gt;... &lt;polygon-source&gt; &lt;output-directory&gt;
+roofer [options] (-c | --config) &lt;config-file&gt;
+                [(&lt;pointcloud-path&gt;... &lt;polygon-source&gt;)] &lt;output-directory&gt;
+roofer -h | --help
+roofer -v | --version
 </pre></div>
 </div>
-<dl>
-<dt>Positional arguments:</dt><dd><p>&lt;pointcloud-path&gt;            Path to pointcloud file (.LAS or .LAZ) or folder that contains pointcloud files.
-&lt;polygon-source&gt;           Path to footprint polygon source. Can be an OGR supported file (eg. GPKG) or database connection string.
-&lt;output-directory&gt;           Output directory.</p>
-</dd>
-<dt>Optional arguments:</dt><dd><dl class="option-list">
-<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pointcloud-path">
+<span class="sig-name descname"><span class="pre">&lt;pointcloud-path&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-pointcloud-path" title="Link to this definition">¶</a></dt>
+<dd><p>Path to pointcloud file (.LAS or .LAZ) or folder that contains pointcloud files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-polygon-source">
+<span class="sig-name descname"><span class="pre">&lt;polygon-source&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-polygon-source" title="Link to this definition">¶</a></dt>
+<dd><p>Path to footprint polygon source. Can be an OGR supported file (eg. GPKG) or database connection string.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-output-directory">
+<span class="sig-name descname"><span class="pre">&lt;output-directory&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-output-directory" title="Link to this definition">¶</a></dt>
+<dd><p>Output directory.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-h">
+<span id="cmdoption-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-h" title="Link to this definition">¶</a></dt>
 <dd><p>Show this help message.</p>
-</dd>
-<dt><kbd><span class="option">-v</span>, <span class="option">--version</span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-v">
+<span id="cmdoption-version"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-v" title="Link to this definition">¶</a></dt>
 <dd><p>Show version.</p>
-</dd>
-<dt><kbd><span class="option">-l</span>, <span class="option">--loglevel <var>&lt;level&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-l">
+<span id="cmdoption-loglevel"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--loglevel</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;level&gt;</span></span><a class="headerlink" href="#cmdoption-l" title="Link to this definition">¶</a></dt>
 <dd><p>Specify loglevel. Can be trace, debug, info, warning [default: info]</p>
-</dd>
-<dt><kbd><span class="option">--trace-interval <var>&lt;s&gt;</var></span></kbd></dt>
-<dd><p>Trace interval in seconds. Implies –loglevel trace [default: 10].</p>
-</dd>
-<dt><kbd><span class="option">-c <var>&lt;file&gt;</var></span>, <span class="option">--config <var>&lt;file&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-trace-interval">
+<span class="sig-name descname"><span class="pre">--trace-interval</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;s&gt;</span></span><a class="headerlink" href="#cmdoption-trace-interval" title="Link to this definition">¶</a></dt>
+<dd><p>Trace interval in seconds. Implies <a class="reference internal" href="#cmdoption-l"><code class="xref std std-option docutils literal notranslate"><span class="pre">--loglevel</span></code></a> trace [default: 10].</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-c">
+<span id="cmdoption-config"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;file&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--config</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;file&gt;</span></span><a class="headerlink" href="#cmdoption-c" title="Link to this definition">¶</a></dt>
 <dd><p>TOML configuration file.</p>
-</dd>
-<dt><kbd><span class="option">-j <var>&lt;n&gt;</var></span>, <span class="option">--jobs <var>&lt;n&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-j">
+<span id="cmdoption-jobs"></span><span class="sig-name descname"><span class="pre">-j</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--jobs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><a class="headerlink" href="#cmdoption-j" title="Link to this definition">¶</a></dt>
 <dd><p>Number of threads to use. [default: number of cores]</p>
-</dd>
-<dt><kbd><span class="option">--crop-output</span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-crop-output">
+<span class="sig-name descname"><span class="pre">--crop-output</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-crop-output" title="Link to this definition">¶</a></dt>
 <dd><p>Output cropped building pointclouds.</p>
-</dd>
-<dt><kbd><span class="option">--crop-output-all</span></kbd></dt>
-<dd><p>Output files for each candidate pointcloud instead of only the optimal candidate. Implies –crop-output.</p>
-</dd>
-<dt><kbd><span class="option">--crop-rasters</span></kbd></dt>
-<dd><p>Output rasterised crop pointclouds. Implies –crop-output.</p>
-</dd>
-<dt><kbd><span class="option">--index</span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-crop-output-all">
+<span class="sig-name descname"><span class="pre">--crop-output-all</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-crop-output-all" title="Link to this definition">¶</a></dt>
+<dd><p>Output files for each candidate pointcloud instead of only the optimal candidate. Implies <a class="reference internal" href="#cmdoption-crop-output"><code class="xref std std-option docutils literal notranslate"><span class="pre">--crop-output</span></code></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-crop-rasters">
+<span class="sig-name descname"><span class="pre">--crop-rasters</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-crop-rasters" title="Link to this definition">¶</a></dt>
+<dd><p>Output rasterised crop pointclouds. Implies <a class="reference internal" href="#cmdoption-crop-output"><code class="xref std std-option docutils literal notranslate"><span class="pre">--crop-output</span></code></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-index">
+<span class="sig-name descname"><span class="pre">--index</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-index" title="Link to this definition">¶</a></dt>
 <dd><p>Output index.gpkg file with crop analytics.</p>
-</dd>
-<dt><kbd><span class="option">--split-cjseq</span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-split-cjseq">
+<span class="sig-name descname"><span class="pre">--split-cjseq</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-split-cjseq" title="Link to this definition">¶</a></dt>
 <dd><p>Output CityJSONSequence file for each building [default: one file per output tile]</p>
-</dd>
-<dt><kbd><span class="option">--filter <var>&lt;str&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-filter">
+<span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
 <dd><p>Attribute filter</p>
-</dd>
-<dt><kbd><span class="option">--polygon-source-layer <var>&lt;str&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-polygon-source-layer">
+<span class="sig-name descname"><span class="pre">--polygon-source-layer</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-polygon-source-layer" title="Link to this definition">¶</a></dt>
 <dd><p>Load this layer from &lt;polygon-source&gt; [default: first layer]</p>
-</dd>
-<dt><kbd><span class="option">--force-lod11-attribute <var>&lt;str&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-force-lod11-attribute">
+<span class="sig-name descname"><span class="pre">--force-lod11-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-force-lod11-attribute" title="Link to this definition">¶</a></dt>
 <dd><p>Building attribute for forcing lod11</p>
-</dd>
-<dt><kbd><span class="option">--srs <var>&lt;str&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-srs">
+<span class="sig-name descname"><span class="pre">--srs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-srs" title="Link to this definition">¶</a></dt>
 <dd><p>Override SRS for both inputs and outputs</p>
-</dd>
-<dt><kbd><span class="option">--box <var>&lt;xmin ymin xmax ymax&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-box">
+<span class="sig-name descname"><span class="pre">--box</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;xmin</span> <span class="pre">ymin</span> <span class="pre">xmax</span> <span class="pre">ymax&gt;</span></span><a class="headerlink" href="#cmdoption-box" title="Link to this definition">¶</a></dt>
 <dd><p>Region of interest. Data outside of this region will be ignored</p>
-</dd>
-<dt><kbd><span class="option">--ceil_point_density <var>&lt;float&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ceil_point_density">
+<span class="sig-name descname"><span class="pre">--ceil_point_density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-ceil_point_density" title="Link to this definition">¶</a></dt>
 <dd><p>Enfore this point density ceiling on each building pointcloud.</p>
-</dd>
-<dt><kbd><span class="option">--tilesize <var>&lt;x y&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tilesize">
+<span class="sig-name descname"><span class="pre">--tilesize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;x</span> <span class="pre">y&gt;</span></span><a class="headerlink" href="#cmdoption-tilesize" title="Link to this definition">¶</a></dt>
 <dd><p>Tilesize used for output tiles</p>
-</dd>
-<dt><kbd><span class="option">--cellsize <var>&lt;float&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cellsize">
+<span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
 <dd><p>Cellsize used for quick pointcloud analysis</p>
-</dd>
-<dt><kbd><span class="option">--id-attribute <var>&lt;str&gt;</var></span></kbd></dt>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-id-attribute">
+<span class="sig-name descname"><span class="pre">--id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-id-attribute" title="Link to this definition">¶</a></dt>
 <dd><p>Building ID attribute</p>
-</dd>
-</dl>
-<p>-Rplane-detect-epsilon &lt;float&gt;     plane detect epsilon
--Rplane-detect-k &lt;int&gt;             plane detect k
--Rplane-detect-min-points &lt;int&gt;    plane detect min points
--Rlod13-step-height &lt;float&gt;        Step height used for LoD1.3 generation
--Rcomplexity-factor &lt;float&gt;        Complexity factor building reconstruction
--Rlod &lt;int&gt;                        Which LoDs to generate, possible values: 12, 13, 22 [default: all]</p>
-</dd>
-</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rplane-detect-epsilon">
+<span class="sig-name descname"><span class="pre">-Rplane-detect-epsilon</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-epsilon" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect epsilon</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rplane-detect-k">
+<span class="sig-name descname"><span class="pre">-Rplane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-k" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect k</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rplane-detect-min-points">
+<span class="sig-name descname"><span class="pre">-Rplane-detect-min-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-min-points" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect min points</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rlod13-step-height">
+<span class="sig-name descname"><span class="pre">-Rlod13-step-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rlod13-step-height" title="Link to this definition">¶</a></dt>
+<dd><p>Step height used for LoD1.3 generation</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rcomplexity-factor">
+<span class="sig-name descname"><span class="pre">-Rcomplexity-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rcomplexity-factor" title="Link to this definition">¶</a></dt>
+<dd><p>Complexity factor building reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-Rlod">
+<span class="sig-name descname"><span class="pre">-Rlod</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rlod" title="Link to this definition">¶</a></dt>
+<dd><p>Which LoDs to generate, possible values: 12, 13, 22 [default: all]</p>
+</dd></dl>
+
+</section>
+</section>
 <section id="example-config-file">
 <h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
@@ -434,6 +540,10 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Roofer CLI App</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#options">Options</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#example-config-file">Example config file</a></li>
 </ul>
 </li>
