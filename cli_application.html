@@ -252,51 +252,89 @@
           <section id="roofer-cli-app">
 <h1>Roofer CLI App<a class="headerlink" href="#roofer-cli-app" title="Link to this heading">¶</a></h1>
 <p>Usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">roofer</span> <span class="o">-</span><span class="n">c</span> <span class="o">&lt;</span><span class="n">file</span><span class="o">&gt;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">roofer</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">pointcloud</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;...</span> <span class="o">&lt;</span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span>
+<span class="n">roofer</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="p">(</span><span class="o">-</span><span class="n">c</span> <span class="o">|</span> <span class="o">--</span><span class="n">config</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">config</span><span class="o">-</span><span class="n">file</span><span class="o">&gt;</span> <span class="p">[(</span><span class="o">&lt;</span><span class="n">pointcloud</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;...</span> <span class="o">&lt;</span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span><span class="o">&gt;</span><span class="p">)]</span> <span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span>
+<span class="n">roofer</span> <span class="o">-</span><span class="n">h</span> <span class="o">|</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">roofer</span> <span class="o">-</span><span class="n">v</span> <span class="o">|</span> <span class="o">--</span><span class="n">version</span>
 </pre></div>
 </div>
 <dl>
-<dt>Options:</dt><dd><dl class="option-list">
+<dt>Positional arguments:</dt><dd><p>&lt;pointcloud-path&gt;            Path to pointcloud file (.LAS or .LAZ) or folder that contains pointcloud files.
+&lt;polygon-source&gt;           Path to footprint polygon source. Can be an OGR supported file (eg. GPKG) or database connection string.
+&lt;output-directory&gt;           Output directory.</p>
+</dd>
+<dt>Optional arguments:</dt><dd><dl class="option-list">
 <dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
 <dd><p>Show this help message.</p>
 </dd>
-<dt><kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></dt>
+<dt><kbd><span class="option">-v</span>, <span class="option">--version</span></kbd></dt>
 <dd><p>Show version.</p>
 </dd>
-<dt><kbd><span class="option">-v</span>, <span class="option">--verbose</span></kbd></dt>
-<dd><p>Be more verbose.</p>
-</dd>
-<dt><kbd><span class="option">-t</span>, <span class="option">--trace</span></kbd></dt>
-<dd><p>Trace the progress. Implies –verbose.</p>
+<dt><kbd><span class="option">-l</span>, <span class="option">--loglevel <var>&lt;level&gt;</var></span></kbd></dt>
+<dd><p>Specify loglevel. Can be trace, debug, info, warning [default: info]</p>
 </dd>
 <dt><kbd><span class="option">--trace-interval <var>&lt;s&gt;</var></span></kbd></dt>
-<dd><p>Trace interval in seconds [default: 10].</p>
+<dd><p>Trace interval in seconds. Implies –loglevel trace [default: 10].</p>
 </dd>
 <dt><kbd><span class="option">-c <var>&lt;file&gt;</var></span>, <span class="option">--config <var>&lt;file&gt;</var></span></kbd></dt>
-<dd><p>Config file.</p>
+<dd><p>TOML configuration file.</p>
 </dd>
 <dt><kbd><span class="option">-j <var>&lt;n&gt;</var></span>, <span class="option">--jobs <var>&lt;n&gt;</var></span></kbd></dt>
-<dd><p>Limit the number of threads used by roofer. Default is to use all available resources.</p>
+<dd><p>Number of threads to use. [default: number of cores]</p>
+</dd>
+<dt><kbd><span class="option">--crop-output</span></kbd></dt>
+<dd><p>Output cropped building pointclouds.</p>
+</dd>
+<dt><kbd><span class="option">--crop-output-all</span></kbd></dt>
+<dd><p>Output files for each candidate pointcloud instead of only the optimal candidate. Implies –crop-output.</p>
+</dd>
+<dt><kbd><span class="option">--crop-rasters</span></kbd></dt>
+<dd><p>Output rasterised crop pointclouds. Implies –crop-output.</p>
+</dd>
+<dt><kbd><span class="option">--index</span></kbd></dt>
+<dd><p>Output index.gpkg file with crop analytics.</p>
+</dd>
+<dt><kbd><span class="option">--split-cjseq</span></kbd></dt>
+<dd><p>Output CityJSONSequence file for each building [default: one file per output tile]</p>
+</dd>
+<dt><kbd><span class="option">--filter <var>&lt;str&gt;</var></span></kbd></dt>
+<dd><p>Attribute filter</p>
+</dd>
+<dt><kbd><span class="option">--polygon-source-layer <var>&lt;str&gt;</var></span></kbd></dt>
+<dd><p>Load this layer from &lt;polygon-source&gt; [default: first layer]</p>
+</dd>
+<dt><kbd><span class="option">--force-lod11-attribute <var>&lt;str&gt;</var></span></kbd></dt>
+<dd><p>Building attribute for forcing lod11</p>
+</dd>
+<dt><kbd><span class="option">--srs <var>&lt;str&gt;</var></span></kbd></dt>
+<dd><p>Override SRS for both inputs and outputs</p>
+</dd>
+<dt><kbd><span class="option">--box <var>&lt;xmin ymin xmax ymax&gt;</var></span></kbd></dt>
+<dd><p>Region of interest. Data outside of this region will be ignored</p>
+</dd>
+<dt><kbd><span class="option">--ceil_point_density <var>&lt;float&gt;</var></span></kbd></dt>
+<dd><p>Enfore this point density ceiling on each building pointcloud.</p>
+</dd>
+<dt><kbd><span class="option">--tilesize <var>&lt;x y&gt;</var></span></kbd></dt>
+<dd><p>Tilesize used for output tiles</p>
+</dd>
+<dt><kbd><span class="option">--cellsize <var>&lt;float&gt;</var></span></kbd></dt>
+<dd><p>Cellsize used for quick pointcloud analysis</p>
+</dd>
+<dt><kbd><span class="option">--id-attribute <var>&lt;str&gt;</var></span></kbd></dt>
+<dd><p>Building ID attribute</p>
 </dd>
 </dl>
+<p>-Rplane-detect-epsilon &lt;float&gt;     plane detect epsilon
+-Rplane-detect-k &lt;int&gt;             plane detect k
+-Rplane-detect-min-points &lt;int&gt;    plane detect min points
+-Rlod13-step-height &lt;float&gt;        Step height used for LoD1.3 generation
+-Rcomplexity-factor &lt;float&gt;        Complexity factor building reconstruction
+-Rlod &lt;int&gt;                        Which LoDs to generate, possible values: 12, 13, 22 [default: all]</p>
 </dd>
 </dl>
-<section id="minimum-example-config-file">
-<h2>Minimum example config file<a class="headerlink" href="#minimum-example-config-file" title="Link to this heading">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="nb">input</span><span class="o">.</span><span class="n">footprint</span><span class="p">]</span>
-<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
-
-<span class="p">[[</span><span class="nb">input</span><span class="o">.</span><span class="n">pointclouds</span><span class="p">]]</span>
-<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;pointcloud&quot;</span>
-<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.laz&quot;</span>
-
-<span class="p">[</span><span class="n">output</span><span class="p">]</span>
-<span class="n">folder</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
-</pre></div>
-</div>
-</section>
-<section id="full-example-config-file">
-<h2>Full example config file<a class="headerlink" href="#full-example-config-file" title="Link to this heading">¶</a></h2>
+<section id="example-config-file">
+<h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
 <span class="n">output</span><span class="o">-</span><span class="n">directory</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
 
@@ -396,8 +434,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Roofer CLI App</a><ul>
-<li><a class="reference internal" href="#minimum-example-config-file">Minimum example config file</a></li>
-<li><a class="reference internal" href="#full-example-config-file">Full example config file</a></li>
+<li><a class="reference internal" href="#example-config-file">Example config file</a></li>
 </ul>
 </li>
 </ul>
