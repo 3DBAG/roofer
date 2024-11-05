@@ -74,7 +74,6 @@ namespace fs = std::filesystem;
 #include <roofer/io/CityJsonWriter.hpp>
 
 #include "BS_thread_pool.hpp"
-#include "argh.h"
 #include "git.h"
 
 #if defined(IS_LINUX) || defined(IS_MACOS)
@@ -968,6 +967,7 @@ int main(int argc, const char* argv[]) {
             auto attrow = roofer::AttributeMapRow(building_tile.attributes,
                                                   building.attribute_index);
 
+            attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
             attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
             attrow.insert(roofer_cfg.n["roof_elevation_50p"],
                           building.roof_elevation_50p);
