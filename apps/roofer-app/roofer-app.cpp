@@ -906,7 +906,7 @@ int main(int argc, const char* argv[]) {
 
         // create status attribute
         auto& attr_status = building_tile.attributes.insert_vec<std::string>(
-            roofer_cfg.n["rf_status"]);
+            roofer_cfg.n["status"]);
         for (auto& progress : building_tile.buildings_progresses) {
           if (progress == RECONSTRUCTION_FAILED) {
             attr_status.push_back("reconstruction_failed");
@@ -918,7 +918,7 @@ int main(int argc, const char* argv[]) {
         }
         // create time attribute
         auto& attr_time = building_tile.attributes.insert_vec<int>(
-            roofer_cfg.n["rf_reconstruction_time"]);
+            roofer_cfg.n["reconstruction_time"]);
         for (auto& building : building_tile.buildings) {
           attr_time.push_back(building.reconstruction_time);
         }

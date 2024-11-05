@@ -497,12 +497,12 @@ struct RooferConfigHandler {
         "Output CityJSONSequence file for each building [default: one file per "
         "output tile]",
         _cfg.split_cjseq, {});
-    // addr("plane-detect_k", "plane detect k", _cfg.rec.plane_detect_k,
-    //      {roofer::v::HigherThan<int>(0)});
-    // addr("plane-detect-min-points", "plane detect min points",
-    //      _cfg.rec.plane_detect_min_points, {roofer::v::HigherThan<int>(2)});
-    // addr("plane-detect-epsilon", "plane detect epsilon",
-    //      _cfg.rec.plane_detect_epsilon, {roofer::v::HigherThan<float>(0)});
+    addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
+         {roofer::v::HigherThan<int>(0)});
+    addr("plane-detect-min-points", "plane detect min points",
+         _cfg.rec.plane_detect_min_points, {roofer::v::HigherThan<int>(2)});
+    addr("plane-detect-epsilon", "plane detect epsilon",
+         _cfg.rec.plane_detect_epsilon, {roofer::v::HigherThan<float>(0)});
   };
 
   template <typename T>
