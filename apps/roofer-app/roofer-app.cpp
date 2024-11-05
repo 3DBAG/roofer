@@ -1011,9 +1011,9 @@ int main(int argc, const char* argv[]) {
               ofs.close();
             }
             ++serialized_buildings_cnt;
-          } catch (...) {
-            logger.error("[serializer] Failed to serialize {}",
-                         building.jsonl_path.string());
+          } catch (const std::exception& e) {
+            logger.error("[serializer] Failed to serialize {}. {}",
+                         building.jsonl_path.string(), e.what());
           }
         }
         if (!roofer_cfg.split_cjseq) {
