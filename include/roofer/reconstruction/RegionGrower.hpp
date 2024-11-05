@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2024 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
 // and Balazs Dukai (3DGI)
 
-// This file is part of geoflow-roofer (https://github.com/3DBAG/geoflow-roofer)
+// This file is part of roofer (https://github.com/3DBAG/roofer)
 
 // geoflow-roofer was created as part of the 3DBAG project by the TU Delft 3D
 // geoinformation group (3d.bk.tudelf.nl) and 3DGI (3dgi.nl)
