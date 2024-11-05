@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set docker image tag to 'develop'
-        if: github.ref == 'refs/heads/develop'
         run: echo "DOCKER_TAG=develop" >> $GITHUB_ENV
       - name: Set docker image tag to git tag
         if: startsWith(github.ref, 'refs/tags/v')
