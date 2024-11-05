@@ -96,6 +96,7 @@ struct RooferConfig {
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
+      {"h_ground", "rf_h_ground"},
   };
 };
 
