@@ -542,10 +542,10 @@ struct RooferConfigHandler {
             "No files found for one of the input pointclouds.");
       }
     }
-    if (auto error_msg = roofer::v::PathExists(_cfg.source_footprints)) {
-      throw std::runtime_error(fmt::format(
-          "Footprint source does not exist: {}.", _cfg.source_footprints));
-    }
+    // if (auto error_msg = roofer::v::PathExists(_cfg.source_footprints)) {
+    //   throw std::runtime_error(fmt::format(
+    //       "Footprint source does not exist: {}.", _cfg.source_footprints));
+    // }
     if (auto error_msg = roofer::v::DirIsWritable(_cfg.output_path)) {
       throw std::runtime_error(
           fmt::format("Can't write to output directory: {}.", *error_msg));
