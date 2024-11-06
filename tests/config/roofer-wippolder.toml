@@ -11,4 +11,4 @@ lod = 22
 [[pointclouds]]
 name = "AHN3"
 quality = 1
-source = ["data/wippolder/wippolder.las"]
+source = ['data/wippolder/wippolder.las']

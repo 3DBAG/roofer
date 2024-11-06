@@ -548,7 +548,7 @@ struct RooferConfigHandler {
     // }
     if (auto error_msg = roofer::v::DirIsWritable(_cfg.output_path)) {
       throw std::runtime_error(
-          fmt::format("Can't write to output directory: {}.", *error_msg));
+          fmt::format("Can't write to output directory: {}", *error_msg));
     }
   }
 
@@ -799,27 +799,43 @@ struct RooferConfigHandler {
             toml::table* tb = el.as_table();
             auto& pc = _input_pointclouds.emplace_back();
 
-            get_toml_value(*tb, "name", pc.name);
-            get_toml_value(*tb, "quality", pc.quality);
-            get_toml_value(*tb, "date", pc.date);
-            get_toml_value(*tb, "force_lod11", pc.force_lod11);
-            get_toml_value(*tb, "select_only_for_date",
-                           pc.select_only_for_date);
-            get_toml_value(*tb, "building_class", pc.bld_class);
-            get_toml_value(*tb, "ground_class", pc.grnd_class);
-            std::list<std::string> input_paths;
-            if (toml::array* pc_paths = tb->at("source").as_array()) {
-              for (auto& pc_path : *pc_paths) {
-                input_paths.push_back(*pc_path.value<std::string>());
+            for (const auto& [key, value] : *tb) {
+              if (key == "name") {
+                get_toml_value(*tb, "name", pc.name);
+              } else if (key == "quality") {
+                get_toml_value(*tb, "quality", pc.quality);
+              } else if (key == "date") {
+                get_toml_value(*tb, "date", pc.date);
+              } else if (key == "force_lod11") {
+                get_toml_value(*tb, "force_lod11", pc.force_lod11);
+              } else if (key == "select_only_for_date") {
+                get_toml_value(*tb, "select_only_for_date",
+                               pc.select_only_for_date);
+              } else if (key == "building_class") {
+                get_toml_value(*tb, "building_class", pc.bld_class);
+              } else if (key == "ground_class") {
+                get_toml_value(*tb, "ground_class", pc.grnd_class);
+              } else if (key == "source") {
+                std::list<std::string> input_paths;
+                if (toml::array* pc_paths = tb->at("source").as_array()) {
+                  for (auto& pc_path : *pc_paths) {
+                    input_paths.push_back(*pc_path.value<std::string>());
+                  }
+                } else {
+                  throw std::runtime_error(
+                      "Failed to read pointclouds.source. Make sure it is a "
+                      "list of "
+                      "strings.");
+                }
+                pc.paths = find_filepaths(input_paths,
+                                          {".las", ".LAS", ".laz", ".LAZ"});
+              } else {
+                throw std::runtime_error(
+                    fmt::format("Unknown parameter in [[pointcloud]] table in "
+                                "config file: {}.",
+                                key.data()));
               }
-            } else {
-              throw std::runtime_error(
-                  "Failed to read pointclouds.source. Make sure it is a list "
-                  "of "
-                  "strings.");
             }
-            pc.paths =
-                find_filepaths(input_paths, {".las", ".LAS", ".laz", ".LAZ"});
           };
         }
       } else if (key == "output-attributes") {
