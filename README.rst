@@ -37,3 +37,8 @@ License
 -------
 
 The roofer project is licensed under the GPLv3 license.
+
+3DBAG organisation
+------------------
+
+This software is part of the 3DBAG project. For more information visit the `3DBAG organisation <https://github.com/3DBAG>`_.
