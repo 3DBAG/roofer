@@ -21,11 +21,49 @@
 
 #include <functional>
 #include <concepts>
+#include <thread>
 #include "toml.hpp"
+#include "fmt/format.h"
 
+#include <roofer/common/common.hpp>
+#include <roofer/logger/logger.h>
 #include <roofer/ReconstructionConfig.hpp>
+#include <roofer/misc/Vector2DOps.hpp>
 #include <stdexcept>
 #include <string>
+#include <list>
+#include <filesystem>
+#include "git.h"
+
+namespace fs = std::filesystem;
+
+using fileExtent = std::pair<std::string, roofer::TBox<double>>;
+
+struct InputPointcloud {
+  std::vector<std::string> paths;
+  std::string name;
+  int quality;
+  int date = 0;
+  int bld_class = 6;
+  int grnd_class = 2;
+  bool force_lod11 = false;
+  bool select_only_for_date = false;
+
+  roofer::vec1f nodata_radii;
+  roofer::vec1f nodata_fractions;
+  roofer::vec1f pt_densities;
+  roofer::vec1b is_mutated;
+  roofer::vec1b is_glass_roof;
+  roofer::vec1b lod11_forced;
+  std::vector<roofer::LinearRing> nodata_circles;
+  std::vector<roofer::PointCollection> building_clouds;
+  std::vector<roofer::ImageMap> building_rasters;
+  roofer::vec1f ground_elevations;
+  roofer::vec1i acquisition_years;
+
+  std::unique_ptr<roofer::misc::RTreeInterface> rtree;
+  std::vector<fileExtent> file_extents;
+};
 
 struct RooferConfig {
   // footprint source parameters
@@ -457,7 +495,10 @@ struct RooferConfigHandler {
         _cfg.layer_name, {});
     // add("layer_id", "id of layer", _cfg.layer_id,
     // {roofer::v::HigherOrEqualTo<int>(0)}});
-    add("filter", "Attribute filter", _cfg.attribute_filter, {});
+    add("filter",
+        "Specift WHERE clause in OGR SQL to select specfic features from "
+        "<polygon-source>",
+        _cfg.attribute_filter, {});
     add("ceil_point_density",
         "Enfore this point density ceiling on each building pointcloud.",
         _cfg.ceil_point_density, {roofer::v::HigherThan<float>(0)});

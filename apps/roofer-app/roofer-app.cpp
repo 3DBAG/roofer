@@ -74,7 +74,6 @@ namespace fs = std::filesystem;
 #include <roofer/io/CityJsonWriter.hpp>
 
 #include "BS_thread_pool.hpp"
-#include "git.h"
 
 #if defined(IS_LINUX) || defined(IS_MACOS)
 #include <new>
@@ -82,34 +81,6 @@ namespace fs = std::filesystem;
 #else
 #undef RF_ENABLE_HEAP_TRACING
 #endif
-
-using fileExtent = std::pair<std::string, roofer::TBox<double>>;
-
-struct InputPointcloud {
-  std::vector<std::string> paths;
-  std::string name;
-  int quality;
-  int date = 0;
-  int bld_class = 6;
-  int grnd_class = 2;
-  bool force_lod11 = false;
-  bool select_only_for_date = false;
-
-  roofer::vec1f nodata_radii;
-  roofer::vec1f nodata_fractions;
-  roofer::vec1f pt_densities;
-  roofer::vec1b is_mutated;
-  roofer::vec1b is_glass_roof;
-  roofer::vec1b lod11_forced;
-  std::vector<roofer::LinearRing> nodata_circles;
-  std::vector<roofer::PointCollection> building_clouds;
-  std::vector<roofer::ImageMap> building_rasters;
-  roofer::vec1f ground_elevations;
-  roofer::vec1i acquisition_years;
-
-  std::unique_ptr<roofer::misc::RTreeInterface> rtree;
-  std::vector<fileExtent> file_extents;
-};
 
 #include "config.hpp"
 

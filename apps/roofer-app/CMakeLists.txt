@@ -33,3 +33,6 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
+
+  add_executable("doc-helper" "doc-helper.cpp")
+  target_link_libraries("doc-helper" PRIVATE roofer-extra fmt::fmt cmake_git_version_tracking)
