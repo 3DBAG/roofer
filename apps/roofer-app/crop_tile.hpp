@@ -206,11 +206,11 @@ void crop_tile(const roofer::TBox<double>& tile,
         input_pointclouds[1].name);
     is_mutated.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
-      is_mutated[i] =
+      is_mutated.push_back(
           roofer::misc::isMutated(input_pointclouds[0].building_rasters[i],
                                   input_pointclouds[1].building_rasters[i],
                                   select_pc_cfg.threshold_mutation_fraction,
-                                  select_pc_cfg.threshold_mutation_difference);
+                                  select_pc_cfg.threshold_mutation_difference));
     }
   }
 
