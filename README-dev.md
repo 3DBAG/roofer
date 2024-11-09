@@ -46,7 +46,7 @@ See the CMake presets for the available test configurations.
 
 ### Test data
 
-Various test cases are available at https://data.3dgi.xyz/roofer-test-data.
+Various test cases are available at https://data.3dbag.nl/testdata/roofer.
 Each test case is documented in the README.
 
 The test data is downloaded automatically into `tests/data` during the project configuration, provided that you enable the tests with `RF_BUILD_TESTING`.
@@ -54,7 +54,7 @@ Once available locally, the data is not re-downloaded, unless the files are remo
 
 #### Adding test data
 
-The data for tests is stored at [https://data.3dgi.xyz/roofer-test-data](https://data.3dgi.xyz/roofer-test-data). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
+The data for tests is stored at [https://data.3dbag.nl/testdata/roofer](https://data.3dbag.nl/testdata/roofer). To add new data, upload a zip of the data files only. The toml configuration is checked into git and placed into `tests/config`. Make sure to use consistent names for the data files and tests.
 
 See `tests/CMakeLists.txt` how to fetch the data from the server and make it available for the tests. Note that `FetchContent` extracts the zip contents recursively. Thus, specify the directory as for instance `SOURCE_DIR "${DATA_DIR}/wippolder"` to have the contents placed into `data/wippolder`.
 Pass the md5 hash of the zipfile as the `URL_HASH` to `FetchContent`, so that only changed archives are re-downloaded.
@@ -73,7 +73,7 @@ wippolder/
 
 The `tests/data/wippolder/wippolder.txt` contains the WKT of the area.
 
-The ZIP compressed `tests/data/wippolder` directory is uploaded to `https://data.3dgi.xyz/roofer-test-data`.
+The ZIP compressed `tests/data/wippolder` directory is uploaded to `https://data.3dbag.nl/testdata/roofer`.
 The data is declared in `tests/CMakeLists.txt` with `FetchContent`.
 The archive's MD5 has is `8efc0a7cfb48d3d17f1dc834e3350efe`.
 

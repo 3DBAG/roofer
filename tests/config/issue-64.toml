@@ -1,0 +1,19 @@
+polygon-source = "data/issue-64/issue-64.gpkg"
+id-attribute = "identificatie"
+force-lod11-attribute = "kas_warenhuis"
+
+cellsize = 0.5
+lod = 22
+
+split-cjseq = false
+output-directory = "output/issue-64"
+
+[[pointclouds]]
+name = "AHN3"
+quality = 1
+source = ['data/issue-64/AHN3/t_967260.laz']
+
+[[pointclouds]]
+name = "AHN4"
+quality = 0
+source = ['data/issue-64/AHN4/t_967260.laz']

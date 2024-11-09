@@ -19,6 +19,13 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/wippolder")
 FetchContent_MakeAvailable(wippolder)
 
+FetchContent_Declare(
+  issue-64
+  URL "${DATA_URL_ROOT}/issue-64.zip"
+  URL_HASH MD5=49fe5d2f088f4c81089813f746264002
+  SOURCE_DIR "${DATA_DIR}/issue-64")
+FetchContent_MakeAvailable(issue-64)
+
 #FetchContent_Declare(
 #  wateringen
 #  URL "${DATA_URL_ROOT}/wateringen.zip"
@@ -70,10 +77,15 @@ if(RF_BUILD_APPS)
 
   add_test(
     NAME "roofer-wippolder"
-    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml" output-roofer-test
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/roofer-wippolder.toml"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "reconstruct-wippolder;roofer-wippolder")
+  add_test(
+    NAME "issue-64"
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-64.toml" --filter identificatie='NL.IMBAG.Pand.0603100000011074'
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  set(tests_built "reconstruct-wippolder;roofer-wippolder;issue-64")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 
