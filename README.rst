@@ -2,7 +2,7 @@
 roofer - automatic building reconstruction from pointclouds
 ===========================================================
 
-**roofer** performs fully automatic LoD2 building reconstruction from a pointcloud and a building footprint polygon. It was originally developed, and is still used, for the `3DBAG project <https://3dbag.nl>`_.
+**roofer** performs fully automatic LoD2 building reconstruction from a pointcloud and a building roofprint polygon. It was originally developed, and is still used, to create the `3DBAG dataset <https://3dbag.nl>`_.
 
 .. image:: https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/docs/_static/img/banner.png
   :width: 800
@@ -11,7 +11,7 @@ roofer - automatic building reconstruction from pointclouds
 Highlights
 ----------
 
-+ It reconstructs a 3D building model from a pointcloud and a 2D footprint polygon
++ It reconstructs a 3D building model from a pointcloud and a 2D roofprint polygon
 + It is a fully automated process, there is no manual modelling required.
 + It is possible to tweak the reconstruction parameters to adjust it a little to different input data qualities.
 + It can output different Level of Details: LoD1.2, LoD1.3, LoD2.2. See `the refined Levef of Details by the 3D geoinformation research group <https://3d.bk.tudelft.nl/lod/>`_.
@@ -19,6 +19,10 @@ Highlights
 + With the CLI application the building models are outputted to a `CityJSONSequence <https://www.cityjson.org/cityjsonseq/>`_ file.
 
 Documentation is provided at https://3dbag.github.io/roofer/. The source code is available at https://github.com/3DBAG/roofer.
+
+.. attention::
+
+  Roofer is currently still under active development and subject to breaking changes.
 
 Origin
 ------
@@ -36,9 +40,9 @@ Prior to 2024 the building reconstruction algorithms were developed as part of *
 License
 -------
 
-The roofer project is licensed under the GPLv3 license.
+Roofer is licensed under the GPLv3 license.
 
 3DBAG organisation
 ------------------
 
-This software is part of the 3DBAG project. For more information visit the `3DBAG organisation <https://github.com/3DBAG>`_.
+Roofer is part of the 3DBAG organisation. For more information visit the `3DBAG organisation <https://github.com/3DBAG>`_ on GitHub.

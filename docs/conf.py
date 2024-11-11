@@ -40,6 +40,12 @@ html_theme = 'furo'
 html_static_path = ['_static']
 
 html_theme_options = {
+    "light_css_variables": {
+        "color-announcement-background": "var(--color-problematic)",
+    },
+    "dark_css_variables": {
+        "color-announcement-background": "var(--color-problematic)",
+    },
     "footer_icons": [
         {
             "name": "GitHub",
@@ -54,5 +60,6 @@ html_theme_options = {
     ],
     "source_repository": "https://github.com/3DBAG/roofer/",
     "source_branch": "develop",
-    "source_directory": "docs/"
+    "source_directory": "docs/",
+    # "announcement": "Roofer is still under active development.",
 }

@@ -1,11 +1,55 @@
-polygon-source = "data/wippolder/wippolder.gpkg"
-output-directory = 'output/wippolder'
+# Vector source with polygon roofprints. Any OGR supported format is supported.
+polygon-source = "data/roofprints.gpkg"
+# Load this layer from <polygon-source> [default: first layer]
+polygon-source-layer = "SomeLayer"
+# Building ID attribute
+id-attribute = "id_attribute"
+# Boolean building attribute for forcing LoD 1.1 (simple roofprint extrustion) and skipping reconstruction in a higher LoD for this building.
+force-lod11-attribute = "SomeAttribute"
+# Specify WHERE clause in OGR SQL to select specfic features from <polygon-source>
+filter = "id_attribute='SomeID'"
+
+
+# Override SRS for both inputs and outputs
+srs = "EPSG:7415"
+# Region of interest. Data outside of this region will be ignored. Format: [x_min, y_min, x_max, y_max].
+box = [0,0,1000,1000]
+# Enfore this point density ceiling on each building pointcloud.
+ceil_point_density = 20
+# Tilesize used for output tiles. Format: [size_x, size_y].
+tilesize = [1000, 1000]
+# Cellsize used for quick pointcloud analysis
+cellsize = 0.5
+
+## Reconstruction options
+# Plane detect epsilon
+plane-detect-epsilon = 0.3
+# Plane detect k
+plane-detect-k = 15
+# Plane detect min points
+plane-detect-min-points = 15
+# Step height used for LoD1.3 generation
+lod13-step-height = 3
+# Complexity factor building reconstruction
+complexity-factor = 0.7
+# Which LoDs to generate, possible values: 12, 13, 22 [if omitted: all LoDs are generated]
+lod = 22
+
+## Output options
+# Output CityJSONSequence file for each building [default: one file per output tile]
+split-cjseq = false
+
+output-directory = 'output-directory'
 
 [[pointclouds]]
+# name of the pointcloud
 name = "AHN3"
-source = "data/wippolder/wippolder.laz"
+# source can be a list of files and/or directories with pointcloud files. If a directory is given
+# roofer recursively looks for files with the extensions `.laz`, `.las`, `.LAZ`, and `.LAS`.
+source = ["data/AHN3-pointcloud.laz"]
 
 [output-attributes]
+# Rename the attributes that are added to the output by roofer. Shown are the default names (prefix: `rf_`)
 status = "rf_status"
 reconstruction_time = "rf_reconstruction_time"
 val3dity_lod12 = "rf_val3dity_lod12"

@@ -18,12 +18,14 @@
 
 // Author(s):
 // Ravi Peters
+#pragma once
 
 #include <functional>
 #include <concepts>
 #include <thread>
 #include "toml.hpp"
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include <roofer/common/common.hpp>
 #include <roofer/logger/logger.h>
@@ -302,6 +304,7 @@ class ConfigParameter {
 
   std::string description() { return _help; }
   virtual std::string type_description() = 0;
+  virtual std::string get_as_string() = 0;
 };
 
 // template <typename T>
@@ -335,6 +338,19 @@ class ConfigParameterByReference : public ConfigParameter {
       }
     }
     return std::nullopt;
+  }
+
+  std::string get_as_string() override {
+    if constexpr (std::is_same_v<T, std::optional<roofer::TBox<double>>>) {
+      if (!_value.has_value()) {
+        return "[]";
+      } else {
+        return fmt::format("[{},{},{},{}]", _value->pmin[0], _value->pmin[1],
+                           _value->pmax[0], _value->pmax[1]);
+      }
+    } else {
+      return fmt::format("{}", _value);
+    }
   }
 
   std::list<std::string>::iterator set(
@@ -496,7 +512,7 @@ struct RooferConfigHandler {
     // add("layer_id", "id of layer", _cfg.layer_id,
     // {roofer::v::HigherOrEqualTo<int>(0)}});
     add("filter",
-        "Specift WHERE clause in OGR SQL to select specfic features from "
+        "Specify WHERE clause in OGR SQL to select specfic features from "
         "<polygon-source>",
         _cfg.attribute_filter, {});
     add("ceil_point_density",
