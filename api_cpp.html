@@ -18,18 +18,21 @@
   body {
     --color-code-background: #f8f8f8;
   --color-code-foreground: black;
+  --color-announcement-background: var(--color-problematic);
   
   }
   @media not print {
     body[data-theme="dark"] {
       --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
         --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
       }
     }
@@ -251,6 +254,12 @@
         <article role="main" id="furo-main-content">
           <section id="api-reference-c">
 <h1>API Reference C++<a class="headerlink" href="#api-reference-c" title="Link to this heading">¶</a></h1>
+<p>The roofer C++ API allows you to use the roofer as a C++ library. Most notably it provides a <cite>reconstruct()</cite> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <cite>reconstruct()</cite> to prevent loss of precision.</p>
+</div>
+<p>See <a class="reference external" href="https://github.com/3DBAG/roofer/blob/develop/tests/test_reconstruct_api.cpp">this file</a> for a short example of how to use the C++ bindings.</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv46roofer">
 <span id="_CPPv36roofer"></span><span id="_CPPv26roofer"></span><span id="roofer"></span><span class="target" id="namespaceroofer"></span><span class="k"><span class="pre">namespace</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">roofer</span></span></span><a class="headerlink" href="#_CPPv46roofer" title="Link to this definition">¶</a><br /></dt>
@@ -319,19 +328,21 @@
 <span id="_CPPv3N6roofer20ReconstructionConfigE"></span><span id="_CPPv2N6roofer20ReconstructionConfigE"></span><span id="roofer::ReconstructionConfig"></span><span class="target" id="structroofer_1_1ReconstructionConfig"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ReconstructionConfig</span></span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfigE" title="Link to this definition">¶</a><br /></dt>
 <dd><div class="docutils container">
 <em>#include &lt;ReconstructionConfig.hpp&gt;</em></div>
-<p>Configuration parameters for single instance building reconstruction. </p>
+<p>Configuration parameters for the roofer building reconstruction algorithm. </p>
+<p>Coordinate units are assumed to be in meters. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig17complexity_factorE">
 <span id="_CPPv3N6roofer20ReconstructionConfig17complexity_factorE"></span><span id="_CPPv2N6roofer20ReconstructionConfig17complexity_factorE"></span><span id="roofer::ReconstructionConfig::complexity_factor__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a1ca223feeb28fa008ffeff43800e6268"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">complexity_factor</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.7</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig17complexity_factorE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>Complexity factor for the optimisation. </p>
+<dd><p>Complexity factor for building model geometry. </p>
+<p>A number between <code class="docutils literal notranslate"><span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">1.0</span></code>. Higher values lead to more detailed building models, lower values to simpler models. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig11clip_groundE">
 <span id="_CPPv3N6roofer20ReconstructionConfig11clip_groundE"></span><span id="_CPPv2N6roofer20ReconstructionConfig11clip_groundE"></span><span id="roofer::ReconstructionConfig::clip_ground__b"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a68629079433b5ed2692accf96d81c891"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clip_ground</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig11clip_groundE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[boolean, no unit] Set to true to activate the procedure that clips parts from the input footprint wherever patches of ground points are detected. </p>
+<dd><p>Set to true to activate the procedure that clips parts from the input footprint wherever patches of ground points are detected. </p>
 <p>May cause irregular outlines in reconstruction result. </p>
 </dd></dl>
 
@@ -340,10 +351,9 @@
 <span id="_CPPv3N6roofer20ReconstructionConfig3lodE"></span><span id="_CPPv2N6roofer20ReconstructionConfig3lodE"></span><span id="roofer::ReconstructionConfig::lod__i"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a1ce7e04433c9a3d0d7d553bc1e168fb3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lod</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">22</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig3lodE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Requested Level of Detail. </p>
 <p><ul class="simple">
-<li><p>12: LoD12</p></li>
-<li><p>13: LoD13</p></li>
-<li><p>22: LoD22</p></li>
-<li><p>0: LoD12, LoD13, and LoD22 (Roofer app only) </p></li>
+<li><p>12: LoD 1.2</p></li>
+<li><p>13: LoD 1.3</p></li>
+<li><p>22: LoD 2.2 </p></li>
 </ul>
 </p>
 </dd></dl>
@@ -351,73 +361,74 @@
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig17lod13_step_heightE">
 <span id="_CPPv3N6roofer20ReconstructionConfig17lod13_step_heightE"></span><span id="_CPPv2N6roofer20ReconstructionConfig17lod13_step_heightE"></span><span id="roofer::ReconstructionConfig::lod13_step_height__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a87354226a55657feafb53a4f14d40cd8"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lod13_step_height</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3.</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig17lod13_step_heightE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>Step height used for LoD13 generalisation. </p>
+<dd><p>Step height used for LoD13 generalisation, i.e. </p>
+<p>roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 reconstructions. Unit: meters. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig15floor_elevationE">
 <span id="_CPPv3N6roofer20ReconstructionConfig15floor_elevationE"></span><span id="_CPPv2N6roofer20ReconstructionConfig15floor_elevationE"></span><span id="roofer::ReconstructionConfig::floor_elevation__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1ac20eac964eb0ac45af1497baec49c9bd"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">floor_elevation</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig15floor_elevationE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>Floor elevation in case it is not provided by the footprint (API only) </p>
+<dd><p>Floor elevation in case it is not provided by the footprint (API only). </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig29override_with_floor_elevationE">
 <span id="_CPPv3N6roofer20ReconstructionConfig29override_with_floor_elevationE"></span><span id="_CPPv2N6roofer20ReconstructionConfig29override_with_floor_elevationE"></span><span id="roofer::ReconstructionConfig::override_with_floor_elevation__b"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a74dc4b2bf3a844e586311fb996ced407"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">override_with_floor_elevation</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig29override_with_floor_elevationE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>Force flat floor instead of using the elevation of the footprint (API only) </p>
+<dd><p>Force flat floor instead of using the elevation of the footprint (API only). </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig14plane_detect_kE">
 <span id="_CPPv3N6roofer20ReconstructionConfig14plane_detect_kE"></span><span id="_CPPv2N6roofer20ReconstructionConfig14plane_detect_kE"></span><span id="roofer::ReconstructionConfig::plane_detect_k__i"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1ab15322c272cc7a2b6e776c33fe5d5a68"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">plane_detect_k</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">15</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig14plane_detect_kE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[no unit] number of points used in nearest neighbour queries during plane detection </p>
+<dd><p>Number of points used in nearest neighbour queries during plane detection. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig23plane_detect_min_pointsE">
 <span id="_CPPv3N6roofer20ReconstructionConfig23plane_detect_min_pointsE"></span><span id="_CPPv2N6roofer20ReconstructionConfig23plane_detect_min_pointsE"></span><span id="roofer::ReconstructionConfig::plane_detect_min_points__i"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a1561604fd2a883b3e941ee6cf278e0d4"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">plane_detect_min_points</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">15</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig23plane_detect_min_pointsE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[no unit] minimum number of points required for detecting a plane </p>
+<dd><p>Minimum number of points required for detecting a plane. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig20plane_detect_epsilonE">
 <span id="_CPPv3N6roofer20ReconstructionConfig20plane_detect_epsilonE"></span><span id="_CPPv2N6roofer20ReconstructionConfig20plane_detect_epsilonE"></span><span id="roofer::ReconstructionConfig::plane_detect_epsilon__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1abadc0381bc4e0d738a63c64afe1d12c7"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">plane_detect_epsilon</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.300000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig20plane_detect_epsilonE" title="Link to this definition">¶</a><br /></dt>
-<dd><p># [meter] maximum distance from candidate points to plane during plane fitting procedure. </p>
-<p>Higher values offer more robustness against oversegmentation in plane detection, lower values give more planes that are closer to the point cloud. </p>
+<dd><p># Maximum distance from candidate points to plane during plane fitting procedure. </p>
+<p>Higher values offer more robustness against oversegmentation in plane detection, lower values give more planes that are closer to the point cloud. Unit: meters. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig25plane_detect_normal_angleE">
 <span id="_CPPv3N6roofer20ReconstructionConfig25plane_detect_normal_angleE"></span><span id="_CPPv2N6roofer20ReconstructionConfig25plane_detect_normal_angleE"></span><span id="roofer::ReconstructionConfig::plane_detect_normal_angle__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a86d63b6d48344109bab8e77c6c789ba2"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">plane_detect_normal_angle</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.750000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig25plane_detect_normal_angleE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[no unit] maximum allowed angle between points inside the same detected plane. </p>
+<dd><p>Maximum allowed angle between points inside the same detected plane. </p>
 <p>This value is compared to the dot product between two unit normals. Eg. 0 means 90 degrees (orthogonal normals), and 1.0 means 0 degrees (parallel normals) </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig19line_detect_epsilonE">
 <span id="_CPPv3N6roofer20ReconstructionConfig19line_detect_epsilonE"></span><span id="_CPPv2N6roofer20ReconstructionConfig19line_detect_epsilonE"></span><span id="roofer::ReconstructionConfig::line_detect_epsilon__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a026171c3cb6893c48c0e65bacf0e8446"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">line_detect_epsilon</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.000000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig19line_detect_epsilonE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[meter] maximum distance from candidate points to line during line fitting procedure. </p>
-<p>Higher values offer more robustness against irregular lines, lower values give more accurate lines (ie. more closely wrapping around point cloud). </p>
+<dd><p>Maximum distance from candidate points to line during line fitting procedure. </p>
+<p>Higher values offer more robustness against irregular lines, lower values give more accurate lines (ie. more closely wrapping around point cloud). Unit: meters. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig11thres_alphaE">
 <span id="_CPPv3N6roofer20ReconstructionConfig11thres_alphaE"></span><span id="_CPPv2N6roofer20ReconstructionConfig11thres_alphaE"></span><span id="roofer::ReconstructionConfig::thres_alpha__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a502ab0868f497b72e7fb3490a17df240"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">thres_alpha</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.250000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig11thres_alphaE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[meter] distance used in computing alpha-shape of detected plane segments prior to line detection. </p>
-<p>Higher values offer more robustness against irregular lines, lower values give more accurate lines (ie. more closely wrapping around point cloud). </p>
+<dd><p>Distance used in computing alpha-shape of detected plane segments prior to line detection. </p>
+<p>Higher values offer more robustness against irregular lines, lower values give more accurate lines (ie. more closely wrapping around point cloud). Unit: meters. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig19thres_reg_line_distE">
 <span id="_CPPv3N6roofer20ReconstructionConfig19thres_reg_line_distE"></span><span id="_CPPv2N6roofer20ReconstructionConfig19thres_reg_line_distE"></span><span id="roofer::ReconstructionConfig::thres_reg_line_dist__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a12a0792b59816010390e4c018ccf4078"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">thres_reg_line_dist</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.500000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig19thres_reg_line_distE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[meter] maximum distance to merge lines during line regularisation (after line detection). </p>
-<p>Approximately parallel lines that are closer to each other than this threshold are merged. Higher values yield more regularisation, lower values preserve more finer details. </p>
+<dd><p>Maximum distance to merge lines during line regularisation (after line detection). </p>
+<p>Approximately parallel lines that are closer to each other than this threshold are merged. Higher values yield more regularisation, lower values preserve more finer details. Unit: meters. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfig18thres_reg_line_extE">
 <span id="_CPPv3N6roofer20ReconstructionConfig18thres_reg_line_extE"></span><span id="_CPPv2N6roofer20ReconstructionConfig18thres_reg_line_extE"></span><span id="roofer::ReconstructionConfig::thres_reg_line_ext__float"></span><span class="target" id="structroofer_1_1ReconstructionConfig_1a49e91cbecb74c206599c95ce377b1d28"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">thres_reg_line_ext</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.000000</span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfig18thres_reg_line_extE" title="Link to this definition">¶</a><br /></dt>
-<dd><p>[meter] extension of regularised lines prior to optimisation. </p>
-<p>Used to compensate for undetected parts in the roofpart boundaries. Use higher values when the input pointcloud is less dense. However, setting this too high can lead to unrealistic reconstruction results. </p>
+<dd><p>Extension of regularised lines prior to optimisation. </p>
+<p>Used to compensate for undetected parts in the roofpart boundaries. Use higher values when the input pointcloud is less dense. However, setting this too high can lead to unrealistic reconstruction results. Unit: meters. </p>
 </dd></dl>
 
 </div>

@@ -18,18 +18,21 @@
   body {
     --color-code-background: #f8f8f8;
   --color-code-foreground: black;
+  --color-announcement-background: var(--color-problematic);
   
   }
   @media not print {
     body[data-theme="dark"] {
       --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
         --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
       }
     }
@@ -249,9 +252,15 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-roofer">
-<span id="api-reference-python"></span><h1>API Reference Python<a class="headerlink" href="#module-roofer" title="Link to this heading">¶</a></h1>
-<dl class="py class">
+          <section id="api-reference-python">
+<h1>API Reference Python<a class="headerlink" href="#api-reference-python" title="Link to this heading">¶</a></h1>
+<p>The roofer python API allows you to use the roofer library from Python. Most notably it provides a <cite>reconstruct()</cite> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <cite>reconstruct()</cite> to prevent loss of precision.</p>
+</div>
+<p>See <a class="reference external" href="https://github.com/3DBAG/roofer/blob/develop/rooferpy/example_rooferpy.py">this script</a> for a simple example of how to use the Python bindings.</p>
+<dl class="py class" id="module-roofer">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">ReconstructionConfig</span></span><a class="headerlink" href="#roofer.ReconstructionConfig" title="Link to this definition">¶</a></dt>
 <dd><dl class="py property">
@@ -296,11 +305,11 @@
 <span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roofer.reconstruct" title="Link to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
-<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], points_ground: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f8c96ab1df0&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
+<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], points_ground: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f0cfda53470&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
 </ol>
 <p>Reconstruct a single instance of a building from a point cloud with ground points</p>
 <ol class="arabic simple" start="2">
-<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f8c96aabc70&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
+<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f0cfda535b0&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
 </ol>
 <p>Reconstruct a single instance of a building from a point cloud without ground points</p>
 </dd></dl>

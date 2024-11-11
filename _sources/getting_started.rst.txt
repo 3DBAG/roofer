@@ -17,10 +17,11 @@ On *macOS* you need to install additional build tools:
    brew install autoconf autoconf-archive automake libtool
    export PATH="/opt/homebrew/opt/m4/bin:$PATH"
 
-Clone this repository and use one of the CMake presets to build the roofer.
+Clone the roofer repository and use one of the CMake presets to build the roofer.
 
 .. code-block:: shell
 
+   git clone https://github.com/3DBAG/roofer.git
    cd roofer
    mkdir build
    cmake --preset vcpkg-minimal -S . -B build

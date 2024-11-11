@@ -18,18 +18,21 @@
   body {
     --color-code-background: #f8f8f8;
   --color-code-foreground: black;
+  --color-announcement-background: var(--color-problematic);
   
   }
   @media not print {
     body[data-theme="dark"] {
       --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
         --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
       }
     }
@@ -350,7 +353,7 @@ roofer -v | --version
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-filter">
 <span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
-<dd><p>Attribute filter</p>
+<dd><p>Specify WHERE clause in OGR SQL to select specfic features from &lt;polygon-source&gt;</p>
 </dd></dl>
 
 <dl class="std option">
@@ -362,7 +365,7 @@ roofer -v | --version
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-force-lod11-attribute">
 <span class="sig-name descname"><span class="pre">--force-lod11-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-force-lod11-attribute" title="Link to this definition">¶</a></dt>
-<dd><p>Building attribute for forcing lod11</p>
+<dd><p>Building attribute for forcing lod11.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -404,51 +407,95 @@ roofer -v | --version
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rplane-detect-epsilon">
 <span class="sig-name descname"><span class="pre">-Rplane-detect-epsilon</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-epsilon" title="Link to this definition">¶</a></dt>
-<dd><p>plane detect epsilon</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig20plane_detect_epsilonE" title="roofer::ReconstructionConfig::plane_detect_epsilon"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_epsilon</span></code></a>.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rplane-detect-k">
 <span class="sig-name descname"><span class="pre">-Rplane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-k" title="Link to this definition">¶</a></dt>
-<dd><p>plane detect k</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig14plane_detect_kE" title="roofer::ReconstructionConfig::plane_detect_k"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_k</span></code></a>.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rplane-detect-min-points">
 <span class="sig-name descname"><span class="pre">-Rplane-detect-min-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rplane-detect-min-points" title="Link to this definition">¶</a></dt>
-<dd><p>plane detect min points</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig23plane_detect_min_pointsE" title="roofer::ReconstructionConfig::plane_detect_min_points"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_min_points</span></code></a>.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rlod13-step-height">
 <span class="sig-name descname"><span class="pre">-Rlod13-step-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rlod13-step-height" title="Link to this definition">¶</a></dt>
-<dd><p>Step height used for LoD1.3 generation</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig17lod13_step_heightE" title="roofer::ReconstructionConfig::lod13_step_height"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::lod13_step_height</span></code></a>.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rcomplexity-factor">
 <span class="sig-name descname"><span class="pre">-Rcomplexity-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span></span><a class="headerlink" href="#cmdoption-Rcomplexity-factor" title="Link to this definition">¶</a></dt>
-<dd><p>Complexity factor building reconstruction</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig17complexity_factorE" title="roofer::ReconstructionConfig::complexity_factor"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::complexity_factor</span></code></a>.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-Rlod">
 <span class="sig-name descname"><span class="pre">-Rlod</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span></span><a class="headerlink" href="#cmdoption-Rlod" title="Link to this definition">¶</a></dt>
-<dd><p>Which LoDs to generate, possible values: 12, 13, 22 [default: all]</p>
+<dd><p>See <a class="reference internal" href="api_cpp.html#_CPPv4N6roofer20ReconstructionConfig3lodE" title="roofer::ReconstructionConfig::lod"><code class="xref cpp cpp-member docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::lod</span></code></a>. Default is to reconstruct all LoDs.</p>
 </dd></dl>
 
 </section>
 </section>
 <section id="example-config-file">
 <h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">polygon</span><span class="o">-</span><span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.gpkg&quot;</span>
-<span class="n">output</span><span class="o">-</span><span class="n">directory</span> <span class="o">=</span> <span class="s1">&#39;output/wippolder&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Vector source with polygon roofprints. Any OGR supported format is supported.</span>
+<span class="n">polygon</span><span class="o">-</span><span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/roofprints.gpkg&quot;</span>
+<span class="c1"># Load this layer from &lt;polygon-source&gt; [default: first layer]</span>
+<span class="n">polygon</span><span class="o">-</span><span class="n">source</span><span class="o">-</span><span class="n">layer</span> <span class="o">=</span> <span class="s2">&quot;SomeLayer&quot;</span>
+<span class="c1"># Building ID attribute</span>
+<span class="nb">id</span><span class="o">-</span><span class="n">attribute</span> <span class="o">=</span> <span class="s2">&quot;id_attribute&quot;</span>
+<span class="c1"># Boolean building attribute for forcing LoD 1.1 (simple roofprint extrustion) and skipping reconstruction in a higher LoD for this building.</span>
+<span class="n">force</span><span class="o">-</span><span class="n">lod11</span><span class="o">-</span><span class="n">attribute</span> <span class="o">=</span> <span class="s2">&quot;SomeAttribute&quot;</span>
+<span class="c1"># Specify WHERE clause in OGR SQL to select specfic features from &lt;polygon-source&gt;</span>
+<span class="nb">filter</span> <span class="o">=</span> <span class="s2">&quot;id_attribute=&#39;SomeID&#39;&quot;</span>
+
+
+<span class="c1"># Override SRS for both inputs and outputs</span>
+<span class="n">srs</span> <span class="o">=</span> <span class="s2">&quot;EPSG:7415&quot;</span>
+<span class="c1"># Region of interest. Data outside of this region will be ignored. Format: [x_min, y_min, x_max, y_max].</span>
+<span class="n">box</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">]</span>
+<span class="c1"># Enfore this point density ceiling on each building pointcloud.</span>
+<span class="n">ceil_point_density</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="c1"># Tilesize used for output tiles. Format: [size_x, size_y].</span>
+<span class="n">tilesize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">]</span>
+<span class="c1"># Cellsize used for quick pointcloud analysis</span>
+<span class="n">cellsize</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+<span class="c1">## Reconstruction options</span>
+<span class="c1"># Plane detect epsilon</span>
+<span class="n">plane</span><span class="o">-</span><span class="n">detect</span><span class="o">-</span><span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="c1"># Plane detect k</span>
+<span class="n">plane</span><span class="o">-</span><span class="n">detect</span><span class="o">-</span><span class="n">k</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="c1"># Plane detect min points</span>
+<span class="n">plane</span><span class="o">-</span><span class="n">detect</span><span class="o">-</span><span class="nb">min</span><span class="o">-</span><span class="n">points</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="c1"># Step height used for LoD1.3 generation</span>
+<span class="n">lod13</span><span class="o">-</span><span class="n">step</span><span class="o">-</span><span class="n">height</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="c1"># Complexity factor building reconstruction</span>
+<span class="n">complexity</span><span class="o">-</span><span class="n">factor</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="c1"># Which LoDs to generate, possible values: 12, 13, 22 [if omitted: all LoDs are generated]</span>
+<span class="n">lod</span> <span class="o">=</span> <span class="mi">22</span>
+
+<span class="c1">## Output options</span>
+<span class="c1"># Output CityJSONSequence file for each building [default: one file per output tile]</span>
+<span class="n">split</span><span class="o">-</span><span class="n">cjseq</span> <span class="o">=</span> <span class="n">false</span>
+
+<span class="n">output</span><span class="o">-</span><span class="n">directory</span> <span class="o">=</span> <span class="s1">&#39;output-directory&#39;</span>
 
 <span class="p">[[</span><span class="n">pointclouds</span><span class="p">]]</span>
+<span class="c1"># name of the pointcloud</span>
 <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;AHN3&quot;</span>
-<span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;data/wippolder/wippolder.laz&quot;</span>
+<span class="c1"># source can be a list of files and/or directories with pointcloud files. If a directory is given</span>
+<span class="c1"># roofer recursively looks for files with the extensions `.laz`, `.las`, `.LAZ`, and `.LAS`.</span>
+<span class="n">source</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;data/AHN3-pointcloud.laz&quot;</span><span class="p">]</span>
 
 <span class="p">[</span><span class="n">output</span><span class="o">-</span><span class="n">attributes</span><span class="p">]</span>
+<span class="c1"># Rename the attributes that are added to the output by roofer. Shown are the default names (prefix: `rf_`)</span>
 <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;rf_status&quot;</span>
 <span class="n">reconstruction_time</span> <span class="o">=</span> <span class="s2">&quot;rf_reconstruction_time&quot;</span>
 <span class="n">val3dity_lod12</span> <span class="o">=</span> <span class="s2">&quot;rf_val3dity_lod12&quot;</span>

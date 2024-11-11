@@ -76,7 +76,7 @@ Options
 
 .. option:: --filter <str>
 
-  Attribute filter
+  Specify WHERE clause in OGR SQL to select specfic features from <polygon-source>
 
 .. option:: --polygon-source-layer <str>
 
@@ -84,7 +84,7 @@ Options
 
 .. option:: --force-lod11-attribute <str>
 
-  Building attribute for forcing lod11
+  Building attribute for forcing lod11.
 
 .. option:: --srs <str>
 
@@ -116,27 +116,27 @@ Options
 
 .. option:: -Rplane-detect-epsilon <float>
 
-  plane detect epsilon
+  See :cpp:member:`roofer::ReconstructionConfig::plane_detect_epsilon`.
 
 .. option:: -Rplane-detect-k <int>
 
-  plane detect k
+  See :cpp:member:`roofer::ReconstructionConfig::plane_detect_k`.
 
 .. option:: -Rplane-detect-min-points <int>
 
-  plane detect min points
+  See :cpp:member:`roofer::ReconstructionConfig::plane_detect_min_points`.
 
 .. option:: -Rlod13-step-height <float>
 
-  Step height used for LoD1.3 generation
+  See :cpp:member:`roofer::ReconstructionConfig::lod13_step_height`.
 
 .. option:: -Rcomplexity-factor <float>
 
-  Complexity factor building reconstruction
+  See :cpp:member:`roofer::ReconstructionConfig::complexity_factor`.
 
 .. option:: -Rlod <int>
 
-  Which LoDs to generate, possible values: 12, 13, 22 [default: all]
+  See :cpp:member:`roofer::ReconstructionConfig::lod`. Default is to reconstruct all LoDs.
 
 
 

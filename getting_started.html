@@ -18,18 +18,21 @@
   body {
     --color-code-background: #f8f8f8;
   --color-code-foreground: black;
+  --color-announcement-background: var(--color-problematic);
   
   }
   @media not print {
     body[data-theme="dark"] {
       --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
         --color-code-background: #202020;
   --color-code-foreground: #d0d0d0;
+  --color-announcement-background: var(--color-problematic);
   
       }
     }
@@ -261,8 +264,9 @@
 <span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/homebrew/opt/m4/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
-<p>Clone this repository and use one of the CMake presets to build the roofer.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>roofer
+<p>Clone the roofer repository and use one of the CMake presets to build the roofer.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3DBAG/roofer.git
+<span class="nb">cd</span><span class="w"> </span>roofer
 mkdir<span class="w"> </span>build
 cmake<span class="w"> </span>--preset<span class="w"> </span>vcpkg-minimal<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
 cmake<span class="w"> </span>--build<span class="w"> </span>build
