@@ -146,10 +146,13 @@ Options
 
 Output format
 -------------
-The output of the :program:`roofer` CLI application are `CityJSONSequence <https://www.cityjson.org/cityjsonseq/>`_ files. These is a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
+The output of the :program:`roofer` CLI application are `CityJSONSequence <https://www.cityjson.org/cityjsonseq/>`_ files. These are a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
+
+..  info::
+  In the near future we expect to introduce a converter program to convert the CityJSONSequence files to other formats like GPKG, OBJ and others.
 
 Example config file
 -------------------
-Below is an example of a configuration file for the :program:`roofer` CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, incase one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
+Below is an example of a `TOML <https://toml.io/en/>` configuration file for the :program:`roofer` CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, incase one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
 
 .. literalinclude:: ../apps/roofer-app/example_full.toml
