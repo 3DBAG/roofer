@@ -8,7 +8,7 @@ The following assumptions are made in the reconstruction algorithm:
 * Roof shapes are approximated with planar faces extracted from a point cloud -- in other words, they are **piecewise planar**,
 * Building models are **2.5D** with vertical walls. This simplifies the problem and results in a fast algorithm and makes sense for Airborne lidar scans; however, this also means that features like roof overhangs and balconies cannot be modelled.
 * Point clouds and footprints are properly aligned. Not only must the input data be in the same coordinate reference system (CRS), but also the positional error (horizontal shift) is assumed to be minimal.
-* Point clouds should have buildings and terrain classified (LAS classes 6 and 2 respectively) and contain no outliers. In case the building points contain vegetation and other off-ground artefacts it might interfere with the reconstruction.
+* Point clouds should be free of outliers and classified with at least buildings and terrain classes. In case the building points contain vegetation and other off-ground artefacts it might interfere with the reconstruction. For more information on the requirements of the input data, see :doc:`data_requirements`.
 
 Algorithm overview
 ------------------

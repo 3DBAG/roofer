@@ -1,10 +1,12 @@
 Getting started
 ===============
 
+At this moment we do not yet provide separate pre-compiled binaries for roofer. To get started with roofer you need to either compile it from the sourcecode yourself or you can use the automatically built `Docker image <https://hub.docker.com/r/3dgi/roofer/tags>`_. Once roofer version 1.0 will be released, we expect to provide pre-compiled binaries for the most common platforms.
+
 Compilation from source
 -----------------------
 
-It is recommended to use `vcpkg <https://vcpkg.io>`_ to build **roofer**.
+To ease getting the required dependencies it is recommended to use `vcpkg <https://vcpkg.io>`_ to build **roofer**.
 
 Follow the `vcpkg instructions <https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd>`_ to set it up.
 
@@ -28,26 +30,3 @@ Clone the roofer repository and use one of the CMake presets to build the roofer
    cmake --build build
    # Optionally, install roofer
    cmake --install build
-
-Requirements on the input data
-------------------------------
-
-Point cloud
-^^^^^^^^^^^
-
-+ Acquired through aerial scanning, either Lidar or Dense Image Matching. But Lidar is preferred, because it is often of higher quality. Thus point clouds with only building facades eg. mobile mapping surveys are not supported.
-+ The fewer outliers the better.
-+ Classified, with at least *ground* and *building* classes.
-+ Has sufficient point density. We achieve good results with 8-10 pts/m2 in the `3D BAG <https://3dbag.nl>`_.
-+ Well aligned with the 2D building polygon.
-+ Do include some ground points around the building so that the software can determine the ground floor elevation.
-+ Pointcloud is automatically cropped to the extent of the 2D building polygon.
-+ In `.LAS` or `.LAZ` format for the CLI app.
-
-2D building polygon
-^^^^^^^^^^^^^^^^^^^
-
-+ A simple 2D polygon of a single building.
-+ Preferably roofprint, since the input point cloud was also acquired from the air.
-+ Well aligned with the point cloud.
-+ In GeoPackage or ESRI Shapefile format, or a PostGIS database connection.
