@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Roofer CLI App" href="cli_application.html" /><link rel="prev" title="Getting started" href="getting_started.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Requirements on the input data" href="data_requirements.html" /><link rel="prev" title="Getting started" href="getting_started.html" />
 
     <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
         <title>Reconstruction algorithm and parameters - roofer documentation</title>
@@ -205,6 +205,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Reconstruction algorithm and parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
@@ -261,7 +262,7 @@
 <li><p>Roof shapes are approximated with planar faces extracted from a point cloud – in other words, they are <strong>piecewise planar</strong>,</p></li>
 <li><p>Building models are <strong>2.5D</strong> with vertical walls. This simplifies the problem and results in a fast algorithm and makes sense for Airborne lidar scans; however, this also means that features like roof overhangs and balconies cannot be modelled.</p></li>
 <li><p>Point clouds and footprints are properly aligned. Not only must the input data be in the same coordinate reference system (CRS), but also the positional error (horizontal shift) is assumed to be minimal.</p></li>
-<li><p>Point clouds should have buildings and terrain classified (LAS classes 6 and 2 respectively) and contain no outliers. In case the building points contain vegetation and other off-ground artefacts it might interfere with the reconstruction.</p></li>
+<li><p>Point clouds should be free of outliers and classified with at least buildings and terrain classes. In case the building points contain vegetation and other off-ground artefacts it might interfere with the reconstruction. For more information on the requirements of the input data, see <a class="reference internal" href="data_requirements.html"><span class="doc">Requirements on the input data</span></a>.</p></li>
 </ul>
 </section>
 <section id="algorithm-overview">
@@ -398,12 +399,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="cli_application.html">
+          <a class="next-page" href="data_requirements.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Roofer CLI App</div>
+                <div class="title">Requirements on the input data</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

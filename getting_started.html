@@ -205,6 +205,7 @@
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
@@ -254,9 +255,10 @@
         <article role="main" id="furo-main-content">
           <section id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
+<p>At this moment we do not yet provide separate pre-compiled binaries for roofer. To get started with roofer you need to either compile it from the sourcecode yourself or you can use the automatically built <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a>. Once roofer version 1.0 will be released, we expect to provide pre-compiled binaries for the most common platforms.</p>
 <section id="compilation-from-source">
 <h2>Compilation from source<a class="headerlink" href="#compilation-from-source" title="Link to this heading">¶</a></h2>
-<p>It is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
+<p>To ease getting the required dependencies it is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
 <p>Follow the <a class="reference external" href="https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd">vcpkg instructions</a> to set it up.</p>
 <p>After <em>vcpkg</em> is set up, set the <code class="docutils literal notranslate"><span class="pre">VCPKG_ROOT</span></code> environment variable to point to the directory where vcpkg is installed.</p>
 <p>On <em>macOS</em> you need to install additional build tools:</p>
@@ -274,31 +276,6 @@ cmake<span class="w"> </span>--build<span class="w"> </span>build
 cmake<span class="w"> </span>--install<span class="w"> </span>build
 </pre></div>
 </div>
-</section>
-<section id="requirements-on-the-input-data">
-<h2>Requirements on the input data<a class="headerlink" href="#requirements-on-the-input-data" title="Link to this heading">¶</a></h2>
-<section id="point-cloud">
-<h3>Point cloud<a class="headerlink" href="#point-cloud" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p>Acquired through aerial scanning, either Lidar or Dense Image Matching. But Lidar is preferred, because it is often of higher quality. Thus point clouds with only building facades eg. mobile mapping surveys are not supported.</p></li>
-<li><p>The fewer outliers the better.</p></li>
-<li><p>Classified, with at least <em>ground</em> and <em>building</em> classes.</p></li>
-<li><p>Has sufficient point density. We achieve good results with 8-10 pts/m2 in the <a class="reference external" href="https://3dbag.nl">3D BAG</a>.</p></li>
-<li><p>Well aligned with the 2D building polygon.</p></li>
-<li><p>Do include some ground points around the building so that the software can determine the ground floor elevation.</p></li>
-<li><p>Pointcloud is automatically cropped to the extent of the 2D building polygon.</p></li>
-<li><p>In <cite>.LAS</cite> or <cite>.LAZ</cite> format for the CLI app.</p></li>
-</ul>
-</section>
-<section id="d-building-polygon">
-<h3>2D building polygon<a class="headerlink" href="#d-building-polygon" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p>A simple 2D polygon of a single building.</p></li>
-<li><p>Preferably roofprint, since the input point cloud was also acquired from the air.</p></li>
-<li><p>Well aligned with the point cloud.</p></li>
-<li><p>In GeoPackage or ESRI Shapefile format, or a PostGIS database connection.</p></li>
-</ul>
-</section>
 </section>
 </section>
 
@@ -366,11 +343,6 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
             <ul>
 <li><a class="reference internal" href="#">Getting started</a><ul>
 <li><a class="reference internal" href="#compilation-from-source">Compilation from source</a></li>
-<li><a class="reference internal" href="#requirements-on-the-input-data">Requirements on the input data</a><ul>
-<li><a class="reference internal" href="#point-cloud">Point cloud</a></li>
-<li><a class="reference internal" href="#d-building-polygon">2D building polygon</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

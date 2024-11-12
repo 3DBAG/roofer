@@ -2,10 +2,12 @@
 <html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Roofer CLI App" href="cli_application.html" /><link rel="prev" title="Reconstruction algorithm and parameters" href="reconstruct_params.html" />
 
-    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 --><title>Python Module Index - roofer documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
+        <title>Requirements on the input data - roofer documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -179,7 +181,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -200,10 +202,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Requirements on the input data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
@@ -226,7 +228,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="theme-toggle-container theme-toggle-content">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/data_requirements.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/data_requirements.rst" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
@@ -235,39 +247,65 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          
-<section class="domainindex-section">
-  <h1>Python Module Index</h1>
-  <div class="domainindex-jumpbox"><a href="#cap-r"><strong>r</strong></a></div>
+          <section id="requirements-on-the-input-data">
+<h1>Requirements on the input data<a class="headerlink" href="#requirements-on-the-input-data" title="Link to this heading">¶</a></h1>
+<p>To achieve good results with the roofer building reconstruction software, the input data should meet the following requirements.</p>
+<section id="point-cloud">
+<h2>Point cloud<a class="headerlink" href="#point-cloud" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Acquired through aerial scanning, preferably using lidar. Thus point clouds with only building facades eg. mobile mapping surveys are not supported.</p></li>
+<li><p>Outliers should be removed before using roofer.</p></li>
+<li><p>Should be classified beforehand, with at least <em>ground</em> and <em>building</em> classes (LAS classes 2 and 6 respectively).</p></li>
+<li><p>Should have sufficient point density. We achieve good results with ~10 pts/m2 in the <a class="reference external" href="https://3dbag.nl">3D BAG</a>.</p></li>
+<li><p>Should have good data consistency (good homogeneity in point density on all roofplanes), ie. there should be no large gaps in the point cloud.</p></li>
+<li><p>Should be well aligned in X and Y with the 2D building roofprint polygons.</p></li>
+<li><p>There should be some ground points around the building so that roofer can determine the ground floor elevation.</p></li>
+<li><p>Pointcloud is automatically cropped to the extent of the 2D building polygon (CLI app).</p></li>
+<li><p>In <cite>.LAS</cite> or <cite>.LAZ</cite> format for the CLI app.</p></li>
+</ul>
 </section>
-<table class="domainindex-table">
-  <tr class="pcap">
-    <td></td><td>&#160;</td><td></td>
-  </tr>
-  <tr class="cap" id="cap-r">
-    <td></td><td><strong>r</strong></td><td></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-        <a href="api_py.html#module-roofer"><code class="xref">roofer</code></a></td><td>
-    <em></em></td>
-  </tr>
-</table>
+<section id="d-building-roofprint-polygon">
+<h2>2D building roofprint polygon<a class="headerlink" href="#d-building-roofprint-polygon" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>For each building you need to provide a 2D outline polygon.</p></li>
+<li><p>Preferably a roofprint, since the input point cloud was also acquired from the air.</p></li>
+<li><p>I should be well aligned with the point cloud.</p></li>
+<li><p>Can be in any [default OGR supported format](<a class="reference external" href="https://gdal.org/en/latest/drivers/vector/index.html">https://gdal.org/en/latest/drivers/vector/index.html</a>). This includes GeoPackage, Shapefile, PostGIS, etc.</p></li>
+</ul>
+</section>
+</section>
 
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="cli_application.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Roofer CLI App</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="reconstruct_params.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Reconstruction algorithm and parameters</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -293,8 +331,28 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Requirements on the input data</a><ul>
+<li><a class="reference internal" href="#point-cloud">Point cloud</a></li>
+<li><a class="reference internal" href="#d-building-roofprint-polygon">2D building roofprint polygon</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -303,6 +361,5 @@
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
-    
-    <script>DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true</script></body>
+    </body>
 </html>
