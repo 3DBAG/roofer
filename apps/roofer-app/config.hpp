@@ -23,6 +23,7 @@
 #include <functional>
 #include <concepts>
 #include <thread>
+#include <algorithm>
 #include "toml.hpp"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
