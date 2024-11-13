@@ -9,7 +9,7 @@ endif()
 
 add_executable("roofer" ${APP_SOURCES})
 set_target_properties("roofer" PROPERTIES CXX_STANDARD 20)
-target_link_libraries("roofer" PRIVATE ROOFER_LINK_LIBRARIES)
+target_link_libraries("roofer" PRIVATE ${ROOFER_LINK_LIBRARIES})
 
 # Used for getting the process memory usage
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
