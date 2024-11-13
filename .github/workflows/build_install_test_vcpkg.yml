@@ -90,6 +90,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/microsoft/vcpkg.git
+          git checkout 0104b799f55b33a4e1b97ecc3a975da664540b71
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
           echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
