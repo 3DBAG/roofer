@@ -168,6 +168,7 @@ void reconstruct_building(BuildingObject& building,
   building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
   building.roof_elevation_min = PlaneDetector->roof_elevation_min;
   building.roof_elevation_max = PlaneDetector->roof_elevation_max;
+  building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
 
   bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
                                  PlaneDetector->roof_type == "no planes";

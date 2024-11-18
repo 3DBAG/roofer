@@ -113,6 +113,7 @@ struct BuildingObject {
   float roof_elevation_70p;
   float roof_elevation_min;
   float roof_elevation_max;
+  int roof_n_planes;
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
@@ -955,6 +956,8 @@ int main(int argc, const char* argv[]) {
                           building.roof_elevation_min);
             attrow.insert(roofer_cfg.n["roof_elevation_max"],
                           building.roof_elevation_max);
+            attrow.insert(roofer_cfg.n["roof_n_planes"],
+                          building.roof_n_planes);
 
             std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
             std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
