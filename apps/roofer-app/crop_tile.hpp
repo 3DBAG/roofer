@@ -143,10 +143,10 @@ void crop_tile(const roofer::TBox<double>& tile,
 
       if (do_force_lod11) {
         target_density = cfg.lod11_fallback_density;
-        logger.info(
-            "Applying extra thinning and skipping nodata circle calculation "
-            "[force_lod11 = {}]",
-            do_force_lod11);
+        // logger.info(
+        //     "Applying extra thinning and skipping nodata circle calculation "
+        //     "[force_lod11 = {}]",
+        //     do_force_lod11);
       }
 
       roofer::misc::gridthinPointcloud(ipc.building_clouds[i],
@@ -201,16 +201,19 @@ void crop_tile(const roofer::TBox<double>& tile,
   // attributes
   roofer::misc::selectPointCloudConfig select_pc_cfg;
   if (input_pointclouds.size() > 1) {
-    auto& is_mutated = attributes.insert_vec<bool>(
-        cfg.n.at("is_mutated") + "_" + input_pointclouds[0].name + "_" +
-        input_pointclouds[1].name);
-    is_mutated.reserve(N_fp);
-    for (unsigned i = 0; i < N_fp; ++i) {
-      is_mutated.push_back(
-          roofer::misc::isMutated(input_pointclouds[0].building_rasters[i],
-                                  input_pointclouds[1].building_rasters[i],
-                                  select_pc_cfg.threshold_mutation_fraction,
-                                  select_pc_cfg.threshold_mutation_difference));
+    // do roofer::misc::isMutated for each pair of consecutive pointclouds
+    for (unsigned i = 0; i < input_pointclouds.size() - 1; ++i) {
+      auto& ipc1 = input_pointclouds[i];
+      auto& ipc2 = input_pointclouds[i + 1];
+      auto& is_mutated = attributes.insert_vec<bool>(
+          cfg.n.at("is_mutated") + "_" + ipc1.name + "_" + ipc2.name);
+      is_mutated.reserve(N_fp);
+      for (unsigned j = 0; j < N_fp; ++j) {
+        is_mutated.push_back(roofer::misc::isMutated(
+            ipc1.building_rasters[j], ipc2.building_rasters[j],
+            select_pc_cfg.threshold_mutation_fraction,
+            select_pc_cfg.threshold_mutation_difference));
+      }
     }
   }
 
@@ -462,7 +465,7 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.nodata_radii.clear();
     ipc.nodata_fractions.clear();
     ipc.pt_densities.clear();
-    ipc.is_mutated.clear();
+    // ipc.is_mutated.clear();
     ipc.nodata_circles.clear();
     ipc.building_clouds.clear();
     ipc.building_rasters.clear();
