@@ -121,7 +121,12 @@ namespace roofer::io {
       if (GDALGetDriverCount() == 0) GDALAllRegister();
       poDS = GDALDatasetUniquePtr(
           GDALDataset::Open(source.c_str(), GDAL_OF_VECTOR));
-      if (poDS == nullptr) throw(rooferException("Open failed on " + source));
+      if (poDS == nullptr) {
+        // get error msg from GDAL
+        auto error_msg = CPLGetLastErrorMsg();
+        throw(rooferException("Open failed on " + source +
+                              " with error: " + error_msg));
+      }
 
       // Open Layer
       layer_count = poDS->GetLayerCount();

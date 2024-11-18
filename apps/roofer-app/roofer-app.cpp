@@ -536,13 +536,17 @@ int main(int argc, const char* argv[]) {
     VectorReader->layer_name = roofer_cfg.layer_name;
     VectorReader->layer_id = roofer_cfg.layer_id;
     VectorReader->attribute_filter = roofer_cfg.attribute_filter;
-    VectorReader->open(roofer_cfg.source_footprints);
+    try {
+      VectorReader->open(roofer_cfg.source_footprints);
+    } catch (const std::exception& e) {
+      logger.error("{}", e.what());
+      return EXIT_FAILURE;
+    }
     if (!project_srs->is_valid()) {
       VectorReader->get_crs(project_srs.get());
     }
     // logger.info("region_of_interest.has_value()? {}",
     //             roofer_cfg.region_of_interest.has_value());
-    logger.info("Reading footprints from {}", roofer_cfg.source_footprints);
 
     roofer::TBox<double> roi;
     if (roofer_cfg.region_of_interest.has_value()) {
@@ -551,6 +555,9 @@ int main(int argc, const char* argv[]) {
     } else {
       roi = VectorReader->layer_extent;
     }
+
+    logger.info("Region of interest: {} {}, {} {}", roi.pmin[0], roi.pmin[1],
+                roi.pmax[0], roi.pmax[1]);
 
     // actual tiling
     auto tile_extents =

@@ -612,9 +612,14 @@ struct RooferConfigHandler {
 
   template <typename T, typename node>
   void get_toml_value(const node& config, const std::string& key, T& result) {
-    if (auto tml_value = config[key].template value<T>();
-        tml_value.has_value()) {
-      result = *tml_value;
+    try {
+      if (auto tml_value = config[key].template value<T>();
+          tml_value.has_value()) {
+        result = *tml_value;
+      }
+    } catch (const std::exception& e) {
+      throw std::runtime_error(fmt::format(
+          "Failed to read value for {} from config file. {}", key, e.what()));
     }
   }
 
@@ -838,82 +843,92 @@ struct RooferConfigHandler {
   void parse_config_file() {
     auto& logger = roofer::logger::Logger::get_logger();
     toml::table config;
-    config = toml::parse_file(_config_path);
+    try {
+      config = toml::parse_file(_config_path);
+    } catch (const std::exception& e) {
+      throw std::runtime_error(fmt::format("Syntax error."));
+    }
 
     // iterate config table
     for (const auto& [key, value] : config) {
-      if (key == "polygon-source") {
-        get_toml_value(config, "polygon-source", _cfg.source_footprints);
-      } else if (key == "output-directory") {
-        get_toml_value(config, "output-directory", _cfg.output_path);
-      } else if (auto p = _pmap.find(key.data()); p != _pmap.end()) {
-        p->second->set_from_toml(config, key.data());
-      } else if (auto p = _rmap.find(key.data()); p != _rmap.end()) {
-        p->second->set_from_toml(config, key.data());
-      } else if (key == "pointclouds") {
-        if (toml::array* arr = config["pointclouds"].as_array()) {
-          // visitation with for_each() helps deal with heterogeneous data
-          for (auto& el : *arr) {
-            toml::table* tb = el.as_table();
-            auto& pc = _input_pointclouds.emplace_back();
+      try {
+        if (key == "polygon-source") {
+          get_toml_value(config, "polygon-source", _cfg.source_footprints);
+        } else if (key == "output-directory") {
+          get_toml_value(config, "output-directory", _cfg.output_path);
+        } else if (auto p = _pmap.find(key.data()); p != _pmap.end()) {
+          p->second->set_from_toml(config, key.data());
+        } else if (auto p = _rmap.find(key.data()); p != _rmap.end()) {
+          p->second->set_from_toml(config, key.data());
+        } else if (key == "pointclouds") {
+          if (toml::array* arr = config["pointclouds"].as_array()) {
+            // visitation with for_each() helps deal with heterogeneous data
+            for (auto& el : *arr) {
+              toml::table* tb = el.as_table();
+              auto& pc = _input_pointclouds.emplace_back();
 
-            for (const auto& [key, value] : *tb) {
-              if (key == "name") {
-                get_toml_value(*tb, "name", pc.name);
-              } else if (key == "quality") {
-                get_toml_value(*tb, "quality", pc.quality);
-              } else if (key == "date") {
-                get_toml_value(*tb, "date", pc.date);
-              } else if (key == "force_lod11") {
-                get_toml_value(*tb, "force_lod11", pc.force_lod11);
-              } else if (key == "select_only_for_date") {
-                get_toml_value(*tb, "select_only_for_date",
-                               pc.select_only_for_date);
-              } else if (key == "building_class") {
-                get_toml_value(*tb, "building_class", pc.bld_class);
-              } else if (key == "ground_class") {
-                get_toml_value(*tb, "ground_class", pc.grnd_class);
-              } else if (key == "source") {
-                std::list<std::string> input_paths;
-                if (toml::array* pc_paths = tb->at("source").as_array()) {
-                  for (auto& pc_path : *pc_paths) {
-                    input_paths.push_back(*pc_path.value<std::string>());
+              for (const auto& [key, value] : *tb) {
+                if (key == "name") {
+                  get_toml_value(*tb, "name", pc.name);
+                } else if (key == "quality") {
+                  get_toml_value(*tb, "quality", pc.quality);
+                } else if (key == "date") {
+                  get_toml_value(*tb, "date", pc.date);
+                } else if (key == "force_lod11") {
+                  get_toml_value(*tb, "force_lod11", pc.force_lod11);
+                } else if (key == "select_only_for_date") {
+                  get_toml_value(*tb, "select_only_for_date",
+                                 pc.select_only_for_date);
+                } else if (key == "building_class") {
+                  get_toml_value(*tb, "building_class", pc.bld_class);
+                } else if (key == "ground_class") {
+                  get_toml_value(*tb, "ground_class", pc.grnd_class);
+                } else if (key == "source") {
+                  std::list<std::string> input_paths;
+                  if (toml::array* pc_paths = tb->at("source").as_array()) {
+                    for (auto& pc_path : *pc_paths) {
+                      input_paths.push_back(*pc_path.value<std::string>());
+                    }
+                  } else {
+                    throw std::runtime_error(
+                        "Failed to read pointclouds.source. Make sure it is a "
+                        "list of "
+                        "strings.");
                   }
+                  pc.paths = find_filepaths(input_paths,
+                                            {".las", ".LAS", ".laz", ".LAZ"});
                 } else {
-                  throw std::runtime_error(
-                      "Failed to read pointclouds.source. Make sure it is a "
-                      "list of "
-                      "strings.");
+                  throw std::runtime_error(fmt::format(
+                      "Unknown parameter in [[pointcloud]] table in "
+                      "config file: {}.",
+                      key.data()));
                 }
-                pc.paths = find_filepaths(input_paths,
-                                          {".las", ".LAS", ".laz", ".LAZ"});
+              }
+            };
+          }
+        } else if (key == "output-attributes") {
+          if (toml::table* tb = config["output-attributes"].as_table()) {
+            for (const auto& [key, value] : *tb) {
+              if (auto p = _cfg.n.find(key.data()); p != _cfg.n.end()) {
+                std::string name = "";
+                get_toml_value(*tb, key.data(), name);
+                if (!name.empty()) {
+                  p->second = name;
+                }
               } else {
                 throw std::runtime_error(
-                    fmt::format("Unknown parameter in [[pointcloud]] table in "
-                                "config file: {}.",
-                                key.data()));
+                    fmt::format("Unknown output attribute: {}.", key.data()));
               }
-            }
-          };
-        }
-      } else if (key == "output-attributes") {
-        if (toml::table* tb = config["output-attributes"].as_table()) {
-          for (const auto& [key, value] : *tb) {
-            if (auto p = _cfg.n.find(key.data()); p != _cfg.n.end()) {
-              std::string name = "";
-              get_toml_value(*tb, key.data(), name);
-              if (!name.empty()) {
-                p->second = name;
-              }
-            } else {
-              throw std::runtime_error(
-                  fmt::format("Unknown output attribute: {}.", key.data()));
             }
           }
+        } else {
+          throw std::runtime_error(
+              fmt::format("Unknown parameter in config file: {}.", key.data()));
         }
-      } else {
+      } catch (const std::exception& e) {
         throw std::runtime_error(
-            fmt::format("Unknown parameter in config file: {}.", key.data()));
+            fmt::format("Failed to read value for {} from config file. {}",
+                        key.data(), e.what()));
       }
     }
 
