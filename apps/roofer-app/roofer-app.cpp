@@ -561,15 +561,22 @@ int main(int argc, const char* argv[]) {
                 roi.pmax[0], roi.pmax[1]);
 
     // actual tiling
-    auto tile_extents =
-        create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
-
-    for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
-      auto& tile = tile_extents[tid];
+    if (roofer_cfg_handler._no_tiling) {
       auto& building_tile = initial_tiles.emplace_back();
-      building_tile.id = tid;
-      building_tile.extent = tile;
+      building_tile.id = 0;
+      building_tile.extent = roi;
       building_tile.proj_helper = roofer::misc::createProjHelper();
+    } else {
+      auto tile_extents =
+          create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
+
+      for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
+        auto& tile = tile_extents[tid];
+        auto& building_tile = initial_tiles.emplace_back();
+        building_tile.id = tid;
+        building_tile.extent = tile;
+        building_tile.proj_helper = roofer::misc::createProjHelper();
+      }
     }
   }
   logger.debug("Created {} batch tile regions", initial_tiles.size());
