@@ -516,14 +516,14 @@ struct RooferConfigHandler {
         "Specify WHERE clause in OGR SQL to select specfic features from "
         "<polygon-source>",
         _cfg.attribute_filter, {});
-    add("ceil_point_density",
+    add("ceil-point-density",
         "Enfore this point density ceiling on each building pointcloud.",
         _cfg.ceil_point_density, {roofer::v::HigherThan<float>(0)});
     add("cellsize", "Cellsize used for quick pointcloud analysis",
         _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
-    // add("lod11_fallback_area", "lod11 fallback area",
+    // add("lod11-fallback-area", "lod11 fallback area",
     // _cfg.lod11_fallback_area, {roofer::v::HigherThan<int>(0)}});
-    // add("lod11_fallback_density", "lod11 fallback density",
+    // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
     add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,
         {roofer::v::HigherThan<roofer::arr2f>({0, 0})});
