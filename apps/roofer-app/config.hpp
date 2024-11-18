@@ -55,7 +55,6 @@ struct InputPointcloud {
   roofer::vec1f nodata_radii;
   roofer::vec1f nodata_fractions;
   roofer::vec1f pt_densities;
-  roofer::vec1b is_mutated;
   roofer::vec1b is_glass_roof;
   roofer::vec1b lod11_forced;
   std::vector<roofer::LinearRing> nodata_circles;
@@ -505,9 +504,8 @@ struct RooferConfigHandler {
     add("id-attribute", "Building ID attribute", _cfg.id_attribute, {});
     add("force-lod11-attribute", "Building attribute for forcing lod11",
         _cfg.force_lod11_attribute, {});
-    // add("yoc-attribute", "Attribute containing building year of
-    // construction",
-    //     _cfg.yoc_attribute, {});
+    add("yoc-attribute", "Attribute containing building year of construction",
+        _cfg.yoc_attribute, {});
     add("polygon-source-layer",
         "Load this layer from <polygon-source> [default: first layer]",
         _cfg.layer_name, {});
@@ -522,8 +520,8 @@ struct RooferConfigHandler {
         _cfg.ceil_point_density, {roofer::v::HigherThan<float>(0)});
     add("cellsize", "Cellsize used for quick pointcloud analysis",
         _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
-    // add("lod11-fallback-area", "lod11 fallback area",
-    // _cfg.lod11_fallback_area, {roofer::v::HigherThan<int>(0)}});
+    add("lod11-fallback-area", "lod11 fallback area", _cfg.lod11_fallback_area,
+        {roofer::v::HigherThan<int>(0)});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
     add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,
