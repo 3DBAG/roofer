@@ -134,6 +134,7 @@ struct RooferConfig {
       {"roof_elevation_70p", "rf_roof_elevation_70p"},
       {"roof_elevation_min", "rf_roof_elevation_min"},
       {"roof_elevation_max", "rf_roof_elevation_max"},
+      {"roof_n_planes", "rf_roof_n_planes"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
