@@ -561,15 +561,22 @@ int main(int argc, const char* argv[]) {
                 roi.pmax[0], roi.pmax[1]);
 
     // actual tiling
-    auto tile_extents =
-        create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
-
-    for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
-      auto& tile = tile_extents[tid];
+    if (roofer_cfg_handler._no_tiling) {
       auto& building_tile = initial_tiles.emplace_back();
-      building_tile.id = tid;
-      building_tile.extent = tile;
+      building_tile.id = 0;
+      building_tile.extent = roi;
       building_tile.proj_helper = roofer::misc::createProjHelper();
+    } else {
+      auto tile_extents =
+          create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
+
+      for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
+        auto& tile = tile_extents[tid];
+        auto& building_tile = initial_tiles.emplace_back();
+        building_tile.id = tid;
+        building_tile.extent = tile;
+        building_tile.proj_helper = roofer::misc::createProjHelper();
+      }
     }
   }
   logger.debug("Created {} batch tile regions", initial_tiles.size());
@@ -626,6 +633,10 @@ int main(int argc, const char* argv[]) {
   std::atomic<size_t> sorted_buildings_cnt = 0;
   std::atomic<size_t> serialized_buildings_cnt = 0;
   std::optional<std::thread> tracer_thread;
+
+  std::thread reconstructor_thread;
+  std::thread serializer_thread;
+  std::thread sorter_thread;
 
   if (do_tracing) {
     tracer_thread.emplace([&] {
@@ -698,332 +709,335 @@ int main(int argc, const char* argv[]) {
     cropped_pending.notify_one();
   });
 
-  // std::thread reconstructor_thread;
-  // std::thread serializer_thread;
-  // std::thread sorter_thread;
-  // if (!roofer_cfg_handler._crop_only) {
-  BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
-  std::thread reconstructor_thread([&]() {
-    while (crop_running.load() || !cropped_tiles.empty()) {
-      logger.debug("[reconstructor] before lock cropped_tiles_mutex");
-      std::unique_lock lock{cropped_tiles_mutex};
-      logger.debug("[reconstructor] before wait(lock)");
-      logger.debug(
-          "[reconstructor] crop_running.load() == {}, !cropped_tiles.empty() "
-          "== {}",
-          crop_running.load(), !cropped_tiles.empty());
-      cropped_pending.wait(lock,
-                           [&cropped_tiles] { return !cropped_tiles.empty(); });
-      // Move the cropped buildings out of the tiles into their own queue, so
-      // that the parallel workers do not stop at the tile boundary, until all
-      // buildings are finished in the current tile.
-      while (!cropped_tiles.empty()) {
-        auto& building_tile = cropped_tiles.front();
-        for (size_t building_idx = 0;
-             building_idx < building_tile.buildings.size(); building_idx++) {
-          cropped_buildings.emplace_back(
-              building_tile.id, building_idx,
-              std::move(building_tile.buildings[building_idx]),
-              RECONSTRUCTION_IN_PROGRESS);
-        }
-        std::ranges::fill(building_tile.buildings_progresses,
-                          RECONSTRUCTION_IN_PROGRESS);
-        reconstructed_tiles.push_back(std::move(building_tile));
-        cropped_tiles.pop_front();
+  if (!roofer_cfg_handler._crop_only) {
+    BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
+    reconstructor_thread = std::thread([&]() {
+      while (crop_running.load() || !cropped_tiles.empty()) {
+        logger.debug("[reconstructor] before lock cropped_tiles_mutex");
+        std::unique_lock lock{cropped_tiles_mutex};
+        logger.debug("[reconstructor] before wait(lock)");
         logger.debug(
-            "[reconstructor] Submitted all buildings of tile {} for "
-            "reconstruction",
-            building_tile.id);
-        // This wakes up the serializer thread as soon as we submitted one tile
-        // for reconstruction, but that doesn't mean that any building of the
-        // tile has finished reconstruction. But at least the serializer thread
-        // is suspended until this point.
-        reconstructed_pending.notify_one();
-      }
-      cropped_tiles.clear();
-      cropped_tiles.shrink_to_fit();
-      lock.unlock();
-      logger.debug("[reconstructor] after lock.unlock()");
-
-      // Start one reconstruction task per building, running parallel
-      while (!cropped_buildings.empty()) {
-        auto building_ref = std::move(cropped_buildings.front());
-        cropped_buildings.pop_front();
-        ++reconstructed_started_cnt;
-
-        reconstructor_pool.detach_task([bref = std::move(building_ref),
-                                        &roofer_cfg, &reconstructed_buildings,
-                                        &reconstructed_buildings_cnt,
-                                        &reconstructed_buildings_mutex] {
-          // TODO: It seems that I need to assign the moved 'building_ref' to a
-          //  new variable with an explicit type here, because 'bref' contains
-          //  const references, but I don't understand why. The problem is that
-          //  "Non-const lvalue reference to type BuildingObject cannot bind to
-          //  lvalue of type const BuildingObject".
-          BuildingObjectRef building_object_ref = bref;
-          try {
-            auto& logger = roofer::logger::Logger::get_logger();
-            auto start = std::chrono::high_resolution_clock::now();
-            logger.debug("[reconstructor] starting reconstruction for: {}",
-                         building_object_ref.building.jsonl_path.string());
-            reconstruct_building(building_object_ref.building, &roofer_cfg.rec);
-            logger.debug("[reconstructor] finished reconstruction for: {}",
-                         building_object_ref.building.jsonl_path.string());
-            // TODO: These two seem to be redundant
-            building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
-            building_object_ref.building.reconstruction_success = true;
-            building_object_ref.building.reconstruction_time = static_cast<int>(
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - start)
-                    .count());
-          } catch (...) {
-            building_object_ref.progress = RECONSTRUCTION_FAILED;
-            auto& logger = roofer::logger::Logger::get_logger();
-            logger.warning("[reconstructor] reconstruction failed for: {}",
-                           building_object_ref.building.jsonl_path.string());
-          }
-          {
-            std::scoped_lock lock_reconstructed{reconstructed_buildings_mutex};
-            ++reconstructed_buildings_cnt;
-            reconstructed_buildings.push_back(std::move(building_object_ref));
-          }
+            "[reconstructor] crop_running.load() == {}, !cropped_tiles.empty() "
+            "== {}",
+            crop_running.load(), !cropped_tiles.empty());
+        cropped_pending.wait(lock, [&cropped_tiles, &crop_running] {
+          return !cropped_tiles.empty() || !crop_running.load();
         });
-      }
-    }
-
-    logger.debug(
-        "[reconstructor] Waiting for all reconstructor threads to join...");
-    reconstructor_pool.wait();
-
-    if (!cropped_tiles.empty()) {
-      logger.error(
-          "[reconstructor] reconstructor is finished, but cropped_tiles is "
-          "not empty, it still contains {} items",
-          cropped_tiles.size());
-    }
-    logger.debug(
-        "[reconstructor] All reconstructor threads have joined, sent {} "
-        "buildings for reconstruction",
-        reconstructed_started_cnt.load());
-    reconstruction_running.store(false);
-    reconstructed_pending.notify_one();
-  });
-
-  std::thread sorter_thread([&] {
-    while (reconstruction_running.load() || !reconstructed_buildings.empty()) {
-      logger.debug("[sorter] before lock reconstructed_buildings_mutex");
-      std::unique_lock lock{reconstructed_buildings_mutex};
-      reconstructed_pending.wait(lock, [&reconstructed_buildings] {
-        return !reconstructed_buildings.empty();
-      });
-      auto pending_sorted{std::move(reconstructed_buildings)};
-      reconstructed_buildings.clear();
-      reconstructed_buildings.shrink_to_fit();
-      lock.unlock();
-      logger.debug("[sorter] after lock.unlock()");
-
-      while (!pending_sorted.empty()) {
-        auto& bref = pending_sorted.front();
-        std::pair<bool, std::size_t> finished_idx{false, 0};
-        // TODO: Maybe we could use a different data structure, one that has
-        //  O(1) lookup for the tile ID, instead of looping the
-        //  reconstructed_tiles. However, I expect that the size of
-        //  reconstructed_tiles remains relatively low. But we need to do the
-        //  loop on each building...
-        for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
-          auto& tile = reconstructed_tiles[i];
-          // We expect that the tile.buildings container hasn't been cleared,
-          // so that we can insert the reconstructed building at the index.
-          assert(tile.buildings.size() == tile.buildings_cnt);
-          if (tile.id == bref.tile_id) {
-            tile.buildings[bref.building_idx] = std::move(bref.building);
-            tile.buildings_progresses[bref.building_idx] = bref.progress;
+        // Move the cropped buildings out of the tiles into their own queue, so
+        // that the parallel workers do not stop at the tile boundary, until all
+        // buildings are finished in the current tile.
+        while (!cropped_tiles.empty()) {
+          auto& building_tile = cropped_tiles.front();
+          for (size_t building_idx = 0;
+               building_idx < building_tile.buildings.size(); building_idx++) {
+            cropped_buildings.emplace_back(
+                building_tile.id, building_idx,
+                std::move(building_tile.buildings[building_idx]),
+                RECONSTRUCTION_IN_PROGRESS);
           }
+          std::ranges::fill(building_tile.buildings_progresses,
+                            RECONSTRUCTION_IN_PROGRESS);
+          reconstructed_tiles.push_back(std::move(building_tile));
+          cropped_tiles.pop_front();
+          logger.debug(
+              "[reconstructor] Submitted all buildings of tile {} for "
+              "reconstruction",
+              building_tile.id);
+          // This wakes up the serializer thread as soon as we submitted one
+          // tile for reconstruction, but that doesn't mean that any building of
+          // the tile has finished reconstruction. But at least the serializer
+          // thread is suspended until this point.
+          reconstructed_pending.notify_one();
+        }
+        cropped_tiles.clear();
+        cropped_tiles.shrink_to_fit();
+        lock.unlock();
+        logger.debug("[reconstructor] after lock.unlock()");
 
-          auto tile_finished = std::all_of(
-              tile.buildings_progresses.begin(),
-              tile.buildings_progresses.end(),
-              [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
-          if (tile_finished) {
-            finished_idx.first = true;
-            finished_idx.second = i;
+        // Start one reconstruction task per building, running parallel
+        while (!cropped_buildings.empty()) {
+          auto building_ref = std::move(cropped_buildings.front());
+          cropped_buildings.pop_front();
+          ++reconstructed_started_cnt;
+
+          reconstructor_pool.detach_task([bref = std::move(building_ref),
+                                          &roofer_cfg, &reconstructed_buildings,
+                                          &reconstructed_buildings_cnt,
+                                          &reconstructed_buildings_mutex] {
+            // TODO: It seems that I need to assign the moved 'building_ref' to
+            // a
+            //  new variable with an explicit type here, because 'bref' contains
+            //  const references, but I don't understand why. The problem is
+            //  that "Non-const lvalue reference to type BuildingObject cannot
+            //  bind to lvalue of type const BuildingObject".
+            BuildingObjectRef building_object_ref = bref;
+            try {
+              auto& logger = roofer::logger::Logger::get_logger();
+              auto start = std::chrono::high_resolution_clock::now();
+              logger.debug("[reconstructor] starting reconstruction for: {}",
+                           building_object_ref.building.jsonl_path.string());
+              reconstruct_building(building_object_ref.building,
+                                   &roofer_cfg.rec);
+              logger.debug("[reconstructor] finished reconstruction for: {}",
+                           building_object_ref.building.jsonl_path.string());
+              // TODO: These two seem to be redundant
+              building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
+              building_object_ref.building.reconstruction_success = true;
+              building_object_ref.building.reconstruction_time =
+                  static_cast<int>(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::high_resolution_clock::now() - start)
+                          .count());
+            } catch (...) {
+              building_object_ref.progress = RECONSTRUCTION_FAILED;
+              auto& logger = roofer::logger::Logger::get_logger();
+              logger.warning("[reconstructor] reconstruction failed for: {}",
+                             building_object_ref.building.jsonl_path.string());
+            }
             {
-              std::scoped_lock lock_sorted{sorted_tiles_mutex};
-              sorted_tiles.push_back(std::move(tile));
+              std::scoped_lock lock_reconstructed{
+                  reconstructed_buildings_mutex};
+              ++reconstructed_buildings_cnt;
+              reconstructed_buildings.push_back(std::move(building_object_ref));
             }
-            sorted_pending.notify_one();
-          }
+          });
         }
-
-        if (finished_idx.first) {
-          reconstructed_tiles.erase(reconstructed_tiles.begin() +
-                                    finished_idx.second);
-        }
-        ++sorted_buildings_cnt;
-        pending_sorted.pop_front();
       }
-    }
-    sorting_running.store(false);
-    logger.debug("[sorter] Finished sorter");
-  });
 
-  std::thread serializer_thread([&]() {
-    logger.info("[serializer] Writing output to {}", roofer_cfg.output_path);
-    while (sorting_running.load() || !sorted_tiles.empty()) {
-      logger.debug("[serializer] before lock sorted_tiles_mutex");
-      std::unique_lock lock{sorted_tiles_mutex};
-      sorted_pending.wait(lock,
-                          [&sorted_tiles] { return !sorted_tiles.empty(); });
-      auto pending_serialized{std::move(sorted_tiles)};
-      sorted_tiles.clear();
-      sorted_tiles.shrink_to_fit();
-      lock.unlock();
-      logger.debug("[serializer] after lock.unlock()");
+      logger.debug(
+          "[reconstructor] Waiting for all reconstructor threads to join...");
+      reconstructor_pool.wait();
 
-      while (!pending_serialized.empty()) {
-        auto& building_tile = pending_serialized.front();
+      if (!cropped_tiles.empty()) {
+        logger.error(
+            "[reconstructor] reconstructor is finished, but cropped_tiles is "
+            "not empty, it still contains {} items",
+            cropped_tiles.size());
+      }
+      logger.debug(
+          "[reconstructor] All reconstructor threads have joined, sent {} "
+          "buildings for reconstruction",
+          reconstructed_started_cnt.load());
+      reconstruction_running.store(false);
+      reconstructed_pending.notify_one();
+    });
 
-        // create status attribute
-        auto& attr_status = building_tile.attributes.insert_vec<std::string>(
-            roofer_cfg.n["status"]);
-        for (auto& progress : building_tile.buildings_progresses) {
-          if (progress == RECONSTRUCTION_FAILED) {
-            attr_status.push_back("reconstruction_failed");
-          } else if (progress == RECONSTRUCTION_SUCCEEDED) {
-            attr_status.push_back("reconstruction_succeeded");
+    sorter_thread = std::thread([&] {
+      while (reconstruction_running.load() ||
+             !reconstructed_buildings.empty()) {
+        logger.debug("[sorter] before lock reconstructed_buildings_mutex");
+        std::unique_lock lock{reconstructed_buildings_mutex};
+        reconstructed_pending.wait(lock, [&reconstructed_buildings] {
+          return !reconstructed_buildings.empty();
+        });
+        auto pending_sorted{std::move(reconstructed_buildings)};
+        reconstructed_buildings.clear();
+        reconstructed_buildings.shrink_to_fit();
+        lock.unlock();
+        logger.debug("[sorter] after lock.unlock()");
+
+        while (!pending_sorted.empty()) {
+          auto& bref = pending_sorted.front();
+          std::pair<bool, std::size_t> finished_idx{false, 0};
+          // TODO: Maybe we could use a different data structure, one that has
+          //  O(1) lookup for the tile ID, instead of looping the
+          //  reconstructed_tiles. However, I expect that the size of
+          //  reconstructed_tiles remains relatively low. But we need to do the
+          //  loop on each building...
+          for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
+            auto& tile = reconstructed_tiles[i];
+            // We expect that the tile.buildings container hasn't been cleared,
+            // so that we can insert the reconstructed building at the index.
+            assert(tile.buildings.size() == tile.buildings_cnt);
+            if (tile.id == bref.tile_id) {
+              tile.buildings[bref.building_idx] = std::move(bref.building);
+              tile.buildings_progresses[bref.building_idx] = bref.progress;
+            }
+
+            auto tile_finished = std::all_of(
+                tile.buildings_progresses.begin(),
+                tile.buildings_progresses.end(),
+                [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
+            if (tile_finished) {
+              finished_idx.first = true;
+              finished_idx.second = i;
+              {
+                std::scoped_lock lock_sorted{sorted_tiles_mutex};
+                sorted_tiles.push_back(std::move(tile));
+              }
+              sorted_pending.notify_one();
+            }
+          }
+
+          if (finished_idx.first) {
+            reconstructed_tiles.erase(reconstructed_tiles.begin() +
+                                      finished_idx.second);
+          }
+          ++sorted_buildings_cnt;
+          pending_sorted.pop_front();
+        }
+      }
+      sorting_running.store(false);
+      logger.debug("[sorter] Finished sorter");
+    });
+
+    serializer_thread = std::thread([&]() {
+      logger.info("[serializer] Writing output to {}", roofer_cfg.output_path);
+      while (sorting_running.load() || !sorted_tiles.empty()) {
+        logger.debug("[serializer] before lock sorted_tiles_mutex");
+        std::unique_lock lock{sorted_tiles_mutex};
+        sorted_pending.wait(lock,
+                            [&sorted_tiles] { return !sorted_tiles.empty(); });
+        auto pending_serialized{std::move(sorted_tiles)};
+        sorted_tiles.clear();
+        sorted_tiles.shrink_to_fit();
+        lock.unlock();
+        logger.debug("[serializer] after lock.unlock()");
+
+        while (!pending_serialized.empty()) {
+          auto& building_tile = pending_serialized.front();
+
+          // create status attribute
+          auto& attr_status = building_tile.attributes.insert_vec<std::string>(
+              roofer_cfg.n["status"]);
+          for (auto& progress : building_tile.buildings_progresses) {
+            if (progress == RECONSTRUCTION_FAILED) {
+              attr_status.push_back("reconstruction_failed");
+            } else if (progress == RECONSTRUCTION_SUCCEEDED) {
+              attr_status.push_back("reconstruction_succeeded");
+            } else {
+              attr_status.push_back("unknown");
+            }
+          }
+          // create time attribute
+          auto& attr_time = building_tile.attributes.insert_vec<int>(
+              roofer_cfg.n["reconstruction_time"]);
+          for (auto& building : building_tile.buildings) {
+            attr_time.push_back(building.reconstruction_time);
+          }
+          // output reconstructed buildings
+          auto CityJsonWriter =
+              roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+          CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
+          CityJsonWriter->translate_x_ =
+              (*building_tile.proj_helper->data_offset)[0];
+          CityJsonWriter->translate_y_ =
+              (*building_tile.proj_helper->data_offset)[1];
+          CityJsonWriter->translate_z_ =
+              (*building_tile.proj_helper->data_offset)[2];
+          CityJsonWriter->scale_x_ = 0.01;
+          CityJsonWriter->scale_y_ = 0.01;
+          CityJsonWriter->scale_z_ = 0.01;
+
+          std::ofstream ofs;
+          if (!roofer_cfg.split_cjseq) {
+            auto jsonl_tile_path =
+                fs::path(roofer_cfg.output_path) / "tiles" /
+                fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
+            fs::create_directories(jsonl_tile_path.parent_path());
+            ofs.open(jsonl_tile_path);
+            CityJsonWriter->write_metadata(
+                ofs, project_srs.get(), building_tile.extent,
+                {.identifier = std::to_string(building_tile.id)});
           } else {
-            attr_status.push_back("unknown");
+            std::string metadata_json_file =
+                fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
+                            fmt::arg("path", roofer_cfg.output_path));
+            fs::create_directories(fs::path(metadata_json_file).parent_path());
+            ofs.open(metadata_json_file);
+            CityJsonWriter->write_metadata(
+                ofs, project_srs.get(), building_tile.extent,
+                {.identifier = std::to_string(building_tile.id)});
+            ofs.close();
           }
-        }
-        // create time attribute
-        auto& attr_time = building_tile.attributes.insert_vec<int>(
-            roofer_cfg.n["reconstruction_time"]);
-        for (auto& building : building_tile.buildings) {
-          attr_time.push_back(building.reconstruction_time);
-        }
-        // output reconstructed buildings
-        auto CityJsonWriter =
-            roofer::io::createCityJsonWriter(*building_tile.proj_helper);
-        CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
-        CityJsonWriter->translate_x_ =
-            (*building_tile.proj_helper->data_offset)[0];
-        CityJsonWriter->translate_y_ =
-            (*building_tile.proj_helper->data_offset)[1];
-        CityJsonWriter->translate_z_ =
-            (*building_tile.proj_helper->data_offset)[2];
-        CityJsonWriter->scale_x_ = 0.01;
-        CityJsonWriter->scale_y_ = 0.01;
-        CityJsonWriter->scale_z_ = 0.01;
 
-        std::ofstream ofs;
-        if (!roofer_cfg.split_cjseq) {
-          auto jsonl_tile_path =
-              fs::path(roofer_cfg.output_path) / "tiles" /
-              fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
-          fs::create_directories(jsonl_tile_path.parent_path());
-          ofs.open(jsonl_tile_path);
-          CityJsonWriter->write_metadata(
-              ofs, project_srs.get(), building_tile.extent,
-              {.identifier = std::to_string(building_tile.id)});
-        } else {
-          std::string metadata_json_file =
-              fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
-                          fmt::arg("path", roofer_cfg.output_path));
-          fs::create_directories(fs::path(metadata_json_file).parent_path());
-          ofs.open(metadata_json_file);
-          CityJsonWriter->write_metadata(
-              ofs, project_srs.get(), building_tile.extent,
-              {.identifier = std::to_string(building_tile.id)});
-          ofs.close();
-        }
-
-        for (auto& building : building_tile.buildings) {
-          if (roofer_cfg.split_cjseq) {
-            fs::create_directories(building.jsonl_path.parent_path());
-            ofs.open(building.jsonl_path);
-          }
-          try {
-            auto attrow = roofer::AttributeMapRow(building_tile.attributes,
-                                                  building.attribute_index);
-
-            attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
-            attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
-            attrow.insert(roofer_cfg.n["roof_elevation_50p"],
-                          building.roof_elevation_50p);
-            attrow.insert(roofer_cfg.n["roof_elevation_70p"],
-                          building.roof_elevation_70p);
-            attrow.insert(roofer_cfg.n["roof_elevation_min"],
-                          building.roof_elevation_min);
-            attrow.insert(roofer_cfg.n["roof_elevation_max"],
-                          building.roof_elevation_max);
-            attrow.insert(roofer_cfg.n["roof_n_planes"],
-                          building.roof_n_planes);
-
-            std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
-            std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
-            std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
-            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
-              ms12 = &building.multisolids_lod12;
-              attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
-#if RF_USE_VAL3DITY
-              attrow.insert(roofer_cfg.n["val3dity_lod12"],
-                            building.val3dity_lod12);
-#endif
-            }
-            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
-              ms13 = &building.multisolids_lod13;
-              attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
-#if RF_USE_VAL3DITY
-              attrow.insert(roofer_cfg.n["val3dity_lod13"],
-                            building.val3dity_lod13);
-#endif
-            }
-            if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
-              ms22 = &building.multisolids_lod22;
-              attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
-#if RF_USE_VAL3DITY
-              attrow.insert(roofer_cfg.n["val3dity_lod22"],
-                            building.val3dity_lod22);
-#endif
-            }
-            CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
-                                          ms22, attrow);
+          for (auto& building : building_tile.buildings) {
             if (roofer_cfg.split_cjseq) {
-              ofs.close();
+              fs::create_directories(building.jsonl_path.parent_path());
+              ofs.open(building.jsonl_path);
             }
-            ++serialized_buildings_cnt;
-          } catch (const std::exception& e) {
-            logger.error("[serializer] Failed to serialize {}. {}",
-                         building.jsonl_path.string(), e.what());
+            try {
+              auto attrow = roofer::AttributeMapRow(building_tile.attributes,
+                                                    building.attribute_index);
+
+              attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
+              attrow.insert(roofer_cfg.n["roof_elevation_50p"],
+                            building.roof_elevation_50p);
+              attrow.insert(roofer_cfg.n["roof_elevation_70p"],
+                            building.roof_elevation_70p);
+              attrow.insert(roofer_cfg.n["roof_elevation_min"],
+                            building.roof_elevation_min);
+              attrow.insert(roofer_cfg.n["roof_elevation_max"],
+                            building.roof_elevation_max);
+              attrow.insert(roofer_cfg.n["roof_n_planes"],
+                            building.roof_n_planes);
+
+              std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
+              std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
+              std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
+              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
+                ms12 = &building.multisolids_lod12;
+                attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
+#if RF_USE_VAL3DITY
+                attrow.insert(roofer_cfg.n["val3dity_lod12"],
+                              building.val3dity_lod12);
+#endif
+              }
+              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
+                ms13 = &building.multisolids_lod13;
+                attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
+#if RF_USE_VAL3DITY
+                attrow.insert(roofer_cfg.n["val3dity_lod13"],
+                              building.val3dity_lod13);
+#endif
+              }
+              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
+                ms22 = &building.multisolids_lod22;
+                attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
+#if RF_USE_VAL3DITY
+                attrow.insert(roofer_cfg.n["val3dity_lod22"],
+                              building.val3dity_lod22);
+#endif
+              }
+              CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
+                                            ms22, attrow);
+              if (roofer_cfg.split_cjseq) {
+                ofs.close();
+              }
+              ++serialized_buildings_cnt;
+            } catch (const std::exception& e) {
+              logger.error("[serializer] Failed to serialize {}. {}",
+                           building.jsonl_path.string(), e.what());
+            }
           }
+          if (!roofer_cfg.split_cjseq) {
+            ofs.close();
+          }
+          pending_serialized.pop_front();
         }
-        if (!roofer_cfg.split_cjseq) {
-          ofs.close();
-        }
-        pending_serialized.pop_front();
       }
-    }
-    serialization_running.store(false);
-    logger.debug("[serializer] Finished serializer");
-  });
+      serialization_running.store(false);
+      logger.debug("[serializer] Finished serializer");
+    });
+    reconstructor_thread.join();
+    sorter_thread.join();
+    serializer_thread.join();
+  }
 
   cropper_thread.join();
-  // if (!roofer_cfg_handler._crop_only) {
-  reconstructor_thread.join();
-  sorter_thread.join();
-  serializer_thread.join();
-  // }
+
   if (tracer_thread.has_value()) {
     tracer_thread->join();
   }
 
-  if (!cropped_tiles.empty()) {
+  if (!cropped_tiles.empty() && !roofer_cfg_handler._crop_only) {
     logger.error(
         "all threads have been joined, but cropped_tiles is "
         "not empty, it still contains {} items",
         cropped_tiles.size());
   }
-  if (!reconstructed_buildings.empty()) {
+  if (!reconstructed_buildings.empty() && !roofer_cfg_handler._crop_only) {
     logger.error(
         "all threads have been joined, but reconstructed_buildings is "
         "not empty, it still contains {} items",
