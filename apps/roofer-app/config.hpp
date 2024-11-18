@@ -488,6 +488,7 @@ struct RooferConfigHandler {
   bool _print_help = false;
   bool _print_version = false;
   bool _crop_only = false;
+  bool _no_tiling = false;
   std::string _loglevel = "info";
   size_t _trace_interval = 10;
   std::string _config_path;
@@ -755,6 +756,9 @@ struct RooferConfigHandler {
         } else {
           throw std::runtime_error("Missing argument for --config.");
         }
+      } else if (arg == "--no-tiling") {
+        _no_tiling = true;
+        it = c.args.erase(it);
       } else if (arg == "--crop-only") {
         _crop_only = true;
         _cfg.write_crop_outputs = true;
