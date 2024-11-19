@@ -89,6 +89,7 @@ void crop_tile(const roofer::TBox<double>& tile,
         ipc.ground_elevations, ipc.acquisition_years, polygon_extent,
         {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
+         .clear_if_insufficient = cfg.clear_if_insufficient,
          .use_acquisition_year = static_cast<bool>(yoc_vec)});
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
@@ -177,6 +178,8 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
+    auto& h_ground =
+        attributes.insert_vec<float>(cfg.n.at("h_ground") + "_" + ipc.name);
     auto& nodata_r =
         attributes.insert_vec<float>(cfg.n.at("nodata_r") + "_" + ipc.name);
     auto& nodata_frac =
@@ -185,11 +188,13 @@ void crop_tile(const roofer::TBox<double>& tile,
         attributes.insert_vec<float>(cfg.n.at("pt_density") + "_" + ipc.name);
     auto& is_glass_roof =
         attributes.insert_vec<bool>(cfg.n.at("is_glass_roof") + "_" + ipc.name);
+    h_ground.reserve(N_fp);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
     is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
+      h_ground.push_back(ipc.ground_elevations[i]);
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
@@ -219,7 +224,7 @@ void crop_tile(const roofer::TBox<double>& tile,
 
   // select pointcloud and write out geoflow config + pointcloud / fp for each
   // building
-  logger.info("Selecting and writing pointclouds");
+  // logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
   auto& pc_select = attributes.insert_vec<std::string>(cfg.n.at("pc_select"));
   auto& pc_source = attributes.insert_vec<std::string>(cfg.n.at("pc_source"));
@@ -374,23 +379,21 @@ void crop_tile(const roofer::TBox<double>& tile,
           double h_ground =
               input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
 
-          auto gf_config = toml::table{
-              {"INPUT_FOOTPRINT", fp_path},
-              // {"INPUT_POINTCLOUD", sresult.explanation ==
-              // roofer::PointCloudSelectExplanation::_LATEST_BUT_OUTDATED ? ""
-              // : pc_path},
-              {"INPUT_POINTCLOUD", pc_path},
-              {"BID", bid},
-              {"GROUND_ELEVATION", h_ground},
-              {"OUTPUT_JSONL", jsonl_path},
-
-              {"GF_PROCESS_OFFSET_OVERRIDE", true},
-              {"GF_PROCESS_OFFSET_X", (*pj->data_offset)[0]},
-              {"GF_PROCESS_OFFSET_Y", (*pj->data_offset)[1]},
-              {"GF_PROCESS_OFFSET_Z", (*pj->data_offset)[2]},
-              {"skip_attribute_name", cfg.n.at("force_lod11")},
-              {"id_attribute", cfg.id_attribute},
+          // Create an array of tables
+          toml::array array_of_pointclouds;
+          // Add the first table
+          toml::table pointcloud{
+              {"name", ipc.name},
+              {"source", pc_path},
           };
+          array_of_pointclouds.emplace_back(std::move(pointcloud));
+
+          auto gf_config =
+              toml::table{{"polygon-source", fp_path},
+                          {"GROUND_ELEVATION", h_ground},
+                          {"force-lod11-attribute", cfg.n.at("force_lod11")},
+                          {"id-attribute", cfg.id_attribute},
+                          {"pointclouds", std::move(array_of_pointclouds)}};
 
           if (!only_write_selected) {
             std::ofstream ofs;
@@ -410,7 +413,7 @@ void crop_tile(const roofer::TBox<double>& tile,
                 fmt::format(fmt::runtime(cfg.building_jsonl_file_spec),
                             fmt::arg("bid", bid), fmt::arg("pc_name", ""),
                             fmt::arg("path", cfg.output_path));
-            gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
+            // gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
             jsonl_paths[""].push_back(jsonl_path);
 
             // write optimal config
@@ -465,7 +468,6 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.nodata_radii.clear();
     ipc.nodata_fractions.clear();
     ipc.pt_densities.clear();
-    // ipc.is_mutated.clear();
     ipc.nodata_circles.clear();
     ipc.building_clouds.clear();
     ipc.building_rasters.clear();

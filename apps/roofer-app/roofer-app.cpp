@@ -962,13 +962,13 @@ int main(int argc, const char* argv[]) {
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
               attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
-              attrow.insert(roofer_cfg.n["roof_elevation_50p"],
+              attrow.insert(roofer_cfg.n["h_roof_50p"],
                             building.roof_elevation_50p);
-              attrow.insert(roofer_cfg.n["roof_elevation_70p"],
+              attrow.insert(roofer_cfg.n["h_roof_70p"],
                             building.roof_elevation_70p);
-              attrow.insert(roofer_cfg.n["roof_elevation_min"],
+              attrow.insert(roofer_cfg.n["h_roof_min"],
                             building.roof_elevation_min);
-              attrow.insert(roofer_cfg.n["roof_elevation_max"],
+              attrow.insert(roofer_cfg.n["h_roof_max"],
                             building.roof_elevation_max);
               attrow.insert(roofer_cfg.n["roof_n_planes"],
                             building.roof_n_planes);
