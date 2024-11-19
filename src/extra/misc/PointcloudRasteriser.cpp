@@ -28,6 +28,7 @@
 #include <roofer/common/datastructures.hpp>
 #include <roofer/common/GridPIPTester.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
+// #include <roofer/logger/logger.h>
 
 namespace roofer::misc {
 
@@ -322,9 +323,7 @@ namespace roofer::misc {
     int change_pixel_cnt =
         std::accumulate(change_mask.begin(), change_mask.end(), int(0));
 
-    // spdlog::debug("change_pixel_cnt: {}, footprint_pixel_cnt: {}",
-    // change_pixel_cnt, footprint_pixel_cnt);
-    return (change_pixel_cnt / footprint_pixel_cnt) >=
+    return (float(change_pixel_cnt) / float(footprint_pixel_cnt)) >=
            threshold_mutation_fraction;
   }
 
