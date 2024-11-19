@@ -83,6 +83,7 @@ struct RooferConfig {
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
+  bool clear_if_insufficient = false;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -129,10 +130,10 @@ struct RooferConfig {
       {"pc_year", "rf_pc_year"},
       {"force_lod11", "rf_force_lod11"},
       {"roof_type", "rf_roof_type"},
-      {"roof_elevation_50p", "rf_roof_elevation_50p"},
-      {"roof_elevation_70p", "rf_roof_elevation_70p"},
-      {"roof_elevation_min", "rf_roof_elevation_min"},
-      {"roof_elevation_max", "rf_roof_elevation_max"},
+      {"h_roof_50p", "rf_h_roof_50p"},
+      {"h_roof_70p", "rf_h_roof_70p"},
+      {"h_roof_min", "rf_h_roof_min"},
+      {"h_roof_max", "rf_h_roof_max"},
       {"roof_n_planes", "rf_roof_n_planes"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
@@ -523,6 +524,8 @@ struct RooferConfigHandler {
         _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
     add("lod11-fallback-area", "lod11 fallback area", _cfg.lod11_fallback_area,
         {roofer::v::HigherThan<int>(0)});
+    add("skip-insufficient", "skip buildings with insufficient pointcloud data",
+        _cfg.clear_if_insufficient, {});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
     add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,
