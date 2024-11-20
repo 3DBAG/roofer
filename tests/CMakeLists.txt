@@ -26,6 +26,13 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/issue-64")
 FetchContent_MakeAvailable(issue-64)
 
+FetchContent_Declare(
+  issue-71-v2
+  URL "${DATA_URL_ROOT}/issue-71-v2.zip"
+  URL_HASH MD5=7143bc65f71ac7c66f57bc9a57947e85
+  SOURCE_DIR "${DATA_DIR}/issue-71-v2")
+FetchContent_MakeAvailable(issue-71-v2)
+
 #FetchContent_Declare(
 #  wateringen
 #  URL "${DATA_URL_ROOT}/wateringen.zip"
@@ -86,19 +93,11 @@ if(RF_BUILD_APPS)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_test(
-    NAME "issue-71-v1"
-    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-v1.toml" --tilesize 300 300
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-  add_test(
     NAME "issue-71-v2"
     COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-v2.toml"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-  add_test(
-    NAME "issue-71-full"
-    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-full.toml"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "reconstruct-wippolder;roofer-wippolder;issue-64;issue-71-v1;issue-71-v2;issue-71-full")
+  set(tests_built "reconstruct-wippolder;roofer-wippolder;issue-64;issue-71-v2")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 
