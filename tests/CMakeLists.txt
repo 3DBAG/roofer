@@ -85,7 +85,20 @@ if(RF_BUILD_APPS)
     COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-64.toml" --filter identificatie='NL.IMBAG.Pand.0603100000011074'
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "reconstruct-wippolder;roofer-wippolder;issue-64")
+  add_test(
+    NAME "issue-71-v1"
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-v1.toml" --tilesize 300 300
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_test(
+    NAME "issue-71-v2"
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-v2.toml"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_test(
+    NAME "issue-71-full"
+    COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-full.toml"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  set(tests_built "reconstruct-wippolder;roofer-wippolder;issue-64;issue-71-v1;issue-71-v2;issue-71-full")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 
