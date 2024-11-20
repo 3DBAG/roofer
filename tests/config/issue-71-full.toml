@@ -1,0 +1,19 @@
+polygon-source = "data/issue-71-full/issue-71.gpkg"
+id-attribute = "identificatie"
+force-lod11-attribute = "kas_warenhuis"
+
+cellsize = 0.5
+lod = 22
+
+split-cjseq = false
+output-directory = "output/issue-71-full"
+
+[[pointclouds]]
+name = "AHN3"
+quality = 1
+source = ['data/issue-71-full/AHN3/t_985979.laz', 'data/issue-71-full/AHN3/t_985980.laz', 'data/issue-71-full/AHN3/t_985981.laz', 'data/issue-71-full/AHN3/t_985982.laz', 'data/issue-71-full/AHN3/t_985983.laz', 'data/issue-71-full/AHN3/t_987309.laz', 'data/issue-71-full/AHN3/t_987310.laz', 'data/issue-71-full/AHN3/t_987311.laz', 'data/issue-71-full/AHN3/t_987312.laz', 'data/issue-71-full/AHN3/t_987313.laz', 'data/issue-71-full/AHN3/t_988639.laz', 'data/issue-71-full/AHN3/t_988640.laz', 'data/issue-71-full/AHN3/t_988641.laz', 'data/issue-71-full/AHN3/t_988642.laz', 'data/issue-71-full/AHN3/t_988643.laz', 'data/issue-71-full/AHN3/t_989968.laz', 'data/issue-71-full/AHN3/t_989969.laz', 'data/issue-71-full/AHN3/t_989970.laz', 'data/issue-71-full/AHN3/t_989971.laz', 'data/issue-71-full/AHN3/t_989972.laz', 'data/issue-71-full/AHN3/t_989973.laz', 'data/issue-71-full/AHN3/t_991298.laz', 'data/issue-71-full/AHN3/t_991299.laz', 'data/issue-71-full/AHN3/t_991300.laz', 'data/issue-71-full/AHN3/t_991301.laz', 'data/issue-71-full/AHN3/t_991302.laz', 'data/issue-71-full/AHN3/t_991303.laz', 'data/issue-71-full/AHN3/t_992630.laz', 'data/issue-71-full/AHN3/t_992631.laz', 'data/issue-71-full/AHN3/t_992632.laz']
+
+[[pointclouds]]
+name = "AHN4"
+quality = 0
+source = ['data/issue-71-full/AHN4/t_985979.laz', 'data/issue-71-full/AHN4/t_985980.laz', 'data/issue-71-full/AHN4/t_985981.laz', 'data/issue-71-full/AHN4/t_985982.laz', 'data/issue-71-full/AHN4/t_985983.laz', 'data/issue-71-full/AHN4/t_987309.laz', 'data/issue-71-full/AHN4/t_987310.laz', 'data/issue-71-full/AHN4/t_987311.laz', 'data/issue-71-full/AHN4/t_987312.laz', 'data/issue-71-full/AHN4/t_987313.laz', 'data/issue-71-full/AHN4/t_988639.laz', 'data/issue-71-full/AHN4/t_988640.laz', 'data/issue-71-full/AHN4/t_988641.laz', 'data/issue-71-full/AHN4/t_988642.laz', 'data/issue-71-full/AHN4/t_988643.laz', 'data/issue-71-full/AHN4/t_989968.laz', 'data/issue-71-full/AHN4/t_989969.laz', 'data/issue-71-full/AHN4/t_989970.laz', 'data/issue-71-full/AHN4/t_989971.laz', 'data/issue-71-full/AHN4/t_989972.laz', 'data/issue-71-full/AHN4/t_989973.laz', 'data/issue-71-full/AHN4/t_991298.laz', 'data/issue-71-full/AHN4/t_991299.laz', 'data/issue-71-full/AHN4/t_991300.laz', 'data/issue-71-full/AHN4/t_991301.laz', 'data/issue-71-full/AHN4/t_991302.laz', 'data/issue-71-full/AHN4/t_991303.laz', 'data/issue-71-full/AHN4/t_992630.laz', 'data/issue-71-full/AHN4/t_992631.laz', 'data/issue-71-full/AHN4/t_992632.laz']

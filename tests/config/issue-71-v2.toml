@@ -1,0 +1,18 @@
+polygon-source = "data/issue-71-v2/issue-71.gpkg"
+id-attribute = "identificatie"
+force-lod11-attribute = "kas_warenhuis"
+cellsize = 0.5
+lod = 22
+split-cjseq = false
+output-directory = "output/issue-71-v2"
+
+[[pointclouds]]
+name = "AHN3"
+quality = 1
+source = [
+    "data/issue-71-v2/AHN3/t_985979.laz",
+    "data/issue-71-v2/AHN3/t_985983.laz",
+    "data/issue-71-v2/AHN3/t_989968.laz",
+    "data/issue-71-v2/AHN3/t_991303.laz",
+    "data/issue-71-v2/AHN3/t_992632.laz",
+]
