@@ -19,7 +19,7 @@
 // Author(s):
 // Ravi Peters
 
-void crop_tile(const roofer::TBox<double>& tile,
+bool crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, RooferConfig& cfg,
                roofer::io::SpatialReferenceSystemInterface* srs) {
@@ -45,6 +45,9 @@ void crop_tile(const roofer::TBox<double>& tile,
   vector_reader->readPolygons(footprints, &attributes);
 
   const unsigned N_fp = footprints.size();
+  if (N_fp == 0) {
+    return false;
+  }
 
   // get yoc attribute vector (nullptr if it does not exist)
   auto yoc_vec = attributes.get_if<int>(cfg.yoc_attribute);
@@ -469,4 +472,6 @@ void crop_tile(const roofer::TBox<double>& tile,
     ipc.ground_elevations.clear();
     ipc.acquisition_years.clear();
   }
+
+  return true;
 }

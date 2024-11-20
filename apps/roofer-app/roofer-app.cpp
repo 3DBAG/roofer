@@ -663,23 +663,29 @@ int main(int argc, const char* argv[]) {
                      building_tile.extent.pmin[0], building_tile.extent.pmin[1],
                      building_tile.extent.pmax[0],
                      building_tile.extent.pmax[1]);
-        crop_tile(building_tile.extent,  // tile extent
-                  input_pointclouds,     // input pointclouds
-                  building_tile,         // output building data
-                  roofer_cfg,
-                  project_srs.get());  // configuration parameters
-        building_tile.buildings_cnt = building_tile.buildings.size();
-        building_tile.buildings_progresses.resize(building_tile.buildings_cnt);
-        std::ranges::fill(building_tile.buildings_progresses, CROP_SUCCEEDED);
-        {
-          std::scoped_lock lock{cropped_tiles_mutex};
-          cropped_buildings_cnt += building_tile.buildings_cnt;
-          cropped_tiles.push_back(std::move(building_tile));
+        // crop_tile returns true if at least one building was cropped
+        if (!crop_tile(building_tile.extent,  // tile extent
+                       input_pointclouds,     // input pointclouds
+                       building_tile,         // output building data
+                       roofer_cfg,            // configuration parameters
+                       project_srs.get())) {
+          logger.info("No footprints found in tile {}, skipping...",
+                      building_tile.id);
+        } else {
+          building_tile.buildings_cnt = building_tile.buildings.size();
+          building_tile.buildings_progresses.resize(
+              building_tile.buildings_cnt);
+          std::ranges::fill(building_tile.buildings_progresses, CROP_SUCCEEDED);
+          {
+            std::scoped_lock lock{cropped_tiles_mutex};
+            cropped_buildings_cnt += building_tile.buildings_cnt;
+            cropped_tiles.push_back(std::move(building_tile));
+          }
+          logger.debug(
+              "[cropper] Finished cropping tile {}, notifying reconstructor",
+              building_tile.id);
+          cropped_pending.notify_one();
         }
-        logger.debug(
-            "[cropper] Finished cropping tile {}, notifying reconstructor",
-            building_tile.id);
-        cropped_pending.notify_one();
       } catch (...) {
         logger.error("[cropper] Failed to crop tile {}", building_tile.id);
       }
