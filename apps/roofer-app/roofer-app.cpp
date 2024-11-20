@@ -139,6 +139,8 @@ enum Progress : std::uint8_t {
   SERIALIZATION_FAILED,
 };
 
+auto format_as(Progress p) { return fmt::underlying(p); }
+
 /**
  * @brief Used for passing a BuildingObject reference to the parallel
  * reconstructor.
@@ -182,6 +184,56 @@ struct BuildingTile {
   std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
   // extent
   roofer::TBox<double> extent;
+
+  std::vector<std::pair<Progress, size_t>> count_progresses() const;
+};
+
+/**
+ * @brief Count of the current `buildings_progresses` items by type.
+ * @return A count of each progress type as a vector of pairs.
+ */
+std::vector<std::pair<Progress, size_t>> BuildingTile::count_progresses()
+    const {
+  auto counts = std::vector<std::pair<Progress, size_t>>();
+  for (std::uint8_t p = CROP_NOT_STARTED; p != SERIALIZATION_SUCCEEDED + 1;
+       p++) {
+    counts.emplace_back(static_cast<Progress>(p), 0);
+  }
+  for (auto& bp : buildings_progresses) {
+    counts.at(bp).second++;
+  }
+  return counts;
+}
+
+template <>
+struct fmt::formatter<BuildingTile> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(BuildingTile const& tile, Context& ctx) const {
+    auto nonzero = [](std::pair<Progress, size_t> c) { return c.second > 0; };
+    auto pc_ = tile.count_progresses();
+    std::vector<std::pair<Progress, size_t>> progress_counts{};
+    std::copy_if(pc_.begin(), pc_.end(), std::back_inserter(progress_counts),
+                 nonzero);
+    // This doesn't work on GCC11 on gilfoyle, because it doesn't recognize the
+    // pipe operator '|', but it would be more elegant than the current
+    // implementation. auto progress_counts =
+    //     tile.count_progresses() |
+    //     std::views::filter(nonzero);
+    bool data_offset_has_value = false;
+    if (tile.proj_helper) {
+      data_offset_has_value = tile.proj_helper->data_offset.has_value();
+    }
+    return format_to(
+        ctx.out(),
+        "BuildingTile(id={}, buildings.size={}, attributes.has_attributes={}, "
+        "buildings_progresses={}, buildings_cnt={}, "
+        "proj_helper.data_offset.has_value={}, extent=({} {}, {} {}))",
+        tile.id, tile.buildings.size(), tile.attributes.has_attributes(),
+        progress_counts, tile.buildings_cnt, data_offset_has_value,
+        tile.extent.pmin[0], tile.extent.pmin[1], tile.extent.pmax[0],
+        tile.extent.pmax[1]);
+  }
 };
 
 #include "crop_tile.hpp"
@@ -677,11 +729,7 @@ int main(int argc, const char* argv[]) {
       auto& building_tile = initial_tiles.front();
       try {
         // crop each tile
-        logger.debug("[cropper] Cropping tile {}", building_tile.id);
-        logger.debug("[cropper] Tile extent: {} {}, {} {}",
-                     building_tile.extent.pmin[0], building_tile.extent.pmin[1],
-                     building_tile.extent.pmax[0],
-                     building_tile.extent.pmax[1]);
+        logger.debug("[cropper] Cropping tile {}", building_tile);
         // crop_tile returns true if at least one building was cropped
         if (!crop_tile(building_tile.extent,  // tile extent
                        input_pointclouds,     // input pointclouds
@@ -701,12 +749,12 @@ int main(int argc, const char* argv[]) {
             cropped_tiles.push_back(std::move(building_tile));
           }
           logger.debug(
-              "[cropper] Finished cropping tile {}, notifying reconstructor",
-              building_tile.id);
+              "[cropper] Finished cropping tile, notifying reconstructor {}",
+              building_tile);
           cropped_pending.notify_one();
         }
       } catch (...) {
-        logger.error("[cropper] Failed to crop tile {}", building_tile.id);
+        logger.error("[cropper] Failed to crop tile {}", building_tile);
       }
       initial_tiles.pop_front();
     }
@@ -743,12 +791,12 @@ int main(int argc, const char* argv[]) {
           }
           std::ranges::fill(building_tile.buildings_progresses,
                             RECONSTRUCTION_IN_PROGRESS);
+          logger.debug(
+              "[reconstructor] Submitted all buildings for reconstruction for "
+              "tile {}",
+              building_tile);
           reconstructed_tiles.push_back(std::move(building_tile));
           cropped_tiles.pop_front();
-          logger.debug(
-              "[reconstructor] Submitted all buildings of tile {} for "
-              "reconstruction",
-              building_tile.id);
           // This wakes up the serializer thread as soon as we submitted one
           // tile for reconstruction, but that doesn't mean that any building of
           // the tile has finished reconstruction. But at least the serializer
@@ -867,6 +915,7 @@ int main(int argc, const char* argv[]) {
             if (tile_finished) {
               finished_idx.first = true;
               finished_idx.second = i;
+              logger.debug("[sorter] tile_finished=true: {}", tile);
               {
                 std::scoped_lock lock_sorted{sorted_tiles_mutex};
                 sorted_tiles.push_back(std::move(tile));
@@ -902,6 +951,7 @@ int main(int argc, const char* argv[]) {
 
         while (!pending_serialized.empty()) {
           auto& building_tile = pending_serialized.front();
+          logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
           auto& attr_status = building_tile.attributes.insert_vec<std::string>(
