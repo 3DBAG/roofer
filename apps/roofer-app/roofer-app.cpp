@@ -925,12 +925,18 @@ int main(int argc, const char* argv[]) {
           auto CityJsonWriter =
               roofer::io::createCityJsonWriter(*building_tile.proj_helper);
           CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
-          CityJsonWriter->translate_x_ =
-              (*building_tile.proj_helper->data_offset)[0];
-          CityJsonWriter->translate_y_ =
-              (*building_tile.proj_helper->data_offset)[1];
-          CityJsonWriter->translate_z_ =
-              (*building_tile.proj_helper->data_offset)[2];
+          if (building_tile.proj_helper->data_offset.has_value()) {
+            CityJsonWriter->translate_x_ =
+                (*building_tile.proj_helper->data_offset)[0];
+            CityJsonWriter->translate_y_ =
+                (*building_tile.proj_helper->data_offset)[1];
+            CityJsonWriter->translate_z_ =
+                (*building_tile.proj_helper->data_offset)[2];
+          } else {
+            throw std::runtime_error(fmt::format(
+                "Tile {} has no data offset, cannot write to cityjson",
+                building_tile.id));
+          }
           CityJsonWriter->scale_x_ = 0.01;
           CityJsonWriter->scale_y_ = 0.01;
           CityJsonWriter->scale_z_ = 0.01;
