@@ -21,6 +21,9 @@
 
 #include <array>
 #include <initializer_list>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 namespace roofer {
 
@@ -102,6 +105,19 @@ namespace roofer {
       return {(pmax[0] + pmin[0]) / 2, (pmax[1] + pmin[1]) / 2,
               (pmax[2] + pmin[2]) / 2};
     };
+    std::string wkt() const {
+      if (isEmpty()) return "POLYGON EMPTY";
+      std::ostringstream oss;
+      oss << std::fixed << std::setprecision(2);
+      oss << "POLYGON((";
+      oss << pmin[0] << " " << pmin[1] << ", ";
+      oss << pmax[0] << " " << pmin[1] << ", ";
+      oss << pmax[0] << " " << pmax[1] << ", ";
+      oss << pmin[0] << " " << pmax[1] << ", ";
+      oss << pmin[0] << " " << pmin[1];
+      oss << "))";
+      return oss.str();
+    }
   };
 
   typedef TBox<float> Box;
