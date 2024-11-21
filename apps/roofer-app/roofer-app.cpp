@@ -228,11 +228,10 @@ struct fmt::formatter<BuildingTile> {
         ctx.out(),
         "BuildingTile(id={}, buildings.size={}, attributes.has_attributes={}, "
         "buildings_progresses={}, buildings_cnt={}, "
-        "proj_helper.data_offset.has_value={}, extent=({} {}, {} {}))",
+        "proj_helper.data_offset.has_value={}, extent='{}'",
         tile.id, tile.buildings.size(), tile.attributes.has_attributes(),
         progress_counts, tile.buildings_cnt, data_offset_has_value,
-        tile.extent.pmin[0], tile.extent.pmin[1], tile.extent.pmax[0],
-        tile.extent.pmax[1]);
+        tile.extent.wkt());
   }
 };
 
