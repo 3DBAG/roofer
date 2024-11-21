@@ -1105,4 +1105,6 @@ int main(int argc, const char* argv[]) {
         "not empty, it still contains {} items",
         reconstructed_buildings.size());
   }
+
+  logger.info("Finished roofer");
 }
