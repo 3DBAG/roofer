@@ -228,7 +228,7 @@ struct fmt::formatter<BuildingTile> {
         ctx.out(),
         "BuildingTile(id={}, buildings.size={}, attributes.has_attributes={}, "
         "buildings_progresses={}, buildings_cnt={}, "
-        "proj_helper.data_offset.has_value={}, extent='{}'",
+        "proj_helper.data_offset.has_value={}, extent='{}')",
         tile.id, tile.buildings.size(), tile.attributes.has_attributes(),
         progress_counts, tile.buildings_cnt, data_offset_has_value,
         tile.extent.wkt());
@@ -572,6 +572,8 @@ int main(int argc, const char* argv[]) {
       logger.info("Using user override SRS: {}", roofer_cfg.srs_override);
     }
   }
+
+  logger.debug("{}", roofer_cfg);
 
   for (auto& ipc : input_pointclouds) {
     get_las_extents(ipc, project_srs.get());

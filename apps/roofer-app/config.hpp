@@ -18,6 +18,7 @@
 
 // Author(s):
 // Ravi Peters
+// Balázs Dukai
 #pragma once
 
 #include <functional>
@@ -140,6 +141,65 @@ struct RooferConfig {
       {"rmse_lod22", "rf_rmse_lod22"},
       {"h_ground", "rf_h_ground"},
   };
+};
+
+template <>
+struct fmt::formatter<roofer::ReconstructionConfig> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(roofer::ReconstructionConfig const& cfg,
+                        Context& ctx) const {
+    return format_to(
+        ctx.out(),
+        "ReconstructionConfig(complexity_factor={}, clip_ground={}, lod={}, "
+        "lod13_step_height={}, floor_elevation={}, "
+        "override_with_floor_elevation={}, plane_detect_k={}, "
+        "plane_detect_min_points={}, plane_detect_epsilon={}, "
+        "plane_detect_normal_angle={}, line_detect_epsilon={}, thres_alpha={}, "
+        "thres_reg_line_dist={}, thres_reg_line_ext={})",
+        cfg.complexity_factor, cfg.clip_ground, cfg.lod, cfg.lod13_step_height,
+        cfg.floor_elevation, cfg.override_with_floor_elevation,
+        cfg.plane_detect_k, cfg.plane_detect_min_points,
+        cfg.plane_detect_epsilon, cfg.plane_detect_normal_angle,
+        cfg.line_detect_epsilon, cfg.thres_alpha, cfg.thres_reg_line_dist,
+        cfg.thres_reg_line_ext);
+  }
+};
+
+template <>
+struct fmt::formatter<RooferConfig> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(RooferConfig const& cfg, Context& ctx) const {
+    std::string region_of_interest = "novalue";
+    if (cfg.region_of_interest.has_value()) {
+      region_of_interest = cfg.region_of_interest.value().wkt();
+    }
+    return format_to(
+        ctx.out(),
+        "RooferConfig(source_footprints={}, id_attribute={}, "
+        "force_lod11_attribute={}, yoc_attribute={}, layer_name={}, "
+        "layer_id={}, attribute_filter={}, ceil_point_density={}, cellsize={}, "
+        "lod11_fallback_area={}, lod11_fallback_density={}, tilesize={}, "
+        "clear_if_insufficient={}, write_crop_outputs={}, output_all={}, "
+        "write_rasters={}, write_index={}, region_of_interest={}, "
+        "srs_override={}, split_cjseq={}, building_toml_file_spec={}, "
+        "building_las_file_spec={}, building_gpkg_file_spec={}, "
+        "building_raster_file_spec={}, building_jsonl_file_spec={}, "
+        "jsonl_list_file_spec={}, index_file_spec={}, "
+        "metadata_json_file_spec={}, output_path={}, rec={})",
+        cfg.source_footprints, cfg.id_attribute, cfg.force_lod11_attribute,
+        cfg.yoc_attribute, cfg.layer_name, cfg.layer_id, cfg.attribute_filter,
+        cfg.ceil_point_density, cfg.cellsize, cfg.lod11_fallback_area,
+        cfg.lod11_fallback_density, cfg.tilesize, cfg.clear_if_insufficient,
+        cfg.write_crop_outputs, cfg.output_all, cfg.write_rasters,
+        cfg.write_index, region_of_interest, cfg.srs_override, cfg.split_cjseq,
+        cfg.building_toml_file_spec, cfg.building_las_file_spec,
+        cfg.building_gpkg_file_spec, cfg.building_raster_file_spec,
+        cfg.building_jsonl_file_spec, cfg.jsonl_list_file_spec,
+        cfg.index_file_spec, cfg.metadata_json_file_spec, cfg.output_path,
+        cfg.rec);
+  }
 };
 
 template <typename T>
