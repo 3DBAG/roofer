@@ -795,6 +795,9 @@ int main(int argc, const char* argv[]) {
               "[reconstructor] Submitted all buildings for reconstruction for "
               "tile {}",
               building_tile);
+          // Here the building_tile.buildings is empty, because we moved off all
+          // BuildingObject-s, so we might as well clear it.
+          building_tile.buildings.clear();
           reconstructed_tiles.push_back(std::move(building_tile));
           cropped_tiles.pop_front();
           // This wakes up the serializer thread as soon as we submitted one
@@ -900,15 +903,17 @@ int main(int argc, const char* argv[]) {
           //  loop on each building...
           for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
             auto& building_tile = reconstructed_tiles[i];
-            // We expect that the building_tile.buildings container hasn't been
-            // cleared, so that we can insert the reconstructed building at the
-            // index.
-            assert(building_tile.buildings.size() ==
-                   building_tile.buildings_cnt);
+            // The reconstructor moved off all items from the
+            // building_tile.buildings container, which can mess up its size. We
+            // need to make sure that the container is the right size, so that
+            // we can insert the reconstructed building at the index.
+            if (building_tile.buildings.size() != building_tile.buildings_cnt) {
+              building_tile.buildings.resize(building_tile.buildings_cnt);
+            }
             if (building_tile.id == bref.tile_id) {
-              building_tile.buildings[bref.building_idx] =
+              building_tile.buildings.at(bref.building_idx) =
                   std::move(bref.building);
-              building_tile.buildings_progresses[bref.building_idx] =
+              building_tile.buildings_progresses.at(bref.building_idx) =
                   bref.progress;
             }
 
