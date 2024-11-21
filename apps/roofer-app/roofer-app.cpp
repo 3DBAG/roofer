@@ -899,26 +899,30 @@ int main(int argc, const char* argv[]) {
           //  reconstructed_tiles remains relatively low. But we need to do the
           //  loop on each building...
           for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
-            auto& tile = reconstructed_tiles[i];
-            // We expect that the tile.buildings container hasn't been cleared,
-            // so that we can insert the reconstructed building at the index.
-            assert(tile.buildings.size() == tile.buildings_cnt);
-            if (tile.id == bref.tile_id) {
-              tile.buildings[bref.building_idx] = std::move(bref.building);
-              tile.buildings_progresses[bref.building_idx] = bref.progress;
+            auto& building_tile = reconstructed_tiles[i];
+            // We expect that the building_tile.buildings container hasn't been
+            // cleared, so that we can insert the reconstructed building at the
+            // index.
+            assert(building_tile.buildings.size() ==
+                   building_tile.buildings_cnt);
+            if (building_tile.id == bref.tile_id) {
+              building_tile.buildings[bref.building_idx] =
+                  std::move(bref.building);
+              building_tile.buildings_progresses[bref.building_idx] =
+                  bref.progress;
             }
 
             auto tile_finished = std::all_of(
-                tile.buildings_progresses.begin(),
-                tile.buildings_progresses.end(),
+                building_tile.buildings_progresses.begin(),
+                building_tile.buildings_progresses.end(),
                 [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
             if (tile_finished) {
               finished_idx.first = true;
               finished_idx.second = i;
-              logger.debug("[sorter] tile_finished=true: {}", tile);
+              logger.debug("[sorter] tile_finished=true: {}", building_tile);
               {
                 std::scoped_lock lock_sorted{sorted_tiles_mutex};
-                sorted_tiles.push_back(std::move(tile));
+                sorted_tiles.push_back(std::move(building_tile));
               }
               sorted_pending.notify_one();
             }
