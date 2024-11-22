@@ -218,11 +218,11 @@ namespace roofer::io {
                       AttributeVecMap* attributes) override {
       auto& logger = logger::Logger::get_logger();
 
-      logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
-                  poLayer->GetFeatureCount());
+      // logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
+      //             poLayer->GetFeatureCount());
       auto geometry_type = poLayer->GetGeomType();
       auto geometry_type_name = OGRGeometryTypeToName(geometry_type);
-      logger.info("Layer geometry type: {}", geometry_type_name);
+      // logger.info("Layer geometry type: {}", geometry_type_name);
 
       auto layer_def = poLayer->GetLayerDefn();
       auto field_count = layer_def->GetFieldCount();
@@ -268,7 +268,7 @@ namespace roofer::io {
 
       poLayer->ResetReading();
       if (this->region_of_interest.has_value()) {
-        logger.info("Setting spatial filter");
+        // logger.info("Setting spatial filter");
         auto& roi = *this->region_of_interest;
         poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0],
                                       roi.pmax[1]);
@@ -294,72 +294,50 @@ namespace roofer::io {
         // read feature geometry
         OGRGeometry* poGeometry;
         poGeometry = poFeature->GetGeometryRef();
-        // std::cout << "Layer geometry type: " << poGeometry->getGeometryType()
-        // << " , " << geometry_type << "\n";
-        if (poGeometry !=
-            nullptr)  // FIXME: we should check if te layer geometrytype matches
-                      // with this feature's geometry type. Messy because they
-                      // can be a bit different eg. wkbLineStringZM and
-                      // wkbLineString25D
-        {
-          // if (wkbFlatten(poGeometry->getGeometryType()) == wkbLineString)
-          // {
-          //   OGRLineString *poLineString = poGeometry->toLineString();
 
-          //   LineString line_string;
-          //   for (auto &poPoint : poLineString)
-          //   {
-          //     std::array<float, 3> p = pjHelper.coord_transform_fwd(
-          //       poPoint.getX(),
-          //       poPoint.getY(),
-          //       base_elevation==0 ? poPoint.getZ() : base_elevation
-          //     );
-          //     line_string.push_back(p);
-          //   }
-          //   line_strings.push_back(line_string);
-          //   is_valid.push_back(bool(poGeometry->IsValid()));
+        // FIXME: we should check if te layer geometrytype matches
+        // with this feature's geometry type. Messy because they
+        // can be a bit different eg. wkbLineStringZM and
+        // wkbLineString25D
+        if (poGeometry == nullptr) {
+          continue;
+        }
 
-          //   // push_attributes(*poFeature, field_name_map);
-          // }
-          // else
-          if (wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon) {
-            OGRPolygon* poPolygon = poGeometry->toPolygon();
-
-            read_polygon(poPolygon, polygons);
-
-            // area.push_back(float(poPolygon->get_Area()));
-            // is_valid.push_back(bool(poPolygon->IsValid()));
-            if (attributes)
-              push_attributes(*poFeature, attributes, field_name_map);
-
-          } else if (wkbFlatten(poGeometry->getGeometryType()) ==
-                     wkbMultiPolygon) {
-            OGRMultiPolygon* poMultiPolygon = poGeometry->toMultiPolygon();
-            for (auto poly_it = poMultiPolygon->begin();
-                 poly_it != poMultiPolygon->end(); ++poly_it) {
-              read_polygon(*poly_it, polygons);
-
-              // area.push_back(float((*poly_it)->get_Area()));
-              // is_valid.push_back(bool((*poly_it)->IsValid()));
-              if (attributes)
-                push_attributes(*poFeature, attributes, field_name_map);
-            }
-          } else {
-            throw rooferException("Unsupported geometry type\n");
+        if (auto roi = this->region_of_interest) {
+          OGRPoint poPoint;
+          poGeometry->Centroid(&poPoint);
+          arr3d p = {poPoint.getX(), poPoint.getY(), poPoint.getZ()};
+          if (!roi->intersects(p)) {
+            continue;
           }
         }
+
+        if (wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon) {
+          OGRPolygon* poPolygon = poGeometry->toPolygon();
+
+          read_polygon(poPolygon, polygons);
+
+          // area.push_back(float(poPolygon->get_Area()));
+          // is_valid.push_back(bool(poPolygon->IsValid()));
+          if (attributes)
+            push_attributes(*poFeature, attributes, field_name_map);
+
+        } else if (wkbFlatten(poGeometry->getGeometryType()) ==
+                   wkbMultiPolygon) {
+          OGRMultiPolygon* poMultiPolygon = poGeometry->toMultiPolygon();
+          for (auto poly_it = poMultiPolygon->begin();
+               poly_it != poMultiPolygon->end(); ++poly_it) {
+            read_polygon(*poly_it, polygons);
+
+            // area.push_back(float((*poly_it)->get_Area()));
+            // is_valid.push_back(bool((*poly_it)->IsValid()));
+            if (attributes)
+              push_attributes(*poFeature, attributes, field_name_map);
+          }
+        } else {
+          throw rooferException("Unsupported geometry type\n");
+        }
       }
-      // if (geometry_type == wkbLineString25D || geometry_type ==
-      // wkbLineStringZM) { if (line_strings.size() > 0)
-      // {
-      //   // output("line_strings").set(line_strings);
-      //   std::cout << "pushed " << line_strings.size() << " line_string
-      //   features...\n";
-      //   // } else if (geometry_type == wkbPolygon || geometry_type ==
-      //   wkbPolygon25D || geometry_type == wkbPolygonZM || geometry_type ==
-      //   wkbPolygonM) {
-      // }
-      // else
       if (polygons.size() > 0) {
         // std::cout << "pushed " << polygons.size() << " linear_ring
         // features...\n";
