@@ -124,47 +124,51 @@ namespace roofer::io {
       if (poDS == nullptr) {
         // get error msg from GDAL
         auto error_msg = CPLGetLastErrorMsg();
-        throw(rooferException("Open failed on " + source +
+        throw(rooferException("[VectorReaderOGR] Open failed on " + source +
                               " with error: " + error_msg));
       }
 
       // Open Layer
       layer_count = poDS->GetLayerCount();
-      logger.info("Layer count: {}", layer_count);
+      // logger.info("Layer count: {}", layer_count);
 
       poLayer = poDS->GetLayerByName(layer_name.c_str());
       if (poLayer == nullptr) {
         if (layer_id >= layer_count) {
-          throw(rooferException(
-              "Illegal layer ID! Layer ID must be less than the layer count."));
+          throw(
+              rooferException("[VectorReaderOGR] Illegal layer ID! Layer ID "
+                              "must be less than the layer count."));
         } else if (layer_id < 0) {
-          throw(rooferException(
-              "Illegal layer ID! Layer ID cannot be negative."));
+          throw(
+              rooferException("[VectorReaderOGR] Illegal layer ID! Layer ID "
+                              "cannot be negative."));
         }
         poLayer = poDS->GetLayer(layer_id);
         // throw(rooferException("Could not get the selected layer by name=" +
         // layer_name));
       }
       if (poLayer == nullptr)
-        throw(rooferException("Could not get the selected layer "));
+        throw(rooferException(
+            "[VectorReaderOGR] Could not get the selected layer "));
 
-      logger.info("Layer '{}' total feature count: {}", poLayer->GetName(),
-                  poLayer->GetFeatureCount());
+      logger.debug("[VectorReaderOGR] Layer '{}' total feature count: {}",
+                   poLayer->GetName(), poLayer->GetFeatureCount());
 
-      logger.info("Getting layer extent...");
+      // logger.info("Getting layer extent...");
       OGREnvelope extent;
       auto error = poLayer->GetExtent(&extent);
       if (error) {
-        throw(rooferException("Could not get the extent of the layer"));
+        throw(rooferException(
+            "[VectorReaderOGR] Could not get the extent of the layer"));
       }
-      logger.info("Layer extent: {} {} {} {}", extent.MinX, extent.MinY,
-                  extent.MaxX, extent.MaxY);
+      logger.debug("[VectorReaderOGR] Layer extent: {} {} {} {}", extent.MinX,
+                   extent.MinY, extent.MaxX, extent.MaxY);
       layer_extent = {extent.MinX, extent.MinY, 0, extent.MaxX, extent.MaxY, 0};
     }
 
     void get_crs(SpatialReferenceSystemInterface* srs) override {
       if (poLayer == nullptr) {
-        throw(rooferException("Layer is not open"));
+        throw(rooferException("[VectorReaderOGR] Layer is not open"));
       }
       if (OGRSpatialReference* layerSRS = poLayer->GetSpatialRef()) {
         if (!srs->is_valid()) {
@@ -282,8 +286,8 @@ namespace roofer::io {
         auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
         if (OGRERR_NONE != error_code) {
           throw(rooferException(
-              "Invalid attribute filter: OGRErr=" + std::to_string(error_code) +
-              ", filter=" + attribute_filter));
+              "[VectorReaderOGR] Invalid attribute filter: OGRErr=" +
+              std::to_string(error_code) + ", filter=" + attribute_filter));
         }
       }
 
@@ -335,7 +339,8 @@ namespace roofer::io {
               push_attributes(*poFeature, attributes, field_name_map);
           }
         } else {
-          throw rooferException("Unsupported geometry type\n");
+          throw rooferException(
+              "[VectorReaderOGR] Unsupported geometry type\n");
         }
       }
       if (polygons.size() > 0) {
