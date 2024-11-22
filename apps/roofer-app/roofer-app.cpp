@@ -624,10 +624,18 @@ int main(int argc, const char* argv[]) {
           create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
 
       for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
-        auto& tile = tile_extents[tid];
+        // intersect with roi, to avoid creating buildings outside of the roi
         auto& building_tile = initial_tiles.emplace_back();
         building_tile.id = tid;
-        building_tile.extent = tile;
+        auto tile = roi.intersect(tile_extents[tid]);
+        if (tile.has_value()) {
+          building_tile.extent = *tile;
+        } else {
+          logger.warning(
+              "Tile is outside of the region of interest: \n{}, ROI: \n{}",
+              tile_extents[tid].wkt(), roi.wkt());
+          return EXIT_FAILURE;
+        }
         building_tile.proj_helper = roofer::misc::createProjHelper();
       }
     }
