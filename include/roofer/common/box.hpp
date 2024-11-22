@@ -95,6 +95,11 @@ namespace roofer {
           (pmin[1] < otherBox.pmax[1]) && (pmax[1] > otherBox.pmin[1]);
       return intersect_x && intersect_y;
     };
+    bool intersects(const std::array<T, 3>& qpoint) const {
+      bool intersect_x = (pmin[0] <= qpoint[0]) && (pmax[0] > qpoint[0]);
+      bool intersect_y = (pmin[1] <= qpoint[1]) && (pmax[1] > qpoint[1]);
+      return intersect_x && intersect_y;
+    };
     void clear() {
       pmin.fill(0);
       pmax.fill(0);
