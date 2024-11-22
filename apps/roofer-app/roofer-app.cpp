@@ -984,6 +984,7 @@ int main(int argc, const char* argv[]) {
           // output reconstructed buildings
           auto CityJsonWriter =
               roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+          CityJsonWriter->written_features_count = serialized_buildings_cnt;
           CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
           if (building_tile.proj_helper->data_offset.has_value()) {
             CityJsonWriter->translate_x_ =

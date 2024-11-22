@@ -149,10 +149,10 @@ namespace roofer::io {
         const MeshMap* multisolid_lod13, const MeshMap* multisolid_lod22,
         const AttributeMapRow& attributes, nlohmann::json& outputJSON,
         std::vector<arr3d>& vertex_vec, std::string& identifier_attribute,
-        StrMap& output_attribute_names, bool& only_output_renamed) {
+        StrMap& output_attribute_names, bool& only_output_renamed,
+        std::string building_id) {
       std::map<arr3d, size_t> vertex_map;
       std::set<arr3d> vertex_set;
-      size_t id_cntr = 0;
       size_t bp_counter = 0;
 
       // we expect at least one of the geomtry inputs is set
@@ -163,7 +163,7 @@ namespace roofer::io {
       nlohmann::json j_null;
       {
         auto building = nlohmann::json::object();
-        auto b_id = std::to_string(++id_cntr);
+        auto b_id = building_id;
         building["type"] = "Building";
 
         // Building atributes
@@ -411,7 +411,8 @@ namespace roofer::io {
       write_cityobject(footprint, multisolid_lod12, multisolid_lod13,
                        multisolid_lod22, attributes, outputJSON, vertex_vec,
                        identifier_attribute, output_attribute_names,
-                       only_output_renamed_);
+                       only_output_renamed_,
+                       std::to_string(++written_features_count));
 
       // The main Building is the parent object.
       // Bit of a hack. Ideally we would know exactly which ID we set,

@@ -46,6 +46,7 @@ namespace roofer::io {
     std::string CRS_ = "EPSG:7415";
     std::string filepath_;
     std::string identifier_attribute = "";
+    size_t written_features_count = 0;
 
     bool prettyPrint_ = false;
     bool only_output_renamed_ = false;
