@@ -422,13 +422,10 @@ namespace roofer {
 
   std::vector<int>& Mesh::get_labels() { return labels_; };
   const std::vector<int>& Mesh::get_labels() const { return labels_; };
-  // std::unordered_map<std::string, AttributeVec>&  Mesh::get_attributes(){
-  //   return attributes_;
-  // };
-  // const std::unordered_map<std::string, AttributeVec>&
-  // Mesh::get_attributes()const {
-  //   return attributes_;
-  // };
+  std::vector<AttributeMapRow>& Mesh::get_attributes() { return attributes_; };
+  const std::vector<AttributeMapRow>& Mesh::get_attributes() const {
+    return attributes_;
+  };
 
   void MultiTriangleCollection::push_back(
       TriangleCollection& trianglecollection) {

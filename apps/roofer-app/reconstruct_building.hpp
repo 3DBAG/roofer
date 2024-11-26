@@ -23,13 +23,15 @@ enum LOD { LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 
 std::unordered_map<int, roofer::Mesh> extrude(
     roofer::Arrangement_2 arrangement, const float& floor_elevation,
+    const float& z_offset,
 #ifdef RF_USE_VAL3DITY
     std::string& attr_val3dity,
 #endif
     float& rmse,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
     roofer::reconstruction::PlaneDetectorInterface* PlaneDetector, LOD lod,
-    roofer::ReconstructionConfig* cfg) {
+    RooferConfig* rfcfg) {
+  auto* cfg = &(rfcfg->rec);
   bool dissolve_step_edges = false;
   bool dissolve_all_interior = false;
   bool extrude_LoD2 = true;
@@ -78,6 +80,19 @@ std::unordered_map<int, roofer::Mesh> extrude(
               .with_class_ids(ArrangementExtruder->labels));
 #endif
 
+  auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
+  for (auto& [label, mesh] : ArrangementExtruder->multisolid) {
+    MeshPropertyCalculator->compute_roof_height(
+        mesh, {.z_offset = z_offset,
+               .cellsize = rfcfg->cellsize,
+               .h_50p = rfcfg->n["h_roof_50p"],
+               .h_70p = rfcfg->n["h_roof_70p"],
+               .h_min = rfcfg->n["h_roof_min"],
+               .h_max = rfcfg->n["h_roof_max"]});
+    MeshPropertyCalculator->compute_roof_orientation(
+        mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+  }
+
   auto MeshTriangulator =
       roofer::reconstruction::createMeshTriangulatorLegacy();
   MeshTriangulator->compute(ArrangementExtruder->multisolid);
@@ -113,8 +128,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
   return ArrangementExtruder->multisolid;
 }
 
-void reconstruct_building(BuildingObject& building,
-                          roofer::ReconstructionConfig* cfg) {
+void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
+  auto* cfg = &(rfcfg->rec);
   auto& logger = roofer::logger::Logger::get_logger();
   // split into ground and roof points
   roofer::PointCollection points, points_ground, points_roof;
@@ -314,32 +329,32 @@ void reconstruct_building(BuildingObject& building,
     // logger.debug("LoD={}", cfg->lod);
     if (cfg->lod == 0 || cfg->lod == 12) {
       building.multisolids_lod12 =
-          extrude(arrangement, building.h_ground,
+          extrude(arrangement, building.h_ground, building.z_offset,
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod12,
 #endif
                   building.rmse_lod12, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD12, cfg);
+                  PlaneDetector.get(), LOD12, rfcfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 13) {
       building.multisolids_lod13 =
-          extrude(arrangement, building.h_ground,
+          extrude(arrangement, building.h_ground, building.z_offset,
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod13,
 #endif
                   building.rmse_lod13, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD13, cfg);
+                  PlaneDetector.get(), LOD13, rfcfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 22) {
       building.multisolids_lod22 =
-          extrude(arrangement, building.h_ground,
+          extrude(arrangement, building.h_ground, building.z_offset,
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod22,
 #endif
                   building.rmse_lod22, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD22, cfg);
+                  PlaneDetector.get(), LOD22, rfcfg);
     }
   }
 }

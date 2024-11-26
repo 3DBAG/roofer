@@ -4,7 +4,8 @@ set(LIBRARY_SOURCES
     "PointcloudRasteriser.cpp"
     "projHelper.cpp"
     "select_pointcloud.cpp"
-    "Vector2DOpsGEOS.cpp")
+    "Vector2DOpsGEOS.cpp"
+    "MeshPropertyCalculator.cpp")
 if(RF_USE_VAL3DITY)
     list(APPEND LIBRARY_SOURCES "Val3dator.cpp")
 endif()
@@ -14,7 +15,8 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/misc/PointcloudRasteriser.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/misc/projHelper.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/misc/select_pointcloud.hpp"
-    "${ROOFER_INCLUDE_DIR}/roofer/misc/Vector2DOps.hpp")
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/Vector2DOps.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/misc/MeshPropertyCalculator.hpp")
 if(RF_USE_VAL3DITY)
     list(APPEND LIBRARY_HEADERS "${ROOFER_INCLUDE_DIR}/roofer/misc/Val3dator.hpp")
 endif()

@@ -56,6 +56,7 @@ namespace fs = std::filesystem;
 
 // reconstruct
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
+#include <roofer/misc/MeshPropertyCalculator.hpp>
 #include <roofer/reconstruction/AlphaShaper.hpp>
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
@@ -93,6 +94,7 @@ namespace fs = std::filesystem;
 struct BuildingObject {
   roofer::PointCollection pointcloud;
   roofer::LinearRing footprint;
+  float z_offset = 0;
 
   std::unordered_map<int, roofer::Mesh> multisolids_lod12;
   std::unordered_map<int, roofer::Mesh> multisolids_lod13;
@@ -842,8 +844,7 @@ int main(int argc, const char* argv[]) {
               auto start = std::chrono::high_resolution_clock::now();
               logger.debug("[reconstructor] starting reconstruction for: {}",
                            building_object_ref.building.jsonl_path.string());
-              reconstruct_building(building_object_ref.building,
-                                   &roofer_cfg.rec);
+              reconstruct_building(building_object_ref.building, &roofer_cfg);
               logger.debug("[reconstructor] finished reconstruction for: {}",
                            building_object_ref.building.jsonl_path.string());
               // TODO: These two seem to be redundant
