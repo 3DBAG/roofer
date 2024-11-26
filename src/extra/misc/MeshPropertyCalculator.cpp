@@ -162,7 +162,7 @@ namespace roofer::misc {
             azimuth = std::numeric_limits<float>::quiet_NaN();
             slope = std::numeric_limits<float>::quiet_NaN();
           } else {
-            float slope = CGAL::to_double(CGAL::approximate_angle(n, up));
+            slope = CGAL::to_double(CGAL::approximate_angle(n, up));
 
             // if (slope < cfg.is_horizontal_threshold) {
             //   ++cnt_flat;
@@ -174,7 +174,7 @@ namespace roofer::misc {
             // (https://en.cppreference.com/w/cpp/numeric/math/atan2) ie.
             // subtract pi/2, multiply by -1 and then add 2 pi if result is
             // negative (4th quadrant)
-            float azimuth = -1 * (std::atan2(n.y(), n.x()) - pi / 2);
+            azimuth = -1 * (std::atan2(n.y(), n.x()) - pi / 2);
             if (azimuth < 0) {
               azimuth = 2 * pi + azimuth;
             }
