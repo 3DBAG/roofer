@@ -140,6 +140,8 @@ struct RooferConfig {
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
       {"h_ground", "rf_h_ground"},
+      {"slope", "rf_slope"},
+      {"azimuth", "rf_azimuth"},
   };
 };
 

@@ -44,6 +44,11 @@ bool crop_tile(const roofer::TBox<double>& tile,
   roofer::AttributeVecMap attributes;
   vector_reader->readPolygons(footprints, &attributes);
 
+  if (!pj->data_offset.has_value()) {
+    logger.error("No data offset set after reading inputs");
+    return false;
+  }
+
   const unsigned N_fp = footprints.size();
   if (N_fp == 0) {
     return false;
@@ -197,7 +202,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     pt_density.reserve(N_fp);
     is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
-      h_ground.push_back(ipc.ground_elevations[i]);
+      h_ground.push_back(ipc.ground_elevations[i] + (*pj->data_offset)[2]);
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
@@ -325,13 +330,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
     {
       BuildingObject& building = output_building_tile.buildings.emplace_back();
       building.attribute_index = i;
+      building.z_offset = (*pj->data_offset)[2];
 
       building.pointcloud =
           input_pointclouds[selected->index].building_clouds[i];
       building.footprint = footprints[i];
       building.h_ground =
-          input_pointclouds[selected->index].ground_elevations[i] +
-          (*pj->data_offset)[2];
+          input_pointclouds[selected->index].ground_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
 
       output_building_tile.attributes = attributes;
