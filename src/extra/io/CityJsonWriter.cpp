@@ -107,15 +107,26 @@ namespace roofer::io {
       }
       geometry["boundaries"] = {exterior_shell};
 
-      auto surfaces = nlohmann::json::array();
-      surfaces.push_back(nlohmann::json::object({{"type", "GroundSurface"}}));
-      surfaces.push_back(nlohmann::json::object({{"type", "RoofSurface"}}));
-      surfaces.push_back(nlohmann::json::object(
-          {{"type", "WallSurface"}, {"on_footprint_edge", true}}));
-      surfaces.push_back(nlohmann::json::object(
-          {{"type", "WallSurface"}, {"on_footprint_edge", false}}));
-      geometry["semantics"] = {{"surfaces", surfaces},
-                               {"values", {mesh.get_labels()}}};
+      auto semantic_objects = nlohmann::json::array();
+      std::vector<int> sem_values;
+      for (size_t i = 0; i < mesh.get_polygons().size(); ++i) {
+        auto semantic_object = attributes2json(mesh.get_attributes().at(i));
+        if (mesh.get_labels()[i] == 0) {
+          semantic_object["type"] = "GroundSurface";
+        } else if (mesh.get_labels()[i] == 1) {
+          semantic_object["type"] = "RoofSurface";
+        } else if (mesh.get_labels()[i] == 2) {
+          semantic_object["type"] = "WallSurface";
+          semantic_object["on_footprint_edge"] = true;
+        } else if (mesh.get_labels()[i] == 3) {
+          semantic_object["type"] = "WallSurface";
+          semantic_object["on_footprint_edge"] = false;
+        }
+        sem_values.push_back(i);
+        semantic_objects.push_back(semantic_object);
+      }
+      geometry["semantics"] = {{"surfaces", semantic_objects},
+                               {"values", {sem_values}}};
       return geometry;
     }
 
@@ -143,13 +154,47 @@ namespace roofer::io {
       return {minp[0], minp[1], minp[2], maxp[0], maxp[1], maxp[2]};
     }
 
+    nlohmann::json::object_t attributes2json(
+        const AttributeMapRow& attributes) {
+      nlohmann::json::object_t jattributes;
+      nlohmann::json j_null;
+      for (const auto& [name, val] : attributes) {
+        if (attributes.is_null(name)) {
+          jattributes[name] = j_null;
+        } else if (auto val = attributes.get_if<bool>(name)) {
+          jattributes[name] = *val;
+        } else if (auto val = attributes.get_if<float>(name)) {
+          jattributes[name] = *val;
+        } else if (auto val = attributes.get_if<int>(name)) {
+          jattributes[name] = *val;
+        } else if (auto val = attributes.get_if<std::string>(name)) {
+          jattributes[name] = *val;
+          // for date/time we follow https://en.wikipedia.org/wiki/ISO_8601
+        } else if (auto val = attributes.get_if<Date>(name)) {
+          auto t = *val;
+          std::string date = t.format_to_ietf();
+          jattributes[name] = date;
+        } else if (auto val = attributes.get_if<Time>(name)) {
+          auto t = *val;
+          std::string time = std::to_string(t.hour) + ":" +
+                             std::to_string(t.minute) + ":" +
+                             std::to_string(t.second) + "Z";
+          jattributes[name] = time;
+        } else if (auto val = attributes.get_if<DateTime>(name)) {
+          auto t = *val;
+          std::string datetime = t.format_to_ietf();
+          jattributes[name] = datetime;
+        }
+      }
+      return jattributes;
+    }
+
     using MeshMap = std::unordered_map<int, Mesh>;
     void write_cityobject(
         const LinearRing& footprint, const MeshMap* multisolid_lod12,
         const MeshMap* multisolid_lod13, const MeshMap* multisolid_lod22,
         const AttributeMapRow& attributes, nlohmann::json& outputJSON,
         std::vector<arr3d>& vertex_vec, std::string& identifier_attribute,
-        StrMap& output_attribute_names, bool& only_output_renamed,
         std::string building_id) {
       std::map<arr3d, size_t> vertex_map;
       std::set<arr3d> vertex_set;
@@ -160,66 +205,25 @@ namespace roofer::io {
       bool export_lod13 = multisolid_lod13;
       bool export_lod22 = multisolid_lod22;
 
-      nlohmann::json j_null;
       {
         auto building = nlohmann::json::object();
         auto b_id = building_id;
         building["type"] = "Building";
 
         // Building atributes
-        bool id_from_attr = false;
-        auto jattributes = nlohmann::json::object();
-        for (const auto& [name_, val] : attributes) {
-          std::string name = name_;
-          // see if we need to rename this attribute
-          auto search = output_attribute_names.find(name);
-          if (search != output_attribute_names.end()) {
-            // ignore if the new name is an empty string
-            if (search->second.size() != 0) name = search->second;
-          } else if (only_output_renamed) {
-            continue;
-          }
-
-          if (attributes.is_null(name)) {
-            jattributes[name] = j_null;
-          } else if (auto val = attributes.get_if<bool>(name)) {
-            jattributes[name] = *val;
-          } else if (auto val = attributes.get_if<float>(name)) {
-            jattributes[name] = *val;
-            if (name == identifier_attribute) {
+        // bool id_from_attr = false;
+        building["attributes"] = attributes2json(attributes);
+        for (const auto& [name, val] : attributes) {
+          if (name == identifier_attribute) {
+            if (auto val = attributes.get_if<float>(name)) {
               b_id = std::to_string(*val);
-            }
-          } else if (auto val = attributes.get_if<int>(name)) {
-            jattributes[name] = *val;
-            if (name == identifier_attribute) {
+            } else if (auto val = attributes.get_if<int>(name)) {
               b_id = std::to_string(*val);
-              id_from_attr = true;
-            }
-          } else if (auto val = attributes.get_if<std::string>(name)) {
-            jattributes[name] = *val;
-            if (name == identifier_attribute) {
+            } else if (auto val = attributes.get_if<std::string>(name)) {
               b_id = *val;
-              id_from_attr = true;
             }
-            // for date/time we follow https://en.wikipedia.org/wiki/ISO_8601
-          } else if (auto val = attributes.get_if<Date>(name)) {
-            auto t = *val;
-            std::string date = t.format_to_ietf();
-            jattributes[name] = date;
-          } else if (auto val = attributes.get_if<Time>(name)) {
-            auto t = *val;
-            std::string time = std::to_string(t.hour) + ":" +
-                               std::to_string(t.minute) + ":" +
-                               std::to_string(t.second) + "Z";
-            jattributes[name] = time;
-          } else if (auto val = attributes.get_if<DateTime>(name)) {
-            auto t = *val;
-            std::string datetime = t.format_to_ietf();
-            jattributes[name] = datetime;
           }
         }
-
-        building["attributes"] = jattributes;
 
         // footprint geometry
         auto fp_geometry = nlohmann::json::object();
@@ -410,8 +414,7 @@ namespace roofer::io {
       std::vector<arr3d> vertex_vec;
       write_cityobject(footprint, multisolid_lod12, multisolid_lod13,
                        multisolid_lod22, attributes, outputJSON, vertex_vec,
-                       identifier_attribute, output_attribute_names,
-                       only_output_renamed_,
+                       identifier_attribute,
                        std::to_string(++written_features_count));
 
       // The main Building is the parent object.

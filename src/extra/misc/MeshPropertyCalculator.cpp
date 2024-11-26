@@ -66,7 +66,7 @@ namespace roofer::misc {
       auto& labels = mesh.get_labels();
       auto& attributes = mesh.get_attributes();
       for (size_t i = 0; i < faces.size(); ++i) {
-        if (labels[i] != 1) {
+        if (labels[i] == 1) {
           auto& polygon = faces.at(i);
           auto box = polygon.box();
           auto bb_min = box.min();
@@ -105,13 +105,11 @@ namespace roofer::misc {
       size_t n_faces = faces.size();
 
       auto& attributes = mesh.get_attributes();
-      if (attributes.size() == 0) {
-        attributes.resize(n_faces);
-      }
+      assert(attributes.size() == n_faces);
 
       Box box;
       for (size_t i = 0; i < n_faces; ++i) {
-        if (labels[i] != 1) {
+        if (labels[i] == 1) {
           box.add(faces[i].box());
         }
       }
@@ -123,7 +121,7 @@ namespace roofer::misc {
                               boxmin[1] - 0.5, boxmax[1] + 0.5);
       r_lod22.prefill_arrays(RasterTools::MAX);
       for (size_t i = 0; i < n_faces; ++i) {
-        if (labels[i] != 1) {
+        if (labels[i] == 1) {
           rasterise_ring(faces[i], r_lod22);
         }
       }
@@ -151,11 +149,12 @@ namespace roofer::misc {
       auto& attributes = mesh.get_attributes();
       assert(faces.size() == labels.size());
       size_t n_faces = faces.size();
+      assert(attributes.size() == n_faces);
 
       // compute inclination and azimuth. Both in degrees.
       // size_t cnt_flat = 0, cnt_slant = 0;
       for (size_t i = 0; i < n_faces; ++i) {
-        if (labels[i] != 1) {
+        if (labels[i] == 1) {
           auto& ring = faces.at(i);
           auto n = calculate_normal_cf(ring);
           float azimuth, slope;

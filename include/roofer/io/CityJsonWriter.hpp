@@ -49,10 +49,8 @@ namespace roofer::io {
     size_t written_features_count = 0;
 
     bool prettyPrint_ = false;
-    bool only_output_renamed_ = false;
 
     vec1s key_options;
-    StrMap output_attribute_names;
 
     float translate_x_ = 0.;
     float translate_y_ = 0.;

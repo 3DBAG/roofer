@@ -82,6 +82,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
 
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
   for (auto& [label, mesh] : ArrangementExtruder->multisolid) {
+    mesh.get_attributes().resize(mesh.get_polygons().size());
     MeshPropertyCalculator->compute_roof_height(
         mesh, {.z_offset = z_offset,
                .cellsize = rfcfg->cellsize,
