@@ -119,6 +119,9 @@ struct BuildingObject {
   float rmse_lod12;
   float rmse_lod13;
   float rmse_lod22;
+  float volume_lod12;
+  float volume_lod13;
+  float volume_lod22;
   std::string val3dity_lod12;
   std::string val3dity_lod13;
   std::string val3dity_lod22;
@@ -1061,6 +1064,8 @@ int main(int argc, const char* argv[]) {
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
                 ms12 = &building.multisolids_lod12;
                 attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
+                attrow.insert(roofer_cfg.n["volume_lod12"],
+                              building.volume_lod12);
 #if RF_USE_VAL3DITY
                 attrow.insert(roofer_cfg.n["val3dity_lod12"],
                               building.val3dity_lod12);
@@ -1069,6 +1074,8 @@ int main(int argc, const char* argv[]) {
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
                 ms13 = &building.multisolids_lod13;
                 attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
+                attrow.insert(roofer_cfg.n["volume_lod13"],
+                              building.volume_lod13);
 #if RF_USE_VAL3DITY
                 attrow.insert(roofer_cfg.n["val3dity_lod13"],
                               building.val3dity_lod13);
@@ -1077,6 +1084,8 @@ int main(int argc, const char* argv[]) {
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
                 ms22 = &building.multisolids_lod22;
                 attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
+                attrow.insert(roofer_cfg.n["volume_lod22"],
+                              building.volume_lod22);
 #if RF_USE_VAL3DITY
                 attrow.insert(roofer_cfg.n["val3dity_lod22"],
                               building.val3dity_lod22);

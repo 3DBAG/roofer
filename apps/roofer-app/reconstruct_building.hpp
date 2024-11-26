@@ -27,7 +27,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
 #ifdef RF_USE_VAL3DITY
     std::string& attr_val3dity,
 #endif
-    float& rmse,
+    float& rmse, float& volume,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
     roofer::reconstruction::PlaneDetectorInterface* PlaneDetector, LOD lod,
     RooferConfig* rfcfg) {
@@ -97,6 +97,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
   auto MeshTriangulator =
       roofer::reconstruction::createMeshTriangulatorLegacy();
   MeshTriangulator->compute(ArrangementExtruder->multisolid);
+  volume = MeshTriangulator->volumes.at(0);
   // logger.debug("Completed MeshTriangulator");
 #ifdef RF_USE_RERUN
   rec.log(worldname + "MeshTriangulator",
@@ -334,8 +335,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod12,
 #endif
-                  building.rmse_lod12, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD12, rfcfg);
+                  building.rmse_lod12, building.volume_lod12,
+                  SegmentRasteriser.get(), PlaneDetector.get(), LOD12, rfcfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 13) {
@@ -344,8 +345,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod13,
 #endif
-                  building.rmse_lod13, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD13, rfcfg);
+                  building.rmse_lod13, building.volume_lod13,
+                  SegmentRasteriser.get(), PlaneDetector.get(), LOD13, rfcfg);
     }
 
     if (cfg->lod == 0 || cfg->lod == 22) {
@@ -354,8 +355,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 #ifdef RF_USE_VAL3DITY
                   building.val3dity_lod22,
 #endif
-                  building.rmse_lod22, SegmentRasteriser.get(),
-                  PlaneDetector.get(), LOD22, rfcfg);
+                  building.rmse_lod22, building.volume_lod22,
+                  SegmentRasteriser.get(), PlaneDetector.get(), LOD22, rfcfg);
     }
   }
 }
