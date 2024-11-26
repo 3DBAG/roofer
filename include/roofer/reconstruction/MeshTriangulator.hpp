@@ -39,10 +39,6 @@ namespace roofer::reconstruction {
     vec3f normals;
     vec1i ring_ids;
     vec1f volumes;
-    // add_output("triangles_og", typeid(TriangleCollection));
-    // add_output("segment_ids_og", typeid(vec1i));
-    // add_output("triangles_snapped", typeid(TriangleCollection));
-    // add_output("segment_ids_snapped", typeid(vec1i));
 
     virtual ~MeshTriangulatorInterface() = default;
     virtual void compute(
