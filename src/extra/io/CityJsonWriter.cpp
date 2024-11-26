@@ -110,7 +110,10 @@ namespace roofer::io {
       auto semantic_objects = nlohmann::json::array();
       std::vector<int> sem_values;
       for (size_t i = 0; i < mesh.get_polygons().size(); ++i) {
-        auto semantic_object = attributes2json(mesh.get_attributes().at(i));
+        nlohmann::json::object_t semantic_object;
+        if (mesh.get_attributes().size()) {
+          semantic_object = attributes2json(mesh.get_attributes().at(i));
+        }
         if (mesh.get_labels()[i] == 0) {
           semantic_object["type"] = "GroundSurface";
         } else if (mesh.get_labels()[i] == 1) {

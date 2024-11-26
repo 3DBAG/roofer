@@ -44,13 +44,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
   roofer::AttributeVecMap attributes;
   vector_reader->readPolygons(footprints, &attributes);
 
-  if (!pj->data_offset.has_value()) {
-    logger.error("No data offset set after reading inputs");
+  const unsigned N_fp = footprints.size();
+  if (N_fp == 0) {
     return false;
   }
 
-  const unsigned N_fp = footprints.size();
-  if (N_fp == 0) {
+  if (!pj->data_offset.has_value()) {
+    logger.error("No data offset set after reading inputs");
     return false;
   }
 
