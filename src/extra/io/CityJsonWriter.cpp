@@ -431,13 +431,10 @@ namespace roofer::io {
       };
 
       std::vector<std::array<int, 3>> vertices_int;
-      double _offset_x = translate_x_;
-      double _offset_y = translate_y_;
-      double _offset_z = translate_z_;
       for (auto& vertex : vertex_vec) {
-        vertices_int.push_back({int((vertex[0] - _offset_x) / scale_x_),
-                                int((vertex[1] - _offset_y) / scale_y_),
-                                int((vertex[2] - _offset_z) / scale_z_)});
+        vertices_int.push_back({int((vertex[0] - translate_x_) / scale_x_),
+                                int((vertex[1] - translate_y_) / scale_y_),
+                                int((vertex[2] - translate_z_) / scale_z_)});
       }
       outputJSON["vertices"] = vertices_int;
 

@@ -80,6 +80,18 @@ Options
 
   Output CityJSONSequence file for each building [default: one file per output tile]
 
+.. option:: --cj-translate
+
+  Specify manually the translation applied to CityJSON output vertices
+
+.. option:: --cj-scale
+
+  Specify manually the scaling applied to CityJSON output vertices
+
+.. option:: --omit-metadata
+
+  Omit metadata from output CityJSON
+
 .. option:: --filter <str>
 
   Specify WHERE clause in OGR SQL to select specfic features from <polygon-source>

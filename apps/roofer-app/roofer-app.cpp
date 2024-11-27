@@ -998,7 +998,13 @@ int main(int argc, const char* argv[]) {
               roofer::io::createCityJsonWriter(*building_tile.proj_helper);
           CityJsonWriter->written_features_count = serialized_buildings_cnt;
           CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
-          if (building_tile.proj_helper->data_offset.has_value()) {
+          // user provided offset
+          if (roofer_cfg.cj_translate.has_value()) {
+            CityJsonWriter->translate_x_ = (*roofer_cfg.cj_translate)[0];
+            CityJsonWriter->translate_y_ = (*roofer_cfg.cj_translate)[1];
+            CityJsonWriter->translate_z_ = (*roofer_cfg.cj_translate)[2];
+            // auto offset from data
+          } else if (building_tile.proj_helper->data_offset.has_value()) {
             CityJsonWriter->translate_x_ =
                 (*building_tile.proj_helper->data_offset)[0];
             CityJsonWriter->translate_y_ =
@@ -1010,9 +1016,15 @@ int main(int argc, const char* argv[]) {
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          CityJsonWriter->scale_x_ = 0.01;
-          CityJsonWriter->scale_y_ = 0.01;
-          CityJsonWriter->scale_z_ = 0.01;
+          if (roofer_cfg.cj_scale.has_value()) {
+            CityJsonWriter->scale_x_ = (*roofer_cfg.cj_scale)[0];
+            CityJsonWriter->scale_y_ = (*roofer_cfg.cj_scale)[1];
+            CityJsonWriter->scale_z_ = (*roofer_cfg.cj_scale)[2];
+          } else {
+            CityJsonWriter->scale_x_ = 0.01;
+            CityJsonWriter->scale_y_ = 0.01;
+            CityJsonWriter->scale_z_ = 0.01;
+          }
 
           std::ofstream ofs;
           if (!roofer_cfg.split_cjseq) {
@@ -1021,19 +1033,23 @@ int main(int argc, const char* argv[]) {
                 fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
-            CityJsonWriter->write_metadata(
-                ofs, project_srs.get(), building_tile.extent,
-                {.identifier = std::to_string(building_tile.id)});
+            if (!roofer_cfg.omit_metadata)
+              CityJsonWriter->write_metadata(
+                  ofs, project_srs.get(), building_tile.extent,
+                  {.identifier = std::to_string(building_tile.id)});
           } else {
-            std::string metadata_json_file =
-                fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
-                            fmt::arg("path", roofer_cfg.output_path));
-            fs::create_directories(fs::path(metadata_json_file).parent_path());
-            ofs.open(metadata_json_file);
-            CityJsonWriter->write_metadata(
-                ofs, project_srs.get(), building_tile.extent,
-                {.identifier = std::to_string(building_tile.id)});
-            ofs.close();
+            if (!roofer_cfg.omit_metadata) {
+              std::string metadata_json_file =
+                  fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
+                              fmt::arg("path", roofer_cfg.output_path));
+              fs::create_directories(
+                  fs::path(metadata_json_file).parent_path());
+              ofs.open(metadata_json_file);
+              CityJsonWriter->write_metadata(
+                  ofs, project_srs.get(), building_tile.extent,
+                  {.identifier = std::to_string(building_tile.id)});
+              ofs.close();
+            }
           }
 
           for (auto& building : building_tile.buildings) {

@@ -52,12 +52,12 @@ namespace roofer::io {
 
     vec1s key_options;
 
-    float translate_x_ = 0.;
-    float translate_y_ = 0.;
-    float translate_z_ = 0.;
-    float scale_x_ = 1.;
-    float scale_y_ = 1.;
-    float scale_z_ = 1.;
+    double translate_x_ = 0.;
+    double translate_y_ = 0.;
+    double translate_z_ = 0.;
+    double scale_x_ = 0.01;
+    double scale_y_ = 0.01;
+    double scale_z_ = 0.01;
 
     roofer::misc::projHelperInterface& pjHelper;
 
