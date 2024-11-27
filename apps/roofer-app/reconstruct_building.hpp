@@ -90,8 +90,10 @@ std::unordered_map<int, roofer::Mesh> extrude(
                .h_70p = rfcfg->n["h_roof_70p"],
                .h_min = rfcfg->n["h_roof_min"],
                .h_max = rfcfg->n["h_roof_max"]});
-    MeshPropertyCalculator->compute_roof_orientation(
-        mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+    if (lod == LOD22) {
+      MeshPropertyCalculator->compute_roof_orientation(
+          mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+    }
   }
 
   auto MeshTriangulator =
