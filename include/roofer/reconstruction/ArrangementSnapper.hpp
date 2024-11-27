@@ -27,7 +27,7 @@
 namespace roofer::reconstruction {
 
   struct ArrangementSnapperConfig {
-    float dist_thres = 0.005;
+    float dist_thres = 0.05;
   };
 
   struct ArrangementSnapperInterface {

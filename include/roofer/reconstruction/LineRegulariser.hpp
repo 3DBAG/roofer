@@ -27,9 +27,9 @@
 namespace roofer::reconstruction {
 
   struct LineRegulariserConfig {
-    float dist_threshold = 0.5;
+    float dist_threshold = 0.8;
     float angle_threshold = 0.15;
-    float extension = 1.0;
+    float extension = 3.0;
     bool merge_intersection_lines = false;
   };
 

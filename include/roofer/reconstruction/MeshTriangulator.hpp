@@ -28,7 +28,7 @@
 namespace roofer::reconstruction {
 
   struct MeshTriangulatorConfig {
-    int dupe_threshold_exp = 6;
+    int dupe_threshold_exp = 4;
     bool output_all_triangles = false;
     bool output_mtc_for_every_input = false;
   };
