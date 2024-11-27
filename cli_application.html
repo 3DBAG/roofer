@@ -359,6 +359,24 @@ roofer -v | --version
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cj-translate">
+<span class="sig-name descname"><span class="pre">--cj-translate</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-cj-translate" title="Link to this definition">¶</a></dt>
+<dd><p>Specify manually the translation applied to CityJSON output vertices</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cj-scale">
+<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
+<dd><p>Specify manually the scaling applied to CityJSON output vertices</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-omit-metadata">
+<span class="sig-name descname"><span class="pre">--omit-metadata</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-omit-metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Omit metadata from output CityJSON</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-filter">
 <span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;str&gt;</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
 <dd><p>Specify WHERE clause in OGR SQL to select specfic features from &lt;polygon-source&gt;</p>
@@ -497,6 +515,12 @@ roofer -v | --version
 <span class="c1">## Output options</span>
 <span class="c1"># Output CityJSONSequence file for each building [default: one file per output tile]</span>
 <span class="n">split</span><span class="o">-</span><span class="n">cjseq</span> <span class="o">=</span> <span class="n">false</span>
+<span class="c1"># Omit metadata from output CityJSON</span>
+<span class="n">omit</span><span class="o">-</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">true</span>
+<span class="c1"># Manually override CityJSON transform translation</span>
+<span class="n">cj</span><span class="o">-</span><span class="n">translate</span> <span class="o">=</span> <span class="p">[</span><span class="mf">171800.0</span><span class="p">,</span><span class="mf">472700.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]</span>
+<span class="c1"># Manually override CityJSON transform scale</span>
+<span class="n">cj</span><span class="o">-</span><span class="n">scale</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.01</span><span class="p">]</span>
 
 <span class="n">output</span><span class="o">-</span><span class="n">directory</span> <span class="o">=</span> <span class="s1">&#39;output-directory&#39;</span>
 
