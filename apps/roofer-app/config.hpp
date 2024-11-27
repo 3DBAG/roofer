@@ -97,6 +97,9 @@ struct RooferConfig {
 
   // crop output
   bool split_cjseq = false;
+  bool omit_metadata = false;
+  std::optional<roofer::arr3d> cj_scale;
+  std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
       "{path}/objects/{bid}/config_{pc_name}.toml";
   std::string building_las_file_spec =
@@ -415,6 +418,15 @@ class ConfigParameterByReference : public ConfigParameter {
         return fmt::format("[{},{},{},{}]", _value->pmin[0], _value->pmin[1],
                            _value->pmax[0], _value->pmax[1]);
       }
+    } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
+      return fmt::format("[{},{}]", _value[0], _value[1]);
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      if (!_value.has_value()) {
+        return "[]";
+      } else {
+        return fmt::format("[{},{},{}]", (*_value)[0], (*_value)[1],
+                           (*_value)[2]);
+      }
     } else {
       return fmt::format("{}", _value);
     }
@@ -423,11 +435,11 @@ class ConfigParameterByReference : public ConfigParameter {
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
-    if (it == args.end()) {
-      throw std::runtime_error("Missing argument for parameter.");
-    } else if constexpr (std::is_same_v<T, bool>) {
+    if constexpr (std::is_same_v<T, bool>) {
       _value = !(_value);
       return it;
+    } else if (it == args.end()) {
+      throw std::runtime_error("Missing argument for parameter");
     } else if constexpr (std::is_same_v<T, int> ||
                          std::is_same_v<T, std::optional<int>>) {
       _value = std::stoi(*it);
@@ -475,6 +487,20 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       _value = arr;
       return it;
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      roofer::arr3d arr;
+      // Check if there are enough arguments
+      if (std::distance(it, args.end()) < 3) {
+        throw std::runtime_error("Not enough arguments, need 3.");
+      }
+      arr[0] = std::stod(*it);
+      it = args.erase(it);
+      arr[1] = std::stod(*it);
+      it = args.erase(it);
+      arr[2] = std::stod(*it);
+      it = args.erase(it);
+      _value = arr;
+      return it;
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for ConfigParameterByReference::set()");
@@ -484,8 +510,31 @@ class ConfigParameterByReference : public ConfigParameter {
   void set_from_toml(const toml::table& table,
                      const std::string& name) override {
     if constexpr (std::is_same_v<T, std::array<float, 2>>) {
-      throw std::runtime_error("Failed to read value for " + name +
-                               " from config file.");
+      if (const toml::array* a = table[name].as_array()) {
+        if (a->size() == 2 &&
+            (a->is_homogeneous(toml::node_type::floating_point) ||
+             a->is_homogeneous(toml::node_type::integer))) {
+          _value = roofer::arr2f{*a->get(0)->value<float>(),
+                                 *a->get(1)->value<float>()};
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
+    } else if constexpr (std::is_same_v<T,
+                                        std::optional<std::array<double, 3>>>) {
+      if (const toml::array* a = table[name].as_array()) {
+        if (a->size() == 3 &&
+            (a->is_homogeneous(toml::node_type::floating_point) ||
+             a->is_homogeneous(toml::node_type::integer))) {
+          _value = roofer::arr3d{*a->get(0)->value<double>(),
+                                 *a->get(1)->value<double>(),
+                                 *a->get(2)->value<double>()};
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>>) {
       if (const toml::array* a = table[name].as_array()) {
@@ -523,6 +572,8 @@ class ConfigParameterByReference : public ConfigParameter {
       return "<xmin ymin xmax ymax>";
     } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
       return "<x y>";
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      return "<x y z>";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "
@@ -623,6 +674,12 @@ struct RooferConfigHandler {
         "Output CityJSONSequence file for each building [default: one file per "
         "output tile]",
         _cfg.split_cjseq, {});
+    add("omit-metadata", "Omit metadata in CityJSON output", _cfg.omit_metadata,
+        {});
+    add("cj-scale", "Scaling applied to CityJSON output vertices",
+        _cfg.cj_scale, {});
+    add("cj-translate", "Translation applied to CityJSON output vertices",
+        _cfg.cj_translate, {});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",

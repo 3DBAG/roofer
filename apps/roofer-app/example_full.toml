@@ -38,6 +38,12 @@ lod = 22
 ## Output options
 # Output CityJSONSequence file for each building [default: one file per output tile]
 split-cjseq = false
+# Omit metadata from output CityJSON
+omit-metadata = true
+# Manually override CityJSON transform translation
+cj-translate = [171800.0,472700.0,0.0]
+# Manually override CityJSON transform scale
+cj-scale = [0.01,0.01,0.01]
 
 output-directory = 'output-directory'
 
