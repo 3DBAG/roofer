@@ -29,7 +29,7 @@ namespace roofer::reconstruction {
   struct AlphaShaperConfig {
     float thres_alpha = 0.25;
     bool extract_polygons = true;
-    bool optimal_alpha = true;
+    bool optimal_alpha = false;
     bool optimal_only_if_needed = true;
   };
 

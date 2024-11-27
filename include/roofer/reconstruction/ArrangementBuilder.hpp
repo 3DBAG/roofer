@@ -28,7 +28,7 @@ namespace roofer::reconstruction {
 
   struct ArrangementBuilderConfig {
     int max_arr_complexity = 400;
-    int dist_threshold_exp = 4;
+    int dist_threshold_exp = 2;
     float fp_extension = 0.0;
     bool insert_with_snap = false;
     bool insert_lines = true;

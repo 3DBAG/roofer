@@ -27,7 +27,7 @@
 namespace roofer::reconstruction {
 
   struct LineDetectorConfig {
-    float dist_thres = 0.4;
+    float dist_thres = 1.0;
     std::pair<int, int> min_cnt_range = {5, 10};
     int min_cnt_range_lower = 5;
     int min_cnt_range_upper = 10;
