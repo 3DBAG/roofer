@@ -845,10 +845,10 @@ int main(int argc, const char* argv[]) {
             try {
               auto& logger = roofer::logger::Logger::get_logger();
               auto start = std::chrono::high_resolution_clock::now();
-              logger.debug("[reconstructor] starting reconstruction for: {}",
+              logger.debug("[reconstructor] start: {}",
                            building_object_ref.building.jsonl_path.string());
               reconstruct_building(building_object_ref.building, &roofer_cfg);
-              logger.debug("[reconstructor] finished reconstruction for: {}",
+              logger.debug("[reconstructor] finish: {}",
                            building_object_ref.building.jsonl_path.string());
               // TODO: These two seem to be redundant
               building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
