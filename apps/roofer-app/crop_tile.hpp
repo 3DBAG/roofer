@@ -246,7 +246,6 @@ bool crop_tile(const roofer::TBox<double>& tile,
     } else {
       bid = std::to_string(i);
     }
-    // spdlog::debug("bid={}", bid);
 
     std::vector<roofer::misc::CandidatePointCloud> candidates;
     candidates.reserve(input_pointclouds.size());

@@ -42,8 +42,8 @@ std::unordered_map<int, roofer::Mesh> extrude(
   }
 #ifdef RF_USE_RERUN
   const auto& rec = rerun::RecordingStream::current();
-#endif
   std::string worldname = fmt::format("world/lod{}/", (int)lod);
+#endif
 
   auto& logger = roofer::logger::Logger::get_logger();
 
@@ -170,6 +170,9 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
           rerun::Points3D(points).with_class_ids(classification));
 #endif
 
+  std::unordered_map<std::string, std::chrono::duration<double>> timings;
+
+  auto t0 = std::chrono::high_resolution_clock::now();
   auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
   PlaneDetector->detect(
       points_roof,
@@ -179,6 +182,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
           .metrics_plane_epsilon = cfg->plane_detect_epsilon,
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
       });
+  timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
   // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
   //  PlaneDetector->pts_per_roofplane.size());
 
@@ -199,8 +203,11 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     return;
   }
 
+  t0 = std::chrono::high_resolution_clock::now();
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
   PlaneDetector_ground->detect(points_ground);
+  timings["PlaneDetector_ground"] =
+      std::chrono::high_resolution_clock::now() - t0;
   // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
   //  PlaneDetector_ground->pts_per_roofplane.size());
 
@@ -221,7 +228,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
         roofer::reconstruction::createSimplePolygonExtruder();
     SimplePolygonExtruder->compute(building.footprint, building.h_ground,
                                    PlaneDetector->roof_elevation_70p);
-    std::vector<std::unordered_map<int, roofer::Mesh> > multisolidvec;
+    std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
     building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
     building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
     building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
@@ -232,9 +239,11 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     //                       &multisolidvec, &multisolidvec, attributes);
     // logger.debug("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
+    t0 = std::chrono::high_resolution_clock::now();
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
                          {.thres_alpha = cfg->thres_alpha});
+    timings["AlphaShaper"] = std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed AlphaShaper (roof), found {} rings, {} labels",
     //  AlphaShaper->alpha_rings.size(),
     //  AlphaShaper->roofplane_ids.size());
@@ -243,9 +252,11 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
             rerun::LineStrips3D(AlphaShaper->alpha_rings)
                 .with_class_ids(AlphaShaper->roofplane_ids));
 #endif
-
+    t0 = std::chrono::high_resolution_clock::now();
     auto AlphaShaper_ground = roofer::reconstruction::createAlphaShaper();
     AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane);
+    timings["AlphaShaper_ground"] =
+        std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed AlphaShaper (ground), found {} rings, {} labels",
     //  AlphaShaper_ground->alpha_rings.size(),
     //  AlphaShaper_ground->roofplane_ids.size());
@@ -254,41 +265,50 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
             rerun::LineStrips3D(AlphaShaper_ground->alpha_rings)
                 .with_class_ids(AlphaShaper_ground->roofplane_ids));
 #endif
-
+    t0 = std::chrono::high_resolution_clock::now();
     auto LineDetector = roofer::reconstruction::createLineDetector();
     LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
                          PlaneDetector->pts_per_roofplane,
                          {.dist_thres = cfg->line_detect_epsilon});
+    timings["LineDetector"] = std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed LineDetector");
 #ifdef RF_USE_RERUN
     rec.log("world/boundary_lines",
             rerun::LineStrips3D(LineDetector->edge_segments));
 #endif
 
+    t0 = std::chrono::high_resolution_clock::now();
     auto PlaneIntersector = roofer::reconstruction::createPlaneIntersector();
     PlaneIntersector->compute(PlaneDetector->pts_per_roofplane,
                               PlaneDetector->plane_adjacencies);
+    timings["PlaneIntersector"] =
+        std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed PlaneIntersector");
 #ifdef RF_USE_RERUN
     rec.log("world/intersection_lines",
             rerun::LineStrips3D(PlaneIntersector->segments));
 #endif
 
+    t0 = std::chrono::high_resolution_clock::now();
     auto LineRegulariser = roofer::reconstruction::createLineRegulariser();
     LineRegulariser->compute(LineDetector->edge_segments,
                              PlaneIntersector->segments,
                              {.dist_threshold = cfg->thres_reg_line_dist,
                               .extension = cfg->thres_reg_line_ext});
+    timings["LineRegulariser"] = std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed LineRegulariser");
 #ifdef RF_USE_RERUN
     rec.log("world/regularised_lines",
             rerun::LineStrips3D(LineRegulariser->regularised_edges));
 #endif
 
+    t0 = std::chrono::high_resolution_clock::now();
     auto SegmentRasteriser = roofer::reconstruction::createSegmentRasteriser();
     SegmentRasteriser->compute(
         AlphaShaper->alpha_triangles, AlphaShaper_ground->alpha_triangles,
         {.use_ground = !points_ground.empty() && cfg->clip_ground});
+    timings["SegmentRasteriser"] =
+        std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed SegmentRasteriser");
 
 #ifdef RF_USE_RERUN
@@ -299,11 +319,14 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
                               *heightfield_copy.vals_));
 #endif
 
+    t0 = std::chrono::high_resolution_clock::now();
     roofer::Arrangement_2 arrangement;
     auto ArrangementBuilder =
         roofer::reconstruction::createArrangementBuilder();
     ArrangementBuilder->compute(arrangement, building.footprint,
                                 LineRegulariser->exact_regularised_edges);
+    timings["ArrangementBuilder"] =
+        std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed ArrangementBuilder");
     // logger.debug("Roof partition has {} faces",
     // arrangement.number_of_faces());
@@ -313,6 +336,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
         rerun::LineStrips3D(roofer::reconstruction::arr2polygons(arrangement)));
 #endif
 
+    t0 = std::chrono::high_resolution_clock::now();
     auto ArrangementOptimiser =
         roofer::reconstruction::createArrangementOptimiser();
     ArrangementOptimiser->compute(
@@ -324,6 +348,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
             .smoothness_multiplier = float(1. - cfg->complexity_factor),
             .use_ground = !points_ground.empty() && cfg->clip_ground,
         });
+    timings["ArrangementOptimiser"] =
+        std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed ArrangementOptimiser");
     // rec.log("world/optimised_partition", rerun::LineStrips3D(
     // roofer::reconstruction::arr2polygons(arrangement) ));
@@ -331,6 +357,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     // LoDs
     // attributes to be filled during reconstruction
     // logger.debug("LoD={}", cfg->lod);
+    t0 = std::chrono::high_resolution_clock::now();
     if (cfg->lod == 0 || cfg->lod == 12) {
       building.multisolids_lod12 =
           extrude(arrangement, building.h_ground, building.z_offset,
@@ -360,5 +387,15 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
                   building.rmse_lod22, building.volume_lod22,
                   SegmentRasteriser.get(), PlaneDetector.get(), LOD22, rfcfg);
     }
+    timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
+
+    std::string timings_str =
+        fmt::format("[reconstructor t] {} (", building.jsonl_path.string());
+    for (const auto& [key, value] : timings) {
+      auto ms = static_cast<int>(
+          std::chrono::duration_cast<std::chrono::milliseconds>(value).count());
+      timings_str += fmt::format("({}, {}),", key, ms);
+    }
+    logger.debug("{})", timings_str);
   }
 }
