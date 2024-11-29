@@ -157,7 +157,7 @@ struct fmt::formatter<roofer::ReconstructionConfig> {
   template <typename Context>
   constexpr auto format(roofer::ReconstructionConfig const& cfg,
                         Context& ctx) const {
-    return format_to(
+    return fmt::format_to(
         ctx.out(),
         "ReconstructionConfig(complexity_factor={}, clip_ground={}, lod={}, "
         "lod13_step_height={}, floor_elevation={}, "
@@ -183,7 +183,7 @@ struct fmt::formatter<RooferConfig> {
     if (cfg.region_of_interest.has_value()) {
       region_of_interest = cfg.region_of_interest.value().wkt();
     }
-    return format_to(
+    return fmt::format_to(
         ctx.out(),
         "RooferConfig(source_footprints={}, id_attribute={}, "
         "force_lod11_attribute={}, yoc_attribute={}, layer_name={}, "

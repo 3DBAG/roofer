@@ -229,7 +229,7 @@ struct fmt::formatter<BuildingTile> {
     if (tile.proj_helper) {
       data_offset_has_value = tile.proj_helper->data_offset.has_value();
     }
-    return format_to(
+    return fmt::format_to(
         ctx.out(),
         "BuildingTile(id={}, buildings.size={}, attributes.has_attributes={}, "
         "buildings_progresses={}, buildings_cnt={}, "
