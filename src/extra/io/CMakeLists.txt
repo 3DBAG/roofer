@@ -26,4 +26,4 @@ find_package(GDAL CONFIG REQUIRED)
 
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("io" PUBLIC GDAL::GDAL LASlib nlohmann_json::nlohmann_json)
+target_link_libraries("io" PUBLIC GDAL::GDAL ${laslib_LIBRARIES} nlohmann_json::nlohmann_json)
