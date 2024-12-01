@@ -897,9 +897,11 @@ int main(int argc, const char* argv[]) {
              !reconstructed_buildings.empty()) {
         logger.debug("[sorter] before lock reconstructed_buildings_mutex");
         std::unique_lock lock{reconstructed_buildings_mutex};
-        reconstructed_pending.wait(lock, [&reconstructed_buildings] {
-          return !reconstructed_buildings.empty();
-        });
+        reconstructed_pending.wait(
+            lock, [&reconstructed_buildings, &reconstruction_running] {
+              return !reconstructed_buildings.empty() ||
+                     !reconstruction_running.load();
+            });
         auto pending_sorted{std::move(reconstructed_buildings)};
         reconstructed_buildings.clear();
         reconstructed_buildings.shrink_to_fit();
@@ -963,8 +965,9 @@ int main(int argc, const char* argv[]) {
       while (sorting_running.load() || !sorted_tiles.empty()) {
         logger.debug("[serializer] before lock sorted_tiles_mutex");
         std::unique_lock lock{sorted_tiles_mutex};
-        sorted_pending.wait(lock,
-                            [&sorted_tiles] { return !sorted_tiles.empty(); });
+        sorted_pending.wait(lock, [&sorted_tiles, &sorting_running] {
+          return !sorted_tiles.empty() || !sorting_running.load();
+        });
         auto pending_serialized{std::move(sorted_tiles)};
         sorted_tiles.clear();
         sorted_tiles.shrink_to_fit();
