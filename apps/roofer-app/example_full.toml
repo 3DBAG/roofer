@@ -15,7 +15,7 @@ srs = "EPSG:7415"
 # Region of interest. Data outside of this region will be ignored. Format: [x_min, y_min, x_max, y_max].
 box = [0,0,1000,1000]
 # Enfore this point density ceiling on each building pointcloud.
-ceil_point_density = 20
+ceil-point-density = 20
 # Tilesize used for output tiles. Format: [size_x, size_y].
 tilesize = [1000, 1000]
 # Cellsize used for quick pointcloud analysis
