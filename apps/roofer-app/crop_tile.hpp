@@ -130,6 +130,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
     ipc.is_glass_roof.reserve(N_fp);
+    ipc.roof_elevations.reserve(N_fp);
     ipc.lod11_forced.reserve(N_fp);
     if (cfg.write_index) ipc.nodata_circles.resize(N_fp);
 
@@ -144,6 +145,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
       ipc.is_glass_roof[i] =
           roofer::misc::testForGlassRoof(ipc.building_rasters[i]);
+      ipc.roof_elevations[i] =
+          roofer::misc::computeRoofElevation(ipc.building_rasters[i], 0.7);
 
       auto target_density = cfg.ceil_point_density;
       bool do_force_lod11 =
@@ -336,6 +339,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       building.h_ground =
           input_pointclouds[selected->index].ground_elevations[i];
+      building.h_roof = input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
 
       output_building_tile.attributes = attributes;

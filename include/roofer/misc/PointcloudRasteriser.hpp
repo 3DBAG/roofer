@@ -64,6 +64,8 @@ namespace roofer::misc {
 
   float computePointDensity(const ImageMap& image_bundle);
 
+  float computeRoofElevation(const ImageMap& image_bundle, float percentile);
+
   // Determine if the two point clouds describe the same object.
   bool isMutated(const ImageMap& a, const ImageMap& b,
                  const float& threshold_mutation_fraction,

@@ -172,54 +172,6 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
-  auto t0 = std::chrono::high_resolution_clock::now();
-  auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector->detect(
-      points_roof,
-      {
-          .metrics_plane_k = cfg->plane_detect_k,
-          .metrics_plane_min_points = cfg->plane_detect_min_points,
-          .metrics_plane_epsilon = cfg->plane_detect_epsilon,
-          .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
-      });
-  timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
-  // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
-  //  PlaneDetector->pts_per_roofplane.size());
-
-  building.roof_type = PlaneDetector->roof_type;
-  building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
-  building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
-  building.roof_elevation_min = PlaneDetector->roof_elevation_min;
-  building.roof_elevation_max = PlaneDetector->roof_elevation_max;
-  building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
-
-  bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
-                                 PlaneDetector->roof_type == "no planes";
-  if (pointcloud_insufficient) {
-    // building.was_skipped = true;
-    // TODO: return building status pointcloud_insufficient
-    // CityJsonWriter->write(path_output_jsonl, footprints, nullptr, nullptr,
-    //                       nullptr, attributes);
-    return;
-  }
-
-  t0 = std::chrono::high_resolution_clock::now();
-  auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector_ground->detect(points_ground);
-  timings["PlaneDetector_ground"] =
-      std::chrono::high_resolution_clock::now() - t0;
-  // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
-  //  PlaneDetector_ground->pts_per_roofplane.size());
-
-#ifdef RF_USE_RERUN
-  rec.log("world/segmented_points",
-          rerun::Collection{rerun::components::AnnotationContext{
-              rerun::datatypes::AnnotationInfo(
-                  0, "no plane", rerun::datatypes::Rgba32(30, 30, 30))}});
-  rec.log("world/segmented_points",
-          rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
-#endif
-
   // check skip_attribute
   // logger.debug("force LoD1.1 = {}", building.force_lod11);
 
@@ -227,18 +179,62 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     auto SimplePolygonExtruder =
         roofer::reconstruction::createSimplePolygonExtruder();
     SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                   PlaneDetector->roof_elevation_70p);
+                                   building.h_roof);
     std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
     building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
     building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
     building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
-    // TODO: return building status
+    // TODO: return rmse, volume, val3dity
     return;
-    // multisolidvec.push_back(SimplePolygonExtruder->multisolid);
-    // CityJsonWriter->write(path_output_jsonl, footprints, &multisolidvec,
-    //                       &multisolidvec, &multisolidvec, attributes);
-    // logger.debug("Completed CityJsonWriter to {}", path_output_jsonl);
   } else {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
+    PlaneDetector->detect(
+        points_roof,
+        {
+            .metrics_plane_k = cfg->plane_detect_k,
+            .metrics_plane_min_points = cfg->plane_detect_min_points,
+            .metrics_plane_epsilon = cfg->plane_detect_epsilon,
+            .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
+        });
+    timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
+    // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
+    //  PlaneDetector->pts_per_roofplane.size());
+
+    building.roof_type = PlaneDetector->roof_type;
+    building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
+    building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
+    building.roof_elevation_min = PlaneDetector->roof_elevation_min;
+    building.roof_elevation_max = PlaneDetector->roof_elevation_max;
+    building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
+
+    bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
+                                   PlaneDetector->roof_type == "no planes";
+    if (pointcloud_insufficient) {
+      // building.was_skipped = true;
+      // TODO: return building status pointcloud_insufficient
+      // CityJsonWriter->write(path_output_jsonl, footprints, nullptr, nullptr,
+      //                       nullptr, attributes);
+      return;
+    }
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
+    PlaneDetector_ground->detect(points_ground);
+    timings["PlaneDetector_ground"] =
+        std::chrono::high_resolution_clock::now() - t0;
+    // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
+    //  PlaneDetector_ground->pts_per_roofplane.size());
+
+#ifdef RF_USE_RERUN
+    rec.log("world/segmented_points",
+            rerun::Collection{rerun::components::AnnotationContext{
+                rerun::datatypes::AnnotationInfo(
+                    0, "no plane", rerun::datatypes::Rgba32(30, 30, 30))}});
+    rec.log(
+        "world/segmented_points",
+        rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
+#endif
     t0 = std::chrono::high_resolution_clock::now();
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
