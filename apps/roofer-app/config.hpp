@@ -335,7 +335,8 @@ namespace roofer::v {
 
 std::vector<std::string> find_filepaths(
     const std::list<std::string>& filepath_parts,
-    std::initializer_list<std::string> extensions) {
+    std::initializer_list<std::string> extensions,
+    bool no_throw_on_missing = false) {
   std::vector<std::string> files;
   for (const auto& filepath_part : filepath_parts) {
     if (fs::is_directory(filepath_part)) {
@@ -350,7 +351,7 @@ std::vector<std::string> find_filepaths(
     } else {
       if (fs::exists(filepath_part)) {
         files.push_back(filepath_part);
-      } else {
+      } else if (!no_throw_on_missing) {
         throw std::runtime_error("File not found: " + filepath_part + ".");
       }
     }
@@ -606,6 +607,7 @@ struct RooferConfigHandler {
   bool _print_version = false;
   bool _crop_only = false;
   bool _no_tiling = false;
+  bool _skip_pc_check = false;
   std::string _loglevel = "info";
   size_t _trace_interval = 10;
   std::string _config_path;
@@ -719,10 +721,12 @@ struct RooferConfigHandler {
     if (_input_pointclouds.empty()) {
       throw std::runtime_error("No input pointclouds specified.");
     }
-    for (auto& ipc : _input_pointclouds) {
-      if (ipc.paths.empty()) {
-        throw std::runtime_error(
-            "No files found for one of the input pointclouds.");
+    if (!_skip_pc_check) {
+      for (auto& ipc : _input_pointclouds) {
+        if (ipc.paths.empty()) {
+          throw std::runtime_error(
+              "No files found for one of the input pointclouds.");
+        }
       }
     }
     // if (auto error_msg = roofer::v::PathExists(_cfg.source_footprints)) {
@@ -797,6 +801,8 @@ struct RooferConfigHandler {
                  "pointclouds. Implies --crop-output.\n";
     std::cout << "   --index                      Output index.gpkg file with "
                  "crop analytics.\n";
+    std::cout << "   --skip-pc-check              Do not check if pointcloud "
+                 "files exist\n";
     std::cout << "\n";
     for (auto& [name, param] : _pmap) {
       std::cout << "   --" << std::setw(33) << std::left
@@ -884,6 +890,9 @@ struct RooferConfigHandler {
       } else if (arg == "--no-tiling") {
         _no_tiling = true;
         it = c.args.erase(it);
+      } else if (arg == "--skip-pc-check") {
+        _skip_pc_check = true;
+        it = c.args.erase(it);
       } else if (arg == "--crop-only") {
         _crop_only = true;
         _cfg.write_crop_outputs = true;
@@ -959,7 +968,8 @@ struct RooferConfigHandler {
 
       _input_pointclouds.clear();
       _input_pointclouds.emplace_back(InputPointcloud{
-          .paths = find_filepaths(c.args, {".las", ".LAS", ".laz", ".LAZ"})});
+          .paths = find_filepaths(c.args, {".las", ".LAS", ".laz", ".LAZ"},
+                                  _skip_pc_check)});
     } else {
       throw std::runtime_error(
           "Unable set all inputs and output. Need to provide at least <ouput "
@@ -1024,7 +1034,8 @@ struct RooferConfigHandler {
                         "strings.");
                   }
                   pc.paths = find_filepaths(input_paths,
-                                            {".las", ".LAS", ".laz", ".LAZ"});
+                                            {".las", ".LAS", ".laz", ".LAZ"},
+                                            _skip_pc_check);
                 } else {
                   throw std::runtime_error(fmt::format(
                       "Unknown parameter in [[pointcloud]] table in "
