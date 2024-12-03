@@ -174,6 +174,9 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
           .metrics_plane_min_points = cfg->plane_detect_min_points,
           .metrics_plane_epsilon = cfg->plane_detect_epsilon,
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
+          .with_limits = rfcfg->limit_planedetector,
+          .limit_n_regions = rfcfg->limit_n_regions,
+          .limit_n_milliseconds = rfcfg->limit_n_milliseconds,
       });
   timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
   // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
@@ -198,7 +201,17 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 
   t0 = std::chrono::high_resolution_clock::now();
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector_ground->detect(building.pointcloud_ground);
+  PlaneDetector_ground->detect(
+      building.pointcloud_ground,
+      {
+          .metrics_plane_k = cfg->plane_detect_k,
+          .metrics_plane_min_points = cfg->plane_detect_min_points,
+          .metrics_plane_epsilon = cfg->plane_detect_epsilon,
+          .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
+          .with_limits = rfcfg->limit_planedetector,
+          .limit_n_regions = rfcfg->limit_n_regions,
+          .limit_n_milliseconds = rfcfg->limit_n_milliseconds,
+      });
   timings["PlaneDetector_ground"] =
       std::chrono::high_resolution_clock::now() - t0;
   // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
