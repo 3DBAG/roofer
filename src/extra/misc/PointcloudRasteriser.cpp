@@ -35,7 +35,8 @@ namespace roofer::misc {
   void RasterisePointcloud(PointCollection& pointcloud, LinearRing& footprint,
                            ImageMap& image_bundle,
                            // RasterTools::Raster& heightfield,
-                           float cellsize) {
+                           float cellsize, int ground_class,
+                           int building_class) {
     // TODO: this is always true?
     bool use_footprint = true;
     Box box;
@@ -81,9 +82,9 @@ namespace roofer::misc {
       auto& p = pointcloud[pi];
       auto& c = (*classification)[pi];
       if (r_max.check_point(p[0], p[1])) {
-        if (c == 2) {
+        if (c == ground_class) {
           r_ground_points.add_value(p[0], p[1], 1);
-        } else if (c == 6) {
+        } else if (c == building_class) {
           r_non_ground_points.add_value(p[0], p[1], 1);
         }
 

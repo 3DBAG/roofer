@@ -92,7 +92,8 @@ namespace fs = std::filesystem;
  * some attributes that are set during the reconstruction.
  */
 struct BuildingObject {
-  roofer::PointCollection pointcloud;
+  roofer::PointCollection pointcloud_ground;
+  roofer::PointCollection pointcloud_building;
   roofer::LinearRing footprint;
   float z_offset = 0;
 

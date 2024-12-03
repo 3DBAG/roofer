@@ -137,7 +137,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
     roofer::arr2f nodata_c;
     for (unsigned i = 0; i < N_fp; ++i) {
       roofer::misc::RasterisePointcloud(ipc.building_clouds[i], footprints[i],
-                                        ipc.building_rasters[i], cfg.cellsize);
+                                        ipc.building_rasters[i], cfg.cellsize,
+                                        ipc.grnd_class, ipc.bld_class);
       ipc.nodata_fractions[i] =
           roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
       ipc.pt_densities[i] =
@@ -331,8 +332,17 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.attribute_index = i;
       building.z_offset = (*pj->data_offset)[2];
 
-      building.pointcloud =
-          input_pointclouds[selected->index].building_clouds[i];
+      auto& points = input_pointclouds[selected->index].building_clouds[i];
+      auto classification = points.attributes.get_if<int>("classification");
+      for (size_t i = 0; i < points.size(); ++i) {
+        if (input_pointclouds[selected->index].grnd_class ==
+            (*classification)[i]) {
+          building.pointcloud_ground.push_back(points[i]);
+        } else if (input_pointclouds[selected->index].bld_class ==
+                   (*classification)[i]) {
+          building.pointcloud_building.push_back(points[i]);
+        }
+      }
       building.footprint = footprints[i];
       building.h_ground =
           input_pointclouds[selected->index].ground_elevations[i];
