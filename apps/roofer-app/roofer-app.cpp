@@ -108,6 +108,7 @@ struct BuildingObject {
   // set in crop
   fs::path jsonl_path;
   float h_ground;
+  float h_roof;
   bool force_lod11;  // force_lod11 / fallback_lod11
 
   // set in reconstruction

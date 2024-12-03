@@ -62,6 +62,7 @@ struct InputPointcloud {
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
   roofer::vec1f ground_elevations;
+  roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
   std::unique_ptr<roofer::misc::RTreeInterface> rtree;

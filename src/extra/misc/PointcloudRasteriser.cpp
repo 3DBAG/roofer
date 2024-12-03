@@ -223,6 +223,27 @@ namespace roofer::misc {
     }
   }
 
+  float computeRoofElevation(const ImageMap& pc, float percentile) {
+    const auto& fp = pc.at("fp").array;
+    const auto& h_max = pc.at("max").array;
+    const auto& nodata = pc.at("max").nodataval;
+    // auto& cellsize = pc.at("fp").cellsize;
+    std::vector<float> h_max_in_fp;
+    h_max_in_fp.reserve(fp.size());
+    for (size_t i = 0; i < fp.size(); ++i) {
+      if (fp[i] != 0 && h_max[i] != nodata) {
+        h_max_in_fp.push_back(h_max[i]);
+      }
+    }
+    if (h_max_in_fp.size() == 0) {
+      return 0;
+    }
+    // sort the values
+    std::sort(h_max_in_fp.begin(), h_max_in_fp.end());
+    // get the 70th percentile
+    return h_max_in_fp[h_max_in_fp.size() * percentile];
+  }
+
   bool testForGlassRoof(const ImageMap& pc, float threshold_glass_roof) {
     auto& grp = pc.at("grp").array;
     auto& cellsize = pc.at("grp").cellsize;
