@@ -132,13 +132,20 @@ std::unordered_map<int, roofer::Mesh> extrude(
   return ArrangementExtruder->multisolid;
 }
 
+void reconstruct_lod11(BuildingObject& building, RooferConfig* rfcfg) {
+  auto SimplePolygonExtruder =
+      roofer::reconstruction::createSimplePolygonExtruder();
+  SimplePolygonExtruder->compute(building.footprint, building.h_ground,
+                                 building.h_roof);
+  std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
+  building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
+  building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
+  building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
+}
+
 void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   auto* cfg = &(rfcfg->rec);
   auto& logger = roofer::logger::Logger::get_logger();
-  // split into ground and roof points
-
-  // logger.debug("{} ground points and {} roof points", points_ground.size(),
-  //  points_roof.size());
 
 #ifdef RF_USE_RERUN
   // Create a new `RecordingStream` which sends data over TCP to the viewer
@@ -169,33 +176,35 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   // logger.debug("force LoD1.1 = {}", building.force_lod11);
 
   if (building.force_lod11) {
-    auto SimplePolygonExtruder =
-        roofer::reconstruction::createSimplePolygonExtruder();
-    SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                   building.h_roof);
-    std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
-    building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
-    building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
-    building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
     // TODO: return rmse, volume, val3dity
+    reconstruct_lod11(building, rfcfg);
     return;
   } else {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
-    PlaneDetector->detect(
-        points_roof,
-        {
-            .metrics_plane_k = cfg->plane_detect_k,
-            .metrics_plane_min_points = cfg->plane_detect_min_points,
-            .metrics_plane_epsilon = cfg->plane_detect_epsilon,
-            .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
-            .with_limits = rfcfg->limit_planedetector,
-            .limit_n_regions = rfcfg->limit_n_regions,
-            .limit_n_milliseconds = rfcfg->limit_n_milliseconds,
-        });
-    timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
-    // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
-    //  PlaneDetector->pts_per_roofplane.size());
+    auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
+    try {
+      auto plane_detector_cfg = roofer::reconstruction::PlaneDetectorConfig{
+          .metrics_plane_k = cfg->plane_detect_k,
+          .metrics_plane_min_points = cfg->plane_detect_min_points,
+          .metrics_plane_epsilon = cfg->plane_detect_epsilon,
+          .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
+          .with_limits = true,
+          .limit_n_regions = rfcfg->lod11_fallback_planes,
+          .limit_n_milliseconds = rfcfg->lod11_fallback_time,
+      };
+      PlaneDetector->detect(building.pointcloud_building, plane_detector_cfg);
+      timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
+      t0 = std::chrono::high_resolution_clock::now();
+      PlaneDetector_ground->detect(building.pointcloud_ground,
+                                   plane_detector_cfg);
+      timings["PlaneDetector_ground"] =
+          std::chrono::high_resolution_clock::now() - t0;
+    } catch (const std::exception& e) {
+      reconstruct_lod11(building, rfcfg);
+      logger.info("Falling back to LoD1.1: {}", e.what());
+      return;
+    }
 
     building.roof_type = PlaneDetector->roof_type;
     building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
@@ -209,38 +218,19 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     if (pointcloud_insufficient) {
       // building.was_skipped = true;
       // TODO: return building status pointcloud_insufficient
-      // CityJsonWriter->write(path_output_jsonl, footprints, nullptr, nullptr,
-      //                       nullptr, attributes);
       return;
     }
 
-    t0 = std::chrono::high_resolution_clock::now();
-    auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-    PlaneDetector_ground->detect(
-        points_ground,
-        {
-            .metrics_plane_k = cfg->plane_detect_k,
-            .metrics_plane_min_points = cfg->plane_detect_min_points,
-            .metrics_plane_epsilon = cfg->plane_detect_epsilon,
-            .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
-            .with_limits = rfcfg->limit_planedetector,
-            .limit_n_regions = rfcfg->limit_n_regions,
-            .limit_n_milliseconds = rfcfg->limit_n_milliseconds,
-        });
-    timings["PlaneDetector_ground"] =
-        std::chrono::high_resolution_clock::now() - t0;
-    // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
-    //  PlaneDetector_ground->pts_per_roofplane.size());
-
-#ifdef RF_USE_RERUN
-    rec.log("world/segmented_points",
-            rerun::Collection{rerun::components::AnnotationContext{
-                rerun::datatypes::AnnotationInfo(
-                    0, "no plane", rerun::datatypes::Rgba32(30, 30, 30))}});
-    rec.log(
-        "world/segmented_points",
-        rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
-#endif
+    // #ifdef RF_USE_RERUN
+    //     rec.log("world/segmented_points",
+    //             rerun::Collection{rerun::components::AnnotationContext{
+    //                 rerun::datatypes::AnnotationInfo(
+    //                     0, "no plane", rerun::datatypes::Rgba32(30, 30,
+    //                     30))}});
+    //     rec.log(
+    //         "world/segmented_points",
+    //         rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
+    // #endif
     t0 = std::chrono::high_resolution_clock::now();
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,

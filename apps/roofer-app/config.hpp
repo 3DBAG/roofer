@@ -116,9 +116,8 @@ struct RooferConfig {
   std::string output_path;
 
   // reconstruct
-  bool limit_planedetector = false;
-  int limit_n_regions = 100;
-  int limit_n_milliseconds = 10000;
+  int lod11_fallback_planes = 100;
+  int lod11_fallback_time = 90000;
   roofer::ReconstructionConfig rec;
 
   // output attribute names
@@ -686,13 +685,13 @@ struct RooferConfigHandler {
         _cfg.cj_scale, {});
     add("cj-translate", "Translation applied to CityJSON output vertices",
         _cfg.cj_translate, {});
-    add("limit-planedetector",
-        "Limit the number of regions and time spent in the plane detector",
-        _cfg.limit_planedetector, {});
-    add("limit-n-regions", "Limit the number of regions", _cfg.limit_n_regions,
-        {roofer::v::HigherThan<int>(0)});
-    add("limit-n-milliseconds", "Limit the time spent in the plane detector",
-        _cfg.limit_n_milliseconds, {roofer::v::HigherThan<int>(0)});
+    add("lod11-fallback-planes",
+        "Fallback to LoD11 if number of detected planes exceeds this value.",
+        _cfg.lod11_fallback_planes, {roofer::v::HigherThan<int>(0)});
+    add("lod11-fallback-time",
+        "Fallback to LoD11 if time spent on detecting planes exceeds this "
+        "value. In milliseconds.",
+        _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",
