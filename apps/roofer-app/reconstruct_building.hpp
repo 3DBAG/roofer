@@ -136,16 +136,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   auto* cfg = &(rfcfg->rec);
   auto& logger = roofer::logger::Logger::get_logger();
   // split into ground and roof points
-  roofer::PointCollection points, points_ground, points_roof;
-  auto classification =
-      building.pointcloud.attributes.get_if<int>("classification");
-  for (size_t i = 0; i < building.pointcloud.size(); ++i) {
-    if (2 == (*classification)[i]) {
-      points_ground.push_back(building.pointcloud[i]);
-    } else if (6 == (*classification)[i]) {
-      points_roof.push_back(building.pointcloud[i]);
-    }
-  }
+
   // logger.debug("{} ground points and {} roof points", points_ground.size(),
   //  points_roof.size());
 
@@ -158,24 +149,26 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   rec.set_global();
 #endif
 
-#ifdef RF_USE_RERUN
-  rec.log("world/raw_points",
-          rerun::Collection{rerun::components::AnnotationContext{
-              rerun::datatypes::AnnotationInfo(
-                  6, "BUILDING", rerun::datatypes::Rgba32(255, 0, 0)),
-              rerun::datatypes::AnnotationInfo(2, "GROUND"),
-              rerun::datatypes::AnnotationInfo(1, "UNCLASSIFIED"),
-          }});
-  rec.log("world/raw_points",
-          rerun::Points3D(points).with_class_ids(classification));
-#endif
+  // #ifdef RF_USE_RERUN
+  //   auto classification =
+  //       building.pointcloud.attributes.get_if<int>("classification");
+  //   rec.log("world/raw_points",
+  //           rerun::Collection{rerun::components::AnnotationContext{
+  //               rerun::datatypes::AnnotationInfo(
+  //                   6, "BUILDING", rerun::datatypes::Rgba32(255, 0, 0)),
+  //               rerun::datatypes::AnnotationInfo(2, "GROUND"),
+  //               rerun::datatypes::AnnotationInfo(1, "UNCLASSIFIED"),
+  //           }});
+  //   rec.log("world/raw_points",
+  //           rerun::Points3D(points).with_class_ids(classification));
+  // #endif
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
   auto t0 = std::chrono::high_resolution_clock::now();
   auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
   PlaneDetector->detect(
-      points_roof,
+      building.pointcloud_building,
       {
           .metrics_plane_k = cfg->plane_detect_k,
           .metrics_plane_min_points = cfg->plane_detect_min_points,
@@ -205,7 +198,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 
   t0 = std::chrono::high_resolution_clock::now();
   auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector_ground->detect(points_ground);
+  PlaneDetector_ground->detect(building.pointcloud_ground);
   timings["PlaneDetector_ground"] =
       std::chrono::high_resolution_clock::now() - t0;
   // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
@@ -306,7 +299,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     auto SegmentRasteriser = roofer::reconstruction::createSegmentRasteriser();
     SegmentRasteriser->compute(
         AlphaShaper->alpha_triangles, AlphaShaper_ground->alpha_triangles,
-        {.use_ground = !points_ground.empty() && cfg->clip_ground});
+        {.use_ground =
+             !building.pointcloud_ground.empty() && cfg->clip_ground});
     timings["SegmentRasteriser"] =
         std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed SegmentRasteriser");
@@ -346,7 +340,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
         {
             .data_multiplier = cfg->complexity_factor,
             .smoothness_multiplier = float(1. - cfg->complexity_factor),
-            .use_ground = !points_ground.empty() && cfg->clip_ground,
+            .use_ground =
+                !building.pointcloud_ground.empty() && cfg->clip_ground,
         });
     timings["ArrangementOptimiser"] =
         std::chrono::high_resolution_clock::now() - t0;

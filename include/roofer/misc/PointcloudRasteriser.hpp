@@ -31,7 +31,8 @@ namespace roofer::misc {
   void RasterisePointcloud(PointCollection& pointcloud, LinearRing& footprint,
                            ImageMap& image_bundle,
                            // Raster& heightfield,
-                           float cellsize = 0.5);
+                           float cellsize = 0.5, int ground_class = 2,
+                           int building_class = 6);
 
   void gridthinPointcloud(PointCollection& pointcloud, const Image& cnt_image,
                           float max_density = 20);
