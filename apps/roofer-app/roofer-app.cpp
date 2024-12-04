@@ -85,6 +85,8 @@ namespace fs = std::filesystem;
 
 #include "config.hpp"
 
+enum ExtrusionMode { STANDARD, LOD11_FALLBACK, SKIP };
+
 /**
  * @brief A single building object
  *
@@ -110,6 +112,7 @@ struct BuildingObject {
   float h_ground;
   float h_roof;
   bool force_lod11;  // force_lod11 / fallback_lod11
+  ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction
   std::string roof_type;
@@ -1078,6 +1081,8 @@ int main(int argc, const char* argv[]) {
                             building.roof_elevation_max);
               attrow.insert(roofer_cfg.n["roof_n_planes"],
                             building.roof_n_planes);
+              attrow.insert(roofer_cfg.n["extrusion_mode"],
+                            building.extrusion_mode);
 
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;

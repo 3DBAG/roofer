@@ -352,14 +352,16 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.h_roof = input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
 
+      if (input_pointclouds[selected->index].lod11_forced[i]) {
+        building.extrusion_mode = ExtrusionMode::LOD11_FALLBACK;
+        force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
+      }
+
       output_building_tile.attributes = attributes;
       building.jsonl_path = fmt::format(
           fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
           fmt::arg("pc_name", input_pointclouds[selected->index].name),
           fmt::arg("path", cfg.output_path));
-    }
-    if (input_pointclouds[selected->index].lod11_forced[i]) {
-      force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
     }
 
     if (cfg.write_crop_outputs) {
