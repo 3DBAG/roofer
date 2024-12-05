@@ -94,7 +94,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
     PointCloudCropper->process(
         lasfiles, footprints, buffered_footprints, ipc.building_clouds,
-        ipc.ground_elevations, ipc.acquisition_years, polygon_extent,
+        ipc.ground_elevations, ipc.acquisition_years,
+        ipc.pointcloud_insufficient, polygon_extent,
         {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
          .clear_if_insufficient = cfg.clear_if_insufficient,
@@ -130,7 +131,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
     ipc.is_glass_roof.reserve(N_fp);
+    ipc.roof_elevations.reserve(N_fp);
     ipc.lod11_forced.reserve(N_fp);
+    ipc.pointcloud_insufficient.reserve(N_fp);
     if (cfg.write_index) ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
@@ -145,6 +148,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
           roofer::misc::computePointDensity(ipc.building_rasters[i]);
       ipc.is_glass_roof[i] =
           roofer::misc::testForGlassRoof(ipc.building_rasters[i]);
+      ipc.roof_elevations[i] =
+          roofer::misc::computeRoofElevation(ipc.building_rasters[i], 0.7);
 
       auto target_density = cfg.ceil_point_density;
       bool do_force_lod11 =
@@ -187,27 +192,19 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
-    auto& h_ground =
-        attributes.insert_vec<float>(cfg.n.at("h_ground") + "_" + ipc.name);
     auto& nodata_r =
         attributes.insert_vec<float>(cfg.n.at("nodata_r") + "_" + ipc.name);
     auto& nodata_frac =
         attributes.insert_vec<float>(cfg.n.at("nodata_frac") + "_" + ipc.name);
     auto& pt_density =
         attributes.insert_vec<float>(cfg.n.at("pt_density") + "_" + ipc.name);
-    auto& is_glass_roof =
-        attributes.insert_vec<bool>(cfg.n.at("is_glass_roof") + "_" + ipc.name);
-    h_ground.reserve(N_fp);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
-    is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
-      h_ground.push_back(ipc.ground_elevations[i] + (*pj->data_offset)[2]);
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
-      is_glass_roof.push_back(ipc.is_glass_roof[i]);
     }
   }
 
@@ -346,16 +343,24 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       building.h_ground =
           input_pointclouds[selected->index].ground_elevations[i];
+      building.h_roof_70p_rough =
+          input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
+      building.pointcloud_insufficient =
+          input_pointclouds[selected->index].pointcloud_insufficient[i];
+      building.is_glass_roof =
+          input_pointclouds[selected->index].is_glass_roof[i];
+
+      if (input_pointclouds[selected->index].lod11_forced[i]) {
+        building.extrusion_mode = ExtrusionMode::LOD11_FALLBACK;
+        force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
+      }
 
       output_building_tile.attributes = attributes;
       building.jsonl_path = fmt::format(
           fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
           fmt::arg("pc_name", input_pointclouds[selected->index].name),
           fmt::arg("path", cfg.output_path));
-    }
-    if (input_pointclouds[selected->index].lod11_forced[i]) {
-      force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
     }
 
     if (cfg.write_crop_outputs) {

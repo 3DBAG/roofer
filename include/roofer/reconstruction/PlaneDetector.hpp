@@ -49,6 +49,11 @@ namespace roofer::reconstruction {
     bool regularize_orthogonality_ = false;
     bool regularize_coplanarity_ = false;
     bool regularize_axis_symmetry_ = false;
+
+    // limits
+    bool with_limits = false;
+    int limit_n_regions = 100;
+    int limit_n_milliseconds = 10000;
   };
 
   struct PlaneDetectorInterface {

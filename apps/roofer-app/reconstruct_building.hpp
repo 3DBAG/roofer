@@ -19,18 +19,70 @@
 // Author(s):
 // Ravi Peters
 
-enum LOD { LOD12 = 12, LOD13 = 13, LOD22 = 22 };
+enum LOD { LOD11 = 11, LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 
-std::unordered_map<int, roofer::Mesh> extrude(
-    roofer::Arrangement_2 arrangement, const float& floor_elevation,
-    const float& z_offset,
-#ifdef RF_USE_VAL3DITY
-    std::string& attr_val3dity,
+void multisolid_post_process(BuildingObject& building, RooferConfig* rfcfg,
+                             LOD lod,
+                             std::unordered_map<int, roofer::Mesh>& multisolid,
+                             std::optional<float>& rmse,
+                             std::optional<float>& volume,
+                             std::optional<std::string>& attr_val3dity) {
+  auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
+  for (auto& [label, mesh] : multisolid) {
+    mesh.get_attributes().resize(mesh.get_polygons().size());
+    MeshPropertyCalculator->compute_roof_height(
+        mesh, {.z_offset = building.z_offset,
+               .cellsize = rfcfg->cellsize,
+               .h_50p = rfcfg->n["h_roof_50p"],
+               .h_70p = rfcfg->n["h_roof_70p"],
+               .h_min = rfcfg->n["h_roof_min"],
+               .h_max = rfcfg->n["h_roof_max"]});
+    if (lod == LOD22) {
+      MeshPropertyCalculator->compute_roof_orientation(
+          mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+    }
+  }
+
+  auto MeshTriangulator =
+      roofer::reconstruction::createMeshTriangulatorLegacy();
+  MeshTriangulator->compute(multisolid);
+  volume = MeshTriangulator->volumes.at(0);
+  // logger.debug("Completed MeshTriangulator");
+#ifdef RF_USE_RERUN
+  rec.log(worldname + "MeshTriangulator",
+          rerun::Mesh3D(MeshTriangulator->triangles)
+              .with_vertex_normals(MeshTriangulator->normals)
+              .with_class_ids(MeshTriangulator->ring_ids));
 #endif
-    float& rmse, float& volume,
+
+  auto PC2MeshDistCalculator = roofer::misc::createPC2MeshDistCalculator();
+  PC2MeshDistCalculator->compute(building.pointcloud_building,
+                                 MeshTriangulator->multitrianglecol,
+                                 MeshTriangulator->ring_ids);
+  rmse = PC2MeshDistCalculator->rms_error;
+  // logger.debug("Completed PC2MeshDistCalculator. RMSE={}",
+  //  PC2MeshDistCalculator->rms_error);
+#ifdef RF_USE_RERUN
+// rec.log(worldname+"PC2MeshDistCalculator",
+// rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
+#endif
+
+#ifdef RF_USE_VAL3DITY
+  if (multisolid.size() > 0) {
+    auto Val3dator = roofer::misc::createVal3dator();
+    Val3dator->compute(multisolid);
+    attr_val3dity = Val3dator->errors.front();
+  }
+  // logger.debug("Completed Val3dator. Errors={}", Val3dator->errors.front());
+#endif
+}
+
+std::unordered_map<int, roofer::Mesh> extrude_lod22(
+    roofer::Arrangement_2 arrangement, BuildingObject& building,
+    RooferConfig* rfcfg,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
-    roofer::reconstruction::PlaneDetectorInterface* PlaneDetector, LOD lod,
-    RooferConfig* rfcfg) {
+    LOD lod, std::optional<float>& rmse, std::optional<float>& volume,
+    std::optional<std::string>& attr_val3dity) {
   auto* cfg = &(rfcfg->rec);
   bool dissolve_step_edges = false;
   bool dissolve_all_interior = false;
@@ -71,7 +123,7 @@ std::unordered_map<int, roofer::Mesh> extrude(
 
   auto ArrangementExtruder =
       roofer::reconstruction::createArrangementExtruder();
-  ArrangementExtruder->compute(arrangement, floor_elevation,
+  ArrangementExtruder->compute(arrangement, building.h_ground,
                                {.LoD2 = extrude_LoD2});
   // logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
@@ -80,65 +132,41 @@ std::unordered_map<int, roofer::Mesh> extrude(
               .with_class_ids(ArrangementExtruder->labels));
 #endif
 
-  auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  for (auto& [label, mesh] : ArrangementExtruder->multisolid) {
-    mesh.get_attributes().resize(mesh.get_polygons().size());
-    MeshPropertyCalculator->compute_roof_height(
-        mesh, {.z_offset = z_offset,
-               .cellsize = rfcfg->cellsize,
-               .h_50p = rfcfg->n["h_roof_50p"],
-               .h_70p = rfcfg->n["h_roof_70p"],
-               .h_min = rfcfg->n["h_roof_min"],
-               .h_max = rfcfg->n["h_roof_max"]});
-    if (lod == LOD22) {
-      MeshPropertyCalculator->compute_roof_orientation(
-          mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
-    }
-  }
-
-  auto MeshTriangulator =
-      roofer::reconstruction::createMeshTriangulatorLegacy();
-  MeshTriangulator->compute(ArrangementExtruder->multisolid);
-  volume = MeshTriangulator->volumes.at(0);
-  // logger.debug("Completed MeshTriangulator");
-#ifdef RF_USE_RERUN
-  rec.log(worldname + "MeshTriangulator",
-          rerun::Mesh3D(MeshTriangulator->triangles)
-              .with_vertex_normals(MeshTriangulator->normals)
-              .with_class_ids(MeshTriangulator->ring_ids));
-#endif
-
-  auto PC2MeshDistCalculator = roofer::misc::createPC2MeshDistCalculator();
-  PC2MeshDistCalculator->compute(PlaneDetector->pts_per_roofplane,
-                                 MeshTriangulator->multitrianglecol,
-                                 MeshTriangulator->ring_ids);
-  rmse = PC2MeshDistCalculator->rms_error;
-  // logger.debug("Completed PC2MeshDistCalculator. RMSE={}",
-  //  PC2MeshDistCalculator->rms_error);
-#ifdef RF_USE_RERUN
-// rec.log(worldname+"PC2MeshDistCalculator",
-// rerun::Mesh3D(PC2MeshDistCalculator->triangles).with_vertex_normals(MeshTriangulator->normals).with_class_ids(MeshTriangulator->ring_ids));
-#endif
-
-#ifdef RF_USE_VAL3DITY
-  if (ArrangementExtruder->multisolid.size() > 0) {
-    auto Val3dator = roofer::misc::createVal3dator();
-    Val3dator->compute(ArrangementExtruder->multisolid);
-    attr_val3dity = Val3dator->errors.front();
-  }
-  // logger.debug("Completed Val3dator. Errors={}", Val3dator->errors.front());
-#endif
+  multisolid_post_process(building, rfcfg, lod, ArrangementExtruder->multisolid,
+                          rmse, volume, attr_val3dity);
 
   return ArrangementExtruder->multisolid;
+}
+
+void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
+  auto SimplePolygonExtruder =
+      roofer::reconstruction::createSimplePolygonExtruder();
+  SimplePolygonExtruder->compute(building.footprint, building.h_ground,
+                                 building.h_roof_70p_rough);
+  // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
+  building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
+  building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
+  building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
+
+  multisolid_post_process(
+      building, rfcfg, LOD11, SimplePolygonExtruder->multisolid,
+      building.rmse_lod12, building.volume_lod12, building.val3dity_lod12);
+  building.rmse_lod13 = building.rmse_lod12;
+  building.rmse_lod22 = building.rmse_lod12;
+  building.volume_lod13 = building.volume_lod12;
+  building.volume_lod22 = building.volume_lod12;
+#ifdef RF_USE_VAL3DITY
+  building.val3dity_lod13 = building.val3dity_lod12;
+  building.val3dity_lod22 = building.val3dity_lod12;
+#endif
+
+  building.extrusion_mode = LOD11_FALLBACK;
+  building.roof_elevation_70p = building.h_roof_70p_rough;
 }
 
 void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   auto* cfg = &(rfcfg->rec);
   auto& logger = roofer::logger::Logger::get_logger();
-  // split into ground and roof points
-
-  // logger.debug("{} ground points and {} roof points", points_ground.size(),
-  //  points_roof.size());
 
 #ifdef RF_USE_RERUN
   // Create a new `RecordingStream` which sends data over TCP to the viewer
@@ -165,73 +193,66 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
-  auto t0 = std::chrono::high_resolution_clock::now();
-  auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector->detect(
-      building.pointcloud_building,
-      {
+  if (building.pointcloud_insufficient) {
+    building.extrusion_mode = SKIP;
+  }
+
+  if (building.extrusion_mode == SKIP) {
+    return;
+  } else if (building.extrusion_mode == LOD11_FALLBACK) {
+    extrude_lod11(building, rfcfg);
+    return;
+  } else {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
+    auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
+    try {
+      auto plane_detector_cfg = roofer::reconstruction::PlaneDetectorConfig{
           .metrics_plane_k = cfg->plane_detect_k,
           .metrics_plane_min_points = cfg->plane_detect_min_points,
           .metrics_plane_epsilon = cfg->plane_detect_epsilon,
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
-      });
-  timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
-  // logger.debug("Completed PlaneDetector (roof), found {} roofplanes",
-  //  PlaneDetector->pts_per_roofplane.size());
+          .with_limits = true,
+          .limit_n_regions = rfcfg->lod11_fallback_planes,
+          .limit_n_milliseconds = rfcfg->lod11_fallback_time,
+      };
+      PlaneDetector->detect(building.pointcloud_building, plane_detector_cfg);
+      timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
+      t0 = std::chrono::high_resolution_clock::now();
+      PlaneDetector_ground->detect(building.pointcloud_ground,
+                                   plane_detector_cfg);
+      timings["PlaneDetector_ground"] =
+          std::chrono::high_resolution_clock::now() - t0;
 
-  building.roof_type = PlaneDetector->roof_type;
-  building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
-  building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
-  building.roof_elevation_min = PlaneDetector->roof_elevation_min;
-  building.roof_elevation_max = PlaneDetector->roof_elevation_max;
-  building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
+      building.roof_type = PlaneDetector->roof_type;
+      building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
+      building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
+      building.roof_elevation_min = PlaneDetector->roof_elevation_min;
+      building.roof_elevation_max = PlaneDetector->roof_elevation_max;
+      building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
 
-  bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
-                                 PlaneDetector->roof_type == "no planes";
-  if (pointcloud_insufficient) {
-    // building.was_skipped = true;
-    // TODO: return building status pointcloud_insufficient
-    // CityJsonWriter->write(path_output_jsonl, footprints, nullptr, nullptr,
-    //                       nullptr, attributes);
-    return;
-  }
-
-  t0 = std::chrono::high_resolution_clock::now();
-  auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
-  PlaneDetector_ground->detect(building.pointcloud_ground);
-  timings["PlaneDetector_ground"] =
-      std::chrono::high_resolution_clock::now() - t0;
-  // logger.debug("Completed PlaneDetector (ground), found {} groundplanes",
-  //  PlaneDetector_ground->pts_per_roofplane.size());
-
-#ifdef RF_USE_RERUN
-  rec.log("world/segmented_points",
-          rerun::Collection{rerun::components::AnnotationContext{
-              rerun::datatypes::AnnotationInfo(
-                  0, "no plane", rerun::datatypes::Rgba32(30, 30, 30))}});
-  rec.log("world/segmented_points",
-          rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
-#endif
-
-  // check skip_attribute
-  // logger.debug("force LoD1.1 = {}", building.force_lod11);
-
-  if (building.force_lod11) {
-    auto SimplePolygonExtruder =
-        roofer::reconstruction::createSimplePolygonExtruder();
-    SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                   PlaneDetector->roof_elevation_70p);
-    std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
-    building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
-    building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
-    building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
-    // TODO: return building status
-    return;
-    // multisolidvec.push_back(SimplePolygonExtruder->multisolid);
-    // CityJsonWriter->write(path_output_jsonl, footprints, &multisolidvec,
-    //                       &multisolidvec, &multisolidvec, attributes);
-    // logger.debug("Completed CityJsonWriter to {}", path_output_jsonl);
-  } else {
+      bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
+                                     PlaneDetector->roof_type == "no planes";
+      if (pointcloud_insufficient) {
+        building.extrusion_mode = SKIP;
+        return;
+      }
+    } catch (const std::runtime_error& e) {
+      extrude_lod11(building, rfcfg);
+      logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
+                     building.jsonl_path.string(), e.what());
+      return;
+    }
+    // #ifdef RF_USE_RERUN
+    //     rec.log("world/segmented_points",
+    //             rerun::Collection{rerun::components::AnnotationContext{
+    //                 rerun::datatypes::AnnotationInfo(
+    //                     0, "no plane", rerun::datatypes::Rgba32(30, 30,
+    //                     30))}});
+    //     rec.log(
+    //         "world/segmented_points",
+    //         rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
+    // #endif
     t0 = std::chrono::high_resolution_clock::now();
     auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
     AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
@@ -354,33 +375,21 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     // logger.debug("LoD={}", cfg->lod);
     t0 = std::chrono::high_resolution_clock::now();
     if (cfg->lod == 0 || cfg->lod == 12) {
-      building.multisolids_lod12 =
-          extrude(arrangement, building.h_ground, building.z_offset,
-#ifdef RF_USE_VAL3DITY
-                  building.val3dity_lod12,
-#endif
-                  building.rmse_lod12, building.volume_lod12,
-                  SegmentRasteriser.get(), PlaneDetector.get(), LOD12, rfcfg);
+      building.multisolids_lod12 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD12,
+          building.rmse_lod12, building.volume_lod12, building.val3dity_lod12);
     }
 
     if (cfg->lod == 0 || cfg->lod == 13) {
-      building.multisolids_lod13 =
-          extrude(arrangement, building.h_ground, building.z_offset,
-#ifdef RF_USE_VAL3DITY
-                  building.val3dity_lod13,
-#endif
-                  building.rmse_lod13, building.volume_lod13,
-                  SegmentRasteriser.get(), PlaneDetector.get(), LOD13, rfcfg);
+      building.multisolids_lod13 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD13,
+          building.rmse_lod13, building.volume_lod13, building.val3dity_lod13);
     }
 
     if (cfg->lod == 0 || cfg->lod == 22) {
-      building.multisolids_lod22 =
-          extrude(arrangement, building.h_ground, building.z_offset,
-#ifdef RF_USE_VAL3DITY
-                  building.val3dity_lod22,
-#endif
-                  building.rmse_lod22, building.volume_lod22,
-                  SegmentRasteriser.get(), PlaneDetector.get(), LOD22, rfcfg);
+      building.multisolids_lod22 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD22,
+          building.rmse_lod22, building.volume_lod22, building.val3dity_lod22);
     }
     timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
 

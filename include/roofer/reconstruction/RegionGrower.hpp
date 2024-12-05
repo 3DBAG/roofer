@@ -24,6 +24,7 @@
 #include <deque>
 #include <type_traits>
 #include <unordered_map>
+#include <chrono>
 
 namespace roofer {
 
@@ -110,6 +111,40 @@ namespace roofer {
           if (region_ids[idx] == 0) {
             grow_one_region(cds, tester, idx);
             ++cur_region_id;
+          }
+        }
+      };
+      template <typename Tester>
+      void grow_regions_with_limits(candidateDS& cds, Tester& tester,
+                                    size_t limit_n_regions,
+                                    size_t limit_n_milliseconds) {
+        std::vector<size_t> new_regions;
+        std::deque<size_t> seeds = cds.get_seeds();
+
+        region_ids.resize(cds.size, 0);
+        // first region means unsegmented
+        regions.push_back(regionType(0));
+
+        // region growing from seed points
+        auto t_start = std::chrono::high_resolution_clock::now();
+        while (seeds.size() > 0) {
+          auto idx = seeds.front();
+          seeds.erase(seeds.begin());
+          if (region_ids[idx] == 0) {
+            grow_one_region(cds, tester, idx);
+            ++cur_region_id;
+            if (regions.size() >= limit_n_regions ||
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - t_start)
+                        .count() >= limit_n_milliseconds) {
+              throw std::runtime_error(
+                  "Region growing limit reached. Time = " +
+                  std::to_string(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::high_resolution_clock::now() - t_start)
+                          .count()) +
+                  "ms, regioncount = " + std::to_string(regions.size()));
+            }
           }
         }
       };

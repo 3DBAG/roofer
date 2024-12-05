@@ -38,6 +38,7 @@ namespace roofer::io {
     std::vector<PointCollection>& point_clouds;
     vec1f& ground_elevations;
     vec1i& acquisition_years;
+    vec1b& pointcloud_insufficient;
 
     // ground elevations
     std::vector<std::vector<arr3f>> ground_buffer_points;
@@ -60,6 +61,7 @@ namespace roofer::io {
                               std::vector<PointCollection>& point_clouds,
                               vec1f& ground_elevations,
                               vec1i& acquisition_years,
+                              vec1b& pointcloud_insufficient,
                               const Box& completearea_bb, float& cellsize,
                               float& buffer, int ground_class = 2,
                               int building_class = 6,
@@ -71,6 +73,7 @@ namespace roofer::io {
           ground_class(ground_class),
           building_class(building_class),
           acquisition_years(acquisition_years),
+          pointcloud_insufficient(pointcloud_insufficient),
           handle_overlap_points(handle_overlap_points) {
       // point_clouds_ground.resize(polygons.size());
       point_clouds.resize(polygons.size());
@@ -204,8 +207,7 @@ namespace roofer::io {
     void do_post_process(float& ground_percentile, float& max_density_delta,
                          float& coverage_threshold, bool& clear_if_insufficient,
                          vec1f& poly_areas, vec1i& poly_pt_counts_bld,
-                         vec1i& poly_pt_counts_grd,
-                         vec1s& poly_ptcoverage_class, vec1f& poly_densities) {
+                         vec1i& poly_pt_counts_grd, vec1f& poly_densities) {
       // compute poly properties
       struct PolyInfo {
         size_t pt_count_bld;
@@ -346,15 +348,8 @@ namespace roofer::io {
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
         auto& info = poly_info[poly_i];
 
-        if ((info.pt_count_bld / info.area) < cov_thres) {
-          if (clear_if_insufficient) {
-            auto& point_cloud = point_clouds.at(poly_i);
-            point_cloud.clear();
-          }
-          poly_ptcoverage_class.push_back(std::string("insufficient"));
-        } else {
-          poly_ptcoverage_class.push_back(std::string("sufficient"));
-        }
+        pointcloud_insufficient.push_back((info.pt_count_bld / info.area) <
+                                          cov_thres);
         // info.pt_count = point_cloud.size();
         poly_areas.push_back(float(info.area));
         poly_pt_counts_bld.push_back(int(info.pt_count_bld));
@@ -444,27 +439,21 @@ namespace roofer::io {
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
                  vec1f& ground_elevations, vec1i& acquisition_years,
-                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
+                 vec1b& pointcloud_insufficient, const Box& polygon_extent,
+                 PointCloudCropperConfig cfg) {
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
       vec1i poly_pt_counts_grd;
-      vec1s poly_ptcoverage_class;
       vec1f poly_densities;
 
       auto& logger = logger::Logger::get_logger();
 
-      PointsInPolygonsCollector pip_collector{polygons,
-                                              buf_polygons,
-                                              point_clouds,
-                                              ground_elevations,
-                                              acquisition_years,
-                                              polygon_extent,
-                                              cfg.cellsize,
-                                              cfg.buffer,
-                                              cfg.ground_class,
-                                              cfg.building_class,
-                                              cfg.handle_overlap_points};
+      PointsInPolygonsCollector pip_collector{
+          polygons,          buf_polygons,       point_clouds,
+          ground_elevations, acquisition_years,  pointcloud_insufficient,
+          polygon_extent,    cfg.cellsize,       cfg.buffer,
+          cfg.ground_class,  cfg.building_class, cfg.handle_overlap_points};
 
       for (auto lasfile : lasfiles) {
         LASreadOpener lasreadopener;
@@ -535,7 +524,7 @@ namespace roofer::io {
       pip_collector.do_post_process(
           cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
           cfg.clear_if_insufficient, poly_areas, poly_pt_counts_bld,
-          poly_pt_counts_grd, poly_ptcoverage_class, poly_densities);
+          poly_pt_counts_grd, poly_densities);
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,

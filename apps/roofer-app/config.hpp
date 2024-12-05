@@ -58,10 +58,12 @@ struct InputPointcloud {
   roofer::vec1f pt_densities;
   roofer::vec1b is_glass_roof;
   roofer::vec1b lod11_forced;
+  roofer::vec1b pointcloud_insufficient;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
   roofer::vec1f ground_elevations;
+  roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
   std::unique_ptr<roofer::misc::RTreeInterface> rtree;
@@ -84,7 +86,7 @@ struct RooferConfig {
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
-  bool clear_if_insufficient = false;
+  bool clear_if_insufficient = true;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -115,12 +117,14 @@ struct RooferConfig {
   std::string output_path;
 
   // reconstruct
+  int lod11_fallback_planes = 900;
+  int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
 
   // output attribute names
   std::unordered_map<std::string, std::string> n = {
-      {"status", "rf_status"},
-      {"reconstruction_time", "rf_reconstruction_time"},
+      {"success", "rf_success"},
+      {"reconstruction_time", "rf_t_run"},
       {"val3dity_lod12", "rf_val3dity_lod12"},
       {"val3dity_lod13", "rf_val3dity_lod13"},
       {"val3dity_lod22", "rf_val3dity_lod22"},
@@ -138,7 +142,7 @@ struct RooferConfig {
       {"h_roof_70p", "rf_h_roof_70p"},
       {"h_roof_min", "rf_h_roof_min"},
       {"h_roof_max", "rf_h_roof_max"},
-      {"roof_n_planes", "rf_roof_n_planes"},
+      {"roof_n_planes", "rf_roof_planes"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
@@ -148,6 +152,8 @@ struct RooferConfig {
       {"h_ground", "rf_h_ground"},
       {"slope", "rf_slope"},
       {"azimuth", "rf_azimuth"},
+      {"extrusion_mode", "rf_extrusion_mode"},
+      {"pointcloud_unusable", "rf_pointcloud_unusable"},
   };
 };
 
@@ -642,7 +648,8 @@ struct RooferConfigHandler {
         _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
     add("lod11-fallback-area", "lod11 fallback area", _cfg.lod11_fallback_area,
         {roofer::v::HigherThan<int>(0)});
-    add("skip-insufficient", "skip buildings with insufficient pointcloud data",
+    add("reconstruct-insufficient",
+        "reconstruct buildings with insufficient pointcloud data",
         _cfg.clear_if_insufficient, {});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
@@ -682,6 +689,13 @@ struct RooferConfigHandler {
         _cfg.cj_scale, {});
     add("cj-translate", "Translation applied to CityJSON output vertices",
         _cfg.cj_translate, {});
+    add("lod11-fallback-plane-cnt",
+        "Fallback to LoD11 if number of detected planes exceeds this value.",
+        _cfg.lod11_fallback_planes, {roofer::v::HigherThan<int>(0)});
+    add("lod11-fallback-time",
+        "Fallback to LoD11 if time spent on detecting planes exceeds this "
+        "value. In milliseconds.",
+        _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",
