@@ -117,14 +117,14 @@ struct RooferConfig {
   std::string output_path;
 
   // reconstruct
-  int lod11_fallback_planes = 100;
-  int lod11_fallback_time = 90000;
+  int lod11_fallback_planes = 900;
+  int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
 
   // output attribute names
   std::unordered_map<std::string, std::string> n = {
       {"success", "rf_success"},
-      {"reconstruction_time", "rf_reconstruction_time"},
+      {"reconstruction_time", "rf_t_run"},
       {"val3dity_lod12", "rf_val3dity_lod12"},
       {"val3dity_lod13", "rf_val3dity_lod13"},
       {"val3dity_lod22", "rf_val3dity_lod22"},
@@ -142,7 +142,7 @@ struct RooferConfig {
       {"h_roof_70p", "rf_h_roof_70p"},
       {"h_roof_min", "rf_h_roof_min"},
       {"h_roof_max", "rf_h_roof_max"},
-      {"roof_n_planes", "rf_roof_n_planes"},
+      {"roof_n_planes", "rf_roof_planes"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
@@ -153,7 +153,7 @@ struct RooferConfig {
       {"slope", "rf_slope"},
       {"azimuth", "rf_azimuth"},
       {"extrusion_mode", "rf_extrusion_mode"},
-      {"pointcloud_insufficient", "rf_pointcloud_insufficient"},
+      {"pointcloud_unusable", "rf_pointcloud_unusable"},
   };
 };
 
