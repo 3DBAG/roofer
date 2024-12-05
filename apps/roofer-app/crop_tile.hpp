@@ -192,27 +192,19 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
-    auto& h_ground =
-        attributes.insert_vec<float>(cfg.n.at("h_ground") + "_" + ipc.name);
     auto& nodata_r =
         attributes.insert_vec<float>(cfg.n.at("nodata_r") + "_" + ipc.name);
     auto& nodata_frac =
         attributes.insert_vec<float>(cfg.n.at("nodata_frac") + "_" + ipc.name);
     auto& pt_density =
         attributes.insert_vec<float>(cfg.n.at("pt_density") + "_" + ipc.name);
-    auto& is_glass_roof =
-        attributes.insert_vec<bool>(cfg.n.at("is_glass_roof") + "_" + ipc.name);
-    h_ground.reserve(N_fp);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
-    is_glass_roof.reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
-      h_ground.push_back(ipc.ground_elevations[i] + (*pj->data_offset)[2]);
       nodata_r.push_back(ipc.nodata_radii[i]);
       nodata_frac.push_back(ipc.nodata_fractions[i]);
       pt_density.push_back(ipc.pt_densities[i]);
-      is_glass_roof.push_back(ipc.is_glass_roof[i]);
     }
   }
 
@@ -356,6 +348,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
       building.pointcloud_insufficient =
           input_pointclouds[selected->index].pointcloud_insufficient[i];
+      building.is_glass_roof =
+          input_pointclouds[selected->index].is_glass_roof[i];
 
       if (input_pointclouds[selected->index].lod11_forced[i]) {
         building.extrusion_mode = ExtrusionMode::LOD11_FALLBACK;

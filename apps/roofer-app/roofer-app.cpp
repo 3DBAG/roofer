@@ -113,6 +113,7 @@ struct BuildingObject {
   float h_roof_70p_rough;
   bool force_lod11;  // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
+  bool is_glass_roof;
   ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction
@@ -1070,6 +1071,8 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["is_glass_roof"],
+                            building.is_glass_roof);
               attrow.insert(roofer_cfg.n["pointcloud_unusable"],
                             building.pointcloud_insufficient);
               attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
