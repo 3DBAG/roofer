@@ -94,7 +94,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
     PointCloudCropper->process(
         lasfiles, footprints, buffered_footprints, ipc.building_clouds,
-        ipc.ground_elevations, ipc.acquisition_years, polygon_extent,
+        ipc.ground_elevations, ipc.acquisition_years,
+        ipc.pointcloud_insufficient, polygon_extent,
         {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
          .clear_if_insufficient = cfg.clear_if_insufficient,
@@ -132,6 +133,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.is_glass_roof.reserve(N_fp);
     ipc.roof_elevations.reserve(N_fp);
     ipc.lod11_forced.reserve(N_fp);
+    ipc.pointcloud_insufficient.reserve(N_fp);
     if (cfg.write_index) ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
@@ -349,8 +351,11 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       building.h_ground =
           input_pointclouds[selected->index].ground_elevations[i];
-      building.h_roof = input_pointclouds[selected->index].roof_elevations[i];
+      building.h_roof_70p_rough =
+          input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
+      building.pointcloud_insufficient =
+          input_pointclouds[selected->index].pointcloud_insufficient[i];
 
       if (input_pointclouds[selected->index].lod11_forced[i]) {
         building.extrusion_mode = ExtrusionMode::LOD11_FALLBACK;

@@ -110,26 +110,28 @@ struct BuildingObject {
   // set in crop
   fs::path jsonl_path;
   float h_ground;
-  float h_roof;
+  float h_roof_70p_rough;
   bool force_lod11;  // force_lod11 / fallback_lod11
+  bool pointcloud_insufficient;
   ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction
-  std::string roof_type;
-  float roof_elevation_50p;
-  float roof_elevation_70p;
-  float roof_elevation_min;
-  float roof_elevation_max;
-  int roof_n_planes;
-  float rmse_lod12;
-  float rmse_lod13;
-  float rmse_lod22;
-  float volume_lod12;
-  float volume_lod13;
-  float volume_lod22;
-  std::string val3dity_lod12;
-  std::string val3dity_lod13;
-  std::string val3dity_lod22;
+  // optionals may not get assigned a valid value
+  std::string roof_type = "unknown";
+  std::optional<float> roof_elevation_50p;
+  std::optional<float> roof_elevation_70p;
+  std::optional<float> roof_elevation_min;
+  std::optional<float> roof_elevation_max;
+  std::optional<int> roof_n_planes;
+  std::optional<float> rmse_lod12;
+  std::optional<float> rmse_lod13;
+  std::optional<float> rmse_lod22;
+  std::optional<float> volume_lod12;
+  std::optional<float> volume_lod13;
+  std::optional<float> volume_lod22;
+  std::optional<std::string> val3dity_lod12;
+  std::optional<std::string> val3dity_lod13;
+  std::optional<std::string> val3dity_lod22;
   // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 
@@ -984,15 +986,13 @@ int main(int argc, const char* argv[]) {
           logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
-          auto& attr_status = building_tile.attributes.insert_vec<std::string>(
-              roofer_cfg.n["status"]);
+          auto& attr_success = building_tile.attributes.insert_vec<bool>(
+              roofer_cfg.n["success"]);
           for (auto& progress : building_tile.buildings_progresses) {
-            if (progress == RECONSTRUCTION_FAILED) {
-              attr_status.push_back("reconstruction_failed");
-            } else if (progress == RECONSTRUCTION_SUCCEEDED) {
-              attr_status.push_back("reconstruction_succeeded");
+            if (progress == RECONSTRUCTION_SUCCEEDED) {
+              attr_success.push_back(true);
             } else {
-              attr_status.push_back("unknown");
+              attr_success.push_back(false);
             }
           }
           // create time attribute
@@ -1070,17 +1070,19 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["pointcloud_unusable"],
+                            building.pointcloud_insufficient);
               attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
-              attrow.insert(roofer_cfg.n["h_roof_50p"],
-                            building.roof_elevation_50p);
-              attrow.insert(roofer_cfg.n["h_roof_70p"],
-                            building.roof_elevation_70p);
-              attrow.insert(roofer_cfg.n["h_roof_min"],
-                            building.roof_elevation_min);
-              attrow.insert(roofer_cfg.n["h_roof_max"],
-                            building.roof_elevation_max);
-              attrow.insert(roofer_cfg.n["roof_n_planes"],
-                            building.roof_n_planes);
+              attrow.insert_optional(roofer_cfg.n["h_roof_50p"],
+                                     building.roof_elevation_50p);
+              attrow.insert_optional(roofer_cfg.n["h_roof_70p"],
+                                     building.roof_elevation_70p);
+              attrow.insert_optional(roofer_cfg.n["h_roof_min"],
+                                     building.roof_elevation_min);
+              attrow.insert_optional(roofer_cfg.n["h_roof_max"],
+                                     building.roof_elevation_max);
+              attrow.insert_optional(roofer_cfg.n["roof_n_planes"],
+                                     building.roof_n_planes);
               attrow.insert(roofer_cfg.n["extrusion_mode"],
                             building.extrusion_mode);
 
@@ -1089,32 +1091,35 @@ int main(int argc, const char* argv[]) {
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
                 ms12 = &building.multisolids_lod12;
-                attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
-                attrow.insert(roofer_cfg.n["volume_lod12"],
-                              building.volume_lod12);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod12"],
+                                       building.rmse_lod12);
+                attrow.insert_optional(roofer_cfg.n["volume_lod12"],
+                                       building.volume_lod12);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod12"],
-                              building.val3dity_lod12);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod12"],
+                                       building.val3dity_lod12);
 #endif
               }
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
                 ms13 = &building.multisolids_lod13;
-                attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
-                attrow.insert(roofer_cfg.n["volume_lod13"],
-                              building.volume_lod13);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod13"],
+                                       building.rmse_lod13);
+                attrow.insert_optional(roofer_cfg.n["volume_lod13"],
+                                       building.volume_lod13);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod13"],
-                              building.val3dity_lod13);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod13"],
+                                       building.val3dity_lod13);
 #endif
               }
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
                 ms22 = &building.multisolids_lod22;
-                attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
-                attrow.insert(roofer_cfg.n["volume_lod22"],
-                              building.volume_lod22);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod22"],
+                                       building.rmse_lod22);
+                attrow.insert_optional(roofer_cfg.n["volume_lod22"],
+                                       building.volume_lod22);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod22"],
-                              building.val3dity_lod22);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod22"],
+                                       building.val3dity_lod22);
 #endif
               }
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,

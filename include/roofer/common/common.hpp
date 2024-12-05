@@ -139,6 +139,13 @@ namespace roofer {
     void insert(const std::string& name, T value) {
       _attributes[name] = value;
     };
+    template <typename T>
+    void insert_optional(const std::string& name, std::optional<T> opt) {
+      if (opt.has_value())
+        _attributes[name] = opt.value();
+      else
+        _attributes[name] = std::monostate();
+    };
 
     void set_null(const std::string& name);
     bool is_null(const std::string& name) const;

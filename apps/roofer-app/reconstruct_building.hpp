@@ -24,8 +24,9 @@ enum LOD { LOD11 = 11, LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 void multisolid_post_process(BuildingObject& building, RooferConfig* rfcfg,
                              LOD lod,
                              std::unordered_map<int, roofer::Mesh>& multisolid,
-                             float& rmse, float& volume,
-                             std::string* attr_val3dity = nullptr) {
+                             std::optional<float>& rmse,
+                             std::optional<float>& volume,
+                             std::optional<std::string>& attr_val3dity) {
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
   for (auto& [label, mesh] : multisolid) {
     mesh.get_attributes().resize(mesh.get_polygons().size());
@@ -67,10 +68,10 @@ void multisolid_post_process(BuildingObject& building, RooferConfig* rfcfg,
 #endif
 
 #ifdef RF_USE_VAL3DITY
-  if (attr_val3dity != nullptr && multisolid.size() > 0) {
+  if (multisolid.size() > 0) {
     auto Val3dator = roofer::misc::createVal3dator();
     Val3dator->compute(multisolid);
-    (*attr_val3dity) = Val3dator->errors.front();
+    attr_val3dity = Val3dator->errors.front();
   }
   // logger.debug("Completed Val3dator. Errors={}", Val3dator->errors.front());
 #endif
@@ -80,7 +81,8 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
     roofer::Arrangement_2 arrangement, BuildingObject& building,
     RooferConfig* rfcfg,
     roofer::reconstruction::SegmentRasteriserInterface* SegmentRasteriser,
-    LOD lod, float& rmse, float& volume, std::string* attr_val3dity = nullptr) {
+    LOD lod, std::optional<float>& rmse, std::optional<float>& volume,
+    std::optional<std::string>& attr_val3dity) {
   auto* cfg = &(rfcfg->rec);
   bool dissolve_step_edges = false;
   bool dissolve_all_interior = false;
@@ -140,37 +142,26 @@ void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
   SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                 building.h_roof);
+                                 building.h_roof_70p_rough);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
-  float rmse, volume;
+
+  multisolid_post_process(
+      building, rfcfg, LOD11, SimplePolygonExtruder->multisolid,
+      building.rmse_lod12, building.volume_lod12, building.val3dity_lod12);
+  building.rmse_lod13 = building.rmse_lod12;
+  building.rmse_lod22 = building.rmse_lod12;
+  building.volume_lod13 = building.volume_lod12;
+  building.volume_lod22 = building.volume_lod12;
 #ifdef RF_USE_VAL3DITY
-  std::string attr_val3dity;
-#endif
-  multisolid_post_process(building, rfcfg, LOD11,
-                          SimplePolygonExtruder->multisolid, rmse, volume
-#ifdef RF_USE_VAL3DITY
-                          ,
-                          &attr_val3dity
-#endif
-  );
-  building.rmse_lod12 = rmse;
-  building.rmse_lod13 = rmse;
-  building.rmse_lod22 = rmse;
-  building.volume_lod12 = volume;
-  building.volume_lod13 = volume;
-  building.volume_lod22 = volume;
-#ifdef RF_USE_VAL3DITY
-  building.val3dity_lod12 = attr_val3dity;
-  building.val3dity_lod13 = attr_val3dity;
-  building.val3dity_lod22 = attr_val3dity;
+  building.val3dity_lod13 = building.val3dity_lod12;
+  building.val3dity_lod22 = building.val3dity_lod12;
 #endif
 
   building.extrusion_mode = LOD11_FALLBACK;
-  building.roof_type = "unknown";
-  building.roof_elevation_70p = building.h_roof;
+  building.roof_elevation_70p = building.h_roof_70p_rough;
 }
 
 void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
@@ -202,7 +193,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
-  if (building.pointcloud_building.size() == 0) {
+  if (building.pointcloud_insufficient) {
     building.extrusion_mode = SKIP;
   }
 
@@ -383,36 +374,21 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     // logger.debug("LoD={}", cfg->lod);
     t0 = std::chrono::high_resolution_clock::now();
     if (cfg->lod == 0 || cfg->lod == 12) {
-      building.multisolids_lod12 =
-          extrude_lod22(arrangement, building, rfcfg, SegmentRasteriser.get(),
-                        LOD12, building.rmse_lod12, building.volume_lod12
-#ifdef RF_USE_VAL3DITY
-                        ,
-                        &building.val3dity_lod12
-#endif
-          );
+      building.multisolids_lod12 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD12,
+          building.rmse_lod12, building.volume_lod12, building.val3dity_lod12);
     }
 
     if (cfg->lod == 0 || cfg->lod == 13) {
-      building.multisolids_lod13 =
-          extrude_lod22(arrangement, building, rfcfg, SegmentRasteriser.get(),
-                        LOD13, building.rmse_lod13, building.volume_lod13
-#ifdef RF_USE_VAL3DITY
-                        ,
-                        &building.val3dity_lod13
-#endif
-          );
+      building.multisolids_lod13 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD13,
+          building.rmse_lod13, building.volume_lod13, building.val3dity_lod13);
     }
 
     if (cfg->lod == 0 || cfg->lod == 22) {
-      building.multisolids_lod22 =
-          extrude_lod22(arrangement, building, rfcfg, SegmentRasteriser.get(),
-                        LOD22, building.rmse_lod22, building.volume_lod22
-#ifdef RF_USE_VAL3DITY
-                        ,
-                        &building.val3dity_lod22
-#endif
-          );
+      building.multisolids_lod22 = extrude_lod22(
+          arrangement, building, rfcfg, SegmentRasteriser.get(), LOD22,
+          building.rmse_lod22, building.volume_lod22, building.val3dity_lod22);
     }
     timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
 

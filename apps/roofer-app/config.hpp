@@ -58,6 +58,7 @@ struct InputPointcloud {
   roofer::vec1f pt_densities;
   roofer::vec1b is_glass_roof;
   roofer::vec1b lod11_forced;
+  roofer::vec1b pointcloud_insufficient;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
@@ -122,7 +123,7 @@ struct RooferConfig {
 
   // output attribute names
   std::unordered_map<std::string, std::string> n = {
-      {"status", "rf_status"},
+      {"success", "rf_success"},
       {"reconstruction_time", "rf_reconstruction_time"},
       {"val3dity_lod12", "rf_val3dity_lod12"},
       {"val3dity_lod13", "rf_val3dity_lod13"},
@@ -152,6 +153,7 @@ struct RooferConfig {
       {"slope", "rf_slope"},
       {"azimuth", "rf_azimuth"},
       {"extrusion_mode", "rf_extrusion_mode"},
+      {"pointcloud_insufficient", "rf_pointcloud_insufficient"},
   };
 };
 
