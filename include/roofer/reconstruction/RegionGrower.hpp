@@ -137,7 +137,13 @@ namespace roofer {
                 std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::high_resolution_clock::now() - t_start)
                         .count() >= limit_n_milliseconds) {
-              throw std::runtime_error("Region growing limit reached.");
+              throw std::runtime_error(
+                  "Region growing limit reached. Time = " +
+                  std::to_string(
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::high_resolution_clock::now() - t_start)
+                          .count()) +
+                  "ms, regioncount = " + std::to_string(regions.size()));
             }
           }
         }

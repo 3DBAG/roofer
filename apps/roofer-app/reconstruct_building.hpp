@@ -237,9 +237,10 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
         building.extrusion_mode = SKIP;
         return;
       }
-    } catch (const std::exception& e) {
+    } catch (const std::runtime_error& e) {
       extrude_lod11(building, rfcfg);
-      // logger.info("Falling back to LoD1.1: {}", e.what());
+      logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
+                     building.jsonl_path.string(), e.what());
       return;
     }
     // #ifdef RF_USE_RERUN
