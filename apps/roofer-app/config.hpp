@@ -689,7 +689,7 @@ struct RooferConfigHandler {
         _cfg.cj_scale, {});
     add("cj-translate", "Translation applied to CityJSON output vertices",
         _cfg.cj_translate, {});
-    add("lod11-fallback-planes",
+    add("lod11-fallback-plane-cnt",
         "Fallback to LoD11 if number of detected planes exceeds this value.",
         _cfg.lod11_fallback_planes, {roofer::v::HigherThan<int>(0)});
     add("lod11-fallback-time",
