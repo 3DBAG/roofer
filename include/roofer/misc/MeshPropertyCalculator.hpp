@@ -22,12 +22,12 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/common/Raster.hpp>
 
 namespace roofer::misc {
 
   struct ComputeRoofHeightConfig {
     float z_offset = 0;
-    float cellsize = 0.5;
     std::string h_50p = "h_50p";
     std::string h_70p = "h_70p";
     std::string h_min = "h_min";
@@ -43,8 +43,9 @@ namespace roofer::misc {
 
   struct MeshPropertyCalculatorInterface {
     virtual ~MeshPropertyCalculatorInterface() = default;
-    virtual void compute_roof_height(Mesh& mesh,
-                                     ComputeRoofHeightConfig cfg) = 0;
+    virtual RasterTools::Raster get_heightmap(Mesh& mesh, float cellsize) = 0;
+    virtual void calculate_h_attr(Mesh& mesh, RasterTools::Raster& r_lod22,
+                                  ComputeRoofHeightConfig cfg) = 0;
     virtual void compute_roof_orientation(
         Mesh& mesh, ComputeRoofOrientationsConfig cfg) = 0;
   };

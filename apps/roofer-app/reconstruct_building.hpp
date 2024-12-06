@@ -21,28 +21,59 @@
 
 enum LOD { LOD11 = 11, LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 
+void compute_mesh_properties(
+    std::unordered_map<int, roofer::Mesh>& multisolid_lod12,
+    std::unordered_map<int, roofer::Mesh>& multisolid_lod13,
+    std::unordered_map<int, roofer::Mesh>& multisolid_lod22, float z_offset,
+    RooferConfig* rfcfg) {
+  auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
+  for (size_t i; i < multisolid_lod22.size(); ++i) {
+    auto& mesh22 = multisolid_lod22.at(i);
+    mesh22.get_attributes().resize(mesh22.get_polygons().size());
+
+    auto heightmap =
+        MeshPropertyCalculator->get_heightmap(mesh22, rfcfg->cellsize);
+    MeshPropertyCalculator->calculate_h_attr(mesh22, heightmap,
+                                             {.z_offset = z_offset,
+                                              .h_50p = rfcfg->n["h_roof_50p"],
+                                              .h_70p = rfcfg->n["h_roof_70p"],
+                                              .h_min = rfcfg->n["h_roof_min"],
+                                              .h_max = rfcfg->n["h_roof_max"]});
+
+    MeshPropertyCalculator->compute_roof_orientation(
+        mesh22, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+
+    if (multisolid_lod12.size() > i) {
+      auto& mesh12 = multisolid_lod12.at(i);
+      mesh12.get_attributes().resize(mesh12.get_polygons().size());
+      MeshPropertyCalculator->calculate_h_attr(
+          mesh12, heightmap,
+          {.z_offset = z_offset,
+           .h_50p = rfcfg->n["h_roof_50p"],
+           .h_70p = rfcfg->n["h_roof_70p"],
+           .h_min = rfcfg->n["h_roof_min"],
+           .h_max = rfcfg->n["h_roof_max"]});
+    }
+    if (multisolid_lod13.size() > i) {
+      auto& mesh13 = multisolid_lod13.at(i);
+      mesh13.get_attributes().resize(mesh13.get_polygons().size());
+      MeshPropertyCalculator->calculate_h_attr(
+          mesh13, heightmap,
+          {.z_offset = z_offset,
+           .h_50p = rfcfg->n["h_roof_50p"],
+           .h_70p = rfcfg->n["h_roof_70p"],
+           .h_min = rfcfg->n["h_roof_min"],
+           .h_max = rfcfg->n["h_roof_max"]});
+    }
+  }
+}
+
 void multisolid_post_process(BuildingObject& building, RooferConfig* rfcfg,
                              LOD lod,
                              std::unordered_map<int, roofer::Mesh>& multisolid,
                              std::optional<float>& rmse,
                              std::optional<float>& volume,
                              std::optional<std::string>& attr_val3dity) {
-  auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  for (auto& [label, mesh] : multisolid) {
-    mesh.get_attributes().resize(mesh.get_polygons().size());
-    MeshPropertyCalculator->compute_roof_height(
-        mesh, {.z_offset = building.z_offset,
-               .cellsize = rfcfg->cellsize,
-               .h_50p = rfcfg->n["h_roof_50p"],
-               .h_70p = rfcfg->n["h_roof_70p"],
-               .h_min = rfcfg->n["h_roof_min"],
-               .h_max = rfcfg->n["h_roof_max"]});
-    if (lod == LOD22) {
-      MeshPropertyCalculator->compute_roof_orientation(
-          mesh, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
-    }
-  }
-
   auto MeshTriangulator =
       roofer::reconstruction::createMeshTriangulatorLegacy();
   MeshTriangulator->compute(multisolid);
@@ -147,6 +178,10 @@ void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod22 = SimplePolygonExtruder->multisolid;
+
+  compute_mesh_properties(building.multisolids_lod12,
+                          building.multisolids_lod13,
+                          building.multisolids_lod22, building.z_offset, rfcfg);
 
   multisolid_post_process(
       building, rfcfg, LOD11, SimplePolygonExtruder->multisolid,
@@ -390,6 +425,9 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
       building.multisolids_lod22 = extrude_lod22(
           arrangement, building, rfcfg, SegmentRasteriser.get(), LOD22,
           building.rmse_lod22, building.volume_lod22, building.val3dity_lod22);
+      compute_mesh_properties(
+          building.multisolids_lod12, building.multisolids_lod13,
+          building.multisolids_lod22, building.z_offset, rfcfg);
     }
     timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
 

@@ -6,8 +6,6 @@ split-cjseq = false
 output-directory = 'output/wippolder'
 # srs_override = "EPSG:7415"
 
-lod = 22
-
 [[pointclouds]]
 name = "AHN3"
 quality = 1

@@ -22,7 +22,6 @@
 #include <CGAL/linear_least_squares_fitting_3.h>
 
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
-#include <roofer/common/Raster.hpp>
 #include <roofer/misc/MeshPropertyCalculator.hpp>
 
 namespace roofer::misc {
@@ -58,10 +57,10 @@ namespace roofer::misc {
                               plane.d() / plane.c();
         r.add_point(p[0], p[1], z_interpolate, RasterTools::MAX);
       }
-    }
+    };
 
     void calculate_h_attr(Mesh& mesh, RasterTools::Raster& r_lod22,
-                          ComputeRoofHeightConfig& cfg) {
+                          ComputeRoofHeightConfig cfg) {
       auto& faces = mesh.get_polygons();
       auto& labels = mesh.get_labels();
       auto& attributes = mesh.get_attributes();
@@ -96,9 +95,9 @@ namespace roofer::misc {
                                float(part_points[N - 1][2] + cfg.z_offset));
         }
       }
-    }
+    };
 
-    void compute_roof_height(Mesh& mesh, ComputeRoofHeightConfig cfg) override {
+    RasterTools::Raster get_heightmap(Mesh& mesh, float cellsize) override {
       auto& faces = mesh.get_polygons();
       auto& labels = mesh.get_labels();
       assert(faces.size() == labels.size());
@@ -117,7 +116,7 @@ namespace roofer::misc {
       auto boxmax = box.max();
 
       RasterTools::Raster r_lod22 =
-          RasterTools::Raster(cfg.cellsize, boxmin[0] - 0.5, boxmax[0] + 0.5,
+          RasterTools::Raster(cellsize, boxmin[0] - 0.5, boxmax[0] + 0.5,
                               boxmin[1] - 0.5, boxmax[1] + 0.5);
       r_lod22.prefill_arrays(RasterTools::MAX);
       for (size_t i = 0; i < n_faces; ++i) {
@@ -125,9 +124,8 @@ namespace roofer::misc {
           rasterise_ring(faces[i], r_lod22);
         }
       }
-      // auto z_offset = (*manager.data_offset())[2];
-      calculate_h_attr(mesh, r_lod22, cfg);
-    }
+      return r_lod22;
+    };
 
     CF::Vector_3 calculate_normal_cf(const LinearRing& ring) {
       float x = 0, y = 0, z = 0;
@@ -140,7 +138,7 @@ namespace roofer::misc {
       }
       CF::Vector_3 n(x, y, z);
       return n / CGAL::approximate_sqrt(n.squared_length());
-    }
+    };
 
     void compute_roof_orientation(Mesh& mesh,
                                   ComputeRoofOrientationsConfig cfg) override {
