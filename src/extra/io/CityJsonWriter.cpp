@@ -108,25 +108,37 @@ namespace roofer::io {
       geometry["boundaries"] = {exterior_shell};
 
       auto semantic_objects = nlohmann::json::array();
+      // 0
+      semantic_objects.push_back(
+          nlohmann::json::object({{"type", "GroundSurface"}}));
+      // 1
+      semantic_objects.push_back(nlohmann::json::object(
+          {{"type", "WallSurface"}, {"on_footprint_edge", true}}));
+      // 2
+      semantic_objects.push_back(nlohmann::json::object(
+          {{"type", "WallSurface"}, {"on_footprint_edge", false}}));
+
       std::vector<int> sem_values;
+      size_t wallSurface_cntr = semantic_objects.size();
       for (size_t i = 0; i < mesh.get_polygons().size(); ++i) {
-        nlohmann::json::object_t semantic_object;
-        if (mesh.get_attributes().size()) {
-          semantic_object = attributes2json(mesh.get_attributes().at(i));
-        }
-        if (mesh.get_labels()[i] == 0) {
-          semantic_object["type"] = "GroundSurface";
-        } else if (mesh.get_labels()[i] == 1) {
+        auto& label = mesh.get_labels()[i];
+        if (label == 0) {  // GroundSurface
+          sem_values.push_back(0);
+        } else if (label == 1) {  // RoofSurface
+          nlohmann::json::object_t semantic_object;
+          if (mesh.get_attributes().size()) {
+            semantic_object = attributes2json(mesh.get_attributes().at(i));
+          }
           semantic_object["type"] = "RoofSurface";
-        } else if (mesh.get_labels()[i] == 2) {
-          semantic_object["type"] = "WallSurface";
-          semantic_object["on_footprint_edge"] = true;
-        } else if (mesh.get_labels()[i] == 3) {
-          semantic_object["type"] = "WallSurface";
-          semantic_object["on_footprint_edge"] = false;
+          semantic_objects.push_back(semantic_object);
+          sem_values.push_back(wallSurface_cntr++);
+        } else if (label == 2) {  // WallSurface on footprint edge
+          sem_values.push_back(1);
+        } else if (label == 3) {  // WallSurface not on footprint edge
+          sem_values.push_back(2);
+        } else {
+          throw rooferException("Unknown label in mesh");
         }
-        sem_values.push_back(i);
-        semantic_objects.push_back(semantic_object);
       }
       geometry["semantics"] = {{"surfaces", semantic_objects},
                                {"values", {sem_values}}};
