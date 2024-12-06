@@ -59,6 +59,10 @@ Options
 
   Number of threads to use. [default: number of cores]
 
+.. option:: --no-tiling
+
+  Do not use tiling.
+
 .. option:: --crop-output
 
   Output cropped building pointclouds.

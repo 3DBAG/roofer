@@ -806,6 +806,7 @@ struct RooferConfigHandler {
                  "[default: number of cores]\n";
     // std::cout << "   --crop-only                  Only crop pointclouds. Skip
     // reconstruction.\n";
+    std::cout << "   --no-tiling                  Do not use tiling.\n";
     std::cout << "   --crop-output                Output cropped building "
                  "pointclouds.\n";
     std::cout << "   --crop-output-all            Output files for each "
