@@ -71,6 +71,7 @@ RUN --mount=target=$ROOFER_BUILD/vcpkg_installed,type=cache cmake \
     --preset vcpkg-minimal \
     -DRF_USE_LOGGER_SPDLOG=ON \
     -DRF_BUILD_APPS=ON \
+    -DRF_USE_VAL3DITY=ON \
     -DCMAKE_INSTALL_PREFIX=$ROOFER_INSTALL \
     -S $ROOFER_ROOT \
     -B $ROOFER_BUILD \
