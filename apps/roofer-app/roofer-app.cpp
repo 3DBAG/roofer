@@ -1030,9 +1030,9 @@ int main(int argc, const char* argv[]) {
             CityJsonWriter->scale_y_ = (*roofer_cfg.cj_scale)[1];
             CityJsonWriter->scale_z_ = (*roofer_cfg.cj_scale)[2];
           } else {
-            CityJsonWriter->scale_x_ = 0.01;
-            CityJsonWriter->scale_y_ = 0.01;
-            CityJsonWriter->scale_z_ = 0.01;
+            CityJsonWriter->scale_x_ = 0.001;
+            CityJsonWriter->scale_y_ = 0.001;
+            CityJsonWriter->scale_z_ = 0.001;
           }
 
           std::ofstream ofs;
