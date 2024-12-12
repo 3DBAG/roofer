@@ -623,8 +623,10 @@ int main(int argc, const char* argv[]) {
       roi = VectorReader->layer_extent;
     }
 
-    logger.info("Region of interest: {} {}, {} {}", roi.pmin[0], roi.pmin[1],
-                roi.pmax[0], roi.pmax[1]);
+    logger.info("Region of interest: {:.3f} {:.3f}, {:.3f} {:.3f}", roi.pmin[0],
+                roi.pmin[1], roi.pmax[0], roi.pmax[1]);
+    logger.info("Number of source footprints: {}",
+                VectorReader->get_feature_count());
 
     // actual tiling
     if (roofer_cfg_handler._no_tiling) {
@@ -1169,5 +1171,5 @@ int main(int argc, const char* argv[]) {
         reconstructed_buildings.size());
   }
 
-  logger.info("Finished roofer");
+  // logger.info("Finished roofer");
 }

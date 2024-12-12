@@ -341,8 +341,8 @@ namespace roofer::io {
         diff_sum += std::pow(mean_density - (info.pt_count_bld / info.area), 2);
       }
       float std_dev_density = std::sqrt(diff_sum / poly_info.size());
-      logger.info("Mean point density = {}", mean_density);
-      logger.info("Standard deviation = {}", std_dev_density);
+      logger.debug("Mean point density = {}", mean_density);
+      logger.debug("Standard deviation = {}", std_dev_density);
 
       float cov_thres = mean_density - coverage_threshold * std_dev_density;
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
@@ -384,8 +384,8 @@ namespace roofer::io {
     if (gps_standard_time) {
       return false;
     } else {
-      logger.info(
-          "No good GPS time available, defaulting to file creation year");
+      // logger.info(
+      //     "No good GPS time available, defaulting to file creation year");
       // If it is GPS Week Time, probably could handle this better here, but I'm
       // simplifying. Also, AHN3 for instance uses week time, but there is no
       // way of knowing which week is date...
@@ -401,15 +401,15 @@ namespace roofer::io {
          i++) {
       if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
       {
-        logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
+        logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
       } else if (lasheader->vlrs[i].record_id ==
                  2112)  // OGC COORDINATE SYSTEM WKT
       {
-        logger.info("Found: OGC COORDINATE SYSTEM WKT");
+        logger.debug("Found: OGC COORDINATE SYSTEM WKT");
         wkt = (char*)(lasheader->vlrs[i].data);
       } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
       {
-        logger.info("Found and ignored: GeoKeyDirectoryTag");
+        logger.debug("Found and ignored: GeoKeyDirectoryTag");
       }
     }
 
@@ -418,12 +418,12 @@ namespace roofer::io {
       if (strcmp(lasheader->evlrs[i].user_id, "LASF_Projection") == 0) {
         if (lasheader->evlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
         {
-          logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
+          logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
 
         } else if (lasheader->evlrs[i].record_id ==
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
-          logger.info("Found: OGC COORDINATE SYSTEM WKT");
+          logger.debug("Found: OGC COORDINATE SYSTEM WKT");
           wkt = (char*)(lasheader->evlrs[i].data);
         }
       }
@@ -514,8 +514,8 @@ namespace roofer::io {
                                            lasreader->point.get_z()),
               lasreader->point.get_classification(), acqusition_year);
         }
-        logger.info("Point cloud acquisition year: {}",
-                    acqusition_year);  // just for debug
+        // logger.info("Point cloud acquisition year: {}",
+        // acqusition_year);  // just for debug
 
         lasreader->close();
         delete lasreader;

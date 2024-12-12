@@ -151,19 +151,42 @@ namespace roofer::io {
         throw(rooferException(
             "[VectorReaderOGR] Could not get the selected layer "));
 
-      logger.debug("[VectorReaderOGR] Layer '{}' total feature count: {}",
-                   poLayer->GetName(), poLayer->GetFeatureCount());
-
-      // logger.info("Getting layer extent...");
-      OGREnvelope extent;
-      auto error = poLayer->GetExtent(&extent);
-      if (error) {
-        throw(rooferException(
-            "[VectorReaderOGR] Could not get the extent of the layer"));
+      if (attribute_filter.size()) {
+        auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
+        if (OGRERR_NONE != error_code) {
+          throw(rooferException(
+              "[VectorReaderOGR] Invalid attribute filter: OGRErr=" +
+              std::to_string(error_code) + ", filter=" + attribute_filter));
+        }
+        // compute extent of filtered layer
+        OGREnvelope extent;
+        for (auto& feature : poLayer) {
+          OGRGeometry* geom = feature->GetGeometryRef();
+          if (geom) {
+            OGREnvelope gextent;
+            geom->getEnvelope(&gextent);
+            extent.Merge(gextent);
+          }
+        }
+        layer_extent = {extent.MinX, extent.MinY, 0,
+                        extent.MaxX, extent.MaxY, 0};
+      } else {
+        OGREnvelope extent;
+        auto error = poLayer->GetExtent(&extent);
+        if (error) {
+          throw(rooferException(
+              "[VectorReaderOGR] Could not get the extent of the layer"));
+        }
+        layer_extent = {extent.MinX, extent.MinY, 0,
+                        extent.MaxX, extent.MaxY, 0};
       }
-      logger.debug("[VectorReaderOGR] Layer extent: {} {} {} {}", extent.MinX,
-                   extent.MinY, extent.MaxX, extent.MaxY);
-      layer_extent = {extent.MinX, extent.MinY, 0, extent.MaxX, extent.MaxY, 0};
+    }
+
+    size_t get_feature_count() override {
+      if (poLayer == nullptr) {
+        throw(rooferException("[VectorReaderOGR] Layer is not open"));
+      }
+      return poLayer->GetFeatureCount();
     }
 
     void get_crs(SpatialReferenceSystemInterface* srs) override {
@@ -276,19 +299,6 @@ namespace roofer::io {
         auto& roi = *this->region_of_interest;
         poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0],
                                       roi.pmax[1]);
-      }
-
-      // if ((poLayer->GetFeatureCount()) < feature_select || feature_select <
-      // 0)
-      //   throw rooferException("Illegal feature_select value");
-
-      if (attribute_filter.size()) {
-        auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
-        if (OGRERR_NONE != error_code) {
-          throw(rooferException(
-              "[VectorReaderOGR] Invalid attribute filter: OGRErr=" +
-              std::to_string(error_code) + ", filter=" + attribute_filter));
-        }
       }
 
       OGRFeature* poFeature;
