@@ -48,7 +48,9 @@ namespace roofer::io {
     };
 
     bool is_valid() const override {
-      return (!srs.IsEmpty()) && (srs.Validate() == OGRERR_NONE);
+      return (!srs.IsEmpty() && (srs.Validate() == OGRERR_NONE) &&
+              (srs.GetAuthorityName(nullptr) != nullptr) &&
+              (srs.GetAuthorityCode(nullptr) != nullptr));
     };
 
     void clear() override { srs.Clear(); };

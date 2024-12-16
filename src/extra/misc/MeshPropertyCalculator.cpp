@@ -60,7 +60,7 @@ namespace roofer::misc {
     };
 
     void calculate_h_attr(Mesh& mesh, RasterTools::Raster& r_lod22,
-                          ComputeRoofHeightConfig cfg) {
+                          ComputeRoofHeightConfig cfg) override {
       auto& faces = mesh.get_polygons();
       auto& labels = mesh.get_labels();
       auto& attributes = mesh.get_attributes();
