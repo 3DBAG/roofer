@@ -27,7 +27,7 @@ void compute_mesh_properties(
     std::unordered_map<int, roofer::Mesh>& multisolid_lod22, float z_offset,
     RooferConfig* rfcfg) {
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  for (size_t i; i < multisolid_lod22.size(); ++i) {
+  for (size_t i = 0; i < multisolid_lod22.size(); ++i) {
     auto& mesh22 = multisolid_lod22.at(i);
     mesh22.get_attributes().resize(mesh22.get_polygons().size());
 
