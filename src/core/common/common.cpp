@@ -81,6 +81,17 @@ namespace roofer {
     return interior_rings_;
   }
 
+  void LinearRing::set_z(const float z) {
+    for (auto& p : *this) {
+      p[2] = z;
+    }
+    for (auto& iring : interior_rings_) {
+      for (auto& p : iring) {
+        p[2] = z;
+      }
+    }
+  }
+
   Segment::Segment() {}
   Segment::Segment(arr3f source, arr3f target) {
     (*this)[0] = source;

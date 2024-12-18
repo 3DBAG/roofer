@@ -1127,6 +1127,8 @@ int main(int argc, const char* argv[]) {
                                        building.val3dity_lod22);
 #endif
               }
+              // lift lod 0 footprint to h_ground
+              building.footprint.set_z(building.h_ground);
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
                                             ms22, attrow);
               if (roofer_cfg.split_cjseq) {
