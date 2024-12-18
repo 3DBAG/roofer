@@ -46,19 +46,18 @@ namespace roofer::io {
     std::string CRS_ = "EPSG:7415";
     std::string filepath_;
     std::string identifier_attribute = "";
+    size_t written_features_count = 0;
 
     bool prettyPrint_ = false;
-    bool only_output_renamed_ = false;
 
     vec1s key_options;
-    StrMap output_attribute_names;
 
-    float translate_x_ = 0.;
-    float translate_y_ = 0.;
-    float translate_z_ = 0.;
-    float scale_x_ = 1.;
-    float scale_y_ = 1.;
-    float scale_z_ = 1.;
+    double translate_x_ = 0.;
+    double translate_y_ = 0.;
+    double translate_z_ = 0.;
+    double scale_x_ = 0.01;
+    double scale_y_ = 0.01;
+    double scale_z_ = 0.01;
 
     roofer::misc::projHelperInterface& pjHelper;
 

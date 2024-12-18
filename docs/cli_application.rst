@@ -59,6 +59,10 @@ Options
 
   Number of threads to use. [default: number of cores]
 
+.. option:: --no-tiling
+
+  Do not use tiling.
+
 .. option:: --crop-output
 
   Output cropped building pointclouds.
@@ -79,6 +83,18 @@ Options
 .. option:: --split-cjseq
 
   Output CityJSONSequence file for each building [default: one file per output tile]
+
+.. option:: --cj-translate
+
+  Specify manually the translation applied to CityJSON output vertices
+
+.. option:: --cj-scale
+
+  Specify manually the scaling applied to CityJSON output vertices
+
+.. option:: --omit-metadata
+
+  Omit metadata from output CityJSON
 
 .. option:: --filter <str>
 

@@ -78,7 +78,7 @@ namespace roofer::logger {
       file_sink->set_level(spdlog_level);
       // Set up json logging in the logfile.
       file_sink->set_pattern("{\n \"log\": [");
-      logger_stdout.log(spdlog_level, "");
+      // logger_stdout.log(spdlog_level, "");
       std::string jsonpattern = {
           R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"},)"};
       file_sink->set_pattern(jsonpattern);
@@ -89,9 +89,9 @@ namespace roofer::logger {
       std::string jsonlastlogpattern = {
           R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"})"};
       file_sink->set_pattern(jsonlastlogpattern);
-      logger_stdout.log(cast_level(level), "Finished.");
+      // logger_stdout.log(cast_level(level), "Finished.");
       file_sink->set_pattern("]\n}");
-      logger_stdout.log(cast_level(level), "");
+      // logger_stdout.log(cast_level(level), "");
       spdlog::drop_all();
     }
 

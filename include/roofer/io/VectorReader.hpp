@@ -42,6 +42,8 @@ namespace roofer::io {
 
     virtual void open(const std::string& source) = 0;
 
+    virtual size_t get_feature_count() = 0;
+
     virtual void get_crs(roofer::io::SpatialReferenceSystemInterface* srs) = 0;
 
     virtual void readPolygons(std::vector<LinearRing>&,

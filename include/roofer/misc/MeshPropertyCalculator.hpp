@@ -22,29 +22,34 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
-#include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/Raster.hpp>
 
-namespace roofer::reconstruction {
+namespace roofer::misc {
 
-  struct ArrangementBuilderConfig {
-    int max_arr_complexity = 400;
-    int dist_threshold_exp = 2;
-    float fp_extension = 0.0;
-    bool insert_with_snap = false;
-    bool insert_lines = true;
+  struct ComputeRoofHeightConfig {
+    float z_offset = 0;
+    std::string h_50p = "h_50p";
+    std::string h_70p = "h_70p";
+    std::string h_min = "h_min";
+    std::string h_max = "h_max";
   };
 
-  struct ArrangementBuilderInterface {
-    // add_vector_input("lines", {typeid(Segment), typeid(linereg::Segment_2)});
-    // add_input("footprint", {typeid(linereg::Polygon_with_holes_2),
-    // typeid(LinearRing)});
-
-    virtual ~ArrangementBuilderInterface() = default;
-    virtual void compute(
-        Arrangement_2& arrangement, LinearRing& footprint,
-        std::vector<EPECK::Segment_2>& input_edges,
-        ArrangementBuilderConfig config = ArrangementBuilderConfig()) = 0;
+  struct ComputeRoofOrientationsConfig {
+    std::string slope = "slope";
+    std::string azimuth = "azimuth";
+    std::string roof_type = "roof_type";
+    float is_horizontal_threshold = 4;
   };
 
-  std::unique_ptr<ArrangementBuilderInterface> createArrangementBuilder();
-}  // namespace roofer::reconstruction
+  struct MeshPropertyCalculatorInterface {
+    virtual ~MeshPropertyCalculatorInterface() = default;
+    virtual RasterTools::Raster get_heightmap(Mesh& mesh, float cellsize) = 0;
+    virtual void calculate_h_attr(Mesh& mesh, RasterTools::Raster& r_lod22,
+                                  ComputeRoofHeightConfig cfg) = 0;
+    virtual void compute_roof_orientation(
+        Mesh& mesh, ComputeRoofOrientationsConfig cfg) = 0;
+  };
+
+  std::unique_ptr<MeshPropertyCalculatorInterface>
+  createMeshPropertyCalculator();
+}  // namespace roofer::misc

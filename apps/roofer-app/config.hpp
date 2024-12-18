@@ -18,6 +18,7 @@
 
 // Author(s):
 // Ravi Peters
+// Balázs Dukai
 #pragma once
 
 #include <functional>
@@ -57,10 +58,12 @@ struct InputPointcloud {
   roofer::vec1f pt_densities;
   roofer::vec1b is_glass_roof;
   roofer::vec1b lod11_forced;
+  roofer::vec1b pointcloud_insufficient;
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
   roofer::vec1f ground_elevations;
+  roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
   std::unique_ptr<roofer::misc::RTreeInterface> rtree;
@@ -83,7 +86,7 @@ struct RooferConfig {
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
-  bool clear_if_insufficient = false;
+  bool clear_if_insufficient = true;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -96,6 +99,9 @@ struct RooferConfig {
 
   // crop output
   bool split_cjseq = false;
+  bool omit_metadata = false;
+  std::optional<roofer::arr3d> cj_scale;
+  std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
       "{path}/objects/{bid}/config_{pc_name}.toml";
   std::string building_las_file_spec =
@@ -111,12 +117,14 @@ struct RooferConfig {
   std::string output_path;
 
   // reconstruct
+  int lod11_fallback_planes = 900;
+  int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
 
   // output attribute names
   std::unordered_map<std::string, std::string> n = {
-      {"status", "rf_status"},
-      {"reconstruction_time", "rf_reconstruction_time"},
+      {"success", "rf_success"},
+      {"reconstruction_time", "rf_t_run"},
       {"val3dity_lod12", "rf_val3dity_lod12"},
       {"val3dity_lod13", "rf_val3dity_lod13"},
       {"val3dity_lod22", "rf_val3dity_lod22"},
@@ -134,12 +142,78 @@ struct RooferConfig {
       {"h_roof_70p", "rf_h_roof_70p"},
       {"h_roof_min", "rf_h_roof_min"},
       {"h_roof_max", "rf_h_roof_max"},
-      {"roof_n_planes", "rf_roof_n_planes"},
+      {"roof_n_planes", "rf_roof_planes"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
+      {"volume_lod12", "rf_volume_lod12"},
+      {"volume_lod13", "rf_volume_lod13"},
+      {"volume_lod22", "rf_volume_lod22"},
       {"h_ground", "rf_h_ground"},
+      {"slope", "rf_slope"},
+      {"azimuth", "rf_azimuth"},
+      {"extrusion_mode", "rf_extrusion_mode"},
+      {"pointcloud_unusable", "rf_pointcloud_unusable"},
   };
+};
+
+template <>
+struct fmt::formatter<roofer::ReconstructionConfig> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(roofer::ReconstructionConfig const& cfg,
+                        Context& ctx) const {
+    return fmt::format_to(
+        ctx.out(),
+        "ReconstructionConfig(complexity_factor={}, clip_ground={}, lod={}, "
+        "lod13_step_height={}, floor_elevation={}, "
+        "override_with_floor_elevation={}, plane_detect_k={}, "
+        "plane_detect_min_points={}, plane_detect_epsilon={}, "
+        "plane_detect_normal_angle={}, line_detect_epsilon={}, thres_alpha={}, "
+        "thres_reg_line_dist={}, thres_reg_line_ext={})",
+        cfg.complexity_factor, cfg.clip_ground, cfg.lod, cfg.lod13_step_height,
+        cfg.floor_elevation, cfg.override_with_floor_elevation,
+        cfg.plane_detect_k, cfg.plane_detect_min_points,
+        cfg.plane_detect_epsilon, cfg.plane_detect_normal_angle,
+        cfg.line_detect_epsilon, cfg.thres_alpha, cfg.thres_reg_line_dist,
+        cfg.thres_reg_line_ext);
+  }
+};
+
+template <>
+struct fmt::formatter<RooferConfig> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(RooferConfig const& cfg, Context& ctx) const {
+    std::string region_of_interest = "novalue";
+    if (cfg.region_of_interest.has_value()) {
+      region_of_interest = cfg.region_of_interest.value().wkt();
+    }
+    return fmt::format_to(
+        ctx.out(),
+        "RooferConfig(source_footprints={}, id_attribute={}, "
+        "force_lod11_attribute={}, yoc_attribute={}, layer_name={}, "
+        "layer_id={}, attribute_filter={}, ceil_point_density={}, cellsize={}, "
+        "lod11_fallback_area={}, lod11_fallback_density={}, tilesize={}, "
+        "clear_if_insufficient={}, write_crop_outputs={}, output_all={}, "
+        "write_rasters={}, write_index={}, region_of_interest={}, "
+        "srs_override={}, split_cjseq={}, building_toml_file_spec={}, "
+        "building_las_file_spec={}, building_gpkg_file_spec={}, "
+        "building_raster_file_spec={}, building_jsonl_file_spec={}, "
+        "jsonl_list_file_spec={}, index_file_spec={}, "
+        "metadata_json_file_spec={}, output_path={}, rec={})",
+        cfg.source_footprints, cfg.id_attribute, cfg.force_lod11_attribute,
+        cfg.yoc_attribute, cfg.layer_name, cfg.layer_id, cfg.attribute_filter,
+        cfg.ceil_point_density, cfg.cellsize, cfg.lod11_fallback_area,
+        cfg.lod11_fallback_density, cfg.tilesize, cfg.clear_if_insufficient,
+        cfg.write_crop_outputs, cfg.output_all, cfg.write_rasters,
+        cfg.write_index, region_of_interest, cfg.srs_override, cfg.split_cjseq,
+        cfg.building_toml_file_spec, cfg.building_las_file_spec,
+        cfg.building_gpkg_file_spec, cfg.building_raster_file_spec,
+        cfg.building_jsonl_file_spec, cfg.jsonl_list_file_spec,
+        cfg.index_file_spec, cfg.metadata_json_file_spec, cfg.output_path,
+        cfg.rec);
+  }
 };
 
 template <typename T>
@@ -267,7 +341,8 @@ namespace roofer::v {
 
 std::vector<std::string> find_filepaths(
     const std::list<std::string>& filepath_parts,
-    std::initializer_list<std::string> extensions) {
+    std::initializer_list<std::string> extensions,
+    bool no_throw_on_missing = false) {
   std::vector<std::string> files;
   for (const auto& filepath_part : filepath_parts) {
     if (fs::is_directory(filepath_part)) {
@@ -282,7 +357,7 @@ std::vector<std::string> find_filepaths(
     } else {
       if (fs::exists(filepath_part)) {
         files.push_back(filepath_part);
-      } else {
+      } else if (!no_throw_on_missing) {
         throw std::runtime_error("File not found: " + filepath_part + ".");
       }
     }
@@ -350,6 +425,15 @@ class ConfigParameterByReference : public ConfigParameter {
         return fmt::format("[{},{},{},{}]", _value->pmin[0], _value->pmin[1],
                            _value->pmax[0], _value->pmax[1]);
       }
+    } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
+      return fmt::format("[{},{}]", _value[0], _value[1]);
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      if (!_value.has_value()) {
+        return "[]";
+      } else {
+        return fmt::format("[{},{},{}]", (*_value)[0], (*_value)[1],
+                           (*_value)[2]);
+      }
     } else {
       return fmt::format("{}", _value);
     }
@@ -358,11 +442,11 @@ class ConfigParameterByReference : public ConfigParameter {
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
-    if (it == args.end()) {
-      throw std::runtime_error("Missing argument for parameter.");
-    } else if constexpr (std::is_same_v<T, bool>) {
+    if constexpr (std::is_same_v<T, bool>) {
       _value = !(_value);
       return it;
+    } else if (it == args.end()) {
+      throw std::runtime_error("Missing argument for parameter");
     } else if constexpr (std::is_same_v<T, int> ||
                          std::is_same_v<T, std::optional<int>>) {
       _value = std::stoi(*it);
@@ -410,6 +494,20 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       _value = arr;
       return it;
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      roofer::arr3d arr;
+      // Check if there are enough arguments
+      if (std::distance(it, args.end()) < 3) {
+        throw std::runtime_error("Not enough arguments, need 3.");
+      }
+      arr[0] = std::stod(*it);
+      it = args.erase(it);
+      arr[1] = std::stod(*it);
+      it = args.erase(it);
+      arr[2] = std::stod(*it);
+      it = args.erase(it);
+      _value = arr;
+      return it;
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for ConfigParameterByReference::set()");
@@ -419,8 +517,31 @@ class ConfigParameterByReference : public ConfigParameter {
   void set_from_toml(const toml::table& table,
                      const std::string& name) override {
     if constexpr (std::is_same_v<T, std::array<float, 2>>) {
-      throw std::runtime_error("Failed to read value for " + name +
-                               " from config file.");
+      if (const toml::array* a = table[name].as_array()) {
+        if (a->size() == 2 &&
+            (a->is_homogeneous(toml::node_type::floating_point) ||
+             a->is_homogeneous(toml::node_type::integer))) {
+          _value = roofer::arr2f{*a->get(0)->value<float>(),
+                                 *a->get(1)->value<float>()};
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
+    } else if constexpr (std::is_same_v<T,
+                                        std::optional<std::array<double, 3>>>) {
+      if (const toml::array* a = table[name].as_array()) {
+        if (a->size() == 3 &&
+            (a->is_homogeneous(toml::node_type::floating_point) ||
+             a->is_homogeneous(toml::node_type::integer))) {
+          _value = roofer::arr3d{*a->get(0)->value<double>(),
+                                 *a->get(1)->value<double>(),
+                                 *a->get(2)->value<double>()};
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>>) {
       if (const toml::array* a = table[name].as_array()) {
@@ -458,6 +579,8 @@ class ConfigParameterByReference : public ConfigParameter {
       return "<xmin ymin xmax ymax>";
     } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
       return "<x y>";
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+      return "<x y z>";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "
@@ -490,6 +613,7 @@ struct RooferConfigHandler {
   bool _print_version = false;
   bool _crop_only = false;
   bool _no_tiling = false;
+  bool _skip_pc_check = false;
   std::string _loglevel = "info";
   size_t _trace_interval = 10;
   std::string _config_path;
@@ -524,7 +648,8 @@ struct RooferConfigHandler {
         _cfg.cellsize, {roofer::v::HigherThan<float>(0)});
     add("lod11-fallback-area", "lod11 fallback area", _cfg.lod11_fallback_area,
         {roofer::v::HigherThan<int>(0)});
-    add("skip-insufficient", "skip buildings with insufficient pointcloud data",
+    add("reconstruct-insufficient",
+        "reconstruct buildings with insufficient pointcloud data",
         _cfg.clear_if_insufficient, {});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
@@ -558,6 +683,19 @@ struct RooferConfigHandler {
         "Output CityJSONSequence file for each building [default: one file per "
         "output tile]",
         _cfg.split_cjseq, {});
+    add("omit-metadata", "Omit metadata in CityJSON output", _cfg.omit_metadata,
+        {});
+    add("cj-scale", "Scaling applied to CityJSON output vertices",
+        _cfg.cj_scale, {});
+    add("cj-translate", "Translation applied to CityJSON output vertices",
+        _cfg.cj_translate, {});
+    add("lod11-fallback-plane-cnt",
+        "Fallback to LoD11 if number of detected planes exceeds this value.",
+        _cfg.lod11_fallback_planes, {roofer::v::HigherThan<int>(0)});
+    add("lod11-fallback-time",
+        "Fallback to LoD11 if time spent on detecting planes exceeds this "
+        "value. In milliseconds.",
+        _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",
@@ -597,10 +735,12 @@ struct RooferConfigHandler {
     if (_input_pointclouds.empty()) {
       throw std::runtime_error("No input pointclouds specified.");
     }
-    for (auto& ipc : _input_pointclouds) {
-      if (ipc.paths.empty()) {
-        throw std::runtime_error(
-            "No files found for one of the input pointclouds.");
+    if (!_skip_pc_check) {
+      for (auto& ipc : _input_pointclouds) {
+        if (ipc.paths.empty()) {
+          throw std::runtime_error(
+              "No files found for one of the input pointclouds.");
+        }
       }
     }
     // if (auto error_msg = roofer::v::PathExists(_cfg.source_footprints)) {
@@ -666,6 +806,7 @@ struct RooferConfigHandler {
                  "[default: number of cores]\n";
     // std::cout << "   --crop-only                  Only crop pointclouds. Skip
     // reconstruction.\n";
+    std::cout << "   --no-tiling                  Do not use tiling.\n";
     std::cout << "   --crop-output                Output cropped building "
                  "pointclouds.\n";
     std::cout << "   --crop-output-all            Output files for each "
@@ -675,6 +816,8 @@ struct RooferConfigHandler {
                  "pointclouds. Implies --crop-output.\n";
     std::cout << "   --index                      Output index.gpkg file with "
                  "crop analytics.\n";
+    std::cout << "   --skip-pc-check              Do not check if pointcloud "
+                 "files exist\n";
     std::cout << "\n";
     for (auto& [name, param] : _pmap) {
       std::cout << "   --" << std::setw(33) << std::left
@@ -762,6 +905,9 @@ struct RooferConfigHandler {
       } else if (arg == "--no-tiling") {
         _no_tiling = true;
         it = c.args.erase(it);
+      } else if (arg == "--skip-pc-check") {
+        _skip_pc_check = true;
+        it = c.args.erase(it);
       } else if (arg == "--crop-only") {
         _crop_only = true;
         _cfg.write_crop_outputs = true;
@@ -837,7 +983,8 @@ struct RooferConfigHandler {
 
       _input_pointclouds.clear();
       _input_pointclouds.emplace_back(InputPointcloud{
-          .paths = find_filepaths(c.args, {".las", ".LAS", ".laz", ".LAZ"})});
+          .paths = find_filepaths(c.args, {".las", ".LAS", ".laz", ".LAZ"},
+                                  _skip_pc_check)});
     } else {
       throw std::runtime_error(
           "Unable set all inputs and output. Need to provide at least <ouput "
@@ -902,7 +1049,8 @@ struct RooferConfigHandler {
                         "strings.");
                   }
                   pc.paths = find_filepaths(input_paths,
-                                            {".las", ".LAS", ".laz", ".LAZ"});
+                                            {".las", ".LAS", ".laz", ".LAZ"},
+                                            _skip_pc_check);
                 } else {
                   throw std::runtime_error(fmt::format(
                       "Unknown parameter in [[pointcloud]] table in "

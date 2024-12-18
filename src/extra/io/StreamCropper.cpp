@@ -38,6 +38,7 @@ namespace roofer::io {
     std::vector<PointCollection>& point_clouds;
     vec1f& ground_elevations;
     vec1i& acquisition_years;
+    vec1b& pointcloud_insufficient;
 
     // ground elevations
     std::vector<std::vector<arr3f>> ground_buffer_points;
@@ -60,6 +61,7 @@ namespace roofer::io {
                               std::vector<PointCollection>& point_clouds,
                               vec1f& ground_elevations,
                               vec1i& acquisition_years,
+                              vec1b& pointcloud_insufficient,
                               const Box& completearea_bb, float& cellsize,
                               float& buffer, int ground_class = 2,
                               int building_class = 6,
@@ -71,6 +73,7 @@ namespace roofer::io {
           ground_class(ground_class),
           building_class(building_class),
           acquisition_years(acquisition_years),
+          pointcloud_insufficient(pointcloud_insufficient),
           handle_overlap_points(handle_overlap_points) {
       // point_clouds_ground.resize(polygons.size());
       point_clouds.resize(polygons.size());
@@ -204,8 +207,7 @@ namespace roofer::io {
     void do_post_process(float& ground_percentile, float& max_density_delta,
                          float& coverage_threshold, bool& clear_if_insufficient,
                          vec1f& poly_areas, vec1i& poly_pt_counts_bld,
-                         vec1i& poly_pt_counts_grd,
-                         vec1s& poly_ptcoverage_class, vec1f& poly_densities) {
+                         vec1i& poly_pt_counts_grd, vec1f& poly_densities) {
       // compute poly properties
       struct PolyInfo {
         size_t pt_count_bld;
@@ -339,22 +341,15 @@ namespace roofer::io {
         diff_sum += std::pow(mean_density - (info.pt_count_bld / info.area), 2);
       }
       float std_dev_density = std::sqrt(diff_sum / poly_info.size());
-      logger.info("Mean point density = {}", mean_density);
-      logger.info("Standard deviation = {}", std_dev_density);
+      logger.debug("Mean point density = {}", mean_density);
+      logger.debug("Standard deviation = {}", std_dev_density);
 
       float cov_thres = mean_density - coverage_threshold * std_dev_density;
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
         auto& info = poly_info[poly_i];
 
-        if ((info.pt_count_bld / info.area) < cov_thres) {
-          if (clear_if_insufficient) {
-            auto& point_cloud = point_clouds.at(poly_i);
-            point_cloud.clear();
-          }
-          poly_ptcoverage_class.push_back(std::string("insufficient"));
-        } else {
-          poly_ptcoverage_class.push_back(std::string("sufficient"));
-        }
+        pointcloud_insufficient.push_back((info.pt_count_bld / info.area) <
+                                          cov_thres);
         // info.pt_count = point_cloud.size();
         poly_areas.push_back(float(info.area));
         poly_pt_counts_bld.push_back(int(info.pt_count_bld));
@@ -389,8 +384,8 @@ namespace roofer::io {
     if (gps_standard_time) {
       return false;
     } else {
-      logger.info(
-          "No good GPS time available, defaulting to file creation year");
+      // logger.info(
+      //     "No good GPS time available, defaulting to file creation year");
       // If it is GPS Week Time, probably could handle this better here, but I'm
       // simplifying. Also, AHN3 for instance uses week time, but there is no
       // way of knowing which week is date...
@@ -406,15 +401,15 @@ namespace roofer::io {
          i++) {
       if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
       {
-        logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
+        logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
       } else if (lasheader->vlrs[i].record_id ==
                  2112)  // OGC COORDINATE SYSTEM WKT
       {
-        logger.info("Found: OGC COORDINATE SYSTEM WKT");
+        logger.debug("Found: OGC COORDINATE SYSTEM WKT");
         wkt = (char*)(lasheader->vlrs[i].data);
       } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
       {
-        logger.info("Found and ignored: GeoKeyDirectoryTag");
+        logger.debug("Found and ignored: GeoKeyDirectoryTag");
       }
     }
 
@@ -423,12 +418,12 @@ namespace roofer::io {
       if (strcmp(lasheader->evlrs[i].user_id, "LASF_Projection") == 0) {
         if (lasheader->evlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
         {
-          logger.info("Found and ignored: OGC MATH TRANSFORM WKT");
+          logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
 
         } else if (lasheader->evlrs[i].record_id ==
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
-          logger.info("Found: OGC COORDINATE SYSTEM WKT");
+          logger.debug("Found: OGC COORDINATE SYSTEM WKT");
           wkt = (char*)(lasheader->evlrs[i].data);
         }
       }
@@ -444,27 +439,21 @@ namespace roofer::io {
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
                  vec1f& ground_elevations, vec1i& acquisition_years,
-                 const Box& polygon_extent, PointCloudCropperConfig cfg) {
+                 vec1b& pointcloud_insufficient, const Box& polygon_extent,
+                 PointCloudCropperConfig cfg) {
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
       vec1i poly_pt_counts_grd;
-      vec1s poly_ptcoverage_class;
       vec1f poly_densities;
 
       auto& logger = logger::Logger::get_logger();
 
-      PointsInPolygonsCollector pip_collector{polygons,
-                                              buf_polygons,
-                                              point_clouds,
-                                              ground_elevations,
-                                              acquisition_years,
-                                              polygon_extent,
-                                              cfg.cellsize,
-                                              cfg.buffer,
-                                              cfg.ground_class,
-                                              cfg.building_class,
-                                              cfg.handle_overlap_points};
+      PointsInPolygonsCollector pip_collector{
+          polygons,          buf_polygons,       point_clouds,
+          ground_elevations, acquisition_years,  pointcloud_insufficient,
+          polygon_extent,    cfg.cellsize,       cfg.buffer,
+          cfg.ground_class,  cfg.building_class, cfg.handle_overlap_points};
 
       for (auto lasfile : lasfiles) {
         LASreadOpener lasreadopener;
@@ -525,8 +514,8 @@ namespace roofer::io {
                                            lasreader->point.get_z()),
               lasreader->point.get_classification(), acqusition_year);
         }
-        logger.info("Point cloud acquisition year: {}",
-                    acqusition_year);  // just for debug
+        // logger.info("Point cloud acquisition year: {}",
+        // acqusition_year);  // just for debug
 
         lasreader->close();
         delete lasreader;
@@ -535,7 +524,7 @@ namespace roofer::io {
       pip_collector.do_post_process(
           cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
           cfg.clear_if_insufficient, poly_areas, poly_pt_counts_bld,
-          poly_pt_counts_grd, poly_ptcoverage_class, poly_densities);
+          poly_pt_counts_grd, poly_densities);
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,

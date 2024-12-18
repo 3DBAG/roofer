@@ -56,6 +56,7 @@ namespace fs = std::filesystem;
 
 // reconstruct
 #include <roofer/misc/PC2MeshDistCalculator.hpp>
+#include <roofer/misc/MeshPropertyCalculator.hpp>
 #include <roofer/reconstruction/AlphaShaper.hpp>
 #include <roofer/reconstruction/ArrangementBuilder.hpp>
 #include <roofer/reconstruction/ArrangementDissolver.hpp>
@@ -84,6 +85,8 @@ namespace fs = std::filesystem;
 
 #include "config.hpp"
 
+enum ExtrusionMode { STANDARD, LOD11_FALLBACK, SKIP };
+
 /**
  * @brief A single building object
  *
@@ -91,8 +94,10 @@ namespace fs = std::filesystem;
  * some attributes that are set during the reconstruction.
  */
 struct BuildingObject {
-  roofer::PointCollection pointcloud;
+  roofer::PointCollection pointcloud_ground;
+  roofer::PointCollection pointcloud_building;
   roofer::LinearRing footprint;
+  float z_offset = 0;
 
   std::unordered_map<int, roofer::Mesh> multisolids_lod12;
   std::unordered_map<int, roofer::Mesh> multisolids_lod13;
@@ -105,21 +110,29 @@ struct BuildingObject {
   // set in crop
   fs::path jsonl_path;
   float h_ground;
+  float h_roof_70p_rough;
   bool force_lod11;  // force_lod11 / fallback_lod11
+  bool pointcloud_insufficient;
+  bool is_glass_roof;
+  ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction
-  std::string roof_type;
-  float roof_elevation_50p;
-  float roof_elevation_70p;
-  float roof_elevation_min;
-  float roof_elevation_max;
-  int roof_n_planes;
-  float rmse_lod12;
-  float rmse_lod13;
-  float rmse_lod22;
-  std::string val3dity_lod12;
-  std::string val3dity_lod13;
-  std::string val3dity_lod22;
+  // optionals may not get assigned a valid value
+  std::string roof_type = "unknown";
+  std::optional<float> roof_elevation_50p;
+  std::optional<float> roof_elevation_70p;
+  std::optional<float> roof_elevation_min;
+  std::optional<float> roof_elevation_max;
+  std::optional<int> roof_n_planes;
+  std::optional<float> rmse_lod12;
+  std::optional<float> rmse_lod13;
+  std::optional<float> rmse_lod22;
+  std::optional<float> volume_lod12;
+  std::optional<float> volume_lod13;
+  std::optional<float> volume_lod22;
+  std::optional<std::string> val3dity_lod12;
+  std::optional<std::string> val3dity_lod13;
+  std::optional<std::string> val3dity_lod22;
   // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 
@@ -138,6 +151,8 @@ enum Progress : std::uint8_t {
   SERIALIZATION_SUCCEEDED,
   SERIALIZATION_FAILED,
 };
+
+auto format_as(Progress p) { return fmt::underlying(p); }
 
 /**
  * @brief Used for passing a BuildingObject reference to the parallel
@@ -182,6 +197,55 @@ struct BuildingTile {
   std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
   // extent
   roofer::TBox<double> extent;
+
+  std::vector<std::pair<Progress, size_t>> count_progresses() const;
+};
+
+/**
+ * @brief Count of the current `buildings_progresses` items by type.
+ * @return A count of each progress type as a vector of pairs.
+ */
+std::vector<std::pair<Progress, size_t>> BuildingTile::count_progresses()
+    const {
+  auto counts = std::vector<std::pair<Progress, size_t>>();
+  for (std::uint8_t p = CROP_NOT_STARTED; p != SERIALIZATION_SUCCEEDED + 1;
+       p++) {
+    counts.emplace_back(static_cast<Progress>(p), 0);
+  }
+  for (auto& bp : buildings_progresses) {
+    counts.at(bp).second++;
+  }
+  return counts;
+}
+
+template <>
+struct fmt::formatter<BuildingTile> {
+  static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(BuildingTile const& tile, Context& ctx) const {
+    auto nonzero = [](std::pair<Progress, size_t> c) { return c.second > 0; };
+    auto pc_ = tile.count_progresses();
+    std::vector<std::pair<Progress, size_t>> progress_counts{};
+    std::copy_if(pc_.begin(), pc_.end(), std::back_inserter(progress_counts),
+                 nonzero);
+    // This doesn't work on GCC11 on gilfoyle, because it doesn't recognize the
+    // pipe operator '|', but it would be more elegant than the current
+    // implementation. auto progress_counts =
+    //     tile.count_progresses() |
+    //     std::views::filter(nonzero);
+    bool data_offset_has_value = false;
+    if (tile.proj_helper) {
+      data_offset_has_value = tile.proj_helper->data_offset.has_value();
+    }
+    return fmt::format_to(
+        ctx.out(),
+        "BuildingTile(id={}, buildings.size={}, attributes.has_attributes={}, "
+        "buildings_progresses={}, buildings_cnt={}, "
+        "proj_helper.data_offset.has_value={}, extent='{}')",
+        tile.id, tile.buildings.size(), tile.attributes.has_attributes(),
+        progress_counts, tile.buildings_cnt, data_offset_has_value,
+        tile.extent.wkt());
+  }
 };
 
 #include "crop_tile.hpp"
@@ -522,6 +586,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
+  logger.debug("{}", roofer_cfg);
+
   for (auto& ipc : input_pointclouds) {
     get_las_extents(ipc, project_srs.get());
     ipc.rtree = roofer::misc::createRTreeGEOS();
@@ -557,8 +623,10 @@ int main(int argc, const char* argv[]) {
       roi = VectorReader->layer_extent;
     }
 
-    logger.info("Region of interest: {} {}, {} {}", roi.pmin[0], roi.pmin[1],
-                roi.pmax[0], roi.pmax[1]);
+    logger.info("Region of interest: {:.3f} {:.3f}, {:.3f} {:.3f}", roi.pmin[0],
+                roi.pmin[1], roi.pmax[0], roi.pmax[1]);
+    logger.info("Number of source footprints: {}",
+                VectorReader->get_feature_count());
 
     // actual tiling
     if (roofer_cfg_handler._no_tiling) {
@@ -571,10 +639,18 @@ int main(int argc, const char* argv[]) {
           create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
 
       for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
-        auto& tile = tile_extents[tid];
+        // intersect with roi, to avoid creating buildings outside of the roi
         auto& building_tile = initial_tiles.emplace_back();
         building_tile.id = tid;
-        building_tile.extent = tile;
+        auto tile = roi.intersect(tile_extents[tid]);
+        if (tile.has_value()) {
+          building_tile.extent = *tile;
+        } else {
+          logger.warning(
+              "Tile is outside of the region of interest: \n{}, ROI: \n{}",
+              tile_extents[tid].wkt(), roi.wkt());
+          return EXIT_FAILURE;
+        }
         building_tile.proj_helper = roofer::misc::createProjHelper();
       }
     }
@@ -677,11 +753,7 @@ int main(int argc, const char* argv[]) {
       auto& building_tile = initial_tiles.front();
       try {
         // crop each tile
-        logger.debug("[cropper] Cropping tile {}", building_tile.id);
-        logger.debug("[cropper] Tile extent: {} {}, {} {}",
-                     building_tile.extent.pmin[0], building_tile.extent.pmin[1],
-                     building_tile.extent.pmax[0],
-                     building_tile.extent.pmax[1]);
+        logger.debug("[cropper] Cropping tile {}", building_tile);
         // crop_tile returns true if at least one building was cropped
         if (!crop_tile(building_tile.extent,  // tile extent
                        input_pointclouds,     // input pointclouds
@@ -701,12 +773,12 @@ int main(int argc, const char* argv[]) {
             cropped_tiles.push_back(std::move(building_tile));
           }
           logger.debug(
-              "[cropper] Finished cropping tile {}, notifying reconstructor",
-              building_tile.id);
+              "[cropper] Finished cropping tile, notifying reconstructor {}",
+              building_tile);
           cropped_pending.notify_one();
         }
       } catch (...) {
-        logger.error("[cropper] Failed to crop tile {}", building_tile.id);
+        logger.error("[cropper] Failed to crop tile {}", building_tile);
       }
       initial_tiles.pop_front();
     }
@@ -743,12 +815,15 @@ int main(int argc, const char* argv[]) {
           }
           std::ranges::fill(building_tile.buildings_progresses,
                             RECONSTRUCTION_IN_PROGRESS);
+          logger.debug(
+              "[reconstructor] Submitted all buildings for reconstruction for "
+              "tile {}",
+              building_tile);
+          // Here the building_tile.buildings is empty, because we moved off all
+          // BuildingObject-s, so we might as well clear it.
+          building_tile.buildings.clear();
           reconstructed_tiles.push_back(std::move(building_tile));
           cropped_tiles.pop_front();
-          logger.debug(
-              "[reconstructor] Submitted all buildings of tile {} for "
-              "reconstruction",
-              building_tile.id);
           // This wakes up the serializer thread as soon as we submitted one
           // tile for reconstruction, but that doesn't mean that any building of
           // the tile has finished reconstruction. But at least the serializer
@@ -780,11 +855,10 @@ int main(int argc, const char* argv[]) {
             try {
               auto& logger = roofer::logger::Logger::get_logger();
               auto start = std::chrono::high_resolution_clock::now();
-              logger.debug("[reconstructor] starting reconstruction for: {}",
+              logger.debug("[reconstructor] start: {}",
                            building_object_ref.building.jsonl_path.string());
-              reconstruct_building(building_object_ref.building,
-                                   &roofer_cfg.rec);
-              logger.debug("[reconstructor] finished reconstruction for: {}",
+              reconstruct_building(building_object_ref.building, &roofer_cfg);
+              logger.debug("[reconstructor] finish: {}",
                            building_object_ref.building.jsonl_path.string());
               // TODO: These two seem to be redundant
               building_object_ref.progress = RECONSTRUCTION_SUCCEEDED;
@@ -833,9 +907,11 @@ int main(int argc, const char* argv[]) {
              !reconstructed_buildings.empty()) {
         logger.debug("[sorter] before lock reconstructed_buildings_mutex");
         std::unique_lock lock{reconstructed_buildings_mutex};
-        reconstructed_pending.wait(lock, [&reconstructed_buildings] {
-          return !reconstructed_buildings.empty();
-        });
+        reconstructed_pending.wait(
+            lock, [&reconstructed_buildings, &reconstruction_running] {
+              return !reconstructed_buildings.empty() ||
+                     !reconstruction_running.load();
+            });
         auto pending_sorted{std::move(reconstructed_buildings)};
         reconstructed_buildings.clear();
         reconstructed_buildings.shrink_to_fit();
@@ -851,25 +927,32 @@ int main(int argc, const char* argv[]) {
           //  reconstructed_tiles remains relatively low. But we need to do the
           //  loop on each building...
           for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
-            auto& tile = reconstructed_tiles[i];
-            // We expect that the tile.buildings container hasn't been cleared,
-            // so that we can insert the reconstructed building at the index.
-            assert(tile.buildings.size() == tile.buildings_cnt);
-            if (tile.id == bref.tile_id) {
-              tile.buildings[bref.building_idx] = std::move(bref.building);
-              tile.buildings_progresses[bref.building_idx] = bref.progress;
+            auto& building_tile = reconstructed_tiles[i];
+            // The reconstructor moved off all items from the
+            // building_tile.buildings container, which can mess up its size. We
+            // need to make sure that the container is the right size, so that
+            // we can insert the reconstructed building at the index.
+            if (building_tile.buildings.size() != building_tile.buildings_cnt) {
+              building_tile.buildings.resize(building_tile.buildings_cnt);
+            }
+            if (building_tile.id == bref.tile_id) {
+              building_tile.buildings.at(bref.building_idx) =
+                  std::move(bref.building);
+              building_tile.buildings_progresses.at(bref.building_idx) =
+                  bref.progress;
             }
 
             auto tile_finished = std::all_of(
-                tile.buildings_progresses.begin(),
-                tile.buildings_progresses.end(),
+                building_tile.buildings_progresses.begin(),
+                building_tile.buildings_progresses.end(),
                 [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
             if (tile_finished) {
               finished_idx.first = true;
               finished_idx.second = i;
+              logger.debug("[sorter] tile_finished=true: {}", building_tile);
               {
                 std::scoped_lock lock_sorted{sorted_tiles_mutex};
-                sorted_tiles.push_back(std::move(tile));
+                sorted_tiles.push_back(std::move(building_tile));
               }
               sorted_pending.notify_one();
             }
@@ -892,8 +975,9 @@ int main(int argc, const char* argv[]) {
       while (sorting_running.load() || !sorted_tiles.empty()) {
         logger.debug("[serializer] before lock sorted_tiles_mutex");
         std::unique_lock lock{sorted_tiles_mutex};
-        sorted_pending.wait(lock,
-                            [&sorted_tiles] { return !sorted_tiles.empty(); });
+        sorted_pending.wait(lock, [&sorted_tiles, &sorting_running] {
+          return !sorted_tiles.empty() || !sorting_running.load();
+        });
         auto pending_serialized{std::move(sorted_tiles)};
         sorted_tiles.clear();
         sorted_tiles.shrink_to_fit();
@@ -902,17 +986,16 @@ int main(int argc, const char* argv[]) {
 
         while (!pending_serialized.empty()) {
           auto& building_tile = pending_serialized.front();
+          logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
-          auto& attr_status = building_tile.attributes.insert_vec<std::string>(
-              roofer_cfg.n["status"]);
+          auto& attr_success = building_tile.attributes.insert_vec<bool>(
+              roofer_cfg.n["success"]);
           for (auto& progress : building_tile.buildings_progresses) {
-            if (progress == RECONSTRUCTION_FAILED) {
-              attr_status.push_back("reconstruction_failed");
-            } else if (progress == RECONSTRUCTION_SUCCEEDED) {
-              attr_status.push_back("reconstruction_succeeded");
+            if (progress == RECONSTRUCTION_SUCCEEDED) {
+              attr_success.push_back(true);
             } else {
-              attr_status.push_back("unknown");
+              attr_success.push_back(false);
             }
           }
           // create time attribute
@@ -924,8 +1007,15 @@ int main(int argc, const char* argv[]) {
           // output reconstructed buildings
           auto CityJsonWriter =
               roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+          CityJsonWriter->written_features_count = serialized_buildings_cnt;
           CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
-          if (building_tile.proj_helper->data_offset.has_value()) {
+          // user provided offset
+          if (roofer_cfg.cj_translate.has_value()) {
+            CityJsonWriter->translate_x_ = (*roofer_cfg.cj_translate)[0];
+            CityJsonWriter->translate_y_ = (*roofer_cfg.cj_translate)[1];
+            CityJsonWriter->translate_z_ = (*roofer_cfg.cj_translate)[2];
+            // auto offset from data
+          } else if (building_tile.proj_helper->data_offset.has_value()) {
             CityJsonWriter->translate_x_ =
                 (*building_tile.proj_helper->data_offset)[0];
             CityJsonWriter->translate_y_ =
@@ -937,9 +1027,15 @@ int main(int argc, const char* argv[]) {
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          CityJsonWriter->scale_x_ = 0.01;
-          CityJsonWriter->scale_y_ = 0.01;
-          CityJsonWriter->scale_z_ = 0.01;
+          if (roofer_cfg.cj_scale.has_value()) {
+            CityJsonWriter->scale_x_ = (*roofer_cfg.cj_scale)[0];
+            CityJsonWriter->scale_y_ = (*roofer_cfg.cj_scale)[1];
+            CityJsonWriter->scale_z_ = (*roofer_cfg.cj_scale)[2];
+          } else {
+            CityJsonWriter->scale_x_ = 0.001;
+            CityJsonWriter->scale_y_ = 0.001;
+            CityJsonWriter->scale_z_ = 0.001;
+          }
 
           std::ofstream ofs;
           if (!roofer_cfg.split_cjseq) {
@@ -948,19 +1044,23 @@ int main(int argc, const char* argv[]) {
                 fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
-            CityJsonWriter->write_metadata(
-                ofs, project_srs.get(), building_tile.extent,
-                {.identifier = std::to_string(building_tile.id)});
+            if (!roofer_cfg.omit_metadata)
+              CityJsonWriter->write_metadata(
+                  ofs, project_srs.get(), building_tile.extent,
+                  {.identifier = std::to_string(building_tile.id)});
           } else {
-            std::string metadata_json_file =
-                fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
-                            fmt::arg("path", roofer_cfg.output_path));
-            fs::create_directories(fs::path(metadata_json_file).parent_path());
-            ofs.open(metadata_json_file);
-            CityJsonWriter->write_metadata(
-                ofs, project_srs.get(), building_tile.extent,
-                {.identifier = std::to_string(building_tile.id)});
-            ofs.close();
+            if (!roofer_cfg.omit_metadata) {
+              std::string metadata_json_file =
+                  fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
+                              fmt::arg("path", roofer_cfg.output_path));
+              fs::create_directories(
+                  fs::path(metadata_json_file).parent_path());
+              ofs.open(metadata_json_file);
+              CityJsonWriter->write_metadata(
+                  ofs, project_srs.get(), building_tile.extent,
+                  {.identifier = std::to_string(building_tile.id)});
+              ofs.close();
+            }
           }
 
           for (auto& building : building_tile.buildings) {
@@ -973,43 +1073,58 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["is_glass_roof"],
+                            building.is_glass_roof);
+              attrow.insert(roofer_cfg.n["pointcloud_unusable"],
+                            building.pointcloud_insufficient);
               attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
-              attrow.insert(roofer_cfg.n["h_roof_50p"],
-                            building.roof_elevation_50p);
-              attrow.insert(roofer_cfg.n["h_roof_70p"],
-                            building.roof_elevation_70p);
-              attrow.insert(roofer_cfg.n["h_roof_min"],
-                            building.roof_elevation_min);
-              attrow.insert(roofer_cfg.n["h_roof_max"],
-                            building.roof_elevation_max);
-              attrow.insert(roofer_cfg.n["roof_n_planes"],
-                            building.roof_n_planes);
+              attrow.insert_optional(roofer_cfg.n["h_roof_50p"],
+                                     building.roof_elevation_50p);
+              attrow.insert_optional(roofer_cfg.n["h_roof_70p"],
+                                     building.roof_elevation_70p);
+              attrow.insert_optional(roofer_cfg.n["h_roof_min"],
+                                     building.roof_elevation_min);
+              attrow.insert_optional(roofer_cfg.n["h_roof_max"],
+                                     building.roof_elevation_max);
+              attrow.insert_optional(roofer_cfg.n["roof_n_planes"],
+                                     building.roof_n_planes);
+              attrow.insert(roofer_cfg.n["extrusion_mode"],
+                            building.extrusion_mode);
 
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
                 ms12 = &building.multisolids_lod12;
-                attrow.insert(roofer_cfg.n["rmse_lod12"], building.rmse_lod12);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod12"],
+                                       building.rmse_lod12);
+                attrow.insert_optional(roofer_cfg.n["volume_lod12"],
+                                       building.volume_lod12);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod12"],
-                              building.val3dity_lod12);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod12"],
+                                       building.val3dity_lod12);
 #endif
               }
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
                 ms13 = &building.multisolids_lod13;
-                attrow.insert(roofer_cfg.n["rmse_lod13"], building.rmse_lod13);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod13"],
+                                       building.rmse_lod13);
+                attrow.insert_optional(roofer_cfg.n["volume_lod13"],
+                                       building.volume_lod13);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod13"],
-                              building.val3dity_lod13);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod13"],
+                                       building.val3dity_lod13);
 #endif
               }
               if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
                 ms22 = &building.multisolids_lod22;
-                attrow.insert(roofer_cfg.n["rmse_lod22"], building.rmse_lod22);
+                attrow.insert_optional(roofer_cfg.n["rmse_lod22"],
+                                       building.rmse_lod22);
+                attrow.insert_optional(roofer_cfg.n["volume_lod22"],
+                                       building.volume_lod22);
 #if RF_USE_VAL3DITY
-                attrow.insert(roofer_cfg.n["val3dity_lod22"],
-                              building.val3dity_lod22);
+                attrow.insert_optional(roofer_cfg.n["val3dity_lod22"],
+                                       building.val3dity_lod22);
 #endif
               }
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
@@ -1055,4 +1170,6 @@ int main(int argc, const char* argv[]) {
         "not empty, it still contains {} items",
         reconstructed_buildings.size());
   }
+
+  // logger.info("Finished roofer");
 }

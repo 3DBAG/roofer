@@ -34,7 +34,7 @@ namespace roofer::reconstruction {
     int metrics_plane_min_points = 20;
     float metrics_plane_epsilon = 0.2;
     float metrics_plane_normal_threshold = 0.75;
-    float metrics_is_horizontal_threshold = 0.97;
+    float metrics_is_horizontal_threshold = 0.995;
     float metrics_probability_ransac = 0.05;
     float metrics_cluster_epsilon_ransac = 0.3;
     float metrics_is_wall_threshold = 0.3;
@@ -49,6 +49,11 @@ namespace roofer::reconstruction {
     bool regularize_orthogonality_ = false;
     bool regularize_coplanarity_ = false;
     bool regularize_axis_symmetry_ = false;
+
+    // limits
+    bool with_limits = false;
+    int limit_n_regions = 100;
+    int limit_n_milliseconds = 10000;
   };
 
   struct PlaneDetectorInterface {

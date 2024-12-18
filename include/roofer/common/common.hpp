@@ -139,6 +139,13 @@ namespace roofer {
     void insert(const std::string& name, T value) {
       _attributes[name] = value;
     };
+    template <typename T>
+    void insert_optional(const std::string& name, std::optional<T> opt) {
+      if (opt.has_value())
+        _attributes[name] = opt.value();
+      else
+        _attributes[name] = std::monostate();
+    };
 
     void set_null(const std::string& name);
     bool is_null(const std::string& name) const;
@@ -281,18 +288,12 @@ namespace roofer {
     float* get_data_ptr();
   };
 
-  // struct AttributeVec {
-  //   AttributeVec(std::type_index ttype) : value_type(ttype) {};
-  //   std::vector<std::any> values;
-  //   std::type_index value_type;
-  // };
-
   // class Mesh : public Geometry {
   // use indexed vertices?
   class Mesh {
     std::vector<LinearRing> polygons_;
     std::vector<int> labels_;
-    // std::unordered_map<std::string, AttributeVec>  attributes_;
+    std::vector<AttributeMapRow> attributes_;
 
    public:
     // Mesh() {};
@@ -307,9 +308,8 @@ namespace roofer {
     const std::vector<LinearRing>& get_polygons() const;
     std::vector<int>& get_labels();
     const std::vector<int>& get_labels() const;
-    // std::unordered_map<std::string, AttributeVec>&  get_attributes();
-    // const std::unordered_map<std::string, AttributeVec>&  get_attributes()
-    // const;
+    std::vector<AttributeMapRow>& get_attributes();
+    const std::vector<AttributeMapRow>& get_attributes() const;
   };
 
   struct Image {

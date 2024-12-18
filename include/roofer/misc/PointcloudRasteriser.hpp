@@ -31,7 +31,8 @@ namespace roofer::misc {
   void RasterisePointcloud(PointCollection& pointcloud, LinearRing& footprint,
                            ImageMap& image_bundle,
                            // Raster& heightfield,
-                           float cellsize = 0.5);
+                           float cellsize = 0.5, int ground_class = 2,
+                           int building_class = 6);
 
   void gridthinPointcloud(PointCollection& pointcloud, const Image& cnt_image,
                           float max_density = 20);
@@ -63,6 +64,8 @@ namespace roofer::misc {
                         float threshold_glass_roof = 0.75);
 
   float computePointDensity(const ImageMap& image_bundle);
+
+  float computeRoofElevation(const ImageMap& image_bundle, float percentile);
 
   // Determine if the two point clouds describe the same object.
   bool isMutated(const ImageMap& a, const ImageMap& b,

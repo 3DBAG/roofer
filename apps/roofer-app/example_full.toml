@@ -15,7 +15,7 @@ srs = "EPSG:7415"
 # Region of interest. Data outside of this region will be ignored. Format: [x_min, y_min, x_max, y_max].
 box = [0,0,1000,1000]
 # Enfore this point density ceiling on each building pointcloud.
-ceil_point_density = 20
+ceil-point-density = 20
 # Tilesize used for output tiles. Format: [size_x, size_y].
 tilesize = [1000, 1000]
 # Cellsize used for quick pointcloud analysis
@@ -38,6 +38,12 @@ lod = 22
 ## Output options
 # Output CityJSONSequence file for each building [default: one file per output tile]
 split-cjseq = false
+# Omit metadata from output CityJSON
+omit-metadata = true
+# Manually override CityJSON transform translation
+cj-translate = [171800.0,472700.0,0.0]
+# Manually override CityJSON transform scale
+cj-scale = [0.01,0.01,0.01]
 
 output-directory = 'output-directory'
 
@@ -65,11 +71,14 @@ pc_source = "rf_pc_source"
 pc_year = "rf_pc_year"
 force_lod11 = "rf_force_lod11"
 roof_type = "rf_roof_type"
-roof_elevation_50p = "rf_roof_elevation_50p"
-roof_elevation_70p = "rf_roof_elevation_70p"
-roof_elevation_min = "rf_roof_elevation_min"
-roof_elevation_max = "rf_roof_elevation_max"
+h_roof_50p = "rf_roof_elevation_50p"
+h_roof_70p = "rf_roof_elevation_70p"
+h_roof_min = "rf_roof_elevation_min"
+h_roof_max = "rf_roof_elevation_max"
+roof_n_planes = "rf_roof_n_planes"
 rmse_lod12 = "rf_rmse_lod12"
 rmse_lod13 = "rf_rmse_lod13"
 rmse_lod22 = "rf_rmse_lod22"
 h_ground = "rf_h_ground"
+slope = "rf_slope"
+azimuth = "rf_azimuth"

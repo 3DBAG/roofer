@@ -33,7 +33,7 @@ namespace roofer {
      * A number between `0.0` and `1.0`. Higher values lead to
      * more detailed building models, lower values to simpler models.
      */
-    float complexity_factor = 0.7;
+    float complexity_factor = 0.888;
     /**
      * @brief Set to true to activate the procedure that
      * clips parts from the input footprint wherever patches of ground points
@@ -113,7 +113,7 @@ namespace roofer {
      * each other than this threshold are merged. Higher values yield more
      * regularisation, lower values preserve more finer details. Unit: meters.
      */
-    float thres_reg_line_dist = 0.500000;
+    float thres_reg_line_dist = 0.800000;
 
     /**
      * @brief Extension of regularised lines prior to optimisation. Used
@@ -121,7 +121,7 @@ namespace roofer {
      * values when the input pointcloud is less dense. However, setting this too
      * high can lead to unrealistic reconstruction results. Unit: meters.
      */
-    float thres_reg_line_ext = 1.000000;
+    float thres_reg_line_ext = 3.000000;
     // lod1_extrude_to_max=false
 
     bool is_valid() {

@@ -268,9 +268,14 @@ namespace roofer {
           regiongrower::RegionGrower<planedect::PlaneDS, planedect::PlaneRegion>
               R;
           R.min_segment_count = cfg.metrics_plane_min_points;
-          if (points.size() > cfg.metrics_plane_min_points)
-            R.grow_regions(PDS, DNTester);
-
+          if (points.size() > cfg.metrics_plane_min_points) {
+            if (cfg.with_limits) {
+              R.grow_regions_with_limits(PDS, DNTester, cfg.limit_n_regions,
+                                         cfg.limit_n_milliseconds);
+            } else {
+              R.grow_regions(PDS, DNTester);
+            }
+          }
           total_plane_cnt = R.regions.size();
           // classify horizontal/vertical planes using plane normals
           unsigned shape_id = 0;

@@ -21,6 +21,11 @@
 
 #include <array>
 #include <initializer_list>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <optional>
 
 namespace roofer {
 
@@ -30,6 +35,11 @@ namespace roofer {
     bool just_cleared;
 
     TBox() { clear(); };
+
+    TBox(const TBox& otherBox)
+        : pmin(otherBox.min()),
+          pmax(otherBox.max()),
+          just_cleared(otherBox.just_cleared){};
 
     TBox(std::initializer_list<T> initList) {
       clear();
@@ -85,11 +95,31 @@ namespace roofer {
     void add(std::vector<std::array<T, 3>>& vec) {
       for (auto& p : vec) add(p);
     };
+    std::optional<TBox> intersect(const TBox& otherBox) const {
+      TBox result;
+      result.pmin[0] = std::max(pmin[0], otherBox.pmin[0]);
+      result.pmin[1] = std::max(pmin[1], otherBox.pmin[1]);
+      result.pmin[2] = std::max(pmin[2], otherBox.pmin[2]);
+      result.pmax[0] = std::min(pmax[0], otherBox.pmax[0]);
+      result.pmax[1] = std::min(pmax[1], otherBox.pmax[1]);
+      result.pmax[2] = std::min(pmax[2], otherBox.pmax[2]);
+      // FIXME: this can return a box that is flat in one or more dimensions
+      if (result.pmin[0] > result.pmax[0] || result.pmin[1] > result.pmax[1] ||
+          result.pmin[2] > result.pmax[2]) {
+        return std::nullopt;
+      }
+      return result;
+    };
     bool intersects(const TBox& otherBox) const {
       bool intersect_x =
           (pmin[0] < otherBox.pmax[0]) && (pmax[0] > otherBox.pmin[0]);
       bool intersect_y =
           (pmin[1] < otherBox.pmax[1]) && (pmax[1] > otherBox.pmin[1]);
+      return intersect_x && intersect_y;
+    };
+    bool intersects(const std::array<T, 3>& qpoint) const {
+      bool intersect_x = (pmin[0] <= qpoint[0]) && (pmax[0] > qpoint[0]);
+      bool intersect_y = (pmin[1] <= qpoint[1]) && (pmax[1] > qpoint[1]);
       return intersect_x && intersect_y;
     };
     void clear() {
@@ -102,6 +132,19 @@ namespace roofer {
       return {(pmax[0] + pmin[0]) / 2, (pmax[1] + pmin[1]) / 2,
               (pmax[2] + pmin[2]) / 2};
     };
+    std::string wkt() const {
+      if (isEmpty()) return "POLYGON EMPTY";
+      std::ostringstream oss;
+      oss << std::fixed << std::setprecision(2);
+      oss << "POLYGON((";
+      oss << pmin[0] << " " << pmin[1] << ", ";
+      oss << pmax[0] << " " << pmin[1] << ", ";
+      oss << pmax[0] << " " << pmax[1] << ", ";
+      oss << pmin[0] << " " << pmax[1] << ", ";
+      oss << pmin[0] << " " << pmin[1];
+      oss << "))";
+      return oss.str();
+    }
   };
 
   typedef TBox<float> Box;
