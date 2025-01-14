@@ -109,9 +109,9 @@ struct BuildingObject {
 
   // set in crop
   fs::path jsonl_path;
-  float h_ground;
-  float h_roof_70p_rough;
-  bool force_lod11;  // force_lod11 / fallback_lod11
+  float h_ground;          // without offset
+  float h_roof_70p_rough;  // with offset!
+  bool force_lod11;        // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
   bool is_glass_roof;
   ExtrusionMode extrusion_mode = STANDARD;
@@ -123,6 +123,7 @@ struct BuildingObject {
   std::optional<float> roof_elevation_70p;
   std::optional<float> roof_elevation_min;
   std::optional<float> roof_elevation_max;
+  std::optional<float> roof_elevation_ridge;
   std::optional<int> roof_n_planes;
   std::optional<float> rmse_lod12;
   std::optional<float> rmse_lod13;
@@ -130,6 +131,7 @@ struct BuildingObject {
   std::optional<float> volume_lod12;
   std::optional<float> volume_lod13;
   std::optional<float> volume_lod22;
+  std::optional<int> roof_n_ridgelines;
   std::optional<std::string> val3dity_lod12;
   std::optional<std::string> val3dity_lod13;
   std::optional<std::string> val3dity_lod22;
@@ -1086,8 +1088,12 @@ int main(int argc, const char* argv[]) {
                                      building.roof_elevation_min);
               attrow.insert_optional(roofer_cfg.n["h_roof_max"],
                                      building.roof_elevation_max);
+              attrow.insert_optional(roofer_cfg.n["h_roof_ridge"],
+                                     building.roof_elevation_ridge);
               attrow.insert_optional(roofer_cfg.n["roof_n_planes"],
                                      building.roof_n_planes);
+              attrow.insert_optional(roofer_cfg.n["roof_n_ridgelines"],
+                                     building.roof_n_ridgelines);
               attrow.insert(roofer_cfg.n["extrusion_mode"],
                             building.extrusion_mode);
 
