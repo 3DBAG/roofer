@@ -273,6 +273,7 @@ namespace roofer {
     size_t vertex_count() const;
     virtual void compute_box();
     float* get_data_ptr();
+    float get_z_percentile(float percentile) const;
   };
 
   class LineStringCollection : public GeometryCollection<vec3f> {

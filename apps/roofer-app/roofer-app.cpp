@@ -109,9 +109,10 @@ struct BuildingObject {
 
   // set in crop
   fs::path jsonl_path;
-  float h_ground;          // without offset
-  float h_roof_70p_rough;  // with offset!
-  bool force_lod11;        // force_lod11 / fallback_lod11
+  float h_ground;       // without offset
+  float h_pc_98p;       // without offset
+  float h_pc_roof_70p;  // with offset!
+  bool force_lod11;     // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
   bool is_glass_roof;
   ExtrusionMode extrusion_mode = STANDARD;
@@ -1075,6 +1076,7 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["h_pc_98p"], building.h_pc_98p);
               attrow.insert(roofer_cfg.n["is_glass_roof"],
                             building.is_glass_roof);
               attrow.insert(roofer_cfg.n["pointcloud_unusable"],

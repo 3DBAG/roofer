@@ -173,7 +173,7 @@ void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
   SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                 building.h_roof_70p_rough);
+                                 building.h_pc_roof_70p);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
@@ -196,7 +196,7 @@ void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
 #endif
 
   building.extrusion_mode = LOD11_FALLBACK;
-  building.roof_elevation_70p = building.h_roof_70p_rough + building.z_offset;
+  building.roof_elevation_70p = building.h_pc_roof_70p + building.z_offset;
 }
 
 void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
@@ -341,7 +341,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     float hr_z;
     building.roof_n_ridgelines =
         PlaneIntersector->find_highest_ridgeline(hr_z, hr_i);
-    if (building.roof_n_ridgelines) {
+    if (building.roof_n_ridgelines > 0) {
       building.roof_elevation_ridge = hr_z;
     }
     // logger.debug("Completed PlaneIntersector");

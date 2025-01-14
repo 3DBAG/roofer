@@ -127,6 +127,17 @@ namespace roofer {
   }
   float* PointCollection::get_data_ptr() { return (*this)[0].data(); }
 
+  float PointCollection::get_z_percentile(float percentile) const {
+    std::vector<float> z_values;
+    z_values.reserve(size());
+    for (auto& p : *this) {
+      z_values.push_back(p[2]);
+    }
+    std::sort(z_values.begin(), z_values.end());
+    return z_values[std::min(size_t(std::round(percentile * size())),
+                             size() - 1)];
+  }
+
   AttributeVecMapDS& AttributeVecMap::get_attributes() { return attribs_; }
   const AttributeVecMapDS& AttributeVecMap::get_attributes() const {
     return attribs_;

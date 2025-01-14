@@ -143,6 +143,7 @@ struct RooferConfig {
       {"h_roof_min", "rf_h_roof_min"},
       {"h_roof_max", "rf_h_roof_max"},
       {"h_roof_ridge", "rf_h_roof_ridge"},
+      {"h_pc_98p", "rf_h_pc_98p"},
       {"roof_n_planes", "rf_roof_planes"},
       {"roof_n_ridgelines", "rf_ridgelines"},
       {"rmse_lod12", "rf_rmse_lod12"},
