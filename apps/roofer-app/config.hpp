@@ -76,6 +76,7 @@ struct RooferConfig {
   std::string id_attribute;           // -> attr_building_id
   std::string force_lod11_attribute;  // -> attr_force_blockmodel
   std::string yoc_attribute;          // -> attr_year_of_construction
+  std::string h_terrain_attribute;    // -> attr_h_terrain
   std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
@@ -635,6 +636,10 @@ struct RooferConfigHandler {
         _cfg.force_lod11_attribute, {});
     add("yoc-attribute", "Attribute containing building year of construction",
         _cfg.yoc_attribute, {});
+    add("h-terrain-attribute",
+        "Attribute containing terrain height, will override terrain height "
+        "derived from pointcloud",
+        _cfg.h_terrain_attribute, {});
     add("polygon-source-layer",
         "Load this layer from <polygon-source> [default: first layer]",
         _cfg.layer_name, {});

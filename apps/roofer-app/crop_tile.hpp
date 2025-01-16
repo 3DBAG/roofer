@@ -232,6 +232,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // building
   // logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
+  auto h_ground_override_vec =
+      attributes.get_if<float>(cfg.h_terrain_attribute);
   auto& pc_select = attributes.insert_vec<std::string>(cfg.n.at("pc_select"));
   auto& pc_source = attributes.insert_vec<std::string>(cfg.n.at("pc_source"));
   auto& pc_year = attributes.insert_vec<int>(cfg.n.at("pc_year"));
@@ -342,8 +344,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
       }
       building.h_pc_98p = points.get_z_percentile(0.98) + (*pj->data_offset)[2];
       building.footprint = footprints[i];
-      building.h_ground =
+      auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
+      if (h_ground_override_vec) {
+        building.h_ground = (*h_ground_override_vec)[i].value_or(h_ground_pc);
+      } else {
+        building.h_ground = h_ground_pc;
+      }
       building.h_pc_roof_70p =
           input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
