@@ -22,7 +22,6 @@
 #include <geos_c.h>
 #include <roofer/logger/logger.h>
 
-#include <__config>
 #include <roofer/misc/Vector2DOps.hpp>
 #include <vector>
 
