@@ -215,7 +215,7 @@ namespace roofer::misc {
         to_geos_polygon(lr, g_polygon);
 
         if (GEOSisValid_r(gc, g_polygon) != 1) {
-          logger.error("Encouterend feature that is not valid. WKT: {}",
+          logger.error("Encountered feature that is not valid. WKT: {}",
                        GEOSGeomToWKT_r(gc, g_polygon));
           GEOSGeom_destroy_r(gc, g_polygon);
           // if (output_failures) polygons_out.push_back(lr);
@@ -226,7 +226,7 @@ namespace roofer::misc {
             GEOSSimplify_r(gc, g_polygon, double(tolerance));
         if (GEOSisValid_r(gc, simplified_geom) != 1) {
           logger.error(
-              "Encouterend feature that is not valid after simplify. WKT: {}",
+              "Encountered feature that is not valid after simplify. WKT: {}",
               GEOSGeomToWKT_r(gc, simplified_geom));
           GEOSGeom_destroy_r(gc, g_polygon);
           GEOSGeom_destroy_r(gc, simplified_geom);
@@ -236,7 +236,7 @@ namespace roofer::misc {
         // dump simplified geometry to wkt
         if (GEOSGetNumGeometries_r(gc, simplified_geom) != 1) {
           logger.error(
-              "Encouterend feature that is a multi-geometry after simplify. "
+              "Encountered feature that is a multi-geometry after simplify. "
               "WKT: {}",
               GEOSGeomToWKT_r(gc, simplified_geom));
           GEOSGeom_destroy_r(gc, g_polygon);
