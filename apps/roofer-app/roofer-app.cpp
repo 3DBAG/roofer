@@ -970,6 +970,7 @@ int main(int argc, const char* argv[]) {
         }
       }
       sorting_running.store(false);
+      sorted_pending.notify_one();
       logger.debug("[sorter] Finished sorter");
     });
 
