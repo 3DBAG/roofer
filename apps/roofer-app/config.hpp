@@ -88,6 +88,7 @@ struct RooferConfig {
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
   bool clear_if_insufficient = true;
+  bool compute_pc_98p = false;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -659,6 +660,9 @@ struct RooferConfigHandler {
     add("reconstruct-insufficient",
         "reconstruct buildings with insufficient pointcloud data",
         _cfg.clear_if_insufficient, {});
+    add("compute-pc-98p",
+        "compute 98th percentile of pointcloud height for each building",
+        _cfg.compute_pc_98p, {});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
     add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,

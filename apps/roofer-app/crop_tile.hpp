@@ -342,7 +342,10 @@ bool crop_tile(const roofer::TBox<double>& tile,
           building.pointcloud_building.push_back(points[i]);
         }
       }
-      building.h_pc_98p = points.get_z_percentile(0.98) + (*pj->data_offset)[2];
+      if (cfg.compute_pc_98p && points.size() > 0) {
+        building.h_pc_98p =
+            points.get_z_percentile(0.98) + (*pj->data_offset)[2];
+      }
       building.footprint = footprints[i];
       auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
