@@ -686,7 +686,8 @@ struct RooferConfigHandler {
          _cfg.rec.lod, {roofer::v::OneOf<int>({0, 12, 13, 22})});
     addr("complexity-factor", "Complexity factor building reconstruction",
          _cfg.rec.complexity_factor, {roofer::v::InRange<float>(0, 1)});
-    // addr("clip-ground", "clip ground", _cfg.rec.clip_ground, {});
+    addr("no-clip", "Do not clip terrain parts from roofprint",
+         _cfg.rec.clip_ground, {});
     addr("lod13-step-height", "Step height used for LoD1.3 generation",
          _cfg.rec.lod13_step_height, {roofer::v::HigherThan<float>(0)});
     add("srs", "Override SRS for both inputs and outputs", _cfg.srs_override,
