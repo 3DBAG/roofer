@@ -117,6 +117,7 @@ struct RooferConfig {
   std::string index_file_spec = "{path}/index.gpkg";
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
+  std::string output_stem = "tile";
 
   // reconstruct
   int lod11_fallback_planes = 900;
@@ -680,6 +681,7 @@ struct RooferConfigHandler {
           }
           return std::nullopt;
         }});
+    add("output-stem", "Filename stem for output tiles,", _cfg.output_stem, {});
 
     addr("lod",
          "Which LoDs to generate, possible values: 12, 13, 22 [default: all]",
