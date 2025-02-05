@@ -1152,6 +1152,30 @@ int main(int argc, const char* argv[]) {
           if (!roofer_cfg.split_cjseq) {
             ofs.close();
           }
+
+          {
+            auto& a_h_roof_70p = building_tile.attributes.insert_vec<float>(
+                roofer_cfg.n.at("h_roof_70p"));
+            auto& roof_n_planes = building_tile.attributes.insert_vec<int>(
+                roofer_cfg.n.at("roof_n_planes"));
+
+            std::vector<roofer::LinearRing> footprints;
+
+            for (auto& building : building_tile.buildings) {
+              footprints.push_back(building.footprint);
+              a_h_roof_70p.push_back(building.roof_elevation_70p);
+              roof_n_planes.push_back(building.roof_n_planes);
+            }
+
+            auto vector_writer =
+                roofer::io::createVectorWriterOGR(*building_tile.proj_helper);
+            auto gpkg_tile_path =
+                fs::path(roofer_cfg.output_path) / "tiles" /
+                fmt::format("tile_{:05d}.gpkg", building_tile.id);
+            vector_writer->writePolygons(gpkg_tile_path, project_srs.get(),
+                                         footprints, building_tile.attributes);
+          }
+
           pending_serialized.pop_front();
         }
       }

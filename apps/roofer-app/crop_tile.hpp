@@ -63,7 +63,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // simplify + buffer footprints
   logger.info("Simplifying and buffering footprints...");
-  vector_ops->simplify_polygons(footprints);
+  // vector_ops->simplify_polygons(footprints);
   auto buffered_footprints = footprints;
   vector_ops->buffer_polygons(buffered_footprints);
 
