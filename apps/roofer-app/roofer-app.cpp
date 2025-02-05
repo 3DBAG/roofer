@@ -1045,7 +1045,8 @@ int main(int argc, const char* argv[]) {
           if (!roofer_cfg.split_cjseq) {
             auto jsonl_tile_path =
                 fs::path(roofer_cfg.output_path) / "tiles" /
-                fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
+                fmt::format("{}_{:05d}.city.jsonl", roofer_cfg.output_stem,
+                            building_tile.id);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
             if (!roofer_cfg.omit_metadata)
