@@ -1163,6 +1163,8 @@ int main(int argc, const char* argv[]) {
                 roofer_cfg.n.at("rmse_lod22"));
             auto& roof_n_ridgelines = building_tile.attributes.insert_vec<int>(
                 roofer_cfg.n.at("roof_n_ridgelines"));
+            auto& roof_type = building_tile.attributes.insert_vec<std::string>(
+                roofer_cfg.n.at("roof_type"));
 
             std::vector<roofer::LinearRing> footprints;
 
@@ -1172,6 +1174,7 @@ int main(int argc, const char* argv[]) {
               roof_n_planes.push_back(building.roof_n_planes);
               rmse_lod22.push_back(building.rmse_lod22);
               roof_n_ridgelines.push_back(building.roof_n_ridgelines);
+              roof_type.push_back(building.roof_type);
             }
 
             auto vector_writer =
