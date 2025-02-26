@@ -169,11 +169,12 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
   return ArrangementExtruder->multisolid;
 }
 
-void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
+void extrude_lod11(BuildingObject& building, float extrusion_h,
+                   RooferConfig* rfcfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
   SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                 building.h_pc_roof_70p);
+                                 extrusion_h);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
@@ -233,11 +234,14 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   }
 
   if (building.extrusion_mode == SKIP) {
+    if (rfcfg->extrusion_fallback_h > 0) {
+      extrude_lod11(building, rfcfg->extrusion_fallback_h, rfcfg);
+    }
     return;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
-    extrude_lod11(building, rfcfg);
+    extrude_lod11(building, building.h_pc_roof_70p, rfcfg);
     return;
-  } else {
+  } else if (building.extrusion_mode == STANDARD) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
     auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
@@ -274,10 +278,13 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
                                      PlaneDetector->roof_type == "no planes";
       if (pointcloud_insufficient) {
         building.extrusion_mode = SKIP;
+        if (rfcfg->extrusion_fallback_h > 0) {
+          extrude_lod11(building, rfcfg->extrusion_fallback_h, rfcfg);
+        }
         return;
       }
     } catch (const std::runtime_error& e) {
-      extrude_lod11(building, rfcfg);
+      extrude_lod11(building, building.h_pc_roof_70p, rfcfg);
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
                      building.jsonl_path.string(), e.what());
       return;

@@ -120,6 +120,14 @@ struct RooferConfig {
   std::string output_stem = "tile";
 
   // reconstruct
+  int h_terrain_strategy = 0;
+  // 0: use pc around building with fallback to min terrain elevation in tile,
+  // 1: use pc around building with fallback to use h_terrain_attribute
+  // 2: always use h_terrain_attribute
+  // 3. use z values from input polygon
+  float extrusion_fallback_h =
+      0;  // in case pointcloud is insufficient. 0: no geometry, 0+: use as
+          // default extrusion value (eg '10' meters)
   int lod11_fallback_planes = 900;
   int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
@@ -271,8 +279,9 @@ namespace roofer::v {
     requires Comparable<T>
   auto HigherOrEqualTo(T min) {
     return [min](const T& val) -> std::optional<std::string> {
-      if (val >= min) {
-        return fmt::format("Value must be higher than or equal to {}.", min);
+      if (val < min) {
+        return fmt::format(
+            "Value must be higher than or equal to {}. But is {}.", min, val);
       }
       return std::nullopt;
     };
@@ -711,6 +720,14 @@ struct RooferConfigHandler {
         "Fallback to LoD11 if time spent on detecting planes exceeds this "
         "value. In milliseconds.",
         _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
+    add("h-terrain-strategy",
+        "Terrain height strategy. 0: only use pointcloud, 1: pointcloud + "
+        "fallback attribute, 2: always use attribute, 3: use z from polygon",
+        _cfg.h_terrain_strategy, {roofer::v::InRange<int>(0, 3)});
+    add("extrusion-fallback-h",
+        "Fallback extrusion height in case of insufficient pointcloud data. 0: "
+        "no geometry, 0+: use as default extrusion value (eg '10' meters)",
+        _cfg.extrusion_fallback_h, {roofer::v::HigherOrEqualTo<float>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",
