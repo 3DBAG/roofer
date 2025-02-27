@@ -115,6 +115,7 @@ struct BuildingObject {
   bool force_lod11;     // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
   bool is_glass_roof;
+  std::optional<float> roof_h_fallback;
   ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction

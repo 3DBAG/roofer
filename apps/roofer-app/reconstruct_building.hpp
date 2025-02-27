@@ -234,8 +234,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   }
 
   if (building.extrusion_mode == SKIP) {
-    if (rfcfg->extrusion_fallback_h > 0) {
-      extrude_lod11(building, rfcfg->extrusion_fallback_h, rfcfg);
+    if (building.roof_h_fallback.has_value()) {
+      extrude_lod11(building, *building.roof_h_fallback, rfcfg);
     }
     return;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
@@ -278,8 +278,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
                                      PlaneDetector->roof_type == "no planes";
       if (pointcloud_insufficient) {
         building.extrusion_mode = SKIP;
-        if (rfcfg->extrusion_fallback_h > 0) {
-          extrude_lod11(building, rfcfg->extrusion_fallback_h, rfcfg);
+        if (building.roof_h_fallback.has_value()) {
+          extrude_lod11(building, *building.roof_h_fallback, rfcfg);
         }
         return;
       }

@@ -84,6 +84,7 @@ struct RooferConfig {
   std::string force_lod11_attribute;  // -> attr_force_blockmodel
   std::string yoc_attribute;          // -> attr_year_of_construction
   std::string h_terrain_attribute;    // -> attr_h_terrain
+  std::string h_roof_attribute;       // -> attr_h_roof
   std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
@@ -127,14 +128,7 @@ struct RooferConfig {
   std::string output_stem = "tile";
 
   // reconstruct
-  int h_terrain_strategy = 0;
-  // 0: use pc around building with fallback to min terrain elevation in tile,
-  // 1: use pc around building with fallback to use h_terrain_attribute
-  // 2: always use h_terrain_attribute
-  // 3. use z values from input polygon
-  float extrusion_fallback_h =
-      0;  // in case pointcloud is insufficient. 0: no geometry, 0+: use as
-          // default extrusion value (eg '10' meters)
+  int h_terrain_strategy = TerrainStrategy::BUFFER_WITH_MIN_H_TILE;
   int lod11_fallback_planes = 900;
   int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
@@ -655,8 +649,11 @@ struct RooferConfigHandler {
     add("yoc-attribute", "Attribute containing building year of construction",
         _cfg.yoc_attribute, {});
     add("h-terrain-attribute",
-        "Attribute containing terrain height for buildings",
+        "Attribute containing (fallback) terrain height for buildings",
         _cfg.h_terrain_attribute, {});
+    add("h-roof-attribute",
+        "Attribute containing fallback roof height for buildings",
+        _cfg.h_roof_attribute, {});
     add("polygon-source-layer",
         "Load this layer from <polygon-source> [default: first layer]",
         _cfg.layer_name, {});
@@ -730,11 +727,6 @@ struct RooferConfigHandler {
         "Terrain height strategy. 0: only use pointcloud, 1: pointcloud + "
         "fallback on h-terrain-attribute, 2: always use h-terrain-attribute",
         _cfg.h_terrain_strategy, {roofer::v::InRange<int>(0, 2)});
-    add("extrusion-fallback-h",
-        "Fallback extrusion height in case of insufficient pointcloud data. 0: "
-        "do not output a geometry, 0+: use given value as default extrusion "
-        "height",
-        _cfg.extrusion_fallback_h, {roofer::v::HigherOrEqualTo<float>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",

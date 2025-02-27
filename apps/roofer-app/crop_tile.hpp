@@ -234,8 +234,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // building
   // logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
-  auto h_ground_override_vec =
+  auto h_ground_fallback_vec =
       attributes.get_if<float>(cfg.h_terrain_attribute);
+  auto h_roof_fallback_vec = attributes.get_if<float>(cfg.h_roof_attribute);
   auto& pc_select = attributes.insert_vec<std::string>(cfg.n.at("pc_select"));
   auto& pc_source = attributes.insert_vec<std::string>(cfg.n.at("pc_source"));
   auto& pc_year = attributes.insert_vec<int>(cfg.n.at("pc_year"));
@@ -363,21 +364,25 @@ bool crop_tile(const roofer::TBox<double>& tile,
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
-          if (h_ground_override_vec) {
-            building.h_ground = (*h_ground_override_vec)[i].value();
+          if (h_ground_fallback_vec) {
+            building.h_ground = (*h_ground_fallback_vec)[i].value();
           } else {
             logger.error("No h_ground value found for building {}", bid);
             exit(1);
           }
         }
       } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
-        if (h_ground_override_vec) {
-          building.h_ground = (*h_ground_override_vec)[i].value();
+        if (h_ground_fallback_vec) {
+          building.h_ground = (*h_ground_fallback_vec)[i].value();
         } else {
           logger.error("No h_ground value found for building {}", bid);
           exit(1);
         }
       }
+      if (h_roof_fallback_vec) {
+        building.roof_h_fallback = (*h_roof_fallback_vec)[i].value();
+      }
+
       building.h_pc_roof_70p =
           input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
