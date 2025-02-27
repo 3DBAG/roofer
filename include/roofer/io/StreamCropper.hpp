@@ -49,10 +49,12 @@ namespace roofer::io {
         const std::vector<std::string>& lasfiles,
         std::vector<LinearRing>& polygons,
         std::vector<LinearRing>& buf_polygons,
-        std::vector<PointCollection>& point_clouds, vec1f& ground_elevations,
+        std::vector<PointCollection>& point_clouds, veco1f& ground_elevations,
         vec1i& acquisition_years, vec1b& pointcloud_insufficient,
         const Box& polygon_extent,
         PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
+
+    virtual float get_min_terrain_elevation() const = 0;
     // virtual void process(
     //     std::string filepaths, std::vector<LinearRing>& polygons,
     //     std::vector<LinearRing>& buf_polygons,

@@ -212,7 +212,7 @@ namespace roofer::io {
 
       // ensure we output ccw exterior ring
       if (ogr_ering->isClockwise()) {
-        ogr_ering->reverseWindingOrder();
+        ogr_ering->reversePoints();
       }
       for (size_t i = 0; i < ogr_ering->getNumPoints() - 1; ++i) {
         ogr_ering->getPoint(i, &poPoint);
@@ -226,7 +226,7 @@ namespace roofer::io {
         auto ogr_iring = poPolygon->getInteriorRing(i);
         // ensure we output cw interior ring
         if (!ogr_iring->isClockwise()) {
-          ogr_iring->reverseWindingOrder();
+          ogr_iring->reversePoints();
         }
         vec3f gf_iring;
         for (size_t j = 0; j < ogr_iring->getNumPoints() - 1; ++j) {

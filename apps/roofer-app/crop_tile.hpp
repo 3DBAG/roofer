@@ -51,6 +51,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   if (!pj->data_offset.has_value()) {
     logger.error("No data offset set after reading inputs");
+    exit(1);
     return false;
   }
 
@@ -177,6 +178,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
                                               &ipc.nodata_radii[i], &nodata_c);
         } catch (const std::exception& e) {
           // logger.error(
+          exit(1);
           //     "Failed to compute_nodata_circle in crop_tile for {}, setting "
           //     "ipc.nodata_radii[i] = 0, what(): {}",
           //     ipc.paths, e.what());
@@ -281,6 +283,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     if (!selected) {
       logger.error("Unable to select pointcloud");
       exit(1);
+      exit(1);
     }
 
     // check if yoc_attribute indicates this building to be built after selected
@@ -349,10 +352,31 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
-      if (h_ground_override_vec) {
-        building.h_ground = (*h_ground_override_vec)[i].value_or(h_ground_pc);
-      } else {
-        building.h_ground = h_ground_pc;
+      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_WITH_MIN_H_TILE) {
+        if (h_ground_pc.has_value()) {
+          building.h_ground = h_ground_pc.value();
+        } else {
+          building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+        }
+      } else if (cfg.h_terrain_strategy ==
+                 TerrainStrategy::BUFFER_WITH_USER_ATTRIBUTE) {
+        if (h_ground_pc.has_value()) {
+          building.h_ground = h_ground_pc.value();
+        } else {
+          if (h_ground_override_vec) {
+            building.h_ground = (*h_ground_override_vec)[i].value();
+          } else {
+            logger.error("No h_ground value found for building {}", bid);
+            exit(1);
+          }
+        }
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
+        if (h_ground_override_vec) {
+          building.h_ground = (*h_ground_override_vec)[i].value();
+        } else {
+          logger.error("No h_ground value found for building {}", bid);
+          exit(1);
+        }
       }
       building.h_pc_roof_70p =
           input_pointclouds[selected->index].roof_elevations[i];
@@ -407,37 +431,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
           LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
                                       srs, pc_path);
 
-          // Correct ground height for offset, NB this ignores crs
-          // transformation
-          double h_ground =
-              input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
-
-          // Create an array of tables
-          toml::array array_of_pointclouds;
-          // Add the first table
-          toml::table pointcloud{
-              {"name", ipc.name},
-              {"source", pc_path},
-          };
-          array_of_pointclouds.emplace_back(std::move(pointcloud));
-
-          auto gf_config =
-              toml::table{{"polygon-source", fp_path},
-                          {"GROUND_ELEVATION", h_ground},
-                          {"force-lod11-attribute", cfg.n.at("force_lod11")},
-                          {"id-attribute", cfg.id_attribute},
-                          {"pointclouds", std::move(array_of_pointclouds)}};
-
           if (!only_write_selected) {
-            std::ofstream ofs;
-            std::string config_path =
-                fmt::format(fmt::runtime(cfg.building_toml_file_spec),
-                            fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                            fmt::arg("path", cfg.output_path));
-            ofs.open(config_path);
-            ofs << gf_config;
-            ofs.close();
-
             jsonl_paths[ipc.name].push_back(jsonl_path);
           }
           if (selected->index == j) {
@@ -448,15 +442,6 @@ bool crop_tile(const roofer::TBox<double>& tile,
                             fmt::arg("path", cfg.output_path));
             // gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
             jsonl_paths[""].push_back(jsonl_path);
-
-            // write optimal config
-            std::ofstream ofs;
-            std::string config_path = fmt::format(
-                fmt::runtime(cfg.building_toml_file_spec), fmt::arg("bid", bid),
-                fmt::arg("pc_name", ""), fmt::arg("path", cfg.output_path));
-            ofs.open(config_path);
-            ofs << gf_config;
-            ofs.close();
           }
           ++j;
         }

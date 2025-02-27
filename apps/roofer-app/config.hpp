@@ -43,6 +43,13 @@ namespace fs = std::filesystem;
 
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
+enum TerrainStrategy {
+  BUFFER_WITH_MIN_H_TILE = 0,
+  BUFFER_WITH_USER_ATTRIBUTE = 1,
+  USER_ATTRIBUTE = 2
+  // POLYGON_Z = 3
+};
+
 struct InputPointcloud {
   std::vector<std::string> paths;
   std::string name;
@@ -62,7 +69,7 @@ struct InputPointcloud {
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
-  roofer::vec1f ground_elevations;
+  roofer::veco1f ground_elevations;
   roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
@@ -648,8 +655,7 @@ struct RooferConfigHandler {
     add("yoc-attribute", "Attribute containing building year of construction",
         _cfg.yoc_attribute, {});
     add("h-terrain-attribute",
-        "Attribute containing terrain height, will override terrain height "
-        "derived from pointcloud",
+        "Attribute containing terrain height for buildings",
         _cfg.h_terrain_attribute, {});
     add("polygon-source-layer",
         "Load this layer from <polygon-source> [default: first layer]",
@@ -722,11 +728,12 @@ struct RooferConfigHandler {
         _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
     add("h-terrain-strategy",
         "Terrain height strategy. 0: only use pointcloud, 1: pointcloud + "
-        "fallback attribute, 2: always use attribute, 3: use z from polygon",
-        _cfg.h_terrain_strategy, {roofer::v::InRange<int>(0, 3)});
+        "fallback on h-terrain-attribute, 2: always use h-terrain-attribute",
+        _cfg.h_terrain_strategy, {roofer::v::InRange<int>(0, 2)});
     add("extrusion-fallback-h",
         "Fallback extrusion height in case of insufficient pointcloud data. 0: "
-        "no geometry, 0+: use as default extrusion value (eg '10' meters)",
+        "do not output a geometry, 0+: use given value as default extrusion "
+        "height",
         _cfg.extrusion_fallback_h, {roofer::v::HigherOrEqualTo<float>(0)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
