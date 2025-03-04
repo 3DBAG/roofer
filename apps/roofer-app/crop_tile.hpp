@@ -380,7 +380,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
         }
       }
       if (h_roof_fallback_vec) {
-        building.roof_h_fallback = (*h_roof_fallback_vec)[i].value();
+        building.roof_h_fallback = (*h_roof_fallback_vec)[i];
       }
 
       building.h_pc_roof_70p =
