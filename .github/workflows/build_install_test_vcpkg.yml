@@ -146,6 +146,6 @@ jobs:
         with:
           name: roofer-windows-${{ matrix.build_type }}
           path: |
-            build/${{ matrix.build_type }}/*.exe
-            build/${{ matrix.build_type }}/*.dll
+            build/apps/roofer-app/${{ matrix.build_type }}/*.exe
+            build/apps/roofer-app/${{ matrix.build_type }}/*.dll
           retention-days: 7
