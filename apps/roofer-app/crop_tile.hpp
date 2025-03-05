@@ -365,17 +365,33 @@ bool crop_tile(const roofer::TBox<double>& tile,
           building.h_ground = h_ground_pc.value();
         } else {
           if (h_ground_fallback_vec) {
-            building.h_ground = (*h_ground_fallback_vec)[i].value();
+            if ((*h_ground_fallback_vec)[i].has_value()) {
+              building.h_ground = (*h_ground_fallback_vec)[i].value();
+            } else {
+              // fallback to min terrain elevation if no value is found
+              building.h_ground =
+                  PointCloudCropper->get_min_terrain_elevation();
+              logger.warning(
+                  "Falling back to minimum tile elevation for building {}",
+                  bid);
+            }
           } else {
-            logger.error("No h_ground value found for building {}", bid);
+            logger.error("No h_ground attribute found");
             exit(1);
           }
         }
       } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
         if (h_ground_fallback_vec) {
-          building.h_ground = (*h_ground_fallback_vec)[i].value();
+          if ((*h_ground_fallback_vec)[i].has_value()) {
+            building.h_ground = (*h_ground_fallback_vec)[i].value();
+          } else {
+            // fallback to min terrain elevation if no value is found
+            building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+            logger.warning(
+                "Falling back to minimum tile elevation for building {}", bid);
+          }
         } else {
-          logger.error("No h_ground value found for building {}", bid);
+          logger.error("No h_ground attribute found");
           exit(1);
         }
       }
