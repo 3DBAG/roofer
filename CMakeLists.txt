@@ -25,6 +25,9 @@ endif()
 if(RF_USE_VAL3DITY)
   list(APPEND VCPKG_MANIFEST_FEATURES "val3dity")
 endif()
+if(RF_USE_RERUN)
+  list(APPEND VCPKG_MANIFEST_FEATURES "app-rerun")
+endif()
 # if(RF_BUILD_BINDINGS)
 #   list(APPEND VCPKG_MANIFEST_FEATURES "python")
 # endif()
@@ -72,6 +75,7 @@ cpmaddpackage(
 set(GIT_IGNORE_UNTRACKED TRUE)
 
 if(RF_USE_RERUN)
+  set(RERUN_DOWNLOAD_AND_BUILD_ARROW OFF)
   cpmaddpackage(
     NAME rerun_sdk URL
     https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip

@@ -47,6 +47,12 @@
           "version>=": "3.11.3"
         }
       ]
+    },
+    "app-rerun": {
+      "description": "Build with rerun support.",
+      "dependencies": [
+        "arrow"
+      ]
     }
   },
   "dependencies": [
@@ -63,5 +69,5 @@
       "version": "3.11.3"
     }
   ],
-  "builtin-baseline": "1d0f0a396cf00af25fbcb5550917c25ac64aa240"
+  "builtin-baseline": "a148012a2b0e671597d5eee149ce50bb462f1722"
 }
