@@ -106,6 +106,9 @@ struct RooferConfig {
   // general parameters
   std::optional<roofer::TBox<double>> region_of_interest;
   std::string srs_override;
+#ifdef RF_USE_RERUN
+  bool use_rerun = false;
+#endif
 
   // crop output
   bool split_cjseq = false;
@@ -694,6 +697,9 @@ struct RooferConfigHandler {
           return std::nullopt;
         }});
     add("output-stem", "Filename stem for output tiles,", _cfg.output_stem, {});
+#ifdef RF_USE_RERUN
+    add("use-rerun", "Use rerun", _cfg.use_rerun, {});
+#endif
 
     addr("lod",
          "Which LoDs to generate, possible values: 12, 13, 22 [default: all]",

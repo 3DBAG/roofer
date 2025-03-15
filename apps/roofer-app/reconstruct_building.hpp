@@ -19,6 +19,48 @@
 // Author(s):
 // Ravi Peters
 
+#ifdef RF_USE_RERUN
+// Adapters so we can log eigen vectors as rerun positions:
+template <>
+struct rerun::CollectionAdapter<rerun::Position3D, roofer::PointCollection> {
+  /// Borrow for non-temporary.
+  Collection<rerun::Position3D> operator()(
+      const roofer::PointCollection& container) {
+    return Collection<rerun::Position3D>::borrow(container.data(),
+                                                 container.size());
+  }
+
+  // Do a full copy for temporaries (otherwise the data might be deleted when
+  // the temporary is destroyed).
+  Collection<rerun::Position3D> operator()(
+      roofer::PointCollection&& container) {
+    std::vector<rerun::Position3D> positions(container.size());
+    memcpy(positions.data(), container.data(),
+           container.size() * sizeof(roofer::arr3f));
+    return Collection<rerun::Position3D>::take_ownership(std::move(positions));
+  }
+};
+template <>
+struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
+  /// Borrow for non-temporary.
+  Collection<rerun::Position3D> operator()(
+      const roofer::TriangleCollection& container) {
+    return Collection<rerun::Position3D>::borrow(container[0].data(),
+                                                 container.vertex_count());
+  }
+
+  // Do a full copy for temporaries (otherwise the data might be deleted when
+  // the temporary is destroyed).
+  Collection<rerun::Position3D> operator()(
+      roofer::TriangleCollection&& container) {
+    std::vector<rerun::Position3D> positions(container.size());
+    memcpy(positions.data(), container[0].data(),
+           container.vertex_count() * sizeof(roofer::arr3f));
+    return Collection<rerun::Position3D>::take_ownership(std::move(positions));
+  }
+};
+#endif
+
 enum LOD { LOD11 = 11, LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 
 void compute_mesh_properties(
@@ -80,6 +122,8 @@ void multisolid_post_process(BuildingObject& building, RooferConfig* rfcfg,
   volume = MeshTriangulator->volumes.at(0);
   // logger.debug("Completed MeshTriangulator");
 #ifdef RF_USE_RERUN
+  const auto& rec = rerun::RecordingStream::current();
+  std::string worldname = fmt::format("world/lod{}/", (int)lod);
   rec.log(worldname + "MeshTriangulator",
           rerun::Mesh3D(MeshTriangulator->triangles)
               .with_vertex_normals(MeshTriangulator->normals)
@@ -205,27 +249,29 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   auto& logger = roofer::logger::Logger::get_logger();
 
 #ifdef RF_USE_RERUN
-  // Create a new `RecordingStream` which sends data over TCP to the viewer
-  // process.
-  const auto rec = rerun::RecordingStream("Roofer rerun test");
-  // Try to spawn a new viewer instance.
-  rec.spawn().exit_on_failure();
-  rec.set_global();
+  // const auto& rec = rerun::RecordingStream::current();
+  const auto rec = rerun::RecordingStream(building.jsonl_path.string());
+  // rec.save(building.jsonl_path.string() + ".rrd");
+  rec.spawn();
+  rec.set_thread_local();
+  logger.info("recording is enabled {}", rec.is_enabled());
+  roofer::vec3f testpts;
+  testpts.push_back({1.0f, 2.0f, 3.0f});
+  rec.log("test", rerun::Points3D(testpts));
+
 #endif
 
-  // #ifdef RF_USE_RERUN
-  //   auto classification =
-  //       building.pointcloud.attributes.get_if<int>("classification");
-  //   rec.log("world/raw_points",
-  //           rerun::Collection{rerun::components::AnnotationContext{
-  //               rerun::datatypes::AnnotationInfo(
-  //                   6, "BUILDING", rerun::datatypes::Rgba32(255, 0, 0)),
-  //               rerun::datatypes::AnnotationInfo(2, "GROUND"),
-  //               rerun::datatypes::AnnotationInfo(1, "UNCLASSIFIED"),
-  //           }});
-  //   rec.log("world/raw_points",
-  //           rerun::Points3D(points).with_class_ids(classification));
-  // #endif
+#ifdef RF_USE_RERUN
+  // rec.log("world/raw_points",
+  //         rerun::AnnotationContext({
+  //             rerun::AnnotationInfo(6, "BUILDING", rerun::Rgba32(255, 0, 0)),
+  //             rerun::AnnotationInfo(2, "GROUND"),
+  //             rerun::AnnotationInfo(1, "UNCLASSIFIED"),
+  //         }));
+  rec.log("world/building_points",
+          rerun::Points3D(building.pointcloud_building));
+  rec.log("world/ground_points", rerun::Points3D(building.pointcloud_ground));
+#endif
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
@@ -384,8 +430,9 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
     auto heightfield_copy = SegmentRasteriser->heightfield;
     heightfield_copy.set_nodata(0);
     rec.log("world/heightfield",
-            rerun::DepthImage({heightfield_copy.dimy_, heightfield_copy.dimx_},
-                              *heightfield_copy.vals_));
+            rerun::DepthImage(heightfield_copy.vals_->data(),
+                              {static_cast<uint32_t>(heightfield_copy.dimx_),
+                               static_cast<uint32_t>(heightfield_copy.dimy_)}));
 #endif
 
     t0 = std::chrono::high_resolution_clock::now();

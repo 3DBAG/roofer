@@ -8,6 +8,12 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 add_executable("roofer" ${APP_SOURCES})
+
+if(RF_USE_RERUN)
+  list(APPEND ROOFER_LINK_LIBRARIES rerun_sdk)
+  target_compile_definitions("roofer" PRIVATE RF_USE_RERUN)
+endif()
+
 set_target_properties("roofer" PROPERTIES CXX_STANDARD 20)
 target_link_libraries("roofer" PRIVATE ${ROOFER_LINK_LIBRARIES})
 
