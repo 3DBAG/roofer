@@ -277,6 +277,11 @@ namespace roofer {
             }
           }
           total_plane_cnt = R.regions.size();
+
+          for (auto region : R.regions) {
+            total_pt_cnt += region.inliers.size();
+          }
+
           // classify horizontal/vertical planes using plane normals
           unsigned shape_id = 0;
           for (auto region : R.regions) {
@@ -299,7 +304,8 @@ namespace roofer {
               std::vector<Point> segpts;
               for (auto& i : region.inliers) {
                 segpts.push_back(boost::get<0>(pnl_points[i]));
-                if (region.inliers.size() > cfg.metrics_plane_min_points * 4) {
+                if (region.inliers.size() > cfg.metrics_plane_min_points * 4 ||
+                    total_pt_cnt <= cfg.metrics_plane_min_points * 4) {
                   roof_elevations.push_back(
                       float(boost::get<0>(pnl_points[i]).z()));
                 }
@@ -307,7 +313,6 @@ namespace roofer {
                 boost::get<3>(pnl_points[i]) = is_wall;
                 boost::get<9>(pnl_points[i]) = is_horizontal;
               }
-              total_pt_cnt += segpts.size();
               pts_per_roofplane[shape_id].second = segpts;
               pts_per_roofplane[shape_id].first = plane;
 
