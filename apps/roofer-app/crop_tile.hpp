@@ -51,6 +51,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   if (!pj->data_offset.has_value()) {
     logger.error("No data offset set after reading inputs");
+    exit(1);
     return false;
   }
 
@@ -63,7 +64,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // simplify + buffer footprints
   logger.info("Simplifying and buffering footprints...");
-  vector_ops->simplify_polygons(footprints);
+  // vector_ops->simplify_polygons(footprints);
   auto buffered_footprints = footprints;
   vector_ops->buffer_polygons(buffered_footprints);
 
@@ -177,6 +178,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
                                               &ipc.nodata_radii[i], &nodata_c);
         } catch (const std::exception& e) {
           // logger.error(
+          exit(1);
           //     "Failed to compute_nodata_circle in crop_tile for {}, setting "
           //     "ipc.nodata_radii[i] = 0, what(): {}",
           //     ipc.paths, e.what());
@@ -232,6 +234,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // building
   // logger.info("Selecting and writing pointclouds");
   auto bid_vec = attributes.get_if<std::string>(cfg.id_attribute);
+  auto h_ground_fallback_vec =
+      attributes.get_if<float>(cfg.h_terrain_attribute);
+  auto h_roof_fallback_vec = attributes.get_if<float>(cfg.h_roof_attribute);
   auto& pc_select = attributes.insert_vec<std::string>(cfg.n.at("pc_select"));
   auto& pc_source = attributes.insert_vec<std::string>(cfg.n.at("pc_source"));
   auto& pc_year = attributes.insert_vec<int>(cfg.n.at("pc_year"));
@@ -278,6 +283,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     // this is a sanity check and should never happen
     if (!selected) {
       logger.error("Unable to select pointcloud");
+      exit(1);
       exit(1);
     }
 
@@ -340,10 +346,60 @@ bool crop_tile(const roofer::TBox<double>& tile,
           building.pointcloud_building.push_back(points[i]);
         }
       }
+      if (cfg.compute_pc_98p && points.size() > 0) {
+        building.h_pc_98p =
+            points.get_z_percentile(0.98) + (*pj->data_offset)[2];
+      }
       building.footprint = footprints[i];
-      building.h_ground =
+      auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
-      building.h_roof_70p_rough =
+      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_WITH_MIN_H_TILE) {
+        if (h_ground_pc.has_value()) {
+          building.h_ground = h_ground_pc.value();
+        } else {
+          building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+        }
+      } else if (cfg.h_terrain_strategy ==
+                 TerrainStrategy::BUFFER_WITH_USER_ATTRIBUTE) {
+        if (h_ground_pc.has_value()) {
+          building.h_ground = h_ground_pc.value();
+        } else {
+          if (h_ground_fallback_vec) {
+            if ((*h_ground_fallback_vec)[i].has_value()) {
+              building.h_ground = (*h_ground_fallback_vec)[i].value();
+            } else {
+              // fallback to min terrain elevation if no value is found
+              building.h_ground =
+                  PointCloudCropper->get_min_terrain_elevation();
+              logger.warning(
+                  "Falling back to minimum tile elevation for building {}",
+                  bid);
+            }
+          } else {
+            logger.error("No h_ground attribute found");
+            exit(1);
+          }
+        }
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
+        if (h_ground_fallback_vec) {
+          if ((*h_ground_fallback_vec)[i].has_value()) {
+            building.h_ground = (*h_ground_fallback_vec)[i].value();
+          } else {
+            // fallback to min terrain elevation if no value is found
+            building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+            logger.warning(
+                "Falling back to minimum tile elevation for building {}", bid);
+          }
+        } else {
+          logger.error("No h_ground attribute found");
+          exit(1);
+        }
+      }
+      if (h_roof_fallback_vec) {
+        building.roof_h_fallback = (*h_roof_fallback_vec)[i];
+      }
+
+      building.h_pc_roof_70p =
           input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
       building.pointcloud_insufficient =
@@ -396,37 +452,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
           LASWriter->write_pointcloud(input_pointclouds[j].building_clouds[i],
                                       srs, pc_path);
 
-          // Correct ground height for offset, NB this ignores crs
-          // transformation
-          double h_ground =
-              input_pointclouds[j].ground_elevations[i] + (*pj->data_offset)[2];
-
-          // Create an array of tables
-          toml::array array_of_pointclouds;
-          // Add the first table
-          toml::table pointcloud{
-              {"name", ipc.name},
-              {"source", pc_path},
-          };
-          array_of_pointclouds.emplace_back(std::move(pointcloud));
-
-          auto gf_config =
-              toml::table{{"polygon-source", fp_path},
-                          {"GROUND_ELEVATION", h_ground},
-                          {"force-lod11-attribute", cfg.n.at("force_lod11")},
-                          {"id-attribute", cfg.id_attribute},
-                          {"pointclouds", std::move(array_of_pointclouds)}};
-
           if (!only_write_selected) {
-            std::ofstream ofs;
-            std::string config_path =
-                fmt::format(fmt::runtime(cfg.building_toml_file_spec),
-                            fmt::arg("bid", bid), fmt::arg("pc_name", ipc.name),
-                            fmt::arg("path", cfg.output_path));
-            ofs.open(config_path);
-            ofs << gf_config;
-            ofs.close();
-
             jsonl_paths[ipc.name].push_back(jsonl_path);
           }
           if (selected->index == j) {
@@ -437,15 +463,6 @@ bool crop_tile(const roofer::TBox<double>& tile,
                             fmt::arg("path", cfg.output_path));
             // gf_config.insert_or_assign("OUTPUT_JSONL", jsonl_path);
             jsonl_paths[""].push_back(jsonl_path);
-
-            // write optimal config
-            std::ofstream ofs;
-            std::string config_path = fmt::format(
-                fmt::runtime(cfg.building_toml_file_spec), fmt::arg("bid", bid),
-                fmt::arg("pc_name", ""), fmt::arg("path", cfg.output_path));
-            ofs.open(config_path);
-            ofs << gf_config;
-            ofs.close();
           }
           ++j;
         }

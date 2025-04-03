@@ -43,6 +43,13 @@ namespace fs = std::filesystem;
 
 using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 
+enum TerrainStrategy {
+  BUFFER_WITH_MIN_H_TILE = 0,
+  BUFFER_WITH_USER_ATTRIBUTE = 1,
+  USER_ATTRIBUTE = 2
+  // POLYGON_Z = 3
+};
+
 struct InputPointcloud {
   std::vector<std::string> paths;
   std::string name;
@@ -62,7 +69,7 @@ struct InputPointcloud {
   std::vector<roofer::LinearRing> nodata_circles;
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
-  roofer::vec1f ground_elevations;
+  roofer::veco1f ground_elevations;
   roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
@@ -76,6 +83,8 @@ struct RooferConfig {
   std::string id_attribute;           // -> attr_building_id
   std::string force_lod11_attribute;  // -> attr_force_blockmodel
   std::string yoc_attribute;          // -> attr_year_of_construction
+  std::string h_terrain_attribute;    // -> attr_h_terrain
+  std::string h_roof_attribute;       // -> attr_h_roof
   std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
@@ -87,6 +96,7 @@ struct RooferConfig {
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
   bool clear_if_insufficient = true;
+  bool compute_pc_98p = false;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -115,8 +125,10 @@ struct RooferConfig {
   std::string index_file_spec = "{path}/index.gpkg";
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
+  std::string output_stem = "tile";
 
   // reconstruct
+  int h_terrain_strategy = TerrainStrategy::BUFFER_WITH_MIN_H_TILE;
   int lod11_fallback_planes = 900;
   int lod11_fallback_time = 1800000;
   roofer::ReconstructionConfig rec;
@@ -142,7 +154,10 @@ struct RooferConfig {
       {"h_roof_70p", "rf_h_roof_70p"},
       {"h_roof_min", "rf_h_roof_min"},
       {"h_roof_max", "rf_h_roof_max"},
+      {"h_roof_ridge", "rf_h_roof_ridge"},
+      {"h_pc_98p", "rf_h_pc_98p"},
       {"roof_n_planes", "rf_roof_planes"},
+      {"roof_n_ridgelines", "rf_ridgelines"},
       {"rmse_lod12", "rf_rmse_lod12"},
       {"rmse_lod13", "rf_rmse_lod13"},
       {"rmse_lod22", "rf_rmse_lod22"},
@@ -265,8 +280,9 @@ namespace roofer::v {
     requires Comparable<T>
   auto HigherOrEqualTo(T min) {
     return [min](const T& val) -> std::optional<std::string> {
-      if (val >= min) {
-        return fmt::format("Value must be higher than or equal to {}.", min);
+      if (val < min) {
+        return fmt::format(
+            "Value must be higher than or equal to {}. But is {}.", min, val);
       }
       return std::nullopt;
     };
@@ -632,6 +648,12 @@ struct RooferConfigHandler {
         _cfg.force_lod11_attribute, {});
     add("yoc-attribute", "Attribute containing building year of construction",
         _cfg.yoc_attribute, {});
+    add("h-terrain-attribute",
+        "Attribute containing (fallback) terrain height for buildings",
+        _cfg.h_terrain_attribute, {});
+    add("h-roof-attribute",
+        "Attribute containing fallback roof height for buildings",
+        _cfg.h_roof_attribute, {});
     add("polygon-source-layer",
         "Load this layer from <polygon-source> [default: first layer]",
         _cfg.layer_name, {});
@@ -651,6 +673,9 @@ struct RooferConfigHandler {
     add("reconstruct-insufficient",
         "reconstruct buildings with insufficient pointcloud data",
         _cfg.clear_if_insufficient, {});
+    add("compute-pc-98p",
+        "compute 98th percentile of pointcloud height for each building",
+        _cfg.compute_pc_98p, {});
     // add("lod11-fallback-density", "lod11 fallback density",
     // _cfg.lod11_fallback_density, {roofer::v::HigherThan<float>(0)}});
     add("tilesize", "Tilesize used for output tiles", _cfg.tilesize,
@@ -668,13 +693,15 @@ struct RooferConfigHandler {
           }
           return std::nullopt;
         }});
+    add("output-stem", "Filename stem for output tiles,", _cfg.output_stem, {});
 
     addr("lod",
          "Which LoDs to generate, possible values: 12, 13, 22 [default: all]",
          _cfg.rec.lod, {roofer::v::OneOf<int>({0, 12, 13, 22})});
     addr("complexity-factor", "Complexity factor building reconstruction",
          _cfg.rec.complexity_factor, {roofer::v::InRange<float>(0, 1)});
-    // addr("clip-ground", "clip ground", _cfg.rec.clip_ground, {});
+    addr("no-clip", "Do not clip terrain parts from roofprint",
+         _cfg.rec.clip_ground, {});
     addr("lod13-step-height", "Step height used for LoD1.3 generation",
          _cfg.rec.lod13_step_height, {roofer::v::HigherThan<float>(0)});
     add("srs", "Override SRS for both inputs and outputs", _cfg.srs_override,
@@ -696,6 +723,10 @@ struct RooferConfigHandler {
         "Fallback to LoD11 if time spent on detecting planes exceeds this "
         "value. In milliseconds.",
         _cfg.lod11_fallback_time, {roofer::v::HigherThan<int>(0)});
+    add("h-terrain-strategy",
+        "Terrain height strategy. 0: only use pointcloud, 1: pointcloud + "
+        "fallback on h-terrain-attribute, 2: always use h-terrain-attribute",
+        _cfg.h_terrain_strategy, {roofer::v::InRange<int>(0, 2)});
     addr("plane-detect-k", "plane detect k", _cfg.rec.plane_detect_k,
          {roofer::v::HigherThan<int>(0)});
     addr("plane-detect-min-points", "plane detect min points",

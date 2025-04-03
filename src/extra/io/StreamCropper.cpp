@@ -36,7 +36,7 @@ namespace roofer::io {
   class PointsInPolygonsCollector {
     std::vector<LinearRing>& polygons;
     std::vector<PointCollection>& point_clouds;
-    vec1f& ground_elevations;
+    veco1f& ground_elevations;
     vec1i& acquisition_years;
     vec1b& pointcloud_insufficient;
 
@@ -59,7 +59,7 @@ namespace roofer::io {
     PointsInPolygonsCollector(std::vector<LinearRing>& polygons,
                               std::vector<LinearRing>& buf_polygons,
                               std::vector<PointCollection>& point_clouds,
-                              vec1f& ground_elevations,
+                              veco1f& ground_elevations,
                               vec1i& acquisition_years,
                               vec1b& pointcloud_insufficient,
                               const Box& completearea_bb, float& cellsize,
@@ -320,12 +320,12 @@ namespace roofer::io {
                     [](auto& z1, auto& z2) { return z1 < z2; });
           int elevation_id =
               std::floor(ground_percentile * float(z_ground[i].size() - 1));
-          ground_ele = z_ground[i][elevation_id];
+          // Assign the median ground elevation to each polygon
+          ground_elevations.push_back(z_ground[i][elevation_id]);
         } else {
           // spdlog::info("no ground pts found for polygon");
+          ground_elevations.push_back(std::nullopt);
         }
-        // Assign the median ground elevation to each polygon
-        ground_elevations.push_back(ground_ele);
       }
 
       // clear footprints with very low coverage (ie. underground footprints)
@@ -434,13 +434,15 @@ namespace roofer::io {
   struct PointCloudCropper : public PointCloudCropperInterface {
     using PointCloudCropperInterface::PointCloudCropperInterface;
 
+    float _min_ground_elevation = std::numeric_limits<float>::max();
+
     void process(const std::vector<std::string>& lasfiles,
                  std::vector<LinearRing>& polygons,
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
-                 vec1f& ground_elevations, vec1i& acquisition_years,
+                 veco1f& ground_elevations, vec1i& acquisition_years,
                  vec1b& pointcloud_insufficient, const Box& polygon_extent,
-                 PointCloudCropperConfig cfg) {
+                 PointCloudCropperConfig cfg) override {
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
@@ -525,6 +527,12 @@ namespace roofer::io {
           cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
           cfg.clear_if_insufficient, poly_areas, poly_pt_counts_bld,
           poly_pt_counts_grd, poly_densities);
+
+      _min_ground_elevation = pip_collector.min_ground_elevation;
+    }
+
+    float get_min_terrain_elevation() const override {
+      return _min_ground_elevation;
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,

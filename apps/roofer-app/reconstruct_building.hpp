@@ -27,7 +27,7 @@ void compute_mesh_properties(
     std::unordered_map<int, roofer::Mesh>& multisolid_lod22, float z_offset,
     RooferConfig* rfcfg) {
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  for (size_t i; i < multisolid_lod22.size(); ++i) {
+  for (size_t i = 0; i < multisolid_lod22.size(); ++i) {
     auto& mesh22 = multisolid_lod22.at(i);
     mesh22.get_attributes().resize(mesh22.get_polygons().size());
 
@@ -169,11 +169,12 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
   return ArrangementExtruder->multisolid;
 }
 
-void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
+void extrude_lod11(BuildingObject& building, float extrusion_h,
+                   RooferConfig* rfcfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
   SimplePolygonExtruder->compute(building.footprint, building.h_ground,
-                                 building.h_roof_70p_rough);
+                                 extrusion_h);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
   building.multisolids_lod13 = SimplePolygonExtruder->multisolid;
@@ -196,7 +197,7 @@ void extrude_lod11(BuildingObject& building, RooferConfig* rfcfg) {
 #endif
 
   building.extrusion_mode = LOD11_FALLBACK;
-  building.roof_elevation_70p = building.h_roof_70p_rough;
+  building.roof_elevation_70p = building.h_pc_roof_70p + building.z_offset;
 }
 
 void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
@@ -233,11 +234,14 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
   }
 
   if (building.extrusion_mode == SKIP) {
+    if (building.roof_h_fallback.has_value()) {
+      extrude_lod11(building, *building.roof_h_fallback, rfcfg);
+    }
     return;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
-    extrude_lod11(building, rfcfg);
+    extrude_lod11(building, building.h_pc_roof_70p, rfcfg);
     return;
-  } else {
+  } else if (building.extrusion_mode == STANDARD) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
     auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
@@ -260,20 +264,27 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
           std::chrono::high_resolution_clock::now() - t0;
 
       building.roof_type = PlaneDetector->roof_type;
-      building.roof_elevation_50p = PlaneDetector->roof_elevation_50p;
-      building.roof_elevation_70p = PlaneDetector->roof_elevation_70p;
-      building.roof_elevation_min = PlaneDetector->roof_elevation_min;
-      building.roof_elevation_max = PlaneDetector->roof_elevation_max;
+      building.roof_elevation_50p =
+          PlaneDetector->roof_elevation_50p + building.z_offset;
+      building.roof_elevation_70p =
+          PlaneDetector->roof_elevation_70p + building.z_offset;
+      building.roof_elevation_min =
+          PlaneDetector->roof_elevation_min + building.z_offset;
+      building.roof_elevation_max =
+          PlaneDetector->roof_elevation_max + building.z_offset;
       building.roof_n_planes = PlaneDetector->pts_per_roofplane.size();
 
       bool pointcloud_insufficient = PlaneDetector->roof_type == "no points" ||
                                      PlaneDetector->roof_type == "no planes";
       if (pointcloud_insufficient) {
         building.extrusion_mode = SKIP;
+        if (building.roof_h_fallback.has_value()) {
+          extrude_lod11(building, *building.roof_h_fallback, rfcfg);
+        }
         return;
       }
     } catch (const std::runtime_error& e) {
-      extrude_lod11(building, rfcfg);
+      extrude_lod11(building, building.h_pc_roof_70p, rfcfg);
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
                      building.jsonl_path.string(), e.what());
       return;
@@ -332,6 +343,14 @@ void reconstruct_building(BuildingObject& building, RooferConfig* rfcfg) {
                               PlaneDetector->plane_adjacencies);
     timings["PlaneIntersector"] =
         std::chrono::high_resolution_clock::now() - t0;
+
+    size_t hr_i;
+    float hr_z;
+    building.roof_n_ridgelines =
+        PlaneIntersector->find_highest_ridgeline(hr_z, hr_i);
+    if (building.roof_n_ridgelines > 0) {
+      building.roof_elevation_ridge = hr_z;
+    }
     // logger.debug("Completed PlaneIntersector");
 #ifdef RF_USE_RERUN
     rec.log("world/intersection_lines",

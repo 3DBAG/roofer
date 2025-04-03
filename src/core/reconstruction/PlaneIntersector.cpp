@@ -123,6 +123,32 @@ namespace roofer::reconstruction {
                   if (sq_length > sq_min_length) {
                     segments.push_back({source, target});
                     length.push_back(std::sqrt(sq_length));
+                    // check if the line is a ridgeline by checking if plane_hi
+                    // and plane_lo have a normal that has an angle of more than
+                    // thres_horiontality degrees with the positive z axis
+                    auto n_hi = plane_hi.orthogonal_vector();
+                    // ensure that n_hi is pointing upwards
+                    if (float(CGAL::to_double(n_hi.z())) < 0) {
+                      n_hi = -n_hi;
+                    }
+                    auto n_lo = plane_lo.orthogonal_vector();
+                    // ensure that n_lo is pointing upwards
+                    if (float(CGAL::to_double(n_lo.z())) < 0) {
+                      n_lo = -n_lo;
+                    }
+                    auto n_z = EPICK::Vector_3(0, 0, 1);
+                    bool is_ridge = CGAL::approximate_angle(n_z, n_hi) >
+                                        cfg.thres_horiontality &&
+                                    CGAL::approximate_angle(n_z, n_lo) >
+                                        cfg.thres_horiontality;
+                    auto a = CGAL::approximate_angle(ppmin, ppmax, ppmax + n_z);
+                    bool is_horizontal = a < (90 + cfg.thres_horiontality) &&
+                                         a > (90 - cfg.thres_horiontality);
+                    if (is_ridge && is_horizontal) {
+                      is_ridgeline.push_back(true);
+                    } else {
+                      is_ridgeline.push_back(false);
+                    }
                   }
                 }
               }
@@ -130,6 +156,27 @@ namespace roofer::reconstruction {
           }
         }
       }
+    }
+
+    size_t find_highest_ridgeline(float& high_z, size_t& high_i) override {
+      size_t i_max, n = 0;
+      float z_max = -std::numeric_limits<float>::max();
+      for (size_t i = 0; i < segments.size(); ++i) {
+        if (is_ridgeline[i]) {
+          if (segments[i][0][2] > z_max) {
+            z_max = segments[i][0][2];
+            i_max = i;
+          } else if (segments[i][1][2] > z_max) {
+            z_max = segments[i][1][2];
+            i_max = i;
+          }
+          ++n;
+        };
+      }
+      if (z_max == -std::numeric_limits<float>::max()) return 0;
+      high_i = i_max;
+      high_z = z_max;
+      return n;
     }
   };
 

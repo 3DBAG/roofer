@@ -109,11 +109,13 @@ struct BuildingObject {
 
   // set in crop
   fs::path jsonl_path;
-  float h_ground;
-  float h_roof_70p_rough;
-  bool force_lod11;  // force_lod11 / fallback_lod11
+  float h_ground;       // without offset
+  float h_pc_98p;       // without offset
+  float h_pc_roof_70p;  // with offset!
+  bool force_lod11;     // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
   bool is_glass_roof;
+  std::optional<float> roof_h_fallback;
   ExtrusionMode extrusion_mode = STANDARD;
 
   // set in reconstruction
@@ -123,6 +125,7 @@ struct BuildingObject {
   std::optional<float> roof_elevation_70p;
   std::optional<float> roof_elevation_min;
   std::optional<float> roof_elevation_max;
+  std::optional<float> roof_elevation_ridge;
   std::optional<int> roof_n_planes;
   std::optional<float> rmse_lod12;
   std::optional<float> rmse_lod13;
@@ -130,6 +133,7 @@ struct BuildingObject {
   std::optional<float> volume_lod12;
   std::optional<float> volume_lod13;
   std::optional<float> volume_lod22;
+  std::optional<int> roof_n_ridgelines;
   std::optional<std::string> val3dity_lod12;
   std::optional<std::string> val3dity_lod13;
   std::optional<std::string> val3dity_lod22;
@@ -967,6 +971,7 @@ int main(int argc, const char* argv[]) {
         }
       }
       sorting_running.store(false);
+      sorted_pending.notify_one();
       logger.debug("[sorter] Finished sorter");
     });
 
@@ -1041,7 +1046,8 @@ int main(int argc, const char* argv[]) {
           if (!roofer_cfg.split_cjseq) {
             auto jsonl_tile_path =
                 fs::path(roofer_cfg.output_path) / "tiles" /
-                fmt::format("tile_{:05d}.city.jsonl", building_tile.id);
+                fmt::format("{}_{:05d}.city.jsonl", roofer_cfg.output_stem,
+                            building_tile.id);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
             if (!roofer_cfg.omit_metadata)
@@ -1073,6 +1079,7 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
+              attrow.insert(roofer_cfg.n["h_pc_98p"], building.h_pc_98p);
               attrow.insert(roofer_cfg.n["is_glass_roof"],
                             building.is_glass_roof);
               attrow.insert(roofer_cfg.n["pointcloud_unusable"],
@@ -1086,8 +1093,12 @@ int main(int argc, const char* argv[]) {
                                      building.roof_elevation_min);
               attrow.insert_optional(roofer_cfg.n["h_roof_max"],
                                      building.roof_elevation_max);
+              attrow.insert_optional(roofer_cfg.n["h_roof_ridge"],
+                                     building.roof_elevation_ridge);
               attrow.insert_optional(roofer_cfg.n["roof_n_planes"],
                                      building.roof_n_planes);
+              attrow.insert_optional(roofer_cfg.n["roof_n_ridgelines"],
+                                     building.roof_n_ridgelines);
               attrow.insert(roofer_cfg.n["extrusion_mode"],
                             building.extrusion_mode);
 
@@ -1127,6 +1138,8 @@ int main(int argc, const char* argv[]) {
                                        building.val3dity_lod22);
 #endif
               }
+              // lift lod 0 footprint to h_ground
+              building.footprint.set_z(building.h_ground);
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
                                             ms22, attrow);
               if (roofer_cfg.split_cjseq) {

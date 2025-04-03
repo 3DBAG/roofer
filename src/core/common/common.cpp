@@ -81,6 +81,17 @@ namespace roofer {
     return interior_rings_;
   }
 
+  void LinearRing::set_z(const float z) {
+    for (auto& p : *this) {
+      p[2] = z;
+    }
+    for (auto& iring : interior_rings_) {
+      for (auto& p : iring) {
+        p[2] = z;
+      }
+    }
+  }
+
   Segment::Segment() {}
   Segment::Segment(arr3f source, arr3f target) {
     (*this)[0] = source;
@@ -115,6 +126,17 @@ namespace roofer {
     }
   }
   float* PointCollection::get_data_ptr() { return (*this)[0].data(); }
+
+  float PointCollection::get_z_percentile(float percentile) const {
+    std::vector<float> z_values;
+    z_values.reserve(size());
+    for (auto& p : *this) {
+      z_values.push_back(p[2]);
+    }
+    std::sort(z_values.begin(), z_values.end());
+    return z_values[std::min(size_t(std::round(percentile * size())),
+                             size() - 1)];
+  }
 
   AttributeVecMapDS& AttributeVecMap::get_attributes() { return attribs_; }
   const AttributeVecMapDS& AttributeVecMap::get_attributes() const {

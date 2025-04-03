@@ -92,8 +92,6 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
           echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
-          cd vcpkg
-          git checkout 0104b799f55b33a4e1b97ecc3a975da664540b71
 
       - if: runner.os == 'Windows'
         name: "Bootstrap vcpkg"
@@ -141,3 +139,13 @@ jobs:
       - name: Test installed
         shell: bash
         run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir build --output-on-failure
+
+      - name: Upload Windows binaries
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: roofer-windows-${{ matrix.build_type }}
+          path: |
+            build/apps/roofer-app/${{ matrix.build_type }}/*.exe
+            build/apps/roofer-app/${{ matrix.build_type }}/*.dll
+          retention-days: 7

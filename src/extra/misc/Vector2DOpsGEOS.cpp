@@ -48,6 +48,8 @@ namespace roofer::misc {
   }
   bool orient_polygon(GEOSGeometry*& g_polygon, ORIENTATION orientation) {
     const GEOSGeometry* g_ring = GEOSGetExteriorRing_r(gc, g_polygon);
+    if (g_ring == nullptr)
+      throw std::runtime_error("orient_polygon: unable to get exterior ring");
     GEOSGeometry* g_ring_ = orient_ring(g_ring, orientation);
     bool reversed = false;
     if (!g_ring_) {
@@ -212,19 +214,35 @@ namespace roofer::misc {
         to_geos_polygon(lr, g_polygon);
 
         if (GEOSisValid_r(gc, g_polygon) != 1) {
-          logger.info("feature not valid");
+          logger.error("Encountered feature that is not valid. WKT: {}",
+                       GEOSGeomToWKT_r(gc, g_polygon));
           GEOSGeom_destroy_r(gc, g_polygon);
           // if (output_failures) polygons_out.push_back(lr);
-          continue;
+          throw std::runtime_error("feature not valid");
         }
 
         GEOSGeometry* simplified_geom =
             GEOSSimplify_r(gc, g_polygon, double(tolerance));
         if (GEOSisValid_r(gc, simplified_geom) != 1) {
-          logger.info("feature not valid after simplify");
+          logger.error(
+              "Encountered feature that is not valid after simplify. WKT: {}",
+              GEOSGeomToWKT_r(gc, simplified_geom));
           GEOSGeom_destroy_r(gc, g_polygon);
+          GEOSGeom_destroy_r(gc, simplified_geom);
           // if (output_failures) polygons_out.push_back(lr);
-          continue;
+          throw std::runtime_error("feature not valid after simplify");
+        }
+        // dump simplified geometry to wkt
+        if (GEOSGetNumGeometries_r(gc, simplified_geom) != 1) {
+          logger.error(
+              "Encountered feature that is a multi-geometry after simplify. "
+              "WKT: {}",
+              GEOSGeomToWKT_r(gc, simplified_geom));
+          GEOSGeom_destroy_r(gc, g_polygon);
+          GEOSGeom_destroy_r(gc, simplified_geom);
+          // if (output_failures) polygons_out.push_back(lr);
+          throw std::runtime_error(
+              "feature has multiple geometries after simplify");
         }
         if (orient_after_simplify) orient_polygon(simplified_geom, CCW);
 
