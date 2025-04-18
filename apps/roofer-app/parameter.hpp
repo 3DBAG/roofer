@@ -1,3 +1,5 @@
+#include <roofer/common/formatters.hpp>
+
 class ConfigParameter {
  public:
   std::string help_;
@@ -17,82 +19,69 @@ class ConfigParameter {
   virtual void set_from_toml(const toml::table& table,
                              const std::string& name) = 0;
 
-  std::string description() { return help_; }
+  virtual std::string description() = 0;
   virtual std::string type_description() = 0;
   virtual std::string to_string() = 0;
+  virtual std::string default_to_string() = 0;
 };
 
 template <typename T>
 class ConfigParameterByReference : public ConfigParameter {
-  T& _value;
+  T& value_;
+  T default_value_;
   std::vector<Validator<T>> _validators;
 
  public:
   ConfigParameterByReference(std::string longname, std::string help, T& value,
                              std::vector<Validator<T>> validators)
       : ConfigParameter(longname, help),
-        _value(value),
+        value_(value),
+        default_value_(value),
         _validators(validators){};
   ConfigParameterByReference(std::string longname, char shortname,
                              std::string help, T& value,
                              std::vector<Validator<T>> validators)
       : ConfigParameter(longname, shortname, help),
-        _value(value),
+        value_(value),
         _validators(validators){};
 
   std::optional<std::string> validate() override {
     for (auto& validator : _validators) {
-      if (auto error_msg = validator(_value)) {
+      if (auto error_msg = validator(value_)) {
         return error_msg;
       }
     }
     return std::nullopt;
   }
 
-  std::string to_string() override {
-    if constexpr (std::is_same_v<T, std::optional<roofer::TBox<double>>>) {
-      if (!_value.has_value()) {
-        return "[]";
-      } else {
-        return fmt::format("[{},{},{},{}]", _value->pmin[0], _value->pmin[1],
-                           _value->pmax[0], _value->pmax[1]);
-      }
-    } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
-      return fmt::format("[{},{}]", _value[0], _value[1]);
-    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
-      if (!_value.has_value()) {
-        return "[]";
-      } else {
-        return fmt::format("[{},{},{}]", (*_value)[0], (*_value)[1],
-                           (*_value)[2]);
-      }
-    } else {
-      return fmt::format("{}", _value);
-    }
+  std::string to_string() override { return std::format("{}", value_); }
+
+  std::string default_to_string() override {
+    return std::format("{}", default_value_);
   }
 
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
     if constexpr (std::is_same_v<T, bool>) {
-      _value = !(_value);
+      value_ = !(value_);
       return it;
     } else if (it == args.end()) {
       throw std::runtime_error("Missing argument for parameter");
     } else if constexpr (std::is_same_v<T, int> ||
                          std::is_same_v<T, std::optional<int>>) {
-      _value = std::stoi(*it);
+      value_ = std::stoi(*it);
       return args.erase(it);
     } else if constexpr (std::is_same_v<T, float> ||
                          std::is_same_v<T, std::optional<float>>) {
-      _value = std::stof(*it);
+      value_ = std::stof(*it);
       return args.erase(it);
     } else if constexpr (std::is_same_v<T, double> ||
                          std::is_same_v<T, std::optional<double>>) {
-      _value = std::stod(*it);
+      value_ = std::stod(*it);
       return args.erase(it);
     } else if constexpr (std::is_same_v<T, std::string>) {
-      _value = *it;
+      value_ = *it;
       return args.erase(it);
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>>) {
@@ -111,7 +100,7 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       box.pmax[1] = std::stod(*it);
       it = args.erase(it);
-      _value = box;
+      value_ = box;
       return it;
     } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
       roofer::arr2f arr;
@@ -123,7 +112,7 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       arr[1] = std::stof(*it);
       it = args.erase(it);
-      _value = arr;
+      value_ = arr;
       return it;
     } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
       roofer::arr3d arr;
@@ -137,7 +126,7 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       arr[2] = std::stod(*it);
       it = args.erase(it);
-      _value = arr;
+      value_ = arr;
       return it;
     } else {
       static_assert(!std::is_same_v<T, T>,
@@ -152,7 +141,7 @@ class ConfigParameterByReference : public ConfigParameter {
         if (a->size() == 2 &&
             (a->is_homogeneous(toml::node_type::floating_point) ||
              a->is_homogeneous(toml::node_type::integer))) {
-          _value = roofer::arr2f{*a->get(0)->value<float>(),
+          value_ = roofer::arr2f{*a->get(0)->value<float>(),
                                  *a->get(1)->value<float>()};
         } else {
           throw std::runtime_error("Failed to read value for " + name +
@@ -165,7 +154,7 @@ class ConfigParameterByReference : public ConfigParameter {
         if (a->size() == 3 &&
             (a->is_homogeneous(toml::node_type::floating_point) ||
              a->is_homogeneous(toml::node_type::integer))) {
-          _value = roofer::arr3d{*a->get(0)->value<double>(),
+          value_ = roofer::arr3d{*a->get(0)->value<double>(),
                                  *a->get(1)->value<double>(),
                                  *a->get(2)->value<double>()};
         } else {
@@ -179,7 +168,7 @@ class ConfigParameterByReference : public ConfigParameter {
         if (a->size() == 4 &&
             (a->is_homogeneous(toml::node_type::floating_point) ||
              a->is_homogeneous(toml::node_type::integer))) {
-          _value = roofer::TBox<double>{
+          value_ = roofer::TBox<double>{
               *a->get(0)->value<double>(), *a->get(1)->value<double>(), 0,
               *a->get(2)->value<double>(), *a->get(3)->value<double>(), 0};
         } else {
@@ -189,14 +178,16 @@ class ConfigParameterByReference : public ConfigParameter {
       }
     } else {
       if (auto value = table[name].value<T>(); value.has_value()) {
-        _value = *value;
+        value_ = *value;
       }
     }
   }
 
+  std::string description() override { return std::format("{}", help_); }
+
   std::string type_description() override {
     if constexpr (std::is_same_v<T, bool>) {
-      return "";
+      return "true|false";
     } else if constexpr (std::is_same_v<T, int>) {
       return "<int>";
     } else if constexpr (std::is_same_v<T, float>) {
@@ -204,14 +195,14 @@ class ConfigParameterByReference : public ConfigParameter {
     } else if constexpr (std::is_same_v<T, double>) {
       return "<double>";
     } else if constexpr (std::is_same_v<T, std::string>) {
-      return "<str>";
+      return "<string>";
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>>) {
-      return "<xmin ymin xmax ymax>";
+      return "(xmin ymin xmax ymax)";
     } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
-      return "<x y>";
+      return "(x y)";
     } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
-      return "<x y z>";
+      return "(x y z)";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "

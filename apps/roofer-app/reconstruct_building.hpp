@@ -77,35 +77,33 @@ void compute_mesh_properties(
         MeshPropertyCalculator->get_heightmap(mesh22, rfcfg->cellsize);
     MeshPropertyCalculator->calculate_h_attr(mesh22, heightmap,
                                              {.z_offset = z_offset,
-                                              .h_50p = rfcfg->n["h_roof_50p"],
-                                              .h_70p = rfcfg->n["h_roof_70p"],
-                                              .h_min = rfcfg->n["h_roof_min"],
-                                              .h_max = rfcfg->n["h_roof_max"]});
+                                              .h_50p = rfcfg->a_h_roof_50p,
+                                              .h_70p = rfcfg->a_h_roof_70p,
+                                              .h_min = rfcfg->a_h_roof_min,
+                                              .h_max = rfcfg->a_h_roof_max});
 
     MeshPropertyCalculator->compute_roof_orientation(
-        mesh22, {.slope = rfcfg->n["slope"], .azimuth = rfcfg->n["azimuth"]});
+        mesh22, {.slope = rfcfg->a_slope, .azimuth = rfcfg->a_azimuth});
 
     if (multisolid_lod12.size() > i) {
       auto& mesh12 = multisolid_lod12.at(i);
       mesh12.get_attributes().resize(mesh12.get_polygons().size());
-      MeshPropertyCalculator->calculate_h_attr(
-          mesh12, heightmap,
-          {.z_offset = z_offset,
-           .h_50p = rfcfg->n["h_roof_50p"],
-           .h_70p = rfcfg->n["h_roof_70p"],
-           .h_min = rfcfg->n["h_roof_min"],
-           .h_max = rfcfg->n["h_roof_max"]});
+      MeshPropertyCalculator->calculate_h_attr(mesh12, heightmap,
+                                               {.z_offset = z_offset,
+                                                .h_50p = rfcfg->a_h_roof_50p,
+                                                .h_70p = rfcfg->a_h_roof_70p,
+                                                .h_min = rfcfg->a_h_roof_min,
+                                                .h_max = rfcfg->a_h_roof_max});
     }
     if (multisolid_lod13.size() > i) {
       auto& mesh13 = multisolid_lod13.at(i);
       mesh13.get_attributes().resize(mesh13.get_polygons().size());
-      MeshPropertyCalculator->calculate_h_attr(
-          mesh13, heightmap,
-          {.z_offset = z_offset,
-           .h_50p = rfcfg->n["h_roof_50p"],
-           .h_70p = rfcfg->n["h_roof_70p"],
-           .h_min = rfcfg->n["h_roof_min"],
-           .h_max = rfcfg->n["h_roof_max"]});
+      MeshPropertyCalculator->calculate_h_attr(mesh13, heightmap,
+                                               {.z_offset = z_offset,
+                                                .h_50p = rfcfg->a_h_roof_50p,
+                                                .h_70p = rfcfg->a_h_roof_70p,
+                                                .h_min = rfcfg->a_h_roof_min,
+                                                .h_max = rfcfg->a_h_roof_max});
     }
   }
 }
