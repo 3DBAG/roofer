@@ -123,11 +123,5 @@ namespace roofer {
      */
     float thres_reg_line_ext = 3.000000;
     // lod1_extrude_to_max=false
-
-    bool is_valid() {
-      return (complexity_factor >= 0 && complexity_factor <= 1.0) &&
-                 lod == 12 ||
-             lod == 13 || lod == 22 && lod13_step_height > 0;
-    }
   };
 }  // namespace roofer
