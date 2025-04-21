@@ -512,6 +512,8 @@ struct RooferConfigHandler {
       "Indicates if the pointcloud was found "
       "unusable for reconstruction",
       cfg_.a_pointcloud_unusable);
+
+    build_lookup_index();
   };
 
   template <typename T>
@@ -544,6 +546,10 @@ struct RooferConfigHandler {
               param.get();
         }
       }
+    }
+    // print lookup index
+    for (const auto& [key, param] : lookup_index_) {
+      fmt::print("{}: {}\n", key, param->longname_);
     }
   }
 

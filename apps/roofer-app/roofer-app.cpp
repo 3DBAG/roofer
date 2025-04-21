@@ -858,10 +858,12 @@ int main(int argc, const char* argv[]) {
 
           std::ofstream ofs;
           if (!handler.cfg_.split_cjseq) {
+            // get bottom left corner coordinates
+            int minx = building_tile.extent.min()[0];
+            int miny = building_tile.extent.min()[1];
             auto jsonl_tile_path =
-                fs::path(handler.cfg_.output_path) / "tiles" /
-                fmt::format("{}_{:05d}.city.jsonl", handler.cfg_.output_stem,
-                            building_tile.id);
+                fs::path(handler.cfg_.output_path) /
+                fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
             if (!handler.cfg_.omit_metadata)
