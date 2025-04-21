@@ -31,7 +31,6 @@
 
 #include <roofer/common/common.hpp>
 #include <roofer/logger/logger.h>
-#include <roofer/ReconstructionConfig.hpp>
 #include <roofer/misc/Vector2DOps.hpp>
 #include <stdexcept>
 #include <string>
@@ -139,14 +138,27 @@ struct RooferConfig {
   std::string index_file_spec = "{path}/index.gpkg";
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
-  std::string output_stem = "tile";
 
   // reconstruct
   roofer::enums::TerrainStrategy h_terrain_strategy =
       roofer::enums::TerrainStrategy::BUFFER_TILE;
   int lod11_fallback_planes = 900;
   int lod11_fallback_time = 1800000;
-  roofer::ReconstructionConfig rec;
+  float complexity_factor = 0.888;
+
+  bool clip_ground = true;
+  int lod = 22;
+  float lod13_step_height = 3.;
+  float floor_elevation = 0.;
+  bool override_with_floor_elevation = false;
+  int plane_detect_k = 15;
+  int plane_detect_min_points = 15;
+  float plane_detect_epsilon = 0.300000;
+  float plane_detect_normal_angle = 0.750000;
+  float line_detect_epsilon = 1.000000;
+  float thres_alpha = 0.250000;
+  float thres_reg_line_dist = 0.800000;
+  float thres_reg_line_ext = 3.000000;
 
   // output attribute names
   std::string a_success = "rf_success";
@@ -363,21 +375,21 @@ struct RooferConfigHandler {
     p(reconstruction, "lod",
       "Which LoDs to generate, possible values: 12, 13, 22 [default: "
       "all]",
-      cfg_.rec.lod, {check::OneOf<int>({0, 12, 13, 22})});
+      cfg_.lod, {check::OneOf<int>({0, 12, 13, 22})});
     p(reconstruction, "complexity-factor",
-      "Complexity factor building reconstruction", cfg_.rec.complexity_factor,
+      "Complexity factor building reconstruction", cfg_.complexity_factor,
       {check::InRange<float>(0, 1)});
     p(reconstruction, "no-clip", "Do not clip terrain parts from roofprint",
-      cfg_.rec.clip_ground, {});
+      cfg_.clip_ground, {});
     p(reconstruction, "lod13-step-height",
-      "Step height used for LoD1.3 generation", cfg_.rec.lod13_step_height,
+      "Step height used for LoD1.3 generation", cfg_.lod13_step_height,
       {check::HigherThan<float>(0)});
-    p(reconstruction, "plane-detect-k", "plane detect k",
-      cfg_.rec.plane_detect_k, {check::HigherThan<int>(0)});
+    p(reconstruction, "plane-detect-k", "plane detect k", cfg_.plane_detect_k,
+      {check::HigherThan<int>(0)});
     p(reconstruction, "plane-detect-min-points", "plane detect min points",
-      cfg_.rec.plane_detect_min_points, {check::HigherThan<int>(2)});
+      cfg_.plane_detect_min_points, {check::HigherThan<int>(2)});
     p(reconstruction, "plane-detect-epsilon", "plane detect epsilon",
-      cfg_.rec.plane_detect_epsilon, {check::HigherThan<float>(0)});
+      cfg_.plane_detect_epsilon, {check::HigherThan<float>(0)});
     p(reconstruction, "h-terrain-strategy", "Terrain height strategy",
       cfg_.h_terrain_strategy, {check::OneOf<int>({0, 1, 2})});
     p(reconstruction, "lod11-fallback-planes",
@@ -388,8 +400,6 @@ struct RooferConfigHandler {
 
         p(output, "tilesize", "Tilesize used for output tiles", cfg_.tilesize,
           {check::HigherThan<roofer::arr2f>({0, 0})});
-    p(output, "output-stem", "Filename stem for output tiles,",
-      cfg_.output_stem);
     p(output, "split-cjseq",
       "Output CityJSONSequence file for each building instead of one "
       "file per tile",
