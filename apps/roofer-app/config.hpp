@@ -305,16 +305,6 @@ struct RooferConfigHandler {
     auto reconstruction = add_group("Reconstruction options");
     auto output = add_group("Output options");
     auto output_attr = add_group("Output attribute names");
-    auto empty = add_group("Empty group");
-    // params_.emplace("Input",
-    // std::vector<std::unique_ptr<ConfigParameter>>{}); params_.emplace("Crop",
-    // std::vector<std::unique_ptr<ConfigParameter>>{});
-    // params_.emplace("Reconstruction",
-    //                 std::vector<std::unique_ptr<ConfigParameter>>{});
-    // params_.emplace("Output",
-    // std::vector<std::unique_ptr<ConfigParameter>>{}); params_.emplace("Output
-    // attribute names", std::vector<std::unique_ptr<ConfigParameter>>{});
-    // params_.emplace("", std::vector<std::unique_ptr<ConfigParameter>>{});
 
     p(input, "id-attribute", "Building ID attribute", cfg_.id_attribute);
     p(input, "force-lod11-attribute", "Building attribute for forcing lod11",
@@ -522,10 +512,6 @@ struct RooferConfigHandler {
       "Indicates if the pointcloud was found "
       "unusable for reconstruction",
       cfg_.a_pointcloud_unusable);
-
-#ifdef RF_USE_RERUN
-    p("", "use-rerun", "Use rerun", cfg_.use_rerun),
-#endif
   };
 
   template <typename T>
@@ -756,6 +742,10 @@ struct RooferConfigHandler {
         } else {
           throw std::runtime_error("Missing argument for --config.");
         }
+#ifdef RF_USE_RERUN
+      } else if (arg == "--rerun") {
+        cfg_.use_rerun = true;
+#endif
       } else if (arg == "--no-tiling") {
         _no_tiling = true;
         it = c.args.erase(it);
