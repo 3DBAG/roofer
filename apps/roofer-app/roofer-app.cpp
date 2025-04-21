@@ -299,7 +299,6 @@ int main(int argc, const char* argv[]) {
   // read cmdl options
   CLIArgs cli_args(argc, argv);
   RooferConfigHandler handler;
-  handler.cfg_.lod = 0;
 
   // Parse basic command line arguments (not yet the configuration parameters)
   try {
@@ -935,7 +934,7 @@ int main(int argc, const char* argv[]) {
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
-              if (handler.cfg_.lod == 0 || handler.cfg_.lod == 12) {
+              if (handler.cfg_.lod_12) {
                 ms12 = &building.multisolids_lod12;
                 attrow.insert_optional(handler.cfg_.a_rmse_lod12,
                                        building.rmse_lod12);
@@ -946,7 +945,7 @@ int main(int argc, const char* argv[]) {
                                        building.val3dity_lod12);
 #endif
               }
-              if (handler.cfg_.lod == 0 || handler.cfg_.lod == 13) {
+              if (handler.cfg_.lod_13) {
                 ms13 = &building.multisolids_lod13;
                 attrow.insert_optional(handler.cfg_.a_rmse_lod13,
                                        building.rmse_lod13);
@@ -957,7 +956,7 @@ int main(int argc, const char* argv[]) {
                                        building.val3dity_lod13);
 #endif
               }
-              if (handler.cfg_.lod == 0 || handler.cfg_.lod == 22) {
+              if (handler.cfg_.lod_22) {
                 ms22 = &building.multisolids_lod22;
                 attrow.insert_optional(handler.cfg_.a_rmse_lod22,
                                        building.rmse_lod22);

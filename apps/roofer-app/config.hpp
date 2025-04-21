@@ -147,7 +147,9 @@ struct RooferConfig {
   float complexity_factor = 0.888;
 
   bool clip_ground = true;
-  int lod = 22;
+  bool lod_12 = false;
+  bool lod_13 = false;
+  bool lod_22 = true;
   float lod13_step_height = 3.;
   float floor_elevation = 0.;
   bool override_with_floor_elevation = false;
@@ -372,10 +374,9 @@ struct RooferConfigHandler {
       "compute 98th percentile of pointcloud height for each building",
       cfg_.compute_pc_98p);
 
-    p(reconstruction, "lod",
-      "Which LoDs to generate, possible values: 12, 13, 22 [default: "
-      "all]",
-      cfg_.lod, {check::OneOf<int>({0, 12, 13, 22})});
+    p(reconstruction, "lod12", "Generate LoD 1,2 geometry", cfg_.lod_12);
+    p(reconstruction, "lod13", "Generate LoD 1.3 geometry", cfg_.lod_13);
+    p(reconstruction, "lod22", "Generate L0D 2.2 geometry", cfg_.lod_22);
     p(reconstruction, "complexity-factor",
       "Complexity factor building reconstruction", cfg_.complexity_factor,
       {check::InRange<float>(0, 1)});

@@ -496,19 +496,19 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     // attributes to be filled during reconstruction
     // logger.debug("LoD={}", cfg->lod);
     t0 = std::chrono::high_resolution_clock::now();
-    if (cfg->lod == 0 || cfg->lod == 12) {
+    if (cfg->lod_12) {
       building.multisolids_lod12 = extrude_lod22(
           arrangement, building, cfg, SegmentRasteriser.get(), LOD12,
           building.rmse_lod12, building.volume_lod12, building.val3dity_lod12);
     }
 
-    if (cfg->lod == 0 || cfg->lod == 13) {
+    if (cfg->lod_13) {
       building.multisolids_lod13 = extrude_lod22(
           arrangement, building, cfg, SegmentRasteriser.get(), LOD13,
           building.rmse_lod13, building.volume_lod13, building.val3dity_lod13);
     }
 
-    if (cfg->lod == 0 || cfg->lod == 22) {
+    if (cfg->lod_22) {
       building.multisolids_lod22 = extrude_lod22(
           arrangement, building, cfg, SegmentRasteriser.get(), LOD22,
           building.rmse_lod22, building.volume_lod22, building.val3dity_lod22);
