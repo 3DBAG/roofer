@@ -380,8 +380,8 @@ struct RooferConfigHandler {
     p(reconstruction, "complexity-factor",
       "Complexity factor building reconstruction", cfg_.complexity_factor,
       {check::InRange<float>(0, 1)});
-    p(reconstruction, "no-clip", "Do not clip terrain parts from roofprint",
-      cfg_.clip_ground, {});
+    p(reconstruction, "clip-terrain",
+      "Do not clip terrain parts from roofprint", cfg_.clip_ground, {});
     p(reconstruction, "lod13-step-height",
       "Step height used for LoD1.3 generation", cfg_.lod13_step_height,
       {check::HigherThan<float>(0)});
@@ -629,7 +629,7 @@ struct RooferConfigHandler {
     std::cout << "\033[1mPositional arguments:\033[0m" << "\n";
     std::cout << "  <pointcloud-path>            Path to pointcloud file "
                  "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
-    std::cout << "  <polygon-source>             Path to footprint polygon "
+    std::cout << "  <polygon-source>             Path to roofprint polygons "
                  "source. "
                  "Can be "
                  "an OGR supported file (eg. GPKG) or database connection "
@@ -932,7 +932,7 @@ struct fmt::formatter<RooferConfigHandler> {
   static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
   template <typename Context>
   auto format(RooferConfigHandler const& cfgh, Context& ctx) const {
-    fmt::format_to(ctx.out(), "RooferConfig(source_footprints={}",
+    fmt::format_to(ctx.out(), "RooferConfig(source_rootprints={}",
                    cfgh.cfg_.source_footprints);
 
     // Add all parameters
