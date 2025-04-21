@@ -380,8 +380,8 @@ struct RooferConfigHandler {
     p(reconstruction, "complexity-factor",
       "Complexity factor building reconstruction", cfg_.complexity_factor,
       {check::InRange<float>(0, 1)});
-    p(reconstruction, "clip-terrain",
-      "Do not clip terrain parts from roofprint", cfg_.clip_ground, {});
+    p(reconstruction, "clip-terrain", "Clip terrain parts from roofprint",
+      cfg_.clip_ground, {});
     p(reconstruction, "lod13-step-height",
       "Step height used for LoD1.3 generation", cfg_.lod13_step_height,
       {check::HigherThan<float>(0)});
@@ -411,8 +411,8 @@ struct RooferConfigHandler {
       cfg_.cj_scale);
     p(output, "cj-translate", "Translation applied to CityJSON output vertices",
       cfg_.cj_translate);
-    p(output, "a_success",
-      "Name of output attribute that indicates if processing completed without "
+    p(output_attr, "a_success",
+      "indicates if processing completed without "
       "unexpected errors",
       cfg_.a_success);
     p(output_attr, "a_reconstruction_time",
@@ -558,10 +558,6 @@ struct RooferConfigHandler {
         }
       }
     }
-    // print lookup index
-    for (const auto& [key, param] : lookup_index_) {
-      fmt::print("{}: {}\n", key, param->longname_);
-    }
   }
 
   void validate() {
@@ -636,7 +632,7 @@ struct RooferConfigHandler {
                  "string.\n";
     std::cout << "  <output-directory>           Output directory.\n";
     std::cout << "\n";
-    std::cout << "\033[1mGeneral options:\033[0m\n";
+    std::cout << "\033[1mGeneral options and flags\033[0m:\n";
     std::cout << "  -h, --help                   Show this help message.\n";
     std::cout << "  -v, --version                Show version." << "\n";
     std::cout << "  -l, --loglevel <level>       Specify loglevel. Can be "

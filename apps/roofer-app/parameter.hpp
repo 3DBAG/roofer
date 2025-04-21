@@ -218,7 +218,7 @@ class ConfigParameterByReference : public ConfigParameter {
 
   std::string type_description() override {
     if constexpr (std::is_same_v<T, bool>) {
-      return "(true|false)";
+      return "<true|false>";
     } else if constexpr (std::is_same_v<T, int>) {
       return "<int>";
     } else if constexpr (std::is_same_v<T, float>) {
@@ -235,7 +235,7 @@ class ConfigParameterByReference : public ConfigParameter {
     } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
       return "(x y z)";
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
-      return "(buffer_tile|buffer_user|user)";
+      return "<buffer_tile|buffer_user|user>";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "
