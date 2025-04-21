@@ -1,4 +1,5 @@
 #include <roofer/common/formatters.hpp>
+#include "config.hpp"
 
 class ConfigParameter {
  public:
@@ -63,11 +64,17 @@ class ConfigParameterByReference : public ConfigParameter {
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
-    if constexpr (std::is_same_v<T, bool>) {
-      value_ = !(value_);
-      return it;
-    } else if (it == args.end()) {
+    if (it == args.end()) {
       throw std::runtime_error("Missing argument for parameter");
+    } else if constexpr (std::is_same_v<T, bool>) {
+      if (*it == "true" || *it == "yes" || *it == "1") {
+        value_ = true;
+      } else if (*it == "false" || *it == "no" || *it == "0") {
+        value_ = false;
+      } else {
+        throw std::runtime_error("Invalid argument for boolean parameter");
+      }
+      return args.erase(it);
     } else if constexpr (std::is_same_v<T, int> ||
                          std::is_same_v<T, std::optional<int>>) {
       value_ = std::stoi(*it);
@@ -128,6 +135,17 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       value_ = arr;
       return it;
+    } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+      if (*it == "buffer_tile") {
+        value_ = roofer::enums::TerrainStrategy::BUFFER_TILE;
+      } else if (*it == "buffer_user") {
+        value_ = roofer::enums::TerrainStrategy::BUFFER_USER;
+      } else if (*it == "user") {
+        value_ = roofer::enums::TerrainStrategy::USER;
+      } else {
+        throw std::runtime_error("Invalid argument for TerrainStrategy");
+      }
+      return args.erase(it);
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for ConfigParameterByReference::set()");
@@ -176,6 +194,19 @@ class ConfigParameterByReference : public ConfigParameter {
                                    " from config file.");
         }
       }
+    } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+      if (const toml::value<std::string>* s = table[name].as_string()) {
+        if (*s == "buffer_tile") {
+          value_ = roofer::enums::TerrainStrategy::BUFFER_TILE;
+        } else if (*s == "buffer_user") {
+          value_ = roofer::enums::TerrainStrategy::BUFFER_USER;
+        } else if (*s == "user") {
+          value_ = roofer::enums::TerrainStrategy::USER;
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
     } else {
       if (auto value = table[name].value<T>(); value.has_value()) {
         value_ = *value;
@@ -187,7 +218,7 @@ class ConfigParameterByReference : public ConfigParameter {
 
   std::string type_description() override {
     if constexpr (std::is_same_v<T, bool>) {
-      return "true|false";
+      return "(true|false)";
     } else if constexpr (std::is_same_v<T, int>) {
       return "<int>";
     } else if constexpr (std::is_same_v<T, float>) {
@@ -203,6 +234,8 @@ class ConfigParameterByReference : public ConfigParameter {
       return "(x y)";
     } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
       return "(x y z)";
+    } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+      return "(buffer_tile|buffer_user|user)";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "

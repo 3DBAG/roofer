@@ -913,8 +913,22 @@ int main(int argc, const char* argv[]) {
                                      building.roof_n_planes);
               attrow.insert_optional(handler.cfg_.a_roof_n_ridgelines,
                                      building.roof_n_ridgelines);
-              attrow.insert(handler.cfg_.a_extrusion_mode,
-                            building.extrusion_mode);
+              std::string extrusion_mode_str;
+              switch (building.extrusion_mode) {
+                case STANDARD:
+                  extrusion_mode_str = "standard";
+                  break;
+                case LOD11_FALLBACK:
+                  extrusion_mode_str = "lod11_fallback";
+                  break;
+                case SKIP:
+                  extrusion_mode_str = "skip";
+                  break;
+                default:
+                  extrusion_mode_str = "unknown";
+                  break;
+              }
+              attrow.insert(handler.cfg_.a_extrusion_mode, extrusion_mode_str);
 
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;

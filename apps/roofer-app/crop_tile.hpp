@@ -334,6 +334,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       BuildingObject& building = output_building_tile.buildings.emplace_back();
       building.attribute_index = i;
       building.z_offset = (*pj->data_offset)[2];
+      using TerrainStrategy = roofer::enums::TerrainStrategy;
 
       auto& points = input_pointclouds[selected->index].building_clouds[i];
       auto classification = points.attributes.get_if<int>("classification");
@@ -353,14 +354,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
-      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_WITH_MIN_H_TILE) {
+      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_TILE) {
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
           building.h_ground = PointCloudCropper->get_min_terrain_elevation();
         }
-      } else if (cfg.h_terrain_strategy ==
-                 TerrainStrategy::BUFFER_WITH_USER_ATTRIBUTE) {
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_USER) {
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
@@ -380,7 +380,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
             exit(1);
           }
         }
-      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER) {
         if (h_ground_fallback_vec) {
           if ((*h_ground_fallback_vec)[i].has_value()) {
             building.h_ground = (*h_ground_fallback_vec)[i].value();
