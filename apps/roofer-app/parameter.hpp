@@ -58,7 +58,12 @@ class ConfigParameterByReference : public ConfigParameter {
   std::string to_string() override { return std::format("{}", value_); }
 
   std::string default_to_string() override {
-    return std::format("{}", default_value_);
+    std::string s = std::format("{}", default_value_);
+    if (s.size() == 0) {
+      return "<no value>";
+    } else {
+      return std::format("{}", default_value_);
+    }
   }
 
   std::list<std::string>::iterator set(
@@ -91,7 +96,8 @@ class ConfigParameterByReference : public ConfigParameter {
       value_ = *it;
       return args.erase(it);
     } else if constexpr (std::is_same_v<T,
-                                        std::optional<roofer::TBox<double>>>) {
+                                        std::optional<roofer::TBox<double>>> ||
+                         std::is_same_v<T, roofer::TBox<double>>) {
       roofer::TBox<double> box;
       // Check if there are enough arguments
       if (std::distance(it, args.end()) < 4) {
@@ -121,7 +127,8 @@ class ConfigParameterByReference : public ConfigParameter {
       it = args.erase(it);
       value_ = arr;
       return it;
-    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>> ||
+                         std::is_same_v<T, roofer::arr3d>) {
       roofer::arr3d arr;
       // Check if there are enough arguments
       if (std::distance(it, args.end()) < 3) {
@@ -167,7 +174,8 @@ class ConfigParameterByReference : public ConfigParameter {
         }
       }
     } else if constexpr (std::is_same_v<T,
-                                        std::optional<std::array<double, 3>>>) {
+                                        std::optional<std::array<double, 3>>> ||
+                         std::is_same_v<T, std::array<double, 3>>) {
       if (const toml::array* a = table[name].as_array()) {
         if (a->size() == 3 &&
             (a->is_homogeneous(toml::node_type::floating_point) ||
@@ -181,7 +189,8 @@ class ConfigParameterByReference : public ConfigParameter {
         }
       }
     } else if constexpr (std::is_same_v<T,
-                                        std::optional<roofer::TBox<double>>>) {
+                                        std::optional<roofer::TBox<double>>> ||
+                         std::is_same_v<T, roofer::TBox<double>>) {
       if (const toml::array* a = table[name].as_array()) {
         if (a->size() == 4 &&
             (a->is_homogeneous(toml::node_type::floating_point) ||
@@ -228,11 +237,13 @@ class ConfigParameterByReference : public ConfigParameter {
     } else if constexpr (std::is_same_v<T, std::string>) {
       return "<string>";
     } else if constexpr (std::is_same_v<T,
-                                        std::optional<roofer::TBox<double>>>) {
+                                        std::optional<roofer::TBox<double>>> ||
+                         std::is_same_v<T, roofer::TBox<double>>) {
       return "(xmin ymin xmax ymax)";
     } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
       return "(x y)";
-    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>>) {
+    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>> ||
+                         std::is_same_v<T, roofer::arr3d>) {
       return "(x y z)";
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
       return "<buffer_tile|buffer_user|user>";

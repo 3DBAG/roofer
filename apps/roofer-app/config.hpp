@@ -123,7 +123,7 @@ struct RooferConfig {
   // crop output
   bool split_cjseq = false;
   bool omit_metadata = false;
-  std::optional<roofer::arr3d> cj_scale;
+  roofer::arr3d cj_scale = {0.001, 0.001, 0.001};
   std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
       "{path}/objects/{bid}/config_{pc_name}.toml";
@@ -383,7 +383,7 @@ struct RooferConfigHandler {
     p(reconstruction, "clip-terrain", "Clip terrain parts from roofprint",
       cfg_.clip_ground, {});
     p(reconstruction, "lod13-step-height",
-      "Step height used for LoD1.3 generation", cfg_.lod13_step_height,
+      "Step height used for LoD 1.3 generation", cfg_.lod13_step_height,
       {check::HigherThan<float>(0)});
     p(reconstruction, "plane-detect-k", "plane detect k", cfg_.plane_detect_k,
       {check::HigherThan<int>(0)});
@@ -409,7 +409,9 @@ struct RooferConfigHandler {
       cfg_.omit_metadata);
     p(output, "cj-scale", "Scaling applied to CityJSON output vertices",
       cfg_.cj_scale);
-    p(output, "cj-translate", "Translation applied to CityJSON output vertices",
+    p(output, "cj-translate",
+      "Translation applied to CityJSON output vertices. Uses tile center by "
+      "default.",
       cfg_.cj_translate);
     p(output_attr, "a_success",
       "indicates if processing completed without "
