@@ -374,7 +374,7 @@ struct RooferConfigHandler {
       "compute 98th percentile of pointcloud height for each building",
       cfg_.compute_pc_98p);
 
-    p(reconstruction, "lod12", "Generate LoD 1,2 geometry", cfg_.lod_12);
+    p(reconstruction, "lod12", "Generate LoD 1.2 geometry", cfg_.lod_12);
     p(reconstruction, "lod13", "Generate LoD 1.3 geometry", cfg_.lod_13);
     p(reconstruction, "lod22", "Generate L0D 2.2 geometry", cfg_.lod_22);
     p(reconstruction, "complexity-factor",
@@ -650,7 +650,7 @@ struct RooferConfigHandler {
                  "[default: number of cores]\n";
     // std::cout << "   --crop-only                  Only crop pointclouds.
     // Skip reconstruction.\n";
-    std::cout << "  --no-tiling                  Do not use tiling.\n";
+    std::cout << "  -n, --no-tiling              Do not use tiling.\n";
     std::cout << "  --crop-output                Output cropped building "
                  "pointclouds.\n";
     std::cout << "  --crop-output-all            Output files for each "
@@ -763,7 +763,7 @@ struct RooferConfigHandler {
       } else if (arg == "--rerun") {
         cfg_.use_rerun = true;
 #endif
-      } else if (arg == "--no-tiling") {
+      } else if (arg == "-n" || arg == "--no-tiling") {
         _no_tiling = true;
         it = c.args.erase(it);
       } else if (arg == "--skip-pc-check") {
