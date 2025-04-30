@@ -361,7 +361,7 @@ struct RooferConfigHandler {
       cfg_.grnd_class, {check::HigherOrEqualTo<int>(0)});
 
     p(crop, "ceil-point-density",
-      "Enfore this point density ceiling on each building pointcloud.",
+      "Enforce this point density ceiling on each building pointcloud.",
       cfg_.ceil_point_density, {check::HigherThan<float>(0)});
     p(crop, "cellsize", "Cellsize used for quick pointcloud analysis",
       cfg_.cellsize, {check::HigherThan<float>(0)});
@@ -376,7 +376,7 @@ struct RooferConfigHandler {
 
     p(reconstruction, "lod12", "Generate LoD 1.2 geometry", cfg_.lod_12);
     p(reconstruction, "lod13", "Generate LoD 1.3 geometry", cfg_.lod_13);
-    p(reconstruction, "lod22", "Generate L0D 2.2 geometry", cfg_.lod_22);
+    p(reconstruction, "lod22", "Generate LoD 2.2 geometry", cfg_.lod_22);
     p(reconstruction, "complexity-factor",
       "Complexity factor building reconstruction", cfg_.complexity_factor,
       {check::InRange<float>(0, 1)});
