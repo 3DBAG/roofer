@@ -19,6 +19,12 @@ On *macOS* you need to install additional build tools:
    brew install autoconf autoconf-archive automake libtool
    export PATH="/opt/homebrew/opt/m4/bin:$PATH"
 
+On *Ubuntu* you need to install additional build tools:
+
+.. code-block:: shell
+
+    apt install autoconf bison flex libtool
+
 Clone the roofer repository and use one of the CMake presets to build the roofer.
 
 .. code-block:: shell

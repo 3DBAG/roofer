@@ -166,7 +166,7 @@ namespace roofer::io {
           if (poly_grids[poly_i]->test(point)) {
             if (point_class == ground_class) {
               point_cloud.push_back(point);
-              (*classification).push_back(2);
+              (*classification).push_back(ground_class);
             } else if (point_class == building_class) {
               poly_intersect.push_back(poly_i);
             }
@@ -189,7 +189,7 @@ namespace roofer::io {
             auto classification =
                 point_cloud.attributes.get_if<int>("classification");
             point_cloud.push_back(point);
-            (*classification).push_back(6);
+            (*classification).push_back(building_class);
           }
         }
       }
@@ -237,10 +237,10 @@ namespace roofer::io {
         size_t pt_cnt_grd = 0;
         float z_sum = 0;
         for (size_t pi = 0; pi < point_cloud.size(); ++pi) {
-          if ((*classification)[pi] == 6) {
+          if ((*classification)[pi] == building_class) {
             ++pt_cnt_bld;
             z_sum += point_cloud[pi][2];
-          } else if ((*classification)[pi] == 2) {
+          } else if ((*classification)[pi] == ground_class) {
             ++pt_cnt_grd;
           }
         }
@@ -260,7 +260,7 @@ namespace roofer::io {
             point_cloud.attributes.get_if<int>("classification");
         for (auto& p : ground_buffer_points[poly_i]) {
           point_cloud.push_back(p);
-          (*classification).push_back(2);
+          (*classification).push_back(ground_class);
         }
       }
       ground_buffer_points.clear();
@@ -305,7 +305,7 @@ namespace roofer::io {
           auto classification =
               point_cloud.attributes.get_if<int>("classification");
           point_cloud.push_back(*p);
-          (*classification).push_back(6);
+          (*classification).push_back(building_class);
           poly_info[polylist.back()].pt_count_bld++;
         }
       }

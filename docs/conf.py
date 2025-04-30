@@ -16,7 +16,13 @@ release = ''
 
 extensions = [
     'breathe',
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    "myst_parser"
+]
+
+myst_enable_extensions = [
+  "colon_fence",
+  "html_admonition"
 ]
 
 # make rooferpy module findable for autodoc
