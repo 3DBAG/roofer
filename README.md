@@ -13,16 +13,7 @@
 - Usable either as a command line application or as a library with C++ and Python bindings.
 - With the CLI application the building models are outputted to a [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) file.
 
-Documentation is provided at https://3dbag.github.io/roofer/. The source code is available at https://github.com/3DBAG/roofer.
-
-:::{Attention}
-Let's give readers a helpful hint!
-:::
-
-<div class="admonition note" name="html-admonition" style="background: lightgreen; padding: 10px">
-<p class="title">This is the **title**</p>
-This is the *content*
-</div>
+Documentation is provided at https://3dbag.github.io/roofer/ The source code is available at https://github.com/3DBAG/roofer
 
 > [!WARNING]
 > Roofer is currently still under active development and subject to breaking changes.
