@@ -24,7 +24,7 @@ Let's give readers a helpful hint!
 This is the *content*
 </div>
 
-> **Attention**
+> [!WARNING]
 > Roofer is currently still under active development and subject to breaking changes.
 
 ## Origin
