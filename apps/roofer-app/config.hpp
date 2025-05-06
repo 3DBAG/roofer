@@ -152,7 +152,6 @@ struct RooferConfig {
   bool lod_22 = true;
   float lod13_step_height = 3.;
   float floor_elevation = 0.;
-  bool override_with_floor_elevation = false;
   int plane_detect_k = 15;
   int plane_detect_min_points = 15;
   float plane_detect_epsilon = 0.300000;
@@ -297,8 +296,12 @@ struct RooferConfigHandler {
       std::map<std::string, std::vector<std::unique_ptr<ConfigParameter>>>;
   ;
   std::vector<InputPointcloud> input_pointclouds_;
+  param_group_map app_params_;
   param_group_map params_;
-  std::unordered_map<std::string, ConfigParameter*> lookup_index_;
+  param_group_map attrib_params_;
+  std::unordered_map<std::string, ConfigParameter*> param_index_;
+  std::unordered_map<std::string, ConfigParameter*> app_param_index_;
+  std::unordered_map<std::string, ConfigParameter*> attributes_index_;
 
   // flags
   bool _print_help = false;
@@ -314,11 +317,15 @@ struct RooferConfigHandler {
   // methods
   RooferConfigHandler() {
     // add parameters
-    auto input = add_group("Input options");
-    auto crop = add_group("Crop options");
-    auto reconstruction = add_group("Reconstruction options");
-    auto output = add_group("Output options");
-    auto output_attr = add_group("Output attribute names");
+    auto input = add_group(params_, "Input options");
+    auto crop = add_group(params_, "Crop options");
+    auto reconstruction = add_group(params_, "Reconstruction options");
+    auto output = add_group(params_, "Output options");
+
+    auto general = add_group(app_params_, "General options");
+    auto output_attr = add_group(attrib_params_, "Output attribute names");
+
+    p(general, "help", 'h', "Show help message", _print_help);
 
     p(input, "id-attribute", "Building ID attribute", cfg_.id_attribute);
     p(input, "force-lod11-attribute", "Building attribute for forcing lod11",
@@ -367,7 +374,7 @@ struct RooferConfigHandler {
       cfg_.cellsize, {check::HigherThan<float>(0)});
     p(crop, "lod11-fallback-area", "lod11 fallback area",
       cfg_.lod11_fallback_area, {check::HigherThan<int>(0)});
-    p(crop, "reconstruct-insufficient",
+    p(crop, "clear-insufficient",
       "reconstruct buildings with insufficient pointcloud data",
       cfg_.clear_if_insufficient);
     p(crop, "compute-pc-98p",
@@ -544,18 +551,27 @@ struct RooferConfigHandler {
         longname, shortname, help, value, std::move(validators)));
   }
 
-  param_group_map::iterator add_group(const std::string& group_title) {
-    auto res = params_.emplace(group_title,
-                               std::vector<std::unique_ptr<ConfigParameter>>{});
+  param_group_map::iterator add_group(param_group_map& params,
+                                      const std::string& group_title) {
+    auto res = params.emplace(group_title,
+                              std::vector<std::unique_ptr<ConfigParameter>>{});
     return res.first;
   }
 
   void build_lookup_index() {
     for (const auto& [group_name, param_list] : params_) {
       for (const auto& param : param_list) {
-        lookup_index_[param->longname_] = param.get();
+        param_index_[param->longname_] = param.get();
         if (param->shortname_.has_value()) {
-          lookup_index_[std::string(1, param->shortname_.value())] =
+          param_index_[std::string(1, param->shortname_.value())] = param.get();
+        }
+      }
+    }
+    for (const auto& [group_name, param_list] : app_params_) {
+      for (const auto& param : param_list) {
+        app_param_index_[param->longname_] = param.get();
+        if (param->shortname_.has_value()) {
+          app_param_index_[std::string(1, param->shortname_.value())] =
               param.get();
         }
       }
@@ -637,6 +653,7 @@ struct RooferConfigHandler {
     std::cout << "  <output-directory>           Output directory.\n";
     std::cout << "\n";
     std::cout << "\033[1mGeneral options and flags\033[0m:\n";
+    print_params(app_params_);
     std::cout << "  -h, --help                   Show this help message.\n";
     std::cout << "  -v, --version                Show version." << "\n";
     std::cout << "  -l, --loglevel <level>       Specify loglevel. Can be "
@@ -663,7 +680,11 @@ struct RooferConfigHandler {
     std::cout << "  --skip-pc-check              Do not check if pointcloud "
                  "files exist\n";
 
-    for (auto& [group_name, group] : params_) {
+    print_params(params_);
+  }
+
+  void print_params(param_group_map& params) {
+    for (auto& [group_name, group] : params) {
       if (group.empty()) continue;
       std::cout << "\n";
       std::cout << "\033[1m" << group_name << ":\033[0m\n";
@@ -671,15 +692,15 @@ struct RooferConfigHandler {
         auto tdesc = param->type_description();
         auto desc = param->description();
         if (param->longname_.size() + tdesc.size() + 1 <= 33) {
-          std::cout << "  --" << std::setw(33) << std::left
-                    << (param->longname_ + " " + tdesc) << desc << "\n";
+          std::cout << "  " << std::setw(35) << std::left
+                    << (param->cli_flag() + " " + tdesc) << desc << "\n";
           std::cout << "    " << std::setw(33) << std::left
                     << ""  // 5 characters of padding
                     << "\033[34mDefault: " << param->default_to_string()
                     << "\033[0m" << "\n";
         } else {
-          std::cout << "  --" << std::setw(33) << std::left
-                    << (param->longname_) << desc << "\n";
+          std::cout << "  " << std::setw(35) << std::left << (param->cli_flag())
+                    << desc << "\n";
           std::cout << "    " << std::setw(33) << std::left
                     << tdesc  // 5 characters of padding
                     << "\033[34mDefault: " << param->default_to_string()
@@ -799,9 +820,17 @@ struct RooferConfigHandler {
       std::string arg = *it;
 
       try {
-        if (arg.starts_with("--")) {
+        if (arg.starts_with("--no")) {
+          auto argname = arg.substr(4);
+          if (auto p = param_index_.find(argname); p != param_index_.end()) {
+            it = c.args.erase(it);
+            p->second->unset();
+          } else {
+            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+          }
+        } else if (arg.starts_with("--")) {
           auto argname = arg.substr(2);
-          if (auto p = lookup_index_.find(argname); p != lookup_index_.end()) {
+          if (auto p = param_index_.find(argname); p != param_index_.end()) {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
@@ -863,8 +892,8 @@ struct RooferConfigHandler {
           get_toml_value(config, "polygon-source", cfg_.source_footprints);
         } else if (key == "output-directory") {
           get_toml_value(config, "output-directory", cfg_.output_path);
-        } else if (auto p = lookup_index_.find(key.data());
-                   p != lookup_index_.end()) {
+        } else if (auto p = param_index_.find(key.data());
+                   p != param_index_.end()) {
           p->second->set_from_toml(config, key.data());
         } else if (key == "pointclouds") {
           if (toml::array* arr = config["pointclouds"].as_array()) {

@@ -154,6 +154,9 @@ See {cpp:member}`roofer::ReconstructionConfig::complexity_factor`.
 See {cpp:member}`roofer::ReconstructionConfig::lod`. Default is to reconstruct all LoDs.
 ```
 
+```{include} cli-options.md
+```
+
 ## Output format
 The output of the :program:`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
 

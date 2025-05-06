@@ -16,6 +16,7 @@ class ConfigParameter {
 
   virtual std::list<std::string>::iterator set(
       std::list<std::string>& args, std::list<std::string>::iterator it) = 0;
+  virtual void unset() = 0;
 
   virtual void set_from_toml(const toml::table& table,
                              const std::string& name) = 0;
@@ -24,6 +25,7 @@ class ConfigParameter {
   virtual std::string type_description() = 0;
   virtual std::string to_string() = 0;
   virtual std::string default_to_string() = 0;
+  virtual std::string cli_flag() = 0;
 };
 
 template <typename T>
@@ -66,96 +68,112 @@ class ConfigParameterByReference : public ConfigParameter {
     }
   }
 
+  std::string cli_flag() override {
+    if (shortname_.has_value()) {
+      return std::format("-{}, --{}", shortname_.value(), longname_);
+    } else {
+      if constexpr (std::is_same_v<T, bool>) {
+        return std::format("--[no-]{}", longname_);
+      } else {
+        return std::format("--{}", longname_);
+      }
+    }
+  }
+
+  void unset() override {
+    if constexpr (std::is_same_v<T, bool>) {
+      value_ = false;
+    } else {
+      value_ = default_value_;
+    }
+  }
+
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
-    if (it == args.end()) {
-      throw std::runtime_error("Missing argument for parameter");
-    } else if constexpr (std::is_same_v<T, bool>) {
-      if (*it == "true" || *it == "yes" || *it == "1") {
-        value_ = true;
-      } else if (*it == "false" || *it == "no" || *it == "0") {
-        value_ = false;
-      } else {
-        throw std::runtime_error("Invalid argument for boolean parameter");
-      }
-      return args.erase(it);
-    } else if constexpr (std::is_same_v<T, int> ||
-                         std::is_same_v<T, std::optional<int>>) {
-      value_ = std::stoi(*it);
-      return args.erase(it);
-    } else if constexpr (std::is_same_v<T, float> ||
-                         std::is_same_v<T, std::optional<float>>) {
-      value_ = std::stof(*it);
-      return args.erase(it);
-    } else if constexpr (std::is_same_v<T, double> ||
-                         std::is_same_v<T, std::optional<double>>) {
-      value_ = std::stod(*it);
-      return args.erase(it);
-    } else if constexpr (std::is_same_v<T, std::string>) {
-      value_ = *it;
-      return args.erase(it);
-    } else if constexpr (std::is_same_v<T,
-                                        std::optional<roofer::TBox<double>>> ||
-                         std::is_same_v<T, roofer::TBox<double>>) {
-      roofer::TBox<double> box;
-      // Check if there are enough arguments
-      if (std::distance(it, args.end()) < 4) {
-        throw std::runtime_error("Not enough arguments, need 4.");
-      }
-
-      // Extract the values safely
-      box.pmin[0] = std::stod(*it);
-      it = args.erase(it);
-      box.pmin[1] = std::stod(*it);
-      it = args.erase(it);
-      box.pmax[0] = std::stod(*it);
-      it = args.erase(it);
-      box.pmax[1] = std::stod(*it);
-      it = args.erase(it);
-      value_ = box;
+    if constexpr (std::is_same_v<T, bool>) {
+      value_ = true;
       return it;
-    } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
-      roofer::arr2f arr;
-      // Check if there are enough arguments
-      if (std::distance(it, args.end()) < 2) {
-        throw std::runtime_error("Not enough arguments, need 2.");
-      }
-      arr[0] = std::stof(*it);
-      it = args.erase(it);
-      arr[1] = std::stof(*it);
-      it = args.erase(it);
-      value_ = arr;
-      return it;
-    } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>> ||
-                         std::is_same_v<T, roofer::arr3d>) {
-      roofer::arr3d arr;
-      // Check if there are enough arguments
-      if (std::distance(it, args.end()) < 3) {
-        throw std::runtime_error("Not enough arguments, need 3.");
-      }
-      arr[0] = std::stod(*it);
-      it = args.erase(it);
-      arr[1] = std::stod(*it);
-      it = args.erase(it);
-      arr[2] = std::stod(*it);
-      it = args.erase(it);
-      value_ = arr;
-      return it;
-    } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
-      if (*it == "buffer_tile") {
-        value_ = roofer::enums::TerrainStrategy::BUFFER_TILE;
-      } else if (*it == "buffer_user") {
-        value_ = roofer::enums::TerrainStrategy::BUFFER_USER;
-      } else if (*it == "user") {
-        value_ = roofer::enums::TerrainStrategy::USER;
-      } else {
-        throw std::runtime_error("Invalid argument for TerrainStrategy");
-      }
-      return args.erase(it);
     } else {
-      static_assert(!std::is_same_v<T, T>,
-                    "Unsupported type for ConfigParameterByReference::set()");
+      if (it == args.end()) {
+        throw std::runtime_error("Missing argument for parameter");
+      } else if constexpr (std::is_same_v<T, int> ||
+                           std::is_same_v<T, std::optional<int>>) {
+        value_ = std::stoi(*it);
+        return args.erase(it);
+      } else if constexpr (std::is_same_v<T, float> ||
+                           std::is_same_v<T, std::optional<float>>) {
+        value_ = std::stof(*it);
+        return args.erase(it);
+      } else if constexpr (std::is_same_v<T, double> ||
+                           std::is_same_v<T, std::optional<double>>) {
+        value_ = std::stod(*it);
+        return args.erase(it);
+      } else if constexpr (std::is_same_v<T, std::string>) {
+        value_ = *it;
+        return args.erase(it);
+      } else if constexpr (std::is_same_v<
+                               T, std::optional<roofer::TBox<double>>> ||
+                           std::is_same_v<T, roofer::TBox<double>>) {
+        roofer::TBox<double> box;
+        // Check if there are enough arguments
+        if (std::distance(it, args.end()) < 4) {
+          throw std::runtime_error("Not enough arguments, need 4.");
+        }
+
+        // Extract the values safely
+        box.pmin[0] = std::stod(*it);
+        it = args.erase(it);
+        box.pmin[1] = std::stod(*it);
+        it = args.erase(it);
+        box.pmax[0] = std::stod(*it);
+        it = args.erase(it);
+        box.pmax[1] = std::stod(*it);
+        it = args.erase(it);
+        value_ = box;
+        return it;
+      } else if constexpr (std::is_same_v<T, roofer::arr2f>) {
+        roofer::arr2f arr;
+        // Check if there are enough arguments
+        if (std::distance(it, args.end()) < 2) {
+          throw std::runtime_error("Not enough arguments, need 2.");
+        }
+        arr[0] = std::stof(*it);
+        it = args.erase(it);
+        arr[1] = std::stof(*it);
+        it = args.erase(it);
+        value_ = arr;
+        return it;
+      } else if constexpr (std::is_same_v<T, std::optional<roofer::arr3d>> ||
+                           std::is_same_v<T, roofer::arr3d>) {
+        roofer::arr3d arr;
+        // Check if there are enough arguments
+        if (std::distance(it, args.end()) < 3) {
+          throw std::runtime_error("Not enough arguments, need 3.");
+        }
+        arr[0] = std::stod(*it);
+        it = args.erase(it);
+        arr[1] = std::stod(*it);
+        it = args.erase(it);
+        arr[2] = std::stod(*it);
+        it = args.erase(it);
+        value_ = arr;
+        return it;
+      } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+        if (*it == "buffer_tile") {
+          value_ = roofer::enums::TerrainStrategy::BUFFER_TILE;
+        } else if (*it == "buffer_user") {
+          value_ = roofer::enums::TerrainStrategy::BUFFER_USER;
+        } else if (*it == "user") {
+          value_ = roofer::enums::TerrainStrategy::USER;
+        } else {
+          throw std::runtime_error("Invalid argument for TerrainStrategy");
+        }
+        return args.erase(it);
+      } else {
+        static_assert(!std::is_same_v<T, T>,
+                      "Unsupported type for ConfigParameterByReference::set()");
+      }
     }
   }
 
@@ -227,7 +245,7 @@ class ConfigParameterByReference : public ConfigParameter {
 
   std::string type_description() override {
     if constexpr (std::is_same_v<T, bool>) {
-      return "<true|false>";
+      return "";
     } else if constexpr (std::is_same_v<T, int>) {
       return "<int>";
     } else if constexpr (std::is_same_v<T, float>) {
