@@ -79,7 +79,9 @@ _GITHUB_ADMONITIONS = {
 }
 
 # based on https://github.com/executablebooks/MyST-Parser/issues/845#issuecomment-2793118480
-# def run_convert_github_admonitions_to_rst(app, filename, lines):
+def run_convert_github_admonitions_to_rst_source(app, filename, lines):
+    run_convert_github_admonitions_to_rst(app, filename, None, lines)
+
 def run_convert_github_admonitions_to_rst(app, relative_path, parent_docname, lines):
     # loop through lines, replace github admonitions
     print("BKABLA")
@@ -111,3 +113,4 @@ def run_convert_github_admonitions_to_rst(app, relative_path, parent_docname, li
 def setup(app):
     print("setupset")
     app.connect("include-read", run_convert_github_admonitions_to_rst)
+    app.connect("source-read", run_convert_github_admonitions_to_rst_source)
