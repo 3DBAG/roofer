@@ -15,7 +15,7 @@
 
 Documentation is provided at https://3dbag.github.io/roofer/ The source code is available at https://github.com/3DBAG/roofer
 
-> [!WARNING]
+> [!CAUTION]
 > Roofer is currently still under active development and subject to breaking changes.
 
 ## Origin
