@@ -272,3 +272,64 @@ class ConfigParameterByReference : public ConfigParameter {
     }
   }
 };
+
+class ParameterGroup {
+ public:
+  // std::string name_;
+  std::vector<std::unique_ptr<ConfigParameter>> params_;
+
+  ParameterGroup(){};
+  ~ParameterGroup() = default;
+
+  // Ensure move constructor and move assignment are enabled
+  ParameterGroup(ParameterGroup&&) = default;             // Move constructor
+  ParameterGroup& operator=(ParameterGroup&&) = default;  // Move assignment
+
+  // If you have a custom copy constructor or destructor, ensure they are
+  // compatible For example, if copying is not needed, explicitly delete it
+  ParameterGroup(const ParameterGroup&) = delete;
+  ParameterGroup& operator=(const ParameterGroup&) = delete;
+
+  template <typename T>
+  void add(const std::string& longname, const std::string& help, T& value,
+           std::vector<Validator<T>> validators = {}) {
+    params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
+        longname, help, value, std::move(validators)));
+  }
+
+  template <typename T>
+  void add(const std::string& longname, const char shortname,
+           const std::string& help, T& value,
+           std::vector<Validator<T>> validators = {}) {
+    params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
+        longname, shortname, help, value, std::move(validators)));
+  }
+
+  void add_to_index(std::unordered_map<std::string, ConfigParameter*>& index) {
+    for (auto& param : params_) {
+      index[param->longname_] = param.get();
+      if (param->shortname_.has_value()) {
+        index[std::string(1, param->shortname_.value())] = param.get();
+      }
+    }
+  }
+
+  // iteraror functionality to params_
+  auto begin() { return params_.begin(); }
+  auto end() { return params_.end(); }
+  auto begin() const { return params_.begin(); }
+  auto end() const { return params_.end(); }
+  auto size() const { return params_.size(); }
+  auto empty() const { return params_.empty(); }
+  auto& operator[](size_t i) { return params_[i]; }
+  auto& operator[](size_t i) const { return params_[i]; }
+
+  // std::optional<std::string> validate() {
+  //   for (auto& param : group_) {
+  //     if (auto error_msg = param->validate()) {
+  //       return error_msg;
+  //     }
+  //   }
+  //   return std::nullopt;
+  // }
+};
