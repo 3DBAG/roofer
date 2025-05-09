@@ -290,21 +290,16 @@ struct CLIArgs {
 };
 
 struct RooferConfigHandler {
-  // parametermap
   RooferConfig cfg_;
 
-  using param_group_map = std::vector<std::pair<std::string, ParameterGroup>>;
-  ;
-  // using param_map =
-  //     std::map<std::string, std::unique_ptr<ConfigParameter>>;
+  using param_group_map = std::vector<std::pair<std::string, ParameterVector>>;
 
   std::vector<InputPointcloud> input_pointclouds_;
   param_group_map app_param_groups_;
   param_group_map param_groups_;
-  param_group_map attrib_param_groups_;
+  DocAttribMap output_attr_;
   std::unordered_map<std::string, ConfigParameter*> param_index_;
   // std::unordered_map<std::string, ConfigParameter*> app_param_index_;
-  // std::unordered_map<std::string, ConfigParameter*> attribute_rename_index_;
 
   // flags
   bool _print_help = false;
@@ -319,8 +314,8 @@ struct RooferConfigHandler {
 
   // methods
   RooferConfigHandler() {
-    ParameterGroup input, crop, reconstruction, output;
-    ParameterGroup general, output_attr;
+    ParameterVector input, crop, reconstruction, output;
+    ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
     general.add("version", 'v', "Show version", _print_version);
@@ -423,131 +418,143 @@ struct RooferConfigHandler {
         "Translation applied to CityJSON output vertices. Uses tile center by "
         "default.",
         cfg_.cj_translate);
-    // output.add("rename",
-    //   "Rename output attributes. Use 'old_name=new_name' format. "
-    //   "If the new name is empty, the attribute will be removed.",
-    //   cfg_.attrib_param_groups_);
-    output_attr.add("a_success",
-                    "indicates if processing completed without "
-                    "unexpected errors",
-                    cfg_.a_success);
-    output_attr.add("a_reconstruction_time",
-                    "Indicates reconstruction time in ms",
-                    cfg_.a_reconstruction_time);
-    output_attr.add("a_val3dity_lod12",
-                    "Lists val3dity codes for LOD12 geometry",
-                    cfg_.a_val3dity_lod12);
-    output_attr.add("a_val3dity_lod13",
-                    "Lists val3dity codes for LOD13 geometry",
-                    cfg_.a_val3dity_lod13);
-    output_attr.add("a_val3dity_lod22",
-                    "Lists val3dity codes for LOD22 geometry",
-                    cfg_.a_val3dity_lod22);
-    output_attr.add("a_is_glass_roof", "Indicates if a glass roof was detected",
-                    cfg_.a_is_glass_roof);
-    output_attr.add("a_nodata_frac",
-                    "Indicates the fraction of the roofprint "
-                    "that is not covered by pointcloud data",
-                    cfg_.a_nodata_frac);
-    output_attr.add(
-        "a_nodata_r",
-        "Indicates the radius of the largest "
-        "circle in the roofprint that is not covered by pointcloud data",
-        cfg_.a_nodata_r);
-    output_attr.add("a_pt_density",
-                    "Indicates the point density inside the "
-                    "roofprint",
-                    cfg_.a_pt_density);
-    output_attr.add("a_is_mutated",
-                    "Indicates if the building was mutated "
-                    "between multiple input pointclouds (if multiple input "
-                    "pointclouds were "
-                    "provided)",
-                    cfg_.a_is_mutated);
-    output_attr.add("a_pc_select",
-                    "Indicates why the input pointcloud was "
-                    "selected for reconstruction",
-                    cfg_.a_pc_select);
-    output_attr.add("a_pc_source",
-                    "Indicates which input pointcloud was used "
-                    "for reconstruction",
-                    cfg_.a_pc_source);
-    output_attr.add("a_pc_year",
-                    "Indicates the acquisition year of the "
-                    "selected input pointcloud",
-                    cfg_.a_pc_year);
-    output_attr.add("a_force_lod11",
-                    "Indicates if LOD11 was forced for the "
-                    "building",
-                    cfg_.a_force_lod11);
-    output_attr.add("a_roof_type", "Indicates the roof type", cfg_.a_roof_type);
-    output_attr.add("a_h_roof_50p", "Indicates the 50th percentile roof height",
-                    cfg_.a_h_roof_50p);
-    output_attr.add("a_h_roof_70p", "Indicates the 70th percentile roof height",
-                    cfg_.a_h_roof_70p);
-    output_attr.add("a_h_roof_min", "Indicates the minimum roof height",
-                    cfg_.a_h_roof_min);
-    output_attr.add("a_h_roof_max", "Indicates the maximum roof height",
-                    cfg_.a_h_roof_max);
-    output_attr.add("a_h_roof_ridge", "Indicates the main ridge height",
-                    cfg_.a_h_roof_ridge);
-    output_attr.add("a_h_pc_98p",
-                    "Indicates the 98th percentile height of "
-                    "the pointcloud",
-                    cfg_.a_h_pc_98p);
-    output_attr.add("a_roof_n_planes",
-                    "Indicates the number of roofplanes "
-                    "detected in the pointcloud (could be different from the "
-                    "generated mesh "
-                    "model)",
-                    cfg_.a_roof_n_planes);
-    output_attr.add("a_roof_n_ridgelines",
-                    "Indicates the number of ridgelines "
-                    "detected in the pointcloud (could be different from the "
-                    "generated mesh "
-                    "model)",
-                    cfg_.a_roof_n_ridgelines);
-    output_attr.add("a_rmse_lod12",
-                    "Indicates the Root Mean Square Erorr of "
-                    "the LOD12 geometry",
-                    cfg_.a_rmse_lod12);
-    output_attr.add("a_rmse_lod13",
-                    "Indicates the Root Mean Square Erorr of "
-                    "the LOD13 geometry",
-                    cfg_.a_rmse_lod13);
-    output_attr.add("a_rmse_lod22",
-                    "Indicates the Root Mean Square Erorr of "
-                    "the LOD22 geometry",
-                    cfg_.a_rmse_lod22);
-    output_attr.add("a_volume_lod12",
-                    "Indicates the volume of the LOD12 "
-                    "geometry",
-                    cfg_.a_volume_lod12);
-    output_attr.add("a_volume_lod13",
-                    "Indicates the volume of the LOD13 "
-                    "geometry",
-                    cfg_.a_volume_lod13);
-    output_attr.add("a_volume_lod22",
-                    "Indicates the volume of the LOD22 "
-                    "geometry",
-                    cfg_.a_volume_lod22);
-    output_attr.add("a_h_ground",
-                    "Indicates the height of floor of the "
-                    "building",
-                    cfg_.a_h_ground);
-    output_attr.add("a_slope", "Indicates the slope of a roofpart",
-                    cfg_.a_slope);
-    output_attr.add("a_azimuth", "Indicates the azimuth of a roofpart",
-                    cfg_.a_azimuth);
-    output_attr.add("a_extrusion_mode",
-                    "Indicates what extrusion mode was used "
-                    "for the building",
-                    cfg_.a_extrusion_mode);
-    output_attr.add("a_pointcloud_unusable",
-                    "Indicates if the pointcloud was found "
-                    "unusable for reconstruction",
-                    cfg_.a_pointcloud_unusable);
 
+    output_attr_.emplace("success",
+                         DocAttrib(&cfg_.a_success,
+                                   "indicates if processing completed without "
+                                   "unexpected errors"));
+    output_attr_.emplace("reconstruction_time",
+                         DocAttrib(&cfg_.a_reconstruction_time,
+                                   "Indicates reconstruction time in ms"));
+    output_attr_.emplace("val3dity_lod12",
+                         DocAttrib(&cfg_.a_val3dity_lod12,
+                                   "Lists val3dity codes for LOD12 geometry"));
+    output_attr_.emplace("val3dity_lod13",
+                         DocAttrib(&cfg_.a_val3dity_lod13,
+                                   "Lists val3dity codes for LOD13 geometry"));
+    output_attr_.emplace("val3dity_lod22",
+                         DocAttrib(&cfg_.a_val3dity_lod22,
+                                   "Lists val3dity codes for LOD22 geometry"));
+    output_attr_.emplace("is_glass_roof",
+                         DocAttrib(&cfg_.a_is_glass_roof,
+                                   "Indicates if a glass roof was detected"));
+    output_attr_.emplace("nodata_frac",
+                         DocAttrib(&cfg_.a_nodata_frac,
+                                   "Indicates the fraction of the roofprint "
+                                   "that is not covered by pointcloud data"));
+    output_attr_.emplace(
+        "nodata_r",
+        DocAttrib(
+            &cfg_.a_nodata_r,
+            "Indicates the radius of the largest "
+            "circle in the roofprint that is not covered by pointcloud data"));
+    output_attr_.emplace("pt_density",
+                         DocAttrib(&cfg_.a_pt_density,
+                                   "Indicates the point density inside the "
+                                   "roofprint"));
+    output_attr_.emplace(
+        "is_mutated",
+        DocAttrib(&cfg_.a_is_mutated,
+                  "Indicates if the building was mutated "
+                  "between multiple input pointclouds (if multiple input "
+                  "pointclouds were "
+                  "provided)"));
+    output_attr_.emplace("pc_select",
+                         DocAttrib(&cfg_.a_pc_select,
+                                   "Indicates why the input pointcloud was "
+                                   "selected for reconstruction"));
+    output_attr_.emplace("pc_source",
+                         DocAttrib(&cfg_.a_pc_source,
+                                   "Indicates which input pointcloud was used "
+                                   "for reconstruction"));
+    output_attr_.emplace("pc_year",
+                         DocAttrib(&cfg_.a_pc_year,
+                                   "Indicates the acquisition year of the "
+                                   "selected input pointcloud"));
+    output_attr_.emplace("force_lod11",
+                         DocAttrib(&cfg_.a_force_lod11,
+                                   "Indicates if LOD11 was forced for the "
+                                   "building"));
+    output_attr_.emplace(
+        "roof_type", DocAttrib(&cfg_.a_roof_type, "Indicates the roof type"));
+    output_attr_.emplace(
+        "h_roof_50p", DocAttrib(&cfg_.a_h_roof_50p,
+                                "Indicates the 50th percentile roof height"));
+    output_attr_.emplace(
+        "h_roof_70p", DocAttrib(&cfg_.a_h_roof_70p,
+                                "Indicates the 70th percentile roof height"));
+    output_attr_.emplace(
+        "h_roof_min",
+        DocAttrib(&cfg_.a_h_roof_min, "Indicates the minimum roof height"));
+    output_attr_.emplace(
+        "h_roof_max",
+        DocAttrib(&cfg_.a_h_roof_max, "Indicates the maximum roof height"));
+    output_attr_.emplace(
+        "h_roof_ridge",
+        DocAttrib(&cfg_.a_h_roof_ridge, "Indicates the main ridge height"));
+    output_attr_.emplace("h_pc_98p",
+                         DocAttrib(&cfg_.a_h_pc_98p,
+                                   "Indicates the 98th percentile height of "
+                                   "the pointcloud"));
+    output_attr_.emplace(
+        "roof_n_planes",
+        DocAttrib(&cfg_.a_roof_n_planes,
+                  "Indicates the number of roofplanes "
+                  "detected in the pointcloud (could be different from the "
+                  "generated mesh "
+                  "model)"));
+    output_attr_.emplace(
+        "roof_n_ridgelines",
+        DocAttrib(&cfg_.a_roof_n_ridgelines,
+                  "Indicates the number of ridgelines "
+                  "detected in the pointcloud (could be different from the "
+                  "generated mesh "
+                  "model)"));
+    output_attr_.emplace("rmse_lod12",
+                         DocAttrib(&cfg_.a_rmse_lod12,
+                                   "Indicates the Root Mean Square Erorr of "
+                                   "the LOD12 geometry"));
+    output_attr_.emplace("rmse_lod13",
+                         DocAttrib(&cfg_.a_rmse_lod13,
+                                   "Indicates the Root Mean Square Erorr of "
+                                   "the LOD13 geometry"));
+    output_attr_.emplace("rmse_lod22",
+                         DocAttrib(&cfg_.a_rmse_lod22,
+                                   "Indicates the Root Mean Square Erorr of "
+                                   "the LOD22 geometry"));
+    output_attr_.emplace("volume_lod12",
+                         DocAttrib(&cfg_.a_volume_lod12,
+                                   "Indicates the volume of the LOD12 "
+                                   "geometry"));
+    output_attr_.emplace("volume_lod13",
+                         DocAttrib(&cfg_.a_volume_lod13,
+                                   "Indicates the volume of the LOD13 "
+                                   "geometry"));
+    output_attr_.emplace("volume_lod22",
+                         DocAttrib(&cfg_.a_volume_lod22,
+                                   "Indicates the volume of the LOD22 "
+                                   "geometry"));
+    output_attr_.emplace("h_ground",
+                         DocAttrib(&cfg_.a_h_ground,
+                                   "Indicates the height of floor of the "
+                                   "building"));
+    output_attr_.emplace(
+        "slope", DocAttrib(&cfg_.a_slope, "Indicates the slope of a roofpart"));
+    output_attr_.emplace(
+        "azimuth",
+        DocAttrib(&cfg_.a_azimuth, "Indicates the azimuth of a roofpart"));
+    output_attr_.emplace("extrusion_mode",
+                         DocAttrib(&cfg_.a_extrusion_mode,
+                                   "Indicates what extrusion mode was used "
+                                   "for the building"));
+    output_attr_.emplace("pointcloud_unusable",
+                         DocAttrib(&cfg_.a_pointcloud_unusable,
+                                   "Indicates if the pointcloud was found "
+                                   "unusable for reconstruction"));
+    output.add("rename",
+               "Rename output attributes. Use 'old_name=new_name' format. "
+               "If the new name is empty, the attribute will be removed.",
+               output_attr_);
     // Move groups into param_group_map
     param_groups_.emplace_back("Input options", std::move(input));
     param_groups_.emplace_back("Crop options", std::move(crop));
@@ -555,8 +562,6 @@ struct RooferConfigHandler {
                                std::move(reconstruction));
     param_groups_.emplace_back("Output options", std::move(output));
     app_param_groups_.emplace_back("General options", std::move(general));
-    attrib_param_groups_.emplace_back("Output attribute names",
-                                      std::move(output_attr));
 
     // Add to index
     for (auto& [group_name, group] : param_groups_) {

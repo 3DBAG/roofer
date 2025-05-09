@@ -1,5 +1,38 @@
 #include <roofer/common/formatters.hpp>
+#include <string>
 #include "config.hpp"
+
+struct DocAttrib {
+  std::string* value;
+  std::string description;
+  DocAttrib(std::string* value, std::string description)
+      : value(value), description(description){};
+
+  // copy constructor
+  DocAttrib(const DocAttrib& other) : value(other.value) {
+    description = other.description;
+  }
+
+  void operator=(const std::string& str) { *value = str; };
+};
+using DocAttribMap = std::map<std::string, DocAttrib>;
+
+// std::formatter for DocAttribMap
+template <>
+struct std::formatter<DocAttribMap> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+  auto format(const DocAttribMap& map, std::format_context& ctx) const {
+    std::string result;
+    for (const auto& [key, value] : map) {
+      result += fmt::format("{}={},", key, *value.value);
+    }
+    if (!result.empty()) {
+      result.pop_back();  // Remove the last comma
+    }
+    return std::format_to(ctx.out(), "{}", result);
+  }
+};
 
 class ConfigParameter {
  public:
@@ -170,6 +203,23 @@ class ConfigParameterByReference : public ConfigParameter {
           throw std::runtime_error("Invalid argument for TerrainStrategy");
         }
         return args.erase(it);
+      } else if constexpr (std::is_same_v<T, DocAttribMap>) {
+        // split by comma
+        auto keyval_pairs = roofer::split_string(*it, ",");
+        // split the string "key=value" into key and value
+        for (auto& keyval : keyval_pairs) {
+          auto kv = roofer::split_string(keyval, "=");
+          if (kv.size() == 1) {
+            // if no value is given
+            value_.at(kv[0]) = "";
+          } else if (kv.size() == 2) {
+            // if key and value are given
+            value_.at(kv[0]) = kv[1];
+          } else {
+            throw std::runtime_error("Invalid argument for StringParameterMap");
+          }
+        }
+        return args.erase(it);
       } else {
         static_assert(!std::is_same_v<T, T>,
                       "Unsupported type for ConfigParameterByReference::set()");
@@ -234,6 +284,18 @@ class ConfigParameterByReference : public ConfigParameter {
                                    " from config file.");
         }
       }
+    } else if constexpr (std::is_same_v<T, DocAttribMap>) {
+      if (const toml::array* a = table[name].as_array()) {
+        for (const auto& el : *a) {
+          if (const toml::table* tb = el.as_table()) {
+            for (const auto& [key, value] : *tb) {
+              std::string key_str(key.str());
+              std::string value_str = *value.value<std::string>();
+              value_.at(key_str) = value_str;
+            }
+          }
+        }
+      }
     } else {
       if (auto value = table[name].value<T>(); value.has_value()) {
         value_ = *value;
@@ -265,6 +327,8 @@ class ConfigParameterByReference : public ConfigParameter {
       return "(x y z)";
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
       return "<buffer_tile|buffer_user|user>";
+    } else if constexpr (std::is_same_v<T, DocAttribMap>) {
+      return "key=value,key=value,...";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "
@@ -273,22 +337,22 @@ class ConfigParameterByReference : public ConfigParameter {
   }
 };
 
-class ParameterGroup {
+class ParameterVector {
  public:
   // std::string name_;
   std::vector<std::unique_ptr<ConfigParameter>> params_;
 
-  ParameterGroup(){};
-  ~ParameterGroup() = default;
+  ParameterVector(){};
+  ~ParameterVector() = default;
 
   // Ensure move constructor and move assignment are enabled
-  ParameterGroup(ParameterGroup&&) = default;             // Move constructor
-  ParameterGroup& operator=(ParameterGroup&&) = default;  // Move assignment
+  ParameterVector(ParameterVector&&) = default;             // Move constructor
+  ParameterVector& operator=(ParameterVector&&) = default;  // Move assignment
 
   // If you have a custom copy constructor or destructor, ensure they are
   // compatible For example, if copying is not needed, explicitly delete it
-  ParameterGroup(const ParameterGroup&) = delete;
-  ParameterGroup& operator=(const ParameterGroup&) = delete;
+  ParameterVector(const ParameterVector&) = delete;
+  ParameterVector& operator=(const ParameterVector&) = delete;
 
   template <typename T>
   void add(const std::string& longname, const std::string& help, T& value,
