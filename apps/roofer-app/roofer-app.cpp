@@ -359,17 +359,11 @@ int main(int argc, const char* argv[]) {
 
   bool do_tracing = false;
   auto trace_interval = std::chrono::seconds(handler._trace_interval);
-  if (handler._loglevel == "info") {
-    logger.set_level(roofer::logger::LogLevel::info);
-  } else if (handler._loglevel == "debug") {
-    logger.set_level(roofer::logger::LogLevel::debug);
-  } else if (handler._loglevel == "trace") {
-    logger.set_level(roofer::logger::LogLevel::trace);
+  logger.set_level(handler._loglevel);
+  if (handler._loglevel == roofer::logger::LogLevel::trace) {
     trace_interval = std::chrono::seconds(handler._trace_interval);
     do_tracing = true;
     logger.debug("trace interval is set to {} seconds", trace_interval.count());
-  } else {
-    logger.set_level(roofer::logger::LogLevel::warning);
   }
 
 // rerun

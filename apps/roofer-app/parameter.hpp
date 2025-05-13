@@ -20,24 +20,37 @@ using DocAttribMap = std::map<std::string, DocAttrib>;
 // std::formatter for DocAttribMap
 template <>
 struct std::formatter<DocAttribMap> {
-  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  bool as_toml = false;
+  constexpr auto parse(std::format_parse_context& ctx) {
+    auto it = ctx.begin();
+    if (it != ctx.end() && *it == 't') {
+      as_toml = true;
+      ++it;
+    }
+    return it;
+  }
 
   auto format(const DocAttribMap& map, std::format_context& ctx) const {
     std::string result;
     for (const auto& [key, value] : map) {
-      result += fmt::format("{}={},", key, *value.value);
+      if (as_toml) {
+        result += std::format("## {}\n", value.description);
+        result += fmt::format("{} = \"{}\"\n", key, *value.value);
+      } else {
+        result += fmt::format("{}={},", key, *value.value);
+      }
     }
-    if (!result.empty()) {
+    if (!result.empty() && !as_toml) {
       result.pop_back();  // Remove the last comma
     }
     return std::format_to(ctx.out(), "{}", result);
   }
 };
 
-class ConfigParameter {
- public:
+struct ConfigParameter {
   std::string help_;
   std::string longname_;
+  std::string example_;
   std::optional<char> shortname_;
   ConfigParameter(std::string longname, char shortname, std::string help)
       : longname_(longname), shortname_(shortname), help_(help){};
@@ -59,15 +72,23 @@ class ConfigParameter {
   virtual std::string to_string() = 0;
   virtual std::string default_to_string() = 0;
   virtual std::string cli_flag() = 0;
+  virtual std::string to_toml() = 0;
+
+  std::string example_to_string() {
+    if (example_.size() == 0) {
+      return "<no example>";
+    } else {
+      return std::format("{}", example_);
+    }
+  }
 };
 
 template <typename T>
-class ConfigParameterByReference : public ConfigParameter {
+struct ConfigParameterByReference : public ConfigParameter {
   T& value_;
   T default_value_;
   std::vector<Validator<T>> _validators;
 
- public:
   ConfigParameterByReference(std::string longname, std::string help, T& value,
                              std::vector<Validator<T>> validators)
       : ConfigParameter(longname, help),
@@ -91,6 +112,14 @@ class ConfigParameterByReference : public ConfigParameter {
   }
 
   std::string to_string() override { return std::format("{}", value_); }
+
+  std::string to_toml() override {
+    if constexpr (std::is_same_v<T, DocAttribMap>) {
+      return std::format("{:t}", value_);
+    } else {
+      return std::format("{}", value_);
+    }
+  }
 
   std::string default_to_string() override {
     std::string s = std::format("{}", default_value_);
@@ -203,6 +232,17 @@ class ConfigParameterByReference : public ConfigParameter {
           throw std::runtime_error("Invalid argument for TerrainStrategy");
         }
         return args.erase(it);
+      } else if constexpr (std::is_same_v<T, roofer::logger::LogLevel>) {
+        if (*it == "trace") {
+          value_ = roofer::logger::LogLevel::trace;
+        } else if (*it == "debug") {
+          value_ = roofer::logger::LogLevel::debug;
+        } else if (*it == "info") {
+          value_ = roofer::logger::LogLevel::info;
+        } else {
+          throw std::runtime_error("Invalid argument for LogLevel");
+        }
+        return args.erase(it);
       } else if constexpr (std::is_same_v<T, DocAttribMap>) {
         // split by comma
         auto keyval_pairs = roofer::split_string(*it, ",");
@@ -284,6 +324,19 @@ class ConfigParameterByReference : public ConfigParameter {
                                    " from config file.");
         }
       }
+    } else if constexpr (std::is_same_v<T, roofer::logger::LogLevel>) {
+      if (const toml::value<std::string>* s = table[name].as_string()) {
+        if (*s == "trace") {
+          value_ = roofer::logger::LogLevel::trace;
+        } else if (*s == "debug") {
+          value_ = roofer::logger::LogLevel::debug;
+        } else if (*s == "info") {
+          value_ = roofer::logger::LogLevel::info;
+        } else {
+          throw std::runtime_error("Failed to read value for " + name +
+                                   " from config file.");
+        }
+      }
     } else if constexpr (std::is_same_v<T, DocAttribMap>) {
       if (const toml::array* a = table[name].as_array()) {
         for (const auto& el : *a) {
@@ -326,9 +379,11 @@ class ConfigParameterByReference : public ConfigParameter {
                          std::is_same_v<T, roofer::arr3d>) {
       return "(x y z)";
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
-      return "<buffer_tile|buffer_user|user>";
+      return "(buffer_tile|buffer_user|user)";
+    } else if constexpr (std::is_same_v<T, roofer::logger::LogLevel>) {
+      return "(trace|debug|info)";
     } else if constexpr (std::is_same_v<T, DocAttribMap>) {
-      return "key=value,key=value,...";
+      return "key=value[,...]";
     } else {
       static_assert(!std::is_same_v<T, T>,
                     "Unsupported type for "
@@ -355,18 +410,20 @@ class ParameterVector {
   ParameterVector& operator=(const ParameterVector&) = delete;
 
   template <typename T>
-  void add(const std::string& longname, const std::string& help, T& value,
-           std::vector<Validator<T>> validators = {}) {
+  ConfigParameter& add(const std::string& longname, const std::string& help,
+                       T& value, std::vector<Validator<T>> validators = {}) {
     params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
         longname, help, value, std::move(validators)));
+    return *params_.back();
   }
 
   template <typename T>
-  void add(const std::string& longname, const char shortname,
-           const std::string& help, T& value,
-           std::vector<Validator<T>> validators = {}) {
+  ConfigParameter& add(const std::string& longname, const char shortname,
+                       const std::string& help, T& value,
+                       std::vector<Validator<T>> validators = {}) {
     params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
         longname, shortname, help, value, std::move(validators)));
+    return *params_.back();
   }
 
   void add_to_index(std::unordered_map<std::string, ConfigParameter*>& index) {
@@ -397,3 +454,33 @@ class ParameterVector {
   //   return std::nullopt;
   // }
 };
+
+// template <>
+// struct std::formatter<ConfigParameterByReference<typename T>> {
+//     bool add_quotes = false; // Flag to control quotes
+
+//     // Parse the format specification (e.g., ":q" for quotes)
+//     constexpr auto parse(std::format_parse_context& ctx) {
+//         auto it = ctx.begin(), end = ctx.end();
+//         if (it != end && *it == 'q') {
+//             add_quotes = true; // Enable quotes if 'q' is specified
+//             ++it;
+//         }
+//         if (it != end && *it != '}') {
+//             throw std::format_error("Invalid format specifier");
+//         }
+//         return it;
+//     }
+
+//     // Format the MyString object
+//     template <typename FormatContext>
+//     auto format(const MyString& str, FormatContext& ctx) const {
+//         if (add_quotes) {
+//             // Output with quotes
+//             return std::format_to(ctx.out(), "\"{}\"", str.value);
+//         } else {
+//             // Output without quotes
+//             return std::format_to(ctx.out(), "{}", str.value);
+//         }
+//     }
+// };

@@ -299,7 +299,7 @@ struct RooferConfigHandler {
   param_group_map param_groups_;
   DocAttribMap output_attr_;
   std::unordered_map<std::string, ConfigParameter*> param_index_;
-  // std::unordered_map<std::string, ConfigParameter*> app_param_index_;
+  std::unordered_map<std::string, ConfigParameter*> app_param_index_;
 
   // flags
   bool _print_help = false;
@@ -307,8 +307,8 @@ struct RooferConfigHandler {
   bool _crop_only = false;
   bool _no_tiling = false;
   bool _skip_pc_check = false;
-  std::string _loglevel = "info";
-  size_t _trace_interval = 10;
+  roofer::logger::LogLevel _loglevel = roofer::logger::LogLevel::info;
+  int _trace_interval = 10;
   std::string _config_path;
   int _jobs = std::thread::hardware_concurrency();
 
@@ -320,6 +320,17 @@ struct RooferConfigHandler {
     general.add("help", 'h', "Show help message", _print_help);
     general.add("version", 'v', "Show version", _print_version);
     general.add("jobs", 'j', "Number of threads to use", _jobs);
+    general.add("config", 'c', "Configuration file", _config_path,
+                {check::PathExists, check::DirIsWritable});
+    general.add("trace-interval", "Interval for tracing (in seconds)",
+                _trace_interval, {check::HigherThan<int>(0)});
+    general.add("loglevel",
+                "Specify loglevel. Can be "
+                "info, warning, debug, trace",
+                _loglevel);
+#ifdef RF_USE_RERUN
+    general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
+#endif
 
     input.add("id-attribute", "Building ID attribute", cfg_.id_attribute);
     input.add("force-lod11-attribute", "Building attribute for forcing lod11",
@@ -340,27 +351,34 @@ struct RooferConfigHandler {
               "Specify WHERE clause in OGR SQL to select specfic features from "
               "<polygon-source>",
               cfg_.attribute_filter);
-    input.add("box",
-              "Region of interest. Data outside of this region will be ignored",
-              cfg_.region_of_interest,
-              {[](const std::optional<roofer::TBox<double>>& box)
-                   -> std::optional<std::string> {
-                if (box.has_value()) {
-                  auto error_msg = check::ValidBox(*box);
-                  if (error_msg) {
-                    return error_msg;
-                  }
-                }
-                return std::nullopt;
-              }});
-    input.add("srs", "Manually set Spatial Reference System for input data",
-              cfg_.srs_override);
+    input
+        .add("box",
+             "Region of interest. Data outside of this region will be ignored",
+             cfg_.region_of_interest,
+             {[](const std::optional<roofer::TBox<double>>& box)
+                  -> std::optional<std::string> {
+               if (box.has_value()) {
+                 auto error_msg = check::ValidBox(*box);
+                 if (error_msg) {
+                   return error_msg;
+                 }
+               }
+               return std::nullopt;
+             }})
+        .example_ = "[100, 100, 200, 200]";
+    input
+        .add("srs", "Manually set Spatial Reference System for input data",
+             cfg_.srs_override)
+        .example_ = "\"EPSG:7415\"";
     // important pointcloud parameters, that are not related to pointcloud
     // selection
     input.add("bld-class", "LAS classification code for building points",
               cfg_.bld_class, {check::HigherOrEqualTo<int>(0)});
     input.add("grnd-class", "LAS classification code for ground points",
               cfg_.grnd_class, {check::HigherOrEqualTo<int>(0)});
+    input.add("skip-pc-check",
+              "Disable/enable check if all supplied pointcloud files exist",
+              _skip_pc_check);
 
     crop.add("ceil-point-density",
              "Enforce this point density ceiling on each building pointcloud.",
@@ -375,6 +393,22 @@ struct RooferConfigHandler {
     crop.add("compute-pc-98p",
              "compute 98th percentile of pointcloud height for each building",
              cfg_.compute_pc_98p);
+    crop.add("crop-only", "Crop only, no reconstruction", _crop_only);
+    crop.add("crop-output", "Output cropped building pointclouds",
+             cfg_.write_crop_outputs);
+    crop.add("crop-output-all",
+             "Output files for each "
+             "candidate pointcloud instead of only the optimal candidate. "
+             "Implies --crop-output",
+             cfg_.output_all);
+    crop.add("crop-rasters",
+             "Output rasterised crop "
+             "pointclouds. Implies --crop-output",
+             cfg_.write_rasters);
+    crop.add("index",
+             "Output index.gpkg file with "
+             "crop analytics.",
+             cfg_.write_index);
 
     reconstruction.add("lod12", "Generate LoD 1.2 geometry", cfg_.lod_12);
     reconstruction.add("lod13", "Generate LoD 1.3 geometry", cfg_.lod_13);
@@ -395,16 +429,19 @@ struct RooferConfigHandler {
     reconstruction.add("plane-detect-epsilon", "plane detect epsilon",
                        cfg_.plane_detect_epsilon,
                        {check::HigherThan<float>(0)});
-    reconstruction.add("h-terrain-strategy", "Terrain height strategy",
-                       cfg_.h_terrain_strategy, {check::OneOf<int>({0, 1, 2})});
+    reconstruction
+        .add("h-terrain-strategy", "Terrain height strategy",
+             cfg_.h_terrain_strategy)
+        .example_ = "\"buffer_tile\"";
     reconstruction.add("lod11-fallback-planes",
                        "Number of planes for LOD11 fallback",
                        cfg_.lod11_fallback_planes, {check::HigherThan<int>(0)});
     reconstruction.add("lod11-fallback-time", "Time for LOD11 fallback",
                        cfg_.lod11_fallback_time, {check::HigherThan<int>(0)}),
 
-        output.add("tilesize", "Tilesize used for output tiles", cfg_.tilesize,
-                   {check::HigherThan<roofer::arr2f>({0, 0})});
+        output.add("no-tiling", "Disable/enable tiling", _no_tiling);
+    output.add("tilesize", "Tilesize used for output tiles", cfg_.tilesize,
+               {check::HigherThan<roofer::arr2f>({0, 0})});
     output.add("split-cjseq",
                "Output CityJSONSequence file for each building instead of one "
                "file per tile",
@@ -413,11 +450,13 @@ struct RooferConfigHandler {
                cfg_.omit_metadata);
     output.add("cj-scale", "Scaling applied to CityJSON output vertices",
                cfg_.cj_scale);
-    output.add(
-        "cj-translate",
-        "Translation applied to CityJSON output vertices. Uses tile center by "
-        "default.",
-        cfg_.cj_translate);
+    output
+        .add("cj-translate",
+             "Translation applied to CityJSON output vertices. Uses tile "
+             "center by "
+             "default.",
+             cfg_.cj_translate)
+        .example_ = "[100000, 200000, 0]";
 
     output_attr_.emplace("success",
                          DocAttrib(&cfg_.a_success,
@@ -551,21 +590,23 @@ struct RooferConfigHandler {
                          DocAttrib(&cfg_.a_pointcloud_unusable,
                                    "Indicates if the pointcloud was found "
                                    "unusable for reconstruction"));
-    output.add("rename",
+    output.add("attribute-rename",
                "Rename output attributes. Use 'old_name=new_name' format. "
                "If the new name is empty, the attribute will be removed.",
                output_attr_);
     // Move groups into param_group_map
-    param_groups_.emplace_back("Input options", std::move(input));
-    param_groups_.emplace_back("Crop options", std::move(crop));
-    param_groups_.emplace_back("Reconstruction options",
-                               std::move(reconstruction));
-    param_groups_.emplace_back("Output options", std::move(output));
-    app_param_groups_.emplace_back("General options", std::move(general));
+    param_groups_.emplace_back("Input", std::move(input));
+    param_groups_.emplace_back("Crop", std::move(crop));
+    param_groups_.emplace_back("Reconstruction", std::move(reconstruction));
+    param_groups_.emplace_back("Output", std::move(output));
+    app_param_groups_.emplace_back("General", std::move(general));
 
     // Add to index
     for (auto& [group_name, group] : param_groups_) {
       group.add_to_index(param_index_);
+    }
+    for (auto& [group_name, group] : app_param_groups_) {
+      group.add_to_index(app_param_index_);
     }
   };
 
@@ -642,35 +683,8 @@ struct RooferConfigHandler {
                  "an OGR supported file (eg. GPKG) or database connection "
                  "string.\n";
     std::cout << "  <output-directory>           Output directory.\n";
-    std::cout << "\n";
-    std::cout << "\033[1mGeneral options and flags\033[0m:\n";
-    print_params(app_param_groups_);
-    std::cout << "  -h, --help                   Show this help message.\n";
-    std::cout << "  -v, --version                Show version." << "\n";
-    std::cout << "  -l, --loglevel <level>       Specify loglevel. Can be "
-                 "trace, debug, info, warning [default: info]"
-              << "\n";
-    std::cout << "  --trace-interval <s>         Trace interval in "
-                 "seconds. Implies --loglevel trace [default: 10].\n";
-    std::cout << "  -c <file>, --config <file>   TOML configuration file."
-              << "\n";
-    std::cout << "  -j <n>, --jobs <n>           Number of threads to use. "
-                 "[default: number of cores]\n";
-    // std::cout << "   --crop-only                  Only crop pointclouds.
-    // Skip reconstruction.\n";
-    std::cout << "  -n, --no-tiling              Do not use tiling.\n";
-    std::cout << "  --crop-output                Output cropped building "
-                 "pointclouds.\n";
-    std::cout << "  --crop-output-all            Output files for each "
-                 "candidate pointcloud instead of only the optimal candidate. "
-                 "Implies --crop-output.\n";
-    std::cout << "  --crop-rasters               Output rasterised crop "
-                 "pointclouds. Implies --crop-output.\n";
-    std::cout << "  --index                      Output index.gpkg file with "
-                 "crop analytics.\n";
-    std::cout << "  --skip-pc-check              Do not check if pointcloud "
-                 "files exist\n";
 
+    print_params(app_param_groups_);
     print_params(param_groups_);
   }
 
@@ -678,7 +692,7 @@ struct RooferConfigHandler {
     for (auto& [group_name, group] : params) {
       if (group.empty()) continue;
       std::cout << "\n";
-      std::cout << "\033[1m" << group_name << ":\033[0m\n";
+      std::cout << "\033[1m" << group_name << " options:\033[0m\n";
       for (auto& param : group) {
         auto tdesc = param->type_description();
         auto desc = param->description();
@@ -714,93 +728,39 @@ struct RooferConfigHandler {
     auto it = c.args.begin();
     while (it != c.args.end()) {
       const std::string& arg = *it;
+      std::string argname = "";
+      if (arg.starts_with("--")) {
+        argname = arg.substr(2);
+        if (auto p = app_param_index_.find(argname);
+            p != app_param_index_.end()) {
+          it = c.args.erase(it);
+          it = p->second->set(c.args, it);
+        } else {
+          throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+        }
+      } else if (arg.starts_with("-")) {
+        argname = arg.substr(1);
+        if (auto p = app_param_index_.find(argname);
+            p != app_param_index_.end()) {
+          it = c.args.erase(it);
+          it = p->second->set(c.args, it);
+        } else {
+          throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+        }
+      }
 
-      if (arg == "-h" || arg == "--help") {
-        _print_help = true;
-        it = c.args.erase(it);  // Remove the processed argument
-      } else if (arg == "-v" || arg == "--version") {
-        _print_version = true;
-        it = c.args.erase(it);
-      } else if (arg == "-l" || arg == "--loglevel") {
-        auto next_it = std::next(it);
-        if (next_it != c.args.end() && !next_it->starts_with("-")) {
-          _loglevel = *next_it;
-          if (auto error_msg = check::OneOf<std::string>(
-                  {"trace", "debug", "info", "warning"})(_loglevel)) {
-            throw std::runtime_error(
-                fmt::format("Invalid argument for --loglevel. {}", *error_msg));
-          }
-          // Erase the option and its argument
-          it = c.args.erase(it);  // Erase the option
-          it = c.args.erase(it);  // Erase the argument
-        } else {
-          throw std::runtime_error("Missing argument for --loglevel.");
+      if (argname == "t" || argname == "trace-interval") {
+        _loglevel = roofer::logger::LogLevel::trace;
+      }
+      if (argname == "-c" || argname == "--config") {
+        if (auto error_msg = check::PathExists(_config_path)) {
+          throw std::runtime_error(fmt::format(
+              "Invalid argument for -c or --config. {}", *error_msg));
         }
-      } else if (arg == "-j" || arg == "--jobs") {
-        auto next_it = std::next(it);
-        if (next_it != c.args.end() && !next_it->starts_with("-")) {
-          _jobs = std::stoi(*next_it);
-          // Erase the option and its argument
-          it = c.args.erase(it);
-          it = c.args.erase(it);
-        } else {
-          throw std::runtime_error("Missing argument for --jobs");
-        }
-      } else if (arg == "-t" || arg == "--trace-interval") {
-        auto next_it = std::next(it);
-        if (next_it != c.args.end() && !next_it->starts_with("-")) {
-          _trace_interval = std::stoi(*next_it);
-          _loglevel = "trace";
-          // Erase the option and its argument
-          it = c.args.erase(it);
-          it = c.args.erase(it);
-        } else {
-          throw std::runtime_error("Missing argument for --trace-interval.");
-        }
-      } else if (arg == "-c" || arg == "--config") {
-        auto next_it = std::next(it);
-        if (next_it != c.args.end() && !next_it->starts_with("-")) {
-          _config_path = *next_it;
-          if (auto error_msg = check::PathExists(_config_path)) {
-            throw std::runtime_error(fmt::format(
-                "Invalid argument for -c or --config. {}", *error_msg));
-          }
-          // Erase the option and its argument
-          it = c.args.erase(it);
-          it = c.args.erase(it);
-        } else {
-          throw std::runtime_error("Missing argument for --config.");
-        }
-#ifdef RF_USE_RERUN
-      } else if (arg == "--rerun") {
-        cfg_.use_rerun = true;
-#endif
-      } else if (arg == "-n" || arg == "--no-tiling") {
-        _no_tiling = true;
-        it = c.args.erase(it);
-      } else if (arg == "--skip-pc-check") {
-        _skip_pc_check = true;
-        it = c.args.erase(it);
-      } else if (arg == "--crop-only") {
-        _crop_only = true;
+      }
+
+      if (argname == "crop-output-all" || argname == "crop-rasters") {
         cfg_.write_crop_outputs = true;
-        it = c.args.erase(it);
-      } else if (arg == "--crop-output") {
-        cfg_.write_crop_outputs = true;
-        it = c.args.erase(it);
-      } else if (arg == "--crop-output-all") {
-        cfg_.write_crop_outputs = true;
-        cfg_.output_all = true;
-        it = c.args.erase(it);
-      } else if (arg == "--crop-rasters") {
-        cfg_.write_crop_outputs = true;
-        cfg_.write_rasters = true;
-        it = c.args.erase(it);
-      } else if (arg == "--index") {
-        cfg_.write_index = true;
-        it = c.args.erase(it);
-      } else {
-        ++it;  // Unrecognized argument; proceed to the next
       }
     }
   }
@@ -821,6 +781,14 @@ struct RooferConfigHandler {
           }
         } else if (arg.starts_with("--")) {
           auto argname = arg.substr(2);
+          if (auto p = param_index_.find(argname); p != param_index_.end()) {
+            it = c.args.erase(it);
+            it = p->second->set(c.args, it);
+          } else {
+            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+          }
+        } else if (arg.starts_with("-")) {
+          auto argname = arg.substr(1);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
