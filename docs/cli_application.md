@@ -39,8 +39,12 @@ Output directory. The building models will be written to a CityJSONSequence file
 ```
 
 ## Output attributes
+:::{note}
+:class: dropdown
+
 ```{include} output-attributes.md
 ```
+:::
 
 ## Output format
 The output of the {program}`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
