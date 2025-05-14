@@ -1,3 +1,24 @@
+// Copyright (c) 2018-2025 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
+// and Balazs Dukai (3DGI)
+
+// This file is part of roofer (https://github.com/3DBAG/roofer)
+
+// geoflow-roofer was created as part of the 3DBAG project by the TU Delft 3D
+// geoinformation group (3d.bk.tudelf.nl) and 3DGI (3dgi.nl)
+
+// geoflow-roofer is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version. geoflow-roofer is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+// Public License for more details. You should have received a copy of the GNU
+// General Public License along with geoflow-roofer. If not, see
+// <https://www.gnu.org/licenses/>.
+
+// Author(s):
+// Ravi Peters
+// Balázs Dukai
 #pragma once
 
 #include <roofer/common/common.hpp>
@@ -62,46 +83,6 @@ struct std::formatter<std::optional<roofer::arr3d>> {
     } else {
       return std::format_to(ctx.out(), "[{},{},{}]", (*arr)[0], (*arr)[1],
                             (*arr)[2]);
-    }
-  }
-};
-
-// Formatter for roofer::enum::TerrainStrategy
-template <>
-struct std::formatter<roofer::enums::TerrainStrategy> {
-  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
-
-  auto format(const roofer::enums::TerrainStrategy& strategy,
-              std::format_context& ctx) const {
-    switch (strategy) {
-      case roofer::enums::BUFFER_TILE:
-        return std::format_to(ctx.out(), "buffer_tile");
-      case roofer::enums::BUFFER_USER:
-        return std::format_to(ctx.out(), "buffer_user");
-      case roofer::enums::USER:
-        return std::format_to(ctx.out(), "user");
-      default:
-        return std::format_to(ctx.out(), "unknown");
-    }
-  }
-};
-
-// Formatter for roofer::logger::LogLevel
-template <>
-struct std::formatter<roofer::logger::LogLevel> {
-  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
-
-  auto format(const roofer::logger::LogLevel& level,
-              std::format_context& ctx) const {
-    switch (level) {
-      case roofer::logger::LogLevel::trace:
-        return std::format_to(ctx.out(), "trace");
-      case roofer::logger::LogLevel::debug:
-        return std::format_to(ctx.out(), "debug");
-      case roofer::logger::LogLevel::info:
-        return std::format_to(ctx.out(), "info");
-      default:
-        return std::format_to(ctx.out(), "unknown");
     }
   }
 };

@@ -30,6 +30,7 @@
 #include "fmt/ranges.h"
 
 #include <roofer/common/common.hpp>
+#include <roofer/common/formatters.hpp>
 #include <roofer/logger/logger.h>
 #include <roofer/misc/Vector2DOps.hpp>
 #include <stdexcept>

@@ -69,6 +69,46 @@ struct std::formatter<DocAttribMap> {
   }
 };
 
+// Formatter for roofer::enum::TerrainStrategy
+template <>
+struct std::formatter<roofer::enums::TerrainStrategy> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+  auto format(const roofer::enums::TerrainStrategy& strategy,
+              std::format_context& ctx) const {
+    switch (strategy) {
+      case roofer::enums::BUFFER_TILE:
+        return std::format_to(ctx.out(), "buffer_tile");
+      case roofer::enums::BUFFER_USER:
+        return std::format_to(ctx.out(), "buffer_user");
+      case roofer::enums::USER:
+        return std::format_to(ctx.out(), "user");
+      default:
+        return std::format_to(ctx.out(), "unknown");
+    }
+  }
+};
+
+// Formatter for roofer::logger::LogLevel
+template <>
+struct std::formatter<roofer::logger::LogLevel> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+  auto format(const roofer::logger::LogLevel& level,
+              std::format_context& ctx) const {
+    switch (level) {
+      case roofer::logger::LogLevel::trace:
+        return std::format_to(ctx.out(), "trace");
+      case roofer::logger::LogLevel::debug:
+        return std::format_to(ctx.out(), "debug");
+      case roofer::logger::LogLevel::info:
+        return std::format_to(ctx.out(), "info");
+      default:
+        return std::format_to(ctx.out(), "unknown");
+    }
+  }
+};
+
 struct ConfigParameter {
   std::string help_;
   std::string longname_;
