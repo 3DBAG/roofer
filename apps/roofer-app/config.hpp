@@ -305,7 +305,7 @@ struct RooferConfigHandler {
   bool _print_help = false;
   bool _print_version = false;
   bool _crop_only = false;
-  bool _no_tiling = false;
+  bool _tiling = false;
   bool _skip_pc_check = false;
   roofer::logger::LogLevel _loglevel = roofer::logger::LogLevel::info;
   int _trace_interval = 10;
@@ -439,7 +439,7 @@ struct RooferConfigHandler {
     reconstruction.add("lod11-fallback-time", "Time for LOD11 fallback",
                        cfg_.lod11_fallback_time, {check::HigherThan<int>(0)}),
 
-        output.add("no-tiling", "Disable/enable tiling", _no_tiling);
+        output.add("tiling", "Disable/enable tiling", _tiling);
     output.add("tilesize", "Tilesize used for output tiles", cfg_.tilesize,
                {check::HigherThan<roofer::arr2f>({0, 0})});
     output.add("split-cjseq",
@@ -615,7 +615,7 @@ struct RooferConfigHandler {
       for (auto& param : group) {
         if (auto error_msg = param->validate()) {
           throw std::runtime_error(
-              fmt::format("Validation error for {} parameter {}. {}",
+              std::format("Validation error for {} parameter {}. {}",
                           group_name, param->longname_, *error_msg));
         }
       }
@@ -633,12 +633,12 @@ struct RooferConfigHandler {
       }
     }
     // if (auto error_msg = check::PathExists(cfg_.source_footprints)) {
-    //   throw std::runtime_error(fmt::format(
+    //   throw std::runtime_error(std::format(
     //       "Footprint source does not exist: {}.", cfg_.source_footprints));
     // }
     if (auto error_msg = check::DirIsWritable(cfg_.output_path)) {
       throw std::runtime_error(
-          fmt::format("Can't write to output directory: {}", *error_msg));
+          std::format("Can't write to output directory: {}", *error_msg));
     }
   }
 
@@ -650,7 +650,7 @@ struct RooferConfigHandler {
         result = *tml_value;
       }
     } catch (const std::exception& e) {
-      throw std::runtime_error(fmt::format(
+      throw std::runtime_error(std::format(
           "Failed to read value for {} from config file. {}", key, e.what()));
     }
   }
@@ -716,10 +716,10 @@ struct RooferConfigHandler {
   }
 
   void print_version() {
-    std::cout << fmt::format(
+    std::cout << std::format(
         "roofer {} ({}{}{})\n", git_Describe(),
         std::strcmp(git_Branch(), "main") ? ""
-                                          : fmt::format("{}, ", git_Branch()),
+                                          : std::format("{}, ", git_Branch()),
         git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
   }
 
@@ -736,7 +736,7 @@ struct RooferConfigHandler {
           it = c.args.erase(it);
           it = p->second->set(c.args, it);
         } else {
-          throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+          ++it;
         }
       } else if (arg.starts_with("-")) {
         argname = arg.substr(1);
@@ -745,8 +745,10 @@ struct RooferConfigHandler {
           it = c.args.erase(it);
           it = p->second->set(c.args, it);
         } else {
-          throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+          ++it;
         }
+      } else {
+        ++it;
       }
 
       if (argname == "t" || argname == "trace-interval") {
@@ -754,7 +756,7 @@ struct RooferConfigHandler {
       }
       if (argname == "-c" || argname == "--config") {
         if (auto error_msg = check::PathExists(_config_path)) {
-          throw std::runtime_error(fmt::format(
+          throw std::runtime_error(std::format(
               "Invalid argument for -c or --config. {}", *error_msg));
         }
       }
@@ -777,7 +779,7 @@ struct RooferConfigHandler {
             it = c.args.erase(it);
             p->second->unset();
           } else {
-            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+            throw std::runtime_error(std::format("Unknown argument: {}.", arg));
           }
         } else if (arg.starts_with("--")) {
           auto argname = arg.substr(2);
@@ -785,7 +787,7 @@ struct RooferConfigHandler {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
-            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+            throw std::runtime_error(std::format("Unknown argument: {}.", arg));
           }
         } else if (arg.starts_with("-")) {
           auto argname = arg.substr(1);
@@ -793,14 +795,14 @@ struct RooferConfigHandler {
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
-            throw std::runtime_error(fmt::format("Unknown argument: {}.", arg));
+            throw std::runtime_error(std::format("Unknown argument: {}.", arg));
           }
         } else {
           ++it;
         }
       } catch (const std::exception& e) {
         throw std::runtime_error(
-            fmt::format("Error parsing argument: {}. {}.", arg, e.what()));
+            std::format("Error parsing argument: {}. {}.", arg, e.what()));
       }
     }
 
@@ -841,7 +843,7 @@ struct RooferConfigHandler {
     try {
       config = toml::parse_file(_config_path);
     } catch (const std::exception& e) {
-      throw std::runtime_error(fmt::format("Syntax error."));
+      throw std::runtime_error(std::format("Syntax error."));
     }
 
     // iterate config table
@@ -894,7 +896,7 @@ struct RooferConfigHandler {
                                             {".las", ".LAS", ".laz", ".LAZ"},
                                             _skip_pc_check);
                 } else {
-                  throw std::runtime_error(fmt::format(
+                  throw std::runtime_error(std::format(
                       "Unknown parameter in [[pointcloud]] table in "
                       "config file: {}.",
                       key.data()));
@@ -904,11 +906,11 @@ struct RooferConfigHandler {
           }
         } else {
           throw std::runtime_error(
-              fmt::format("Unknown parameter in config file: {}.", key.data()));
+              std::format("Unknown parameter in config file: {}.", key.data()));
         }
       } catch (const std::exception& e) {
         throw std::runtime_error(
-            fmt::format("Failed to read value for {} from config file. {}",
+            std::format("Failed to read value for {} from config file. {}",
                         key.data(), e.what()));
       }
     }

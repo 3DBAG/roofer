@@ -438,7 +438,7 @@ int main(int argc, const char* argv[]) {
                 VectorReader->get_feature_count());
 
     // actual tiling
-    if (handler._no_tiling) {
+    if (!handler._tiling) {
       auto& building_tile = initial_tiles.emplace_back();
       building_tile.id = 0;
       building_tile.extent = roi;

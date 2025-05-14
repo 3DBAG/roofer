@@ -168,6 +168,15 @@ namespace roofer::io {
             extent.Merge(gextent);
           }
         }
+        // Also check for GDAL errors
+        const char* gdal_error = CPLGetLastErrorMsg();
+        if (CPLGetLastErrorType() != CE_None && gdal_error &&
+            strlen(gdal_error) > 0) {
+          throw rooferException(
+              "[VectorReaderOGR] error while reading layer. Check your "
+              "--filter string. GDAL error: " +
+              std::string(gdal_error));
+        }
         layer_extent = {extent.MinX, extent.MinY, 0,
                         extent.MaxX, extent.MaxY, 0};
       } else {

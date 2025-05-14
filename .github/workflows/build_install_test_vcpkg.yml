@@ -20,7 +20,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, windows-2022, macos-14 ]
+        os: [ ubuntu-24.04, windows-2022, macos-15 ]
         build_type: [ Release ]
         c_compiler: [ gcc, clang, cl ]
         # Default compilers:
@@ -28,12 +28,6 @@ jobs:
         #   - Ubuntu 24.04 (noble): gcc-13, clang-18
         #   - macOS 14: clang-15
         include:
-          - os: ubuntu-22.04
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-22.04
-            c_compiler: clang
-            cpp_compiler: clang++
           - os: ubuntu-24.04
             c_compiler: gcc
             cpp_compiler: g++
@@ -43,21 +37,19 @@ jobs:
           - os: windows-2022
             c_compiler: cl
             cpp_compiler: cl
-          - os: macos-14
+          - os: macos-15
             c_compiler: clang
             cpp_compiler: clang++
         exclude:
-          - os: ubuntu-22.04
-            c_compiler: cl
           - os: ubuntu-24.04
             c_compiler: cl
           - os: windows-2022
             c_compiler: gcc
           - os: windows-2022
             c_compiler: clang
-          - os: macos-14
+          - os: macos-15
             c_compiler: cl
-          - os: macos-14
+          - os: macos-15
             c_compiler: gcc
 
     env:
