@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2024 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
+// Copyright (c) 2018-2025 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
 // and Balazs Dukai (3DGI)
 
 // This file is part of roofer (https://github.com/3DBAG/roofer)
@@ -18,7 +18,7 @@
 
 // Author(s):
 // Ravi Peters
-
+#pragma once
 #ifdef RF_USE_RERUN
 // Adapters so we can log eigen vectors as rerun positions:
 template <>

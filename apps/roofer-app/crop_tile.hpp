@@ -18,7 +18,7 @@
 
 // Author(s):
 // Ravi Peters
-
+#pragma once
 bool crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, const RooferConfig& cfg,

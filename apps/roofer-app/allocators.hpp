@@ -1,3 +1,4 @@
+#pragma once
 #ifdef RF_ENABLE_HEAP_TRACING
 // Overrides for heap allocation counting
 // Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE

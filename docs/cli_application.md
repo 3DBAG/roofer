@@ -38,19 +38,15 @@ Output directory. The building models will be written to a CityJSONSequence file
 ```{include} cli-options.md
 ```
 
-## Output attributes
-:::{note}
-:class: dropdown
-
-```{include} output-attributes.md
-```
-:::
-
 ## Output format
 The output of the {program}`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
 
 > [!TIP]
 >  In the near future we expect to introduce a converter program to convert the CityJSONSequence files to other formats like GPKG, OBJ and others.
+
+### Output attributes
+```{include} output-attributes.md
+```
 
 ## Example config file
 Below is an example of a [TOML](https://toml.io/en/) configuration file for the {program}`roofer` CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
