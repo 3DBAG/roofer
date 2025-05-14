@@ -3,7 +3,9 @@ id-attribute = "identificatie"
 force-lod11-attribute = "kas_warenhuis"
 
 cellsize = 0.5
-lod = 22
+lod12 = false
+lod13 = false
+lod22 = true
 
 split-cjseq = false
 output-directory = "output/issue-64"
