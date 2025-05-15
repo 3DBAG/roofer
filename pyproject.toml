@@ -1,0 +1,17 @@
+[project]
+name = "roofer-dev"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "breathe>=4.36.0",
+    "cmake-format>=0.6.13",
+    "furo>=2024.8.6",
+    "laspy>=2.5.4",
+    "myst-parser>=4.0.1",
+    "pre-commit>=4.2.0",
+    "pybind11>=2.13.6",
+    "shapely>=2.1.0",
+    "sphinx>=8.2.3",
+]

@@ -17,8 +17,7 @@ release = ''
 extensions = [
     'breathe',
     'sphinx.ext.autodoc',
-    'myst_parser',
-    'sphinx_togglebutton'
+    'myst_parser'
 ]
 
 myst_enable_extensions = [

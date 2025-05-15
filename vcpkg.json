@@ -33,9 +33,11 @@
         },
         {
           "name": "gdal",
+          "default-features": false,
           "features": [
-            "recommended-features",
-            "postgresql"
+            "sqlite3",
+            "postgresql",
+            "geos"
           ]
         },
         {
@@ -69,5 +71,5 @@
       "version": "3.11.3"
     }
   ],
-  "builtin-baseline": "a148012a2b0e671597d5eee149ce50bb462f1722"
+  "builtin-baseline": "dbe35ceb30c688bf72e952ab23778e009a578f18"
 }
