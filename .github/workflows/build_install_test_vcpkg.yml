@@ -65,6 +65,7 @@ jobs:
           python-version: 3.13
           activate-environment: true
       - name: Install python dependencies
+        if: runner.os == 'Windows'
         run: uv sync
 
       - name: Set reusable strings
@@ -81,18 +82,19 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      # - name: "Install vcpkg"
-      #   shell: bash
-      #   run: |
-      #     git clone https://github.com/microsoft/vcpkg.git
-      #     git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
-      #     echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-      #     echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+      - if: runner.os == 'Windows'
+        name: "Install vcpkg"
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
+          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
-      # - if: runner.os == 'Windows'
-      #   name: "Bootstrap vcpkg"
-      #   run: |
-      #     vcpkg/bootstrap-vcpkg.bat
+      - if: runner.os == 'Windows'
+        name: "Bootstrap vcpkg"
+        run: |
+          vcpkg/bootstrap-vcpkg.bat
       # - if: runner.os != 'Windows'
       #   name: "Bootstrap vcpkg"
       #   run: |
