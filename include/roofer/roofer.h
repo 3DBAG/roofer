@@ -38,13 +38,23 @@
 
 #include "CGAL/Polygon_with_holes_2.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#ifdef MYLIB_EXPORTS
+#define RF_API __declspec(dllexport)
+#else
+#define RF_API __declspec(dllimport)
+#endif
+#else
+#define RF_API __attribute__((visibility("default")))
+#endif
+
 namespace roofer {
 
   /**
    * @brief Configuration parameters for the roofer building
    * reconstruction algorithm. Coordinate units are assumed to be in meters.
    */
-  struct ReconstructionConfig {
+  struct RF_API ReconstructionConfig {
     /**
      * @brief Complexity factor for building model geometry.
      *
@@ -164,7 +174,7 @@ namespace roofer {
    * equal to the number of building parts.
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct(
+  RF_API std::vector<Mesh> reconstruct(
       const PointCollection& points_roof, const PointCollection& points_ground,
       Footprint& footprint, ReconstructionConfig cfg = ReconstructionConfig()) {
     try {
@@ -318,7 +328,7 @@ namespace roofer {
    * ground points are available.
    */
   template <typename Footprint>
-  std::vector<Mesh> reconstruct(
+  RF_API std::vector<Mesh> reconstruct(
       const PointCollection& points_roof, Footprint& footprint,
       ReconstructionConfig cfg = ReconstructionConfig()) {
     PointCollection points_ground = PointCollection();
@@ -333,7 +343,7 @@ namespace roofer {
    *
    * @return TriangleCollection Triangulated mesh
    */
-  TriangleCollection triangulate_mesh(const Mesh& mesh) {
+  RF_API TriangleCollection triangulate_mesh(const Mesh& mesh) {
     auto MeshTriangulator =
         roofer::reconstruction::createMeshTriangulatorLegacy();
     MeshTriangulator->compute({mesh});

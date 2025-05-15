@@ -41,6 +41,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use extensions, because they might affect compiler compatibility
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 # Enable position independent code for shared libraries in case we build them
 if(BUILD_SHARED_LIBS OR RF_BUILD_BINDINGS)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)

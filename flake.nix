@@ -19,6 +19,7 @@
               cmakeCurses
               vcpkg
               ninja
+              llvmPackages.libcxxClang
 
               # to make vcpkg work
               autoconf
@@ -54,6 +55,7 @@
               echo "Updating and activating python environment..."
               uv sync
               source .venv/bin/activate
+              export pybind11_ROOT="$(python -m pybind11 --cmakedir)"
               echo "Roofer dev shell with vcpkg is ready"
             '';
           };
