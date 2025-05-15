@@ -58,14 +58,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Need python for running the tests on the installed exes
-      - uses: actions/setup-python@v5
+      - name: Install the latest version of uv and set the python version to 3.13
+        if: runner.os == 'Windows'
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: 3.13
+          activate-environment: true
       - name: Install python dependencies
-        run: pip install -r "${{ github.workspace }}/requirements.txt"
+        run: uv sync
 
       - name: Set reusable strings
+        if: runner.os == 'Windows'
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         shell: bash
         run: |
@@ -78,27 +81,35 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - name: "Install vcpkg"
-        shell: bash
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
-          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+      # - name: "Install vcpkg"
+      #   shell: bash
+      #   run: |
+      #     git clone https://github.com/microsoft/vcpkg.git
+      #     git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
+      #     echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+      #     echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
-      - if: runner.os == 'Windows'
-        name: "Bootstrap vcpkg"
-        run: |
-          vcpkg/bootstrap-vcpkg.bat
+      # - if: runner.os == 'Windows'
+      #   name: "Bootstrap vcpkg"
+      #   run: |
+      #     vcpkg/bootstrap-vcpkg.bat
+      # - if: runner.os != 'Windows'
+      #   name: "Bootstrap vcpkg"
+      #   run: |
+      #     ./vcpkg/bootstrap-vcpkg.sh
+
+      # - if: runner.os == 'macOS'
+      #   name: "Install additional macOS build tools"
+      #   run: |
+      #     brew install autoconf autoconf-archive automake libtool
+
       - if: runner.os != 'Windows'
-        name: "Bootstrap vcpkg"
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
+        uses: cachix/install-nix-action@v31
+        name: "install nix"
 
-      - if: runner.os == 'macOS'
-        name: "Install additional macOS build tools"
-        run: |
-          brew install autoconf autoconf-archive automake libtool
+      - if: runner.os != 'Windows'
+        uses: nicknovitski/nix-develop@v1
+        name: "nix develop"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
