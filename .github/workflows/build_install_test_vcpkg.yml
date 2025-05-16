@@ -143,6 +143,7 @@ jobs:
         #   FEED_URL: https://nuget.pkg.github.com/<OWNER>/index.json
         run: |
           export VCPKG_EXE=$(which vcpkg)
+          unset VCPKG_FORCE_SYSTEM_BINARIES
           mono `$VCPKG_EXE fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
