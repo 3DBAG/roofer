@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "breathe>=4.36.0",
-    "cmake-format>=0.6.13",
     "furo>=2024.8.6",
     "laspy>=2.5.4",
     "myst-parser>=4.0.1",

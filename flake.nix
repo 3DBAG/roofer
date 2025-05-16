@@ -42,6 +42,7 @@
               # python tools
               py
               uv
+              geos # for shapely
 
               # docs
               doxygen
@@ -50,6 +51,7 @@
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
+            UV_NO_BINARY = 1;
             # VCPKG_FORCE_SYSTEM_BINARIES = 1;
 
             shellHook = ''

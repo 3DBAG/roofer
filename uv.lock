@@ -86,30 +86,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cmake-format"
-version = "0.6.13"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cmakelang" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/3e/f1a7388ce2528b69fbfce9691e5c97f1b2b2b83c25711e0627c3e8f99e58/cmake-format-0.6.13.tar.gz", hash = "sha256:1a48b779067ecca68c498691d07d5c9d3df9803a7e0c5b641128fa6efe5ae489", size = 10484, upload-time = "2020-08-19T17:15:26.286Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/40/0ca7c62dc4b9af58ca32da8e6d87ee222f5bb551c17ef22900b2f81b998e/cmake_format-0.6.13-py3-none-any.whl", hash = "sha256:ec7ed949101e5f0b7bc19317d122b83ccbc28fd766c41c93094845719667c56e", size = 19725, upload-time = "2020-08-19T17:15:24.23Z" },
-]
-
-[[package]]
-name = "cmakelang"
-version = "0.6.13"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/74/c0/75d4806cf21dcb4198e9fba02f4d2fa61c8db919b7db788862d9cd5f4433/cmakelang-0.6.13.tar.gz", hash = "sha256:03982e87b00654d024d73ef972d9d9bb0e5726cdb6b8a424a15661fb6278e67f", size = 123111, upload-time = "2020-08-19T17:15:25.44Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/a8/c4676cac062d133c6b909d7def80a3194162597968953a3291b309878721/cmakelang-0.6.13-py3-none-any.whl", hash = "sha256:764b9467195c7c36453d60a829f30229720d26c7dffd41cb516b99bd9c7daf4e", size = 159803, upload-time = "2020-08-19T17:15:23.981Z" },
-]
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -425,7 +401,6 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "breathe" },
-    { name = "cmake-format" },
     { name = "furo" },
     { name = "laspy" },
     { name = "myst-parser" },
@@ -438,7 +413,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "breathe", specifier = ">=4.36.0" },
-    { name = "cmake-format", specifier = ">=0.6.13" },
     { name = "furo", specifier = ">=2024.8.6" },
     { name = "laspy", specifier = ">=2.5.4" },
     { name = "myst-parser", specifier = ">=4.0.1" },
@@ -473,15 +447,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5d/6e/37ff3c6af1d408cacb0a7d7bfea7b8ab163a5486e35acb08997eae9d8756/shapely-2.1.0-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:8e6c229e7bb87aae5df82fa00b6718987a43ec168cc5affe095cca59d233f314", size = 4036148, upload-time = "2025-04-03T09:15:01.328Z" },
     { url = "https://files.pythonhosted.org/packages/c8/6a/8c0b7de3aeb5014a23f06c5e9d3c7852ebcf0d6b00fe660b93261e310e24/shapely-2.1.0-cp313-cp313t-win32.whl", hash = "sha256:a9580bda119b1f42f955aa8e52382d5c73f7957e0203bc0c0c60084846f3db94", size = 1535993, upload-time = "2025-04-03T09:15:02.973Z" },
     { url = "https://files.pythonhosted.org/packages/a8/91/ae80359a58409d52e4d62c7eacc7eb3ddee4b9135f1db884b6a43cf2e174/shapely-2.1.0-cp313-cp313t-win_amd64.whl", hash = "sha256:e8ff4e5cfd799ba5b6f37b5d5527dbd85b4a47c65b6d459a03d0962d2a9d4d10", size = 1717777, upload-time = "2025-04-03T09:15:04.461Z" },
-]
-
-[[package]]
-name = "six"
-version = "1.17.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]
