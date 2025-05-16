@@ -127,22 +127,20 @@ jobs:
       - if: runner.os != 'Windows'
         # uses: nixbuild/nix-quick-install-action@v30
         uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
         name: "install nix"
 
 
       - if: runner.os != 'Windows'
         uses: nicknovitski/nix-develop@v1
         with:
-          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep MONO_EXE"
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
         name: "nix develop"
 
       - if: runner.os != 'Windows'
         name: Add NuGet sources
         shell: bash
-        # env:
-        #   VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-        #   USERNAME: <OWNER>
-        #   FEED_URL: https://nuget.pkg.github.com/<OWNER>/index.json
         run: |
           nix-shell -p mono
           unset VCPKG_FORCE_SYSTEM_BINARIES
