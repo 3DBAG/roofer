@@ -62,6 +62,10 @@
                 mkdir -p $PWD/.bin
                 cat > $PWD/.bin/mono << 'EOF'
 #!/usr/bin/env bash
+if [ "$1" = "--version" ]; then
+  echo "Mono JIT compiler version 6.8.0.105 (Debian 6.8.0.105+dfsg-2 Wed Feb 26 23:23:50 UTC 2020)"
+  exit 0
+fi
 exec "$@"
 EOF
                 chmod +x $PWD/.bin/mono
