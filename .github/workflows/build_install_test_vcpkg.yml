@@ -125,7 +125,8 @@ jobs:
       #     brew install autoconf autoconf-archive automake libtool
 
       - if: runner.os != 'Windows'
-        uses: nixbuild/nix-quick-install-action@v30
+        # uses: nixbuild/nix-quick-install-action@v30
+        uses: cachix/install-nix-action@v31
         name: "install nix"
 
 
@@ -143,7 +144,7 @@ jobs:
         #   USERNAME: <OWNER>
         #   FEED_URL: https://nuget.pkg.github.com/<OWNER>/index.json
         run: |
-          nix-shell -p mono
+          nix-shell -I nixpkgs=github:NixOS/nixpkgs/nixos-unstable -p mono
           unset VCPKG_FORCE_SYSTEM_BINARIES
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
