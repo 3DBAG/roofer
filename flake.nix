@@ -58,7 +58,14 @@
               source .venv/bin/activate
               export pybind11_ROOT="$(python -m pybind11 --cmakedir)"
               if [ "$GITHUB_ACTIONS" = "true" ]; then
-              alias mono=exec
+                echo "Creating mono wrapper script for GitHub Actions..."
+                mkdir -p $PWD/.bin
+                cat > $PWD/.bin/mono << 'EOF'
+                #!/usr/bin/env bash
+                exec "$@"
+                EOF
+                chmod +x $PWD/.bin/mono
+                export PATH="$PWD/.bin:$PATH"
               fi
               echo "Roofer dev shell with vcpkg is ready"
             '';
