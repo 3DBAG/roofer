@@ -127,6 +127,9 @@ jobs:
       - if: runner.os != 'Windows'
         uses: nixbuild/nix-quick-install-action@v30
         name: "install nix"
+
+      - if: runner.os != 'Windows'
+        name: "Remember Mono"
         run: |
           echo "MONO_EXE=$(which mono)" >> $GITHUB_ENV
 
