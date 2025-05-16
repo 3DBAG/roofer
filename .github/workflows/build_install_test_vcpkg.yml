@@ -82,18 +82,20 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      # - if: runner.os == 'Windows'
-      #   name: "Install vcpkg"
-      #   shell: bash
-      #   run: |
-      #     git clone https://github.com/microsoft/vcpkg.git
-      #     echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-      #     echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+      - if: runner.os == 'Windows'
+        name: "Install vcpkg"
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
+          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
-      # - if: runner.os == 'Windows'
-      #   name: "Bootstrap vcpkg"
-      #   run: |
-      #     vcpkg/bootstrap-vcpkg.bat
+      - if: runner.os == 'Windows'
+        name: "Bootstrap vcpkg"
+        run: |
+          vcpkg/bootstrap-vcpkg.bat
       # - if: runner.os != 'Windows'
       #   name: "Bootstrap vcpkg"
       #   run: |
@@ -106,12 +108,12 @@ jobs:
 
       - if: runner.os != 'Windows'
         uses: nixbuild/nix-quick-install-action@v30
-        with:
-          arguments: "--keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
         name: "install nix"
 
       - if: runner.os != 'Windows'
         uses: nicknovitski/nix-develop@v1
+        with:
+          arguments: "--keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
         name: "nix develop"
 
       - name: Configure CMake
