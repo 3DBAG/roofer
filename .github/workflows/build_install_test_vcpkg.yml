@@ -53,10 +53,17 @@ jobs:
             c_compiler: gcc
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      USERNAME: 3DBAG
+      FEED_URL: https://nuget.pkg.github.com/3DBAG/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/3DBAG/index.json,readwrite"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       # Need python for running the tests on the installed exes
       - name: Install the latest version of uv and set the python version to 3.13
         if: runner.os == 'Windows'
@@ -76,11 +83,6 @@ jobs:
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           echo "pybind11_ROOT=$(python -m pybind11 --cmakedir)" >> $GITHUB_ENV
 
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - if: runner.os == 'Windows'
         name: "Install vcpkg"
@@ -90,12 +92,28 @@ jobs:
           cd vcpkg
           git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+          echo "VCPKG_EXE=${{ github.workspace }}/vcpkg/vcpkg" >> "$GITHUB_ENV"
           echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
       - if: runner.os == 'Windows'
         name: "Bootstrap vcpkg"
         run: |
           vcpkg/bootstrap-vcpkg.bat
+
+      - if: runner.os == 'Windows'
+        name: Add NuGet sources
+        shell: pwsh
+        run: |
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
+            -StorePasswordInClearText `
+            -Name GitHubPackages `
+            -UserName "${{ env.USERNAME }}" `
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+            -Source "${{ env.FEED_URL }}"
       # - if: runner.os != 'Windows'
       #   name: "Bootstrap vcpkg"
       #   run: |
@@ -113,8 +131,28 @@ jobs:
       - if: runner.os != 'Windows'
         uses: nicknovitski/nix-develop@v1
         with:
-          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep FEED_URL --keep USERNAME"
         name: "nix develop"
+
+      - if: runner.os != 'Windows'
+        name: Add NuGet sources
+        shell: bash
+        # env:
+        #   VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
+        #   USERNAME: <OWNER>
+        #   FEED_URL: https://nuget.pkg.github.com/<OWNER>/index.json
+        run: |
+          export VCPKG_EXE=$(which vcpkg)
+          mono `$VCPKG_EXE fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `$VCPKG_EXE fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
