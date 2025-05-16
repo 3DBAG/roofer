@@ -128,10 +128,6 @@ jobs:
         uses: nixbuild/nix-quick-install-action@v30
         name: "install nix"
 
-      - if: runner.os != 'Windows'
-        name: "Remember Mono"
-        run: |
-          echo "MONO_EXE=$(which mono)" >> $GITHUB_ENV
 
       - if: runner.os != 'Windows'
         uses: nicknovitski/nix-develop@v1
@@ -147,16 +143,16 @@ jobs:
         #   USERNAME: <OWNER>
         #   FEED_URL: https://nuget.pkg.github.com/<OWNER>/index.json
         run: |
-          export VCPKG_EXE=$(which vcpkg)
+          nix-shell -p mono
           unset VCPKG_FORCE_SYSTEM_BINARIES
-          $MONO_EXE `$VCPKG_EXE fetch nuget | tail -n 1` \
+          mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
             -StorePasswordInClearText \
             -Name GitHubPackages \
             -UserName "${{ env.USERNAME }}" \
             -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
-          $MONO_EXE `$VCPKG_EXE fetch nuget | tail -n 1` \
+          mono `vcpkg fetch nuget | tail -n 1` \
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
 
