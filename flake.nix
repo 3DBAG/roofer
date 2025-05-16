@@ -61,9 +61,9 @@
                 echo "Creating mono wrapper script for GitHub Actions..."
                 mkdir -p $PWD/.bin
                 cat > $PWD/.bin/mono << 'EOF'
-                #!/usr/bin/env bash
-                exec "$@"
-                EOF
+#!/usr/bin/env bash
+exec "$@"
+EOF
                 chmod +x $PWD/.bin/mono
                 export PATH="$PWD/.bin:$PATH"
               fi
