@@ -46,31 +46,17 @@
               # docs
               doxygen
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [ dotnetPackages.Nuget];
+              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [];
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
-            VCPKG_FORCE_SYSTEM_BINARIES = 1;
+            # VCPKG_FORCE_SYSTEM_BINARIES = 1;
 
             shellHook = ''
               echo "Updating and activating python environment..."
               uv sync
               source .venv/bin/activate
               export pybind11_ROOT="$(python -m pybind11 --cmakedir)"
-              if [ "$GITHUB_ACTIONS" = "true" ]; then
-                echo "Creating mono wrapper script for GitHub Actions..."
-                mkdir -p $PWD/.bin
-                cat > $PWD/.bin/mono << 'EOF'
-#!/usr/bin/env bash
-if [ "$1" = "--version" ]; then
-  echo "Mono JIT compiler version 6.8.0.105 (Debian 6.8.0.105+dfsg-2 Wed Feb 26 23:23:50 UTC 2020)"
-  exit 0
-fi
-exec "$@"
-EOF
-                chmod +x $PWD/.bin/mono
-                export PATH="$PWD/.bin:$PATH"
-              fi
               echo "Roofer dev shell with vcpkg is ready"
             '';
           };
