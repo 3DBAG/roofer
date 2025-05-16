@@ -135,14 +135,13 @@ jobs:
       - if: runner.os != 'Windows'
         uses: nicknovitski/nix-develop@v1
         with:
-          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --impure"
         name: "nix develop"
 
       - if: runner.os != 'Windows'
         name: Add NuGet sources
         shell: bash
         run: |
-          nix-shell -p mono
           unset VCPKG_FORCE_SYSTEM_BINARIES
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
