@@ -142,15 +142,14 @@ jobs:
         name: Add NuGet sources
         shell: bash
         run: |
-          unset VCPKG_FORCE_SYSTEM_BINARIES
-          mono `vcpkg fetch nuget | tail -n 1` \
+          nuget \
             sources add \
             -Source "${{ env.FEED_URL }}" \
             -StorePasswordInClearText \
             -Name GitHubPackages \
             -UserName "${{ env.USERNAME }}" \
             -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
-          mono `vcpkg fetch nuget | tail -n 1` \
+          nuget \
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
 

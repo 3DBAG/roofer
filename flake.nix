@@ -47,7 +47,7 @@
               # docs
               doxygen
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [ mono ];
+              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [ dotnetPackages.Nuget];
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
