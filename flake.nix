@@ -42,6 +42,7 @@
               # python tools
               py
               uv
+              zlib # fix numpy import error?
 
               # docs
               doxygen

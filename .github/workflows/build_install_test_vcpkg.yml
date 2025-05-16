@@ -82,18 +82,18 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - if: runner.os == 'Windows'
-        name: "Install vcpkg"
-        shell: bash
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
+      # - if: runner.os == 'Windows'
+      #   name: "Install vcpkg"
+      #   shell: bash
+      #   run: |
+      #     git clone https://github.com/microsoft/vcpkg.git
+      #     echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+      #     echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
-      - if: runner.os == 'Windows'
-        name: "Bootstrap vcpkg"
-        run: |
-          vcpkg/bootstrap-vcpkg.bat
+      # - if: runner.os == 'Windows'
+      #   name: "Bootstrap vcpkg"
+      #   run: |
+      #     vcpkg/bootstrap-vcpkg.bat
       # - if: runner.os != 'Windows'
       #   name: "Bootstrap vcpkg"
       #   run: |
@@ -105,7 +105,9 @@ jobs:
       #     brew install autoconf autoconf-archive automake libtool
 
       - if: runner.os != 'Windows'
-        uses: cachix/install-nix-action@v31
+        uses: nixbuild/nix-quick-install-action@v30
+        with:
+          arguments: "--keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES"
         name: "install nix"
 
       - if: runner.os != 'Windows'
@@ -117,6 +119,7 @@ jobs:
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: >
           cmake -B build
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           --preset gh-${{ runner.os }}
