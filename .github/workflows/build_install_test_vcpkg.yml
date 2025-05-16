@@ -131,15 +131,6 @@ jobs:
         name: "install nix"
 
       - if: runner.os != 'Windows'
-        uses: nicknovitski/nix-develop@v1
-        env:
-          # Configure a constant location for the uv cache
-          UV_CACHE_DIR: /tmp/.uv-cache
-        with:
-          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --impure"
-        name: "nix develop"
-
-      - if: runner.os != 'Windows'
         name: Restore uv cache
         uses: actions/cache@v4
         with:
@@ -150,10 +141,18 @@ jobs:
             uv-${{ runner.os }}
 
       - if: runner.os != 'Windows'
+        uses: nicknovitski/nix-develop@v1
+        env:
+          # Configure a constant location for the uv cache
+          UV_CACHE_DIR: /tmp/.uv-cache
+        with:
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep UV_CACHE_DIR --impure"
+        name: "nix develop"
+
+      - if: runner.os != 'Windows'
         name: Add NuGet sources
         shell: bash
         run: |
-          export VCPKG_FO
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
