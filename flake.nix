@@ -46,7 +46,7 @@
               # docs
               doxygen
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals (builtins.getEnv "CI" == "true") [mono];
+              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [mono];
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
@@ -58,10 +58,6 @@
               uv sync
               source .venv/bin/activate
               export pybind11_ROOT="$(python -m pybind11 --cmakedir)"
-              if [[ "$CI" != "true" ]]; then
-                export VCPKG_FORCE_SYSTEM_BINARIES=1
-                echo "Set VCPKG_FORCE_SYSTEM_BINARIES=1"
-              fi
               echo "Roofer dev shell with vcpkg is ready"
             '';
           };
