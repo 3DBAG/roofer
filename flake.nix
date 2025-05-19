@@ -19,7 +19,6 @@
               cmakeCurses
               vcpkg
               ninja
-              llvmPackages.libcxxClang
 
               # to make vcpkg work
               autoconf
@@ -59,6 +58,10 @@
               uv sync
               source .venv/bin/activate
               export pybind11_ROOT="$(python -m pybind11 --cmakedir)"
+              if [[ "$GITHUB_ACTIONS" != "true" ]]; then
+                export VCPKG_FORCE_SYSTEM_BINARIES=1
+                echo "Set VCPKG_FORCE_SYSTEM_BINARIES=1"
+              fi
               echo "Roofer dev shell with vcpkg is ready"
             '';
           };
