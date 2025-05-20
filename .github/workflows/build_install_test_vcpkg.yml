@@ -180,12 +180,6 @@ jobs:
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         run: cmake --build build --config ${{ matrix.build_type }} --verbose --preset gh-${{ runner.os }}
 
-      - if: runner.os == 'Windows'
-        name: show contents rooferpy build dir
-        run: |
-          cd build\rooferpy
-          tree /F
-
       - name: Test
         # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
@@ -193,6 +187,12 @@ jobs:
 
       - name: Install
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
+
+      - if: runner.os == 'Windows'
+        name: show contents rooferpy build dir
+        run: |
+          cd install
+          tree /F
 
       - name: Test installed
         shell: bash
