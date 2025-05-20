@@ -7,8 +7,9 @@ The roofer python API allows you to use the roofer library from Python. Most not
 
 See [this script](https://github.com/3DBAG/roofer/blob/develop/rooferpy/example_rooferpy.py) for a simple example of how to use the Python bindings.
 
+
 ```{eval-rst}
 .. automodule:: roofer
-:members:
-:undoc-members:
+    :members:
+    :undoc-members:
 ```
