@@ -659,7 +659,7 @@ struct RooferConfigHandler {
   void print_help(std::string program_name) {
     // see http://docopt.org/
     std::cout << "Automatic LoD 2.2 building reconstruction from "
-                 "a pointclouds\n\n";
+                 "a pointcloud\n\n";
     std::cout << "\033[1mUsage\033[0m:" << "\n";
     std::cout << "  " << program_name;
     std::cout << " [options] <pointcloud-path>... <polygon-source> "
