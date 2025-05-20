@@ -149,7 +149,7 @@ if(RF_BUILD_BINDINGS)
   if(WIN32)
     set_tests_properties(
       "rooferpy" PROPERTIES ENVIRONMENT
-                            "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy/Release")
+                            "PYTHONPATH=${CMAKE_BINARY_DIR}\\rooferpy\\Release")
   else()
     set_tests_properties(
       "rooferpy" PROPERTIES ENVIRONMENT

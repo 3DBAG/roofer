@@ -64,11 +64,14 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       # Need python for running the tests on the installed exes
+      - uses: actions/setup-python@v5
+        if: runner.os == 'Windows'
+        with:
+          python-version: '3.13' 
       - name: Install the latest version of uv and set the python version to 3.13
         if: runner.os == 'Windows'
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.13
           activate-environment: true
           enable-cache: true
       - name: Install python dependencies
