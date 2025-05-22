@@ -4,15 +4,6 @@ add_subdirectory(roofer-app)
 # add_subdirectory(crop)
 # add_subdirectory(reconstruct)
 
-if(WIN32)
-    install (DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj
-            DESTINATION "share"
-            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal
-            DESTINATION "share"
-            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
-endif()
-
 # add polyscope
 # if(${RF_BUILD_GUI})
 #   add_subdirectory(external/polyscope)

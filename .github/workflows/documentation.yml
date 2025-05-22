@@ -73,16 +73,22 @@ jobs:
         run: >
           cmake -B build
           --preset vcpkg-docs
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
           -S ${{ github.workspace }}
 
       - name: Build bindings
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
+        run: |
+          cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
+          cmake --install build --config Release --verbose
 
       - name: Generate Docs
         run: |
           mkdir docs/rooferpy
           cp build/rooferpy/*.so docs/rooferpy
+          ./install/bin/doc-helper config > docs/example_full.toml
+          ./install/bin/doc-helper params > docs/cli-options.md
+          ./install/bin/doc-helper attr > docs/output-attributes.md
           cd docs
           make html
 

@@ -89,6 +89,11 @@ void print_attributes(DocAttribMap& attributes) {
 }
 
 int main(int argc, const char* argv[]) {
+  if (argc < 2) {
+    std::cerr << "Usage: " << argv[0] << " <format>\n";
+    std::cerr << "Available formats: config, attr, params\n";
+    return EXIT_FAILURE;
+  }
   std::string format = argv[1];
   RooferConfigHandler rch{};
 

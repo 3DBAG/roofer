@@ -333,20 +333,28 @@ struct RooferConfigHandler {
     general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
 #endif
 
-    input.add("id-attribute", "Building ID attribute", cfg_.id_attribute);
-    input.add("force-lod11-attribute", "Building attribute for forcing lod11",
+    input.add(
+        "id-attribute",
+        "Building ID attribute to be used as identifier in CityJSONSeq output.",
+        cfg_.id_attribute);
+    input.add("force-lod11-attribute",
+              "Building attribute (bool) for forcing LoD1.1",
               cfg_.force_lod11_attribute);
     input.add("yoc-attribute",
-              "Attribute containing building year of construction",
+              "Attribute (int) containing building year of construction",
               cfg_.yoc_attribute);
     input.add("h-terrain-attribute",
-              "Attribute containing (fallback) terrain height for buildings",
+              "Attribute (float) containing (fallback) terrain height for "
+              "buildings, in case no terrain height can be derived from the "
+              "pointcloud. See also --h-terrain-strategy",
               cfg_.h_terrain_attribute);
     input.add("h-roof-attribute",
-              "Attribute containing fallback roof height for buildings",
+              "Attribute containing fallback roof height for buildings in case "
+              "no roof height can be derived from the pointcloud.",
               cfg_.h_roof_attribute);
     input.add("polygon-source-layer",
-              "Load this layer from <polygon-source> [default: first layer]",
+              "Select this layername from <polygon-source>. By default the "
+              "first layer is used.",
               cfg_.layer_name);
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "

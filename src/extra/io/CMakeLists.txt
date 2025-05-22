@@ -20,7 +20,7 @@ set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
 
 find_package(laslib CONFIG REQUIRED)
-
+find_package(nlohmann_json CONFIG REQUIRED)
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
 
