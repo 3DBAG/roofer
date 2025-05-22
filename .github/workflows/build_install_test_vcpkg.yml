@@ -193,7 +193,7 @@ jobs:
         run: |
           cd install
           tree /F
-      - else:
+      - if: runner.os != 'Windows'
         name: show contents install dir
         run: |
           cd install
