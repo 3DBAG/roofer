@@ -189,10 +189,15 @@ jobs:
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
 
       - if: runner.os == 'Windows'
-        name: show contents rooferpy build dir
+        name: show contents install dir
         run: |
           cd install
           tree /F
+      - else:
+        name: show contents install dir
+        run: |
+          cd install
+          ls -R
 
       - name: Test installed
         shell: bash
@@ -202,11 +207,10 @@ jobs:
         name: Minimize uv cache
         run: uv cache prune --ci
 
-      - if: runner.os == 'Windows'
-        name: Upload Windows binaries
+      - name: Upload Windows binaries
         uses: actions/upload-artifact@v4
         with:
-          name: roofer-windows-${{ matrix.build_type }}
+          name: roofer-${{ runner.os }}-${{ matrix.build_type }}
           path: |
             install
           retention-days: 7
