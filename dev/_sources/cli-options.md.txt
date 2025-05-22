@@ -1,0 +1,151 @@
+### General options
+
+```{option} -h, --help  (default: false)
+Show help message
+```
+```{option} -v, --version  (default: false)
+Show version
+```
+```{option} -j, --jobs <int> (default: 0)
+Number of threads to use
+```
+```{option} -c, --config <string> (default: <no value>)
+Configuration file
+```
+```{option} --trace-interval <int> (default: 10)
+Interval for tracing (in seconds)
+```
+```{option} --loglevel (trace|debug|info) (default: info)
+Specify loglevel. Can be info, warning, debug, trace
+```
+### Input options
+
+```{option} --id-attribute <string> (default: <no value>)
+Building ID attribute to be used as identifier in CityJSONSeq output.
+```
+```{option} --force-lod11-attribute <string> (default: <no value>)
+Building attribute (bool) for forcing LoD1.1
+```
+```{option} --yoc-attribute <string> (default: <no value>)
+Attribute (int) containing building year of construction
+```
+```{option} --h-terrain-attribute <string> (default: <no value>)
+Attribute (float) containing (fallback) terrain height for buildings, in case no terrain height can be derived from the pointcloud. See also --h-terrain-strategy
+```
+```{option} --h-roof-attribute <string> (default: <no value>)
+Attribute containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.
+```
+```{option} --polygon-source-layer <string> (default: <no value>)
+Select this layername from <polygon-source>. By default the first layer is used.
+```
+```{option} --filter <string> (default: <no value>)
+Specify WHERE clause in OGR SQL to select specfic features from <polygon-source>
+```
+```{option} --box (xmin ymin xmax ymax) (default: <no value>)
+Region of interest. Data outside of this region will be ignored
+```
+```{option} --srs <string> (default: <no value>)
+Manually set Spatial Reference System for input data
+```
+```{option} --bld-class <int> (default: 6)
+LAS classification code for building points
+```
+```{option} --grnd-class <int> (default: 2)
+LAS classification code for ground points
+```
+```{option} --[no-]skip-pc-check  (default: false)
+Disable/enable check if all supplied pointcloud files exist
+```
+### Crop options
+
+```{option} --ceil-point-density <float> (default: 20)
+Enforce this point density ceiling on each building pointcloud.
+```
+```{option} --cellsize <float> (default: 0.5)
+Cellsize used for quick pointcloud analysis
+```
+```{option} --lod11-fallback-area <int> (default: 69000)
+lod11 fallback area
+```
+```{option} --[no-]clear-insufficient  (default: true)
+reconstruct buildings with insufficient pointcloud data
+```
+```{option} --[no-]compute-pc-98p  (default: false)
+compute 98th percentile of pointcloud height for each building
+```
+```{option} --[no-]crop-only  (default: false)
+Crop only, no reconstruction
+```
+```{option} --[no-]crop-output  (default: false)
+Output cropped building pointclouds
+```
+```{option} --[no-]crop-output-all  (default: false)
+Output files for each candidate pointcloud instead of only the optimal candidate. Implies --crop-output
+```
+```{option} --[no-]crop-rasters  (default: false)
+Output rasterised crop pointclouds. Implies --crop-output
+```
+```{option} --[no-]index  (default: false)
+Output index.gpkg file with crop analytics.
+```
+### Reconstruction options
+
+```{option} --[no-]lod12  (default: false)
+Generate LoD 1.2 geometry
+```
+```{option} --[no-]lod13  (default: false)
+Generate LoD 1.3 geometry
+```
+```{option} --[no-]lod22  (default: true)
+Generate LoD 2.2 geometry
+```
+```{option} --complexity-factor <float> (default: 0.888)
+Complexity factor building reconstruction
+```
+```{option} --[no-]clip-terrain  (default: true)
+Clip terrain parts from roofprint
+```
+```{option} --lod13-step-height <float> (default: 3)
+Step height used for LoD 1.3 generation
+```
+```{option} --plane-detect-k <int> (default: 15)
+plane detect k
+```
+```{option} --plane-detect-min-points <int> (default: 15)
+plane detect min points
+```
+```{option} --plane-detect-epsilon <float> (default: 0.3)
+plane detect epsilon
+```
+```{option} --h-terrain-strategy (buffer_tile|buffer_user|user) (default: buffer_tile)
+Terrain height strategy
+```
+```{option} --lod11-fallback-planes <int> (default: 900)
+Number of planes for LOD11 fallback
+```
+```{option} --lod11-fallback-time <int> (default: 1800000)
+Time for LOD11 fallback
+```
+### Output options
+
+```{option} --[no-]tiling  (default: false)
+Disable/enable tiling
+```
+```{option} --tilesize (x y) (default: [1000,1000])
+Tilesize used for output tiles
+```
+```{option} --[no-]split-cjseq  (default: false)
+Output CityJSONSequence file for each building instead of one file per tile
+```
+```{option} --[no-]omit-metadata  (default: false)
+Omit metadata in CityJSON output
+```
+```{option} --cj-scale (x y z) (default: [0.001,0.001,0.001])
+Scaling applied to CityJSON output vertices
+```
+```{option} --cj-translate (x y z) (default: <no value>)
+Translation applied to CityJSON output vertices. Uses tile center by default.
+```
+```{option} --attribute-rename key=value[,...] (default: azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)
+Rename output attributes. Use 'old_name=new_name' format. If the new name is empty, the attribute will be removed.
+```

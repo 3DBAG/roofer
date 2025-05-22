@@ -12,7 +12,7 @@ With the {program}`roofer` CLI application you can:
 
 ## Usage
 ```{code-block} text
-Automatic LoD 2.2 building reconstruction from a pointclouds
+Automatic LoD 2.2 building reconstruction from a pointcloud
 
 Usage:
   roofer [options] <pointcloud-path>... <polygon-source> <output-directory>

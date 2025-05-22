@@ -266,7 +266,7 @@
 </ul>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Automatic LoD 2.2 building reconstruction from a pointclouds
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Automatic LoD 2.2 building reconstruction from a pointcloud
 
 Usage:
   roofer [options] &lt;pointcloud-path&gt;... &lt;polygon-source&gt; &lt;output-directory&gt;
@@ -296,6 +296,303 @@ Usage:
 </dd></dl>
 
 </section>
+<section id="general-options">
+<h3>General options<a class="headerlink" href="#general-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-h">
+<span id="cmdoption-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-h" title="Link to this definition">¶</a></dt>
+<dd><p>Show help message</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-v">
+<span id="cmdoption-version"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-v" title="Link to this definition">¶</a></dt>
+<dd><p>Show version</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-j">
+<span id="cmdoption-jobs"></span><span class="sig-name descname"><span class="pre">-j</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--jobs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">0)</span></span><a class="headerlink" href="#cmdoption-j" title="Link to this definition">¶</a></dt>
+<dd><p>Number of threads to use</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-c">
+<span id="cmdoption-config"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--config</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-c" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-trace-interval">
+<span class="sig-name descname"><span class="pre">--trace-interval</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">10)</span></span><a class="headerlink" href="#cmdoption-trace-interval" title="Link to this definition">¶</a></dt>
+<dd><p>Interval for tracing (in seconds)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-loglevel">
+<span class="sig-name descname"><span class="pre">--loglevel</span></span><span class="sig-prename descclassname"> <span class="pre">(trace|debug|info)</span> <span class="pre">(default:</span> <span class="pre">info)</span></span><a class="headerlink" href="#cmdoption-loglevel" title="Link to this definition">¶</a></dt>
+<dd><p>Specify loglevel. Can be info, warning, debug, trace</p>
+</dd></dl>
+
+</section>
+<section id="input-options">
+<h3>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-id-attribute">
+<span class="sig-name descname"><span class="pre">--id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-id-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Building ID attribute to be used as identifier in CityJSONSeq output.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-force-lod11-attribute">
+<span class="sig-name descname"><span class="pre">--force-lod11-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-force-lod11-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Building attribute (bool) for forcing LoD1.1</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-yoc-attribute">
+<span class="sig-name descname"><span class="pre">--yoc-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-yoc-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Attribute (int) containing building year of construction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-h-terrain-attribute">
+<span class="sig-name descname"><span class="pre">--h-terrain-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-h-terrain-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Attribute (float) containing (fallback) terrain height for buildings, in case no terrain height can be derived from the pointcloud. See also –h-terrain-strategy</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-h-roof-attribute">
+<span class="sig-name descname"><span class="pre">--h-roof-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-h-roof-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Attribute containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-polygon-source-layer">
+<span class="sig-name descname"><span class="pre">--polygon-source-layer</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-polygon-source-layer" title="Link to this definition">¶</a></dt>
+<dd><p>Select this layername from <polygon-source>. By default the first layer is used.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-filter">
+<span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
+<dd><p>Specify WHERE clause in OGR SQL to select specfic features from <polygon-source></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-box">
+<span class="sig-name descname"><span class="pre">--box</span></span><span class="sig-prename descclassname"> <span class="pre">(xmin</span> <span class="pre">ymin</span> <span class="pre">xmax</span> <span class="pre">ymax)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-box" title="Link to this definition">¶</a></dt>
+<dd><p>Region of interest. Data outside of this region will be ignored</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-srs">
+<span class="sig-name descname"><span class="pre">--srs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-srs" title="Link to this definition">¶</a></dt>
+<dd><p>Manually set Spatial Reference System for input data</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-bld-class">
+<span class="sig-name descname"><span class="pre">--bld-class</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">6)</span></span><a class="headerlink" href="#cmdoption-bld-class" title="Link to this definition">¶</a></dt>
+<dd><p>LAS classification code for building points</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-grnd-class">
+<span class="sig-name descname"><span class="pre">--grnd-class</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">2)</span></span><a class="headerlink" href="#cmdoption-grnd-class" title="Link to this definition">¶</a></dt>
+<dd><p>LAS classification code for ground points</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-skip-pc-check">
+<span class="sig-name descname"><span class="pre">--[no-]skip-pc-check</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-skip-pc-check" title="Link to this definition">¶</a></dt>
+<dd><p>Disable/enable check if all supplied pointcloud files exist</p>
+</dd></dl>
+
+</section>
+<section id="crop-options">
+<h3>Crop options<a class="headerlink" href="#crop-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ceil-point-density">
+<span class="sig-name descname"><span class="pre">--ceil-point-density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">20)</span></span><a class="headerlink" href="#cmdoption-ceil-point-density" title="Link to this definition">¶</a></dt>
+<dd><p>Enforce this point density ceiling on each building pointcloud.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cellsize">
+<span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
+<dd><p>Cellsize used for quick pointcloud analysis</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod11-fallback-area">
+<span class="sig-name descname"><span class="pre">--lod11-fallback-area</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">69000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-area" title="Link to this definition">¶</a></dt>
+<dd><p>lod11 fallback area</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-clear-insufficient">
+<span class="sig-name descname"><span class="pre">--[no-]clear-insufficient</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-clear-insufficient" title="Link to this definition">¶</a></dt>
+<dd><p>reconstruct buildings with insufficient pointcloud data</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-compute-pc-98p">
+<span class="sig-name descname"><span class="pre">--[no-]compute-pc-98p</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-compute-pc-98p" title="Link to this definition">¶</a></dt>
+<dd><p>compute 98th percentile of pointcloud height for each building</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-crop-only">
+<span class="sig-name descname"><span class="pre">--[no-]crop-only</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-crop-only" title="Link to this definition">¶</a></dt>
+<dd><p>Crop only, no reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-crop-output">
+<span class="sig-name descname"><span class="pre">--[no-]crop-output</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-crop-output" title="Link to this definition">¶</a></dt>
+<dd><p>Output cropped building pointclouds</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-crop-output-all">
+<span class="sig-name descname"><span class="pre">--[no-]crop-output-all</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-crop-output-all" title="Link to this definition">¶</a></dt>
+<dd><p>Output files for each candidate pointcloud instead of only the optimal candidate. Implies –crop-output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-crop-rasters">
+<span class="sig-name descname"><span class="pre">--[no-]crop-rasters</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-crop-rasters" title="Link to this definition">¶</a></dt>
+<dd><p>Output rasterised crop pointclouds. Implies –crop-output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-index">
+<span class="sig-name descname"><span class="pre">--[no-]index</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-index" title="Link to this definition">¶</a></dt>
+<dd><p>Output index.gpkg file with crop analytics.</p>
+</dd></dl>
+
+</section>
+<section id="reconstruction-options">
+<h3>Reconstruction options<a class="headerlink" href="#reconstruction-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-lod12">
+<span class="sig-name descname"><span class="pre">--[no-]lod12</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod12" title="Link to this definition">¶</a></dt>
+<dd><p>Generate LoD 1.2 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-lod13">
+<span class="sig-name descname"><span class="pre">--[no-]lod13</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod13" title="Link to this definition">¶</a></dt>
+<dd><p>Generate LoD 1.3 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-lod22">
+<span class="sig-name descname"><span class="pre">--[no-]lod22</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-lod22" title="Link to this definition">¶</a></dt>
+<dd><p>Generate LoD 2.2 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-complexity-factor">
+<span class="sig-name descname"><span class="pre">--complexity-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.888)</span></span><a class="headerlink" href="#cmdoption-complexity-factor" title="Link to this definition">¶</a></dt>
+<dd><p>Complexity factor building reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-clip-terrain">
+<span class="sig-name descname"><span class="pre">--[no-]clip-terrain</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-clip-terrain" title="Link to this definition">¶</a></dt>
+<dd><p>Clip terrain parts from roofprint</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod13-step-height">
+<span class="sig-name descname"><span class="pre">--lod13-step-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">3)</span></span><a class="headerlink" href="#cmdoption-lod13-step-height" title="Link to this definition">¶</a></dt>
+<dd><p>Step height used for LoD 1.3 generation</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-plane-detect-k">
+<span class="sig-name descname"><span class="pre">--plane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-k" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect k</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-plane-detect-min-points">
+<span class="sig-name descname"><span class="pre">--plane-detect-min-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-min-points" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect min points</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-plane-detect-epsilon">
+<span class="sig-name descname"><span class="pre">--plane-detect-epsilon</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.3)</span></span><a class="headerlink" href="#cmdoption-plane-detect-epsilon" title="Link to this definition">¶</a></dt>
+<dd><p>plane detect epsilon</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
+<span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
+<dd><p>Terrain height strategy</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod11-fallback-planes">
+<span class="sig-name descname"><span class="pre">--lod11-fallback-planes</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">900)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-planes" title="Link to this definition">¶</a></dt>
+<dd><p>Number of planes for LOD11 fallback</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod11-fallback-time">
+<span class="sig-name descname"><span class="pre">--lod11-fallback-time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">1800000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-time" title="Link to this definition">¶</a></dt>
+<dd><p>Time for LOD11 fallback</p>
+</dd></dl>
+
+</section>
+<section id="output-options">
+<h3>Output options<a class="headerlink" href="#output-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-tiling">
+<span class="sig-name descname"><span class="pre">--[no-]tiling</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-tiling" title="Link to this definition">¶</a></dt>
+<dd><p>Disable/enable tiling</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tilesize">
+<span class="sig-name descname"><span class="pre">--tilesize</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y)</span> <span class="pre">(default:</span> <span class="pre">[1000,1000])</span></span><a class="headerlink" href="#cmdoption-tilesize" title="Link to this definition">¶</a></dt>
+<dd><p>Tilesize used for output tiles</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-split-cjseq">
+<span class="sig-name descname"><span class="pre">--[no-]split-cjseq</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-split-cjseq" title="Link to this definition">¶</a></dt>
+<dd><p>Output CityJSONSequence file for each building instead of one file per tile</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-omit-metadata">
+<span class="sig-name descname"><span class="pre">--[no-]omit-metadata</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-omit-metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Omit metadata in CityJSON output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cj-scale">
+<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">[0.001,0.001,0.001])</span></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
+<dd><p>Scaling applied to CityJSON output vertices</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-cj-translate">
+<span class="sig-name descname"><span class="pre">--cj-translate</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-cj-translate" title="Link to this definition">¶</a></dt>
+<dd><p>Translation applied to CityJSON output vertices. Uses tile center by default.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-attribute-rename">
+<span class="sig-name descname"><span class="pre">--attribute-rename</span></span><span class="sig-prename descclassname"> <span class="pre">key=value[,...]</span> <span class="pre">(default:</span> <span class="pre">azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-attribute-rename" title="Link to this definition">¶</a></dt>
+<dd><p>Rename output attributes. Use ‘old_name=new_name’ format. If the new name is empty, the attribute will be removed.</p>
+</dd></dl>
+
+</section>
 </section>
 <section id="output-format">
 <h2>Output format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h2>
@@ -306,11 +603,392 @@ Usage:
 </div>
 <section id="output-attributes">
 <h3>Output attributes<a class="headerlink" href="#output-attributes" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-azimuth">
+<span class="sig-name descname"><span class="pre">azimuth</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_azimuth)</span></span><a class="headerlink" href="#cmdoption-arg-azimuth" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the azimuth of a roofpart</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-extrusion_mode">
+<span class="sig-name descname"><span class="pre">extrusion_mode</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_extrusion_mode)</span></span><a class="headerlink" href="#cmdoption-arg-extrusion_mode" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates what extrusion mode was used for the building</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-force_lod11">
+<span class="sig-name descname"><span class="pre">force_lod11</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_force_lod11)</span></span><a class="headerlink" href="#cmdoption-arg-force_lod11" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates if LOD11 was forced for the building</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_ground">
+<span class="sig-name descname"><span class="pre">h_ground</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_ground)</span></span><a class="headerlink" href="#cmdoption-arg-h_ground" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the height of floor of the building</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_pc_98p">
+<span class="sig-name descname"><span class="pre">h_pc_98p</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_pc_98p)</span></span><a class="headerlink" href="#cmdoption-arg-h_pc_98p" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the 98th percentile height of the pointcloud</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_roof_50p">
+<span class="sig-name descname"><span class="pre">h_roof_50p</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_50p)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_50p" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the 50th percentile roof height</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_roof_70p">
+<span class="sig-name descname"><span class="pre">h_roof_70p</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_70p)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_70p" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the 70th percentile roof height</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_roof_max">
+<span class="sig-name descname"><span class="pre">h_roof_max</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_max)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_max" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the maximum roof height</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_roof_min">
+<span class="sig-name descname"><span class="pre">h_roof_min</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_min)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_min" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the minimum roof height</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-h_roof_ridge">
+<span class="sig-name descname"><span class="pre">h_roof_ridge</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_ridge)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_ridge" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the main ridge height</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-is_glass_roof">
+<span class="sig-name descname"><span class="pre">is_glass_roof</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_is_glass_roof)</span></span><a class="headerlink" href="#cmdoption-arg-is_glass_roof" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates if a glass roof was detected</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-is_mutated">
+<span class="sig-name descname"><span class="pre">is_mutated</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_is_mutated)</span></span><a class="headerlink" href="#cmdoption-arg-is_mutated" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-nodata_frac">
+<span class="sig-name descname"><span class="pre">nodata_frac</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_nodata_frac)</span></span><a class="headerlink" href="#cmdoption-arg-nodata_frac" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the fraction of the roofprint that is not covered by pointcloud data</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-nodata_r">
+<span class="sig-name descname"><span class="pre">nodata_r</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_nodata_r)</span></span><a class="headerlink" href="#cmdoption-arg-nodata_r" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pc_select">
+<span class="sig-name descname"><span class="pre">pc_select</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pc_select)</span></span><a class="headerlink" href="#cmdoption-arg-pc_select" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates why the input pointcloud was selected for reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pc_source">
+<span class="sig-name descname"><span class="pre">pc_source</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pc_source)</span></span><a class="headerlink" href="#cmdoption-arg-pc_source" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates which input pointcloud was used for reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pc_year">
+<span class="sig-name descname"><span class="pre">pc_year</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pc_year)</span></span><a class="headerlink" href="#cmdoption-arg-pc_year" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the acquisition year of the selected input pointcloud</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pointcloud_unusable">
+<span class="sig-name descname"><span class="pre">pointcloud_unusable</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pointcloud_unusable)</span></span><a class="headerlink" href="#cmdoption-arg-pointcloud_unusable" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates if the pointcloud was found unusable for reconstruction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-pt_density">
+<span class="sig-name descname"><span class="pre">pt_density</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pt_density)</span></span><a class="headerlink" href="#cmdoption-arg-pt_density" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the point density inside the roofprint</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-reconstruction_time">
+<span class="sig-name descname"><span class="pre">reconstruction_time</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_t_run)</span></span><a class="headerlink" href="#cmdoption-arg-reconstruction_time" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates reconstruction time in ms</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-rmse_lod12">
+<span class="sig-name descname"><span class="pre">rmse_lod12</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod12)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod12" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the Root Mean Square Erorr of the LOD12 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-rmse_lod13">
+<span class="sig-name descname"><span class="pre">rmse_lod13</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod13)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod13" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the Root Mean Square Erorr of the LOD13 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-rmse_lod22">
+<span class="sig-name descname"><span class="pre">rmse_lod22</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod22)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod22" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the Root Mean Square Erorr of the LOD22 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-roof_n_planes">
+<span class="sig-name descname"><span class="pre">roof_n_planes</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_roof_planes)</span></span><a class="headerlink" href="#cmdoption-arg-roof_n_planes" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the number of roofplanes detected in the pointcloud (could be different from the generated mesh model)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-roof_n_ridgelines">
+<span class="sig-name descname"><span class="pre">roof_n_ridgelines</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_ridgelines)</span></span><a class="headerlink" href="#cmdoption-arg-roof_n_ridgelines" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the number of ridgelines detected in the pointcloud (could be different from the generated mesh model)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-roof_type">
+<span class="sig-name descname"><span class="pre">roof_type</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_roof_type)</span></span><a class="headerlink" href="#cmdoption-arg-roof_type" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the roof type</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-slope">
+<span class="sig-name descname"><span class="pre">slope</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_slope)</span></span><a class="headerlink" href="#cmdoption-arg-slope" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the slope of a roofpart</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-success">
+<span class="sig-name descname"><span class="pre">success</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_success)</span></span><a class="headerlink" href="#cmdoption-arg-success" title="Link to this definition">¶</a></dt>
+<dd><p>indicates if processing completed without unexpected errors</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-val3dity_lod12">
+<span class="sig-name descname"><span class="pre">val3dity_lod12</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_val3dity_lod12)</span></span><a class="headerlink" href="#cmdoption-arg-val3dity_lod12" title="Link to this definition">¶</a></dt>
+<dd><p>Lists val3dity codes for LOD12 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-val3dity_lod13">
+<span class="sig-name descname"><span class="pre">val3dity_lod13</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_val3dity_lod13)</span></span><a class="headerlink" href="#cmdoption-arg-val3dity_lod13" title="Link to this definition">¶</a></dt>
+<dd><p>Lists val3dity codes for LOD13 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-val3dity_lod22">
+<span class="sig-name descname"><span class="pre">val3dity_lod22</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_val3dity_lod22)</span></span><a class="headerlink" href="#cmdoption-arg-val3dity_lod22" title="Link to this definition">¶</a></dt>
+<dd><p>Lists val3dity codes for LOD22 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-volume_lod12">
+<span class="sig-name descname"><span class="pre">volume_lod12</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod12)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod12" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the volume of the LOD12 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-volume_lod13">
+<span class="sig-name descname"><span class="pre">volume_lod13</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod13)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod13" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the volume of the LOD13 geometry</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-volume_lod22">
+<span class="sig-name descname"><span class="pre">volume_lod22</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod22" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates the volume of the LOD22 geometry</p>
+</dd></dl>
+
 </section>
 </section>
 <section id="example-config-file">
 <h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
 <p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[Input]</span>
+<span class="c1">## Building ID attribute to be used as identifier in CityJSONSeq output.</span>
+<span class="c1"># id-attribute = </span>
+<span class="c1">## Building attribute (bool) for forcing LoD1.1</span>
+<span class="c1"># force-lod11-attribute = </span>
+<span class="c1">## Attribute (int) containing building year of construction</span>
+<span class="c1"># yoc-attribute = </span>
+<span class="c1">## Attribute (float) containing (fallback) terrain height for buildings, in case no terrain height can be derived from the pointcloud. See also --h-terrain-strategy</span>
+<span class="c1"># h-terrain-attribute = </span>
+<span class="c1">## Attribute containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.</span>
+<span class="c1"># h-roof-attribute = </span>
+<span class="c1">## Select this layername from &lt;polygon-source&gt;. By default the first layer is used.</span>
+<span class="c1"># polygon-source-layer = </span>
+<span class="c1">## Specify WHERE clause in OGR SQL to select specfic features from &lt;polygon-source&gt;</span>
+<span class="c1"># filter = </span>
+<span class="c1">## Region of interest. Data outside of this region will be ignored</span>
+<span class="c1"># box = [100, 100, 200, 200]</span>
+<span class="c1">## Manually set Spatial Reference System for input data</span>
+<span class="c1"># srs = &quot;EPSG:7415&quot;</span>
+<span class="c1">## LAS classification code for building points</span>
+<span class="n">bld-class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span>
+<span class="c1">## LAS classification code for ground points</span>
+<span class="n">grnd-class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="c1">## Disable/enable check if all supplied pointcloud files exist</span>
+<span class="n">skip-pc-check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[Crop]</span>
+<span class="c1">## Enforce this point density ceiling on each building pointcloud.</span>
+<span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
+<span class="c1">## Cellsize used for quick pointcloud analysis</span>
+<span class="n">cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="c1">## lod11 fallback area</span>
+<span class="n">lod11-fallback-area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">69000</span>
+<span class="c1">## reconstruct buildings with insufficient pointcloud data</span>
+<span class="n">clear-insufficient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## compute 98th percentile of pointcloud height for each building</span>
+<span class="n">compute-pc-98p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Crop only, no reconstruction</span>
+<span class="n">crop-only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Output cropped building pointclouds</span>
+<span class="n">crop-output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Output files for each candidate pointcloud instead of only the optimal candidate. Implies --crop-output</span>
+<span class="n">crop-output-all</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Output rasterised crop pointclouds. Implies --crop-output</span>
+<span class="n">crop-rasters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Output index.gpkg file with crop analytics.</span>
+<span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[Reconstruction]</span>
+<span class="c1">## Generate LoD 1.2 geometry</span>
+<span class="n">lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Generate LoD 1.3 geometry</span>
+<span class="n">lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Generate LoD 2.2 geometry</span>
+<span class="n">lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Complexity factor building reconstruction</span>
+<span class="n">complexity-factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.888</span>
+<span class="c1">## Clip terrain parts from roofprint</span>
+<span class="n">clip-terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Step height used for LoD 1.3 generation</span>
+<span class="n">lod13-step-height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="c1">## plane detect k</span>
+<span class="n">plane-detect-k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
+<span class="c1">## plane detect min points</span>
+<span class="n">plane-detect-min-points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
+<span class="c1">## plane detect epsilon</span>
+<span class="n">plane-detect-epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span>
+<span class="c1">## Terrain height strategy</span>
+<span class="c1"># h-terrain-strategy = &quot;buffer_tile&quot;</span>
+<span class="c1">## Number of planes for LOD11 fallback</span>
+<span class="n">lod11-fallback-planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">900</span>
+<span class="c1">## Time for LOD11 fallback</span>
+<span class="n">lod11-fallback-time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1800000</span>
+
+<span class="k">[Output]</span>
+<span class="c1">## Disable/enable tiling</span>
+<span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Tilesize used for output tiles</span>
+<span class="n">tilesize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">]</span>
+<span class="c1">## Output CityJSONSequence file for each building instead of one file per tile</span>
+<span class="n">split-cjseq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Omit metadata in CityJSON output</span>
+<span class="n">omit-metadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Scaling applied to CityJSON output vertices</span>
+<span class="n">cj-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.001</span><span class="p">]</span>
+<span class="c1">## Translation applied to CityJSON output vertices. Uses tile center by default.</span>
+<span class="c1"># cj-translate = [100000, 200000, 0]</span>
+<span class="c1">## Rename output attributes. Use &#39;old_name=new_name&#39; format. If the new name is empty, the attribute will be removed.</span>
+<span class="k">[Output.attribute-rename]</span>
+<span class="c1">## Indicates the azimuth of a roofpart</span>
+<span class="n">azimuth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_azimuth&quot;</span>
+<span class="c1">## Indicates what extrusion mode was used for the building</span>
+<span class="n">extrusion_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_extrusion_mode&quot;</span>
+<span class="c1">## Indicates if LOD11 was forced for the building</span>
+<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_force_lod11&quot;</span>
+<span class="c1">## Indicates the height of floor of the building</span>
+<span class="n">h_ground</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_ground&quot;</span>
+<span class="c1">## Indicates the 98th percentile height of the pointcloud</span>
+<span class="n">h_pc_98p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_pc_98p&quot;</span>
+<span class="c1">## Indicates the 50th percentile roof height</span>
+<span class="n">h_roof_50p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_50p&quot;</span>
+<span class="c1">## Indicates the 70th percentile roof height</span>
+<span class="n">h_roof_70p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_70p&quot;</span>
+<span class="c1">## Indicates the maximum roof height</span>
+<span class="n">h_roof_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_max&quot;</span>
+<span class="c1">## Indicates the minimum roof height</span>
+<span class="n">h_roof_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_min&quot;</span>
+<span class="c1">## Indicates the main ridge height</span>
+<span class="n">h_roof_ridge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_ridge&quot;</span>
+<span class="c1">## Indicates if a glass roof was detected</span>
+<span class="n">is_glass_roof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_glass_roof&quot;</span>
+<span class="c1">## Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)</span>
+<span class="n">is_mutated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_mutated&quot;</span>
+<span class="c1">## Indicates the fraction of the roofprint that is not covered by pointcloud data</span>
+<span class="n">nodata_frac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_frac&quot;</span>
+<span class="c1">## Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data</span>
+<span class="n">nodata_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_r&quot;</span>
+<span class="c1">## Indicates why the input pointcloud was selected for reconstruction</span>
+<span class="n">pc_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_select&quot;</span>
+<span class="c1">## Indicates which input pointcloud was used for reconstruction</span>
+<span class="n">pc_source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_source&quot;</span>
+<span class="c1">## Indicates the acquisition year of the selected input pointcloud</span>
+<span class="n">pc_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_year&quot;</span>
+<span class="c1">## Indicates if the pointcloud was found unusable for reconstruction</span>
+<span class="n">pointcloud_unusable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pointcloud_unusable&quot;</span>
+<span class="c1">## Indicates the point density inside the roofprint</span>
+<span class="n">pt_density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pt_density&quot;</span>
+<span class="c1">## Indicates reconstruction time in ms</span>
+<span class="n">reconstruction_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_t_run&quot;</span>
+<span class="c1">## Indicates the Root Mean Square Erorr of the LOD12 geometry</span>
+<span class="n">rmse_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod12&quot;</span>
+<span class="c1">## Indicates the Root Mean Square Erorr of the LOD13 geometry</span>
+<span class="n">rmse_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod13&quot;</span>
+<span class="c1">## Indicates the Root Mean Square Erorr of the LOD22 geometry</span>
+<span class="n">rmse_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod22&quot;</span>
+<span class="c1">## Indicates the number of roofplanes detected in the pointcloud (could be different from the generated mesh model)</span>
+<span class="n">roof_n_planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_planes&quot;</span>
+<span class="c1">## Indicates the number of ridgelines detected in the pointcloud (could be different from the generated mesh model)</span>
+<span class="n">roof_n_ridgelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_ridgelines&quot;</span>
+<span class="c1">## Indicates the roof type</span>
+<span class="n">roof_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_type&quot;</span>
+<span class="c1">## Indicates the slope of a roofpart</span>
+<span class="n">slope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_slope&quot;</span>
+<span class="c1">## indicates if processing completed without unexpected errors</span>
+<span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_success&quot;</span>
+<span class="c1">## Lists val3dity codes for LOD12 geometry</span>
+<span class="n">val3dity_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod12&quot;</span>
+<span class="c1">## Lists val3dity codes for LOD13 geometry</span>
+<span class="n">val3dity_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod13&quot;</span>
+<span class="c1">## Lists val3dity codes for LOD22 geometry</span>
+<span class="n">val3dity_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod22&quot;</span>
+<span class="c1">## Indicates the volume of the LOD12 geometry</span>
+<span class="n">volume_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod12&quot;</span>
+<span class="c1">## Indicates the volume of the LOD13 geometry</span>
+<span class="n">volume_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod13&quot;</span>
+<span class="c1">## Indicates the volume of the LOD22 geometry</span>
+<span class="n">volume_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod22&quot;</span>
+
+<span class="k">[[pointclouds]]</span>
+<span class="c1">## Name of the pointcloud</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="c1">## Path to the pointcloud</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="c1">## Ground class</span>
+<span class="n">ground_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## building class</span>
+<span class="n">building_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Quality</span>
+<span class="n">quality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Date</span>
+<span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Force LoD11</span>
+<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Select only for date</span>
+<span class="n">select_only_for_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -379,6 +1057,11 @@ Usage:
 <li><a class="reference internal" href="#">Roofer CLI App</a><ul>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#positional-arguments">Positional arguments</a></li>
+<li><a class="reference internal" href="#general-options">General options</a></li>
+<li><a class="reference internal" href="#input-options">Input options</a></li>
+<li><a class="reference internal" href="#crop-options">Crop options</a></li>
+<li><a class="reference internal" href="#reconstruction-options">Reconstruction options</a></li>
+<li><a class="reference internal" href="#output-options">Output options</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#output-format">Output format</a><ul>
