@@ -198,6 +198,11 @@ jobs:
         run: |
           cd install
           ls -R
+      - if: runner.os == 'macOS'
+        name: show contents install dir
+        run: |
+          cd install/bin
+          bundle_libcxx.sh roofer
 
       - name: Test installed
         shell: bash

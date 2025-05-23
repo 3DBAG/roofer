@@ -14,7 +14,10 @@
           apple_sdk = pkgs.apple-sdk_15;
           py = pkgs.python313;
         in {
-          default = pkgs.mkShell {
+          default = pkgs.mkShell.override {
+            # Use stdenvNoCC to avoid compiler contamination
+            # stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
+          } {
             buildInputs = with pkgs; [
               cmakeCurses
               vcpkg
@@ -54,6 +57,11 @@
             # VCPKG_FORCE_SYSTEM_BINARIES = 1;
 
             shellHook = ''
+              ${pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
+                # distribution script for macOS
+                chmod +x distribution/macOS/bundle_cxx.sh
+                export PATH="$(pwd)/distribution/macOS:$PATH"
+              ''}
               echo "Updating and activating python environment..."
               uv sync
               source .venv/bin/activate
