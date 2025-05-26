@@ -21,8 +21,8 @@ if(RF_BUILD_APPS)
   # Used for getting the process memory usage
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions("roofer" PUBLIC "IS_LINUX")
-    target_link_options("roofer" PRIVATE -static)
-    target_compile_options("roofer" PRIVATE -static)
+    target_link_options("roofer" PRIVATE -static-libstdc++)
+    target_compile_options("roofer" PRIVATE -static-libstdc++)
   endif()
   if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_compile_definitions("roofer" PUBLIC "IS_MACOS")
@@ -57,9 +57,9 @@ if(RF_BUILD_DOC_HELPER OR RF_BUILD_APPS)
   add_executable("doc-helper" "doc-helper.cpp")
   set_target_properties("doc-helper" PROPERTIES CXX_STANDARD 20)
   target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt cmake_git_version_tracking)
-  install(
-    TARGETS "doc-helper"
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
+  # install(
+  #   TARGETS "doc-helper"
+  #   ARCHIVE DESTINATION lib
+  #   LIBRARY DESTINATION lib
+  #   RUNTIME DESTINATION bin)
 endif()

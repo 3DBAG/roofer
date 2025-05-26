@@ -86,9 +86,9 @@ jobs:
         run: |
           mkdir docs/rooferpy
           cp build/rooferpy/*.so docs/rooferpy
-          ./install/bin/doc-helper config > docs/example_full.toml
-          ./install/bin/doc-helper params > docs/cli-options.md
-          ./install/bin/doc-helper attr > docs/output-attributes.md
+          ./build/apps/roofer-app/doc-helper config > docs/example_full.toml
+          ./build/apps/roofer-app/doc-helper params > docs/cli-options.md
+          ./build/apps/roofer-app/doc-helper attr > docs/output-attributes.md
           cd docs
           make html
 
