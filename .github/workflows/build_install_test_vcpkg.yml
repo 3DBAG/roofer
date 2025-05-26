@@ -192,11 +192,13 @@ jobs:
         name: show contents install dir
         run: |
           cd install
+          rm install/bin/doc-helper.exe
           tree /F
       - if: runner.os != 'Windows'
         name: show contents install dir
         run: |
           cd install
+          rm install/bin/doc-helper
           ls -R
       - if: runner.os == 'macOS'
         name: show contents install dir

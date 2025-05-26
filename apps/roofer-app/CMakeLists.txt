@@ -21,6 +21,8 @@ if(RF_BUILD_APPS)
   # Used for getting the process memory usage
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions("roofer" PUBLIC "IS_LINUX")
+    target_link_options("roofer" PRIVATE -static)
+    target_compile_options("roofer" PRIVATE -static)
   endif()
   if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_compile_definitions("roofer" PUBLIC "IS_MACOS")
