@@ -84,7 +84,6 @@ def run_convert_github_admonitions_to_rst_source(app, filename, lines):
 
 def run_convert_github_admonitions_to_rst(app, relative_path, parent_docname, lines):
     # loop through lines, replace github admonitions
-    print("BKABLA")
     for i, orig_line in enumerate(lines):
         orig_line_splits = orig_line.split("\n")
         replacing = False

@@ -323,12 +323,9 @@ struct RooferConfigHandler {
     general.add("jobs", 'j', "Number of threads to use", _jobs);
     general.add("config", 'c', "Configuration file", _config_path,
                 {check::PathExists, check::DirIsWritable});
-    general.add("trace-interval", "Interval for tracing (in seconds)",
+    general.add("trace-interval", "Interval for tracing in seconds",
                 _trace_interval, {check::HigherThan<int>(0)});
-    general.add("loglevel",
-                "Specify loglevel. Can be "
-                "info, warning, debug, trace",
-                _loglevel);
+    general.add("loglevel", "Specify loglevel", _loglevel);
 #ifdef RF_USE_RERUN
     general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
 #endif
@@ -337,159 +334,232 @@ struct RooferConfigHandler {
         "id-attribute",
         "Building ID attribute to be used as identifier in CityJSONSeq output.",
         cfg_.id_attribute);
-    input.add("force-lod11-attribute",
-              "Building attribute (bool) for forcing LoD1.1",
-              cfg_.force_lod11_attribute);
+    input.add(
+        "force-lod11-attribute",
+        "Input attribute (boolean) to force individual buildings to always be "
+        "reconstructed using simple extrusion (LoD 1.1).",
+        cfg_.force_lod11_attribute);
     input.add("yoc-attribute",
-              "Attribute (int) containing building year of construction",
+              "Input attribute (integer) containing the building's year of "
+              "construction."
+              " Only relevant when multiple pointclouds are provided.",
               cfg_.yoc_attribute);
-    input.add("h-terrain-attribute",
-              "Attribute (float) containing (fallback) terrain height for "
-              "buildings, in case no terrain height can be derived from the "
-              "pointcloud. See also --h-terrain-strategy",
-              cfg_.h_terrain_attribute);
-    input.add("h-roof-attribute",
-              "Attribute containing fallback roof height for buildings in case "
-              "no roof height can be derived from the pointcloud.",
-              cfg_.h_roof_attribute);
+    input.add(
+        "h-terrain-attribute",
+        "Input attribute (float) that contains (fallback) terrain height for "
+        "building. It is used in case no terrain height can be derived from "
+        "the "
+        "pointcloud. See also --h-terrain-strategy",
+        cfg_.h_terrain_attribute);
+    input.add(
+        "h-roof-attribute",
+        "Input attribute (float) containing fallback roof height for buildings "
+        "in case no roof height can be derived from the pointcloud.",
+        cfg_.h_roof_attribute);
     input.add("polygon-source-layer",
-              "Select this layername from <polygon-source>. By default the "
+              "Select this layer name from `<polygon-source>`. By default the "
               "first layer is used.",
               cfg_.layer_name);
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
-              "<polygon-source>",
+              "`<polygon-source>`.",
               cfg_.attribute_filter);
     input
-        .add("box",
-             "Region of interest. Data outside of this region will be ignored",
-             cfg_.region_of_interest,
-             {[](const std::optional<roofer::TBox<double>>& box)
-                  -> std::optional<std::string> {
-               if (box.has_value()) {
-                 auto error_msg = check::ValidBox(*box);
-                 if (error_msg) {
-                   return error_msg;
-                 }
-               }
-               return std::nullopt;
-             }})
+        .add(
+            "box",
+            "Axis aligned bounding box specifying the region of interest. Data "
+            "outside of this region will be ignored.",
+            cfg_.region_of_interest,
+            {[](const std::optional<roofer::TBox<double>>& box)
+                 -> std::optional<std::string> {
+              if (box.has_value()) {
+                auto error_msg = check::ValidBox(*box);
+                if (error_msg) {
+                  return error_msg;
+                }
+              }
+              return std::nullopt;
+            }})
         .example_ = "[100, 100, 200, 200]";
     input
-        .add("srs", "Manually set Spatial Reference System for input data",
-             cfg_.srs_override)
+        .add(
+            "srs",
+            "Manually set or override Spatial Reference System for input data.",
+            cfg_.srs_override)
         .example_ = "\"EPSG:7415\"";
     // important pointcloud parameters, that are not related to pointcloud
     // selection
-    input.add("bld-class", "LAS classification code for building points",
+    input.add("bld-class",
+              "LAS classification code that contains the building points.",
               cfg_.bld_class, {check::HigherOrEqualTo<int>(0)});
-    input.add("grnd-class", "LAS classification code for ground points",
+    input.add("grnd-class",
+              "LAS classification code that constains the ground points.",
               cfg_.grnd_class, {check::HigherOrEqualTo<int>(0)});
     input.add("skip-pc-check",
-              "Disable/enable check if all supplied pointcloud files exist",
+              "Disable/enable check if all supplied pointcloud files exist.",
               _skip_pc_check);
 
     crop.add("ceil-point-density",
              "Enforce this point density ceiling on each building pointcloud.",
              cfg_.ceil_point_density, {check::HigherThan<float>(0)});
-    crop.add("cellsize", "Cellsize used for quick pointcloud analysis",
+    crop.add("cellsize",
+             "Cellsize used for quick pointcloud analysis (eg. point density"
+             " and nodata regions).",
              cfg_.cellsize, {check::HigherThan<float>(0)});
-    crop.add("lod11-fallback-area", "lod11 fallback area",
-             cfg_.lod11_fallback_area, {check::HigherThan<int>(0)});
+    crop.add(
+        "lod11-fallback-area",
+        "LoD 1.1 fallback threshold area in square meters. If the area of the "
+        "roofprint is larger than this value, the building will be always be "
+        "reconstructed using a LoD 1.1 extrusion.",
+        cfg_.lod11_fallback_area, {check::HigherThan<int>(0)});
     crop.add("clear-insufficient",
-             "reconstruct buildings with insufficient pointcloud data",
+             "Do not attempt to reconstruct buildings with insufficient "
+             "pointcloud data."
+             " If `--h-roof-attribute` is set, an LoD 1.1 extrusion will be "
+             "performed, "
+             "otherwise no 3D model will be generated.",
              cfg_.clear_if_insufficient);
     crop.add("compute-pc-98p",
-             "compute 98th percentile of pointcloud height for each building",
+             "Compute and output the 98th percentile of pointcloud height for "
+             "each building.",
              cfg_.compute_pc_98p);
-    crop.add("crop-only", "Crop only, no reconstruction", _crop_only);
-    crop.add("crop-output", "Output cropped building pointclouds",
+    crop.add("crop-only",
+             "Only perform the crop phase, do not perform reconstruction,",
+             _crop_only);
+    crop.add("crop-output",
+             "Output building pointclouds from crop phase as LAS files.",
              cfg_.write_crop_outputs);
     crop.add("crop-output-all",
-             "Output files for each "
-             "candidate pointcloud instead of only the optimal candidate. "
-             "Implies --crop-output",
+             "Output building pointclouds for each pointcloud. "
+             "Only relevant when multiple pointclouds are provided."
+             "Implies `--crop-output`",
              cfg_.output_all);
     crop.add("crop-rasters",
-             "Output rasterised crop "
-             "pointclouds. Implies --crop-output",
+             "Output rasterised pointcloud analytics from crop phase as "
+             "GeoTIFF files. "
+             "Implies `--crop-output`",
              cfg_.write_rasters);
     crop.add("index",
-             "Output index.gpkg file with "
-             "crop analytics.",
+             "Output index.gpkg file with quick pointcloud analystics from "
+             "crop phase.",
              cfg_.write_index);
 
-    reconstruction.add("lod12", "Generate LoD 1.2 geometry", cfg_.lod_12);
-    reconstruction.add("lod13", "Generate LoD 1.3 geometry", cfg_.lod_13);
-    reconstruction.add("lod22", "Generate LoD 2.2 geometry", cfg_.lod_22);
-    reconstruction.add("complexity-factor",
-                       "Complexity factor building reconstruction",
-                       cfg_.complexity_factor, {check::InRange<float>(0, 1)});
-    reconstruction.add("clip-terrain", "Clip terrain parts from roofprint",
-                       cfg_.clip_ground, {});
-    reconstruction.add("lod13-step-height",
-                       "Step height used for LoD 1.3 generation",
-                       cfg_.lod13_step_height, {check::HigherThan<float>(0)});
+    reconstruction.add("lod12",
+                       "Generate LoD 1.2 geometries in CityJSONSeq output.",
+                       cfg_.lod_12);
+    reconstruction.add("lod13",
+                       "Generate LoD 1.3 geometries in CityJSONSeq output.",
+                       cfg_.lod_13);
+    reconstruction.add("lod22",
+                       "Generate LoD 2.2 geometries in CityJSONSeq output.",
+                       cfg_.lod_22);
+    reconstruction.add(
+        "complexity-factor",
+        "Complexity factor for building model geometry."
+        "A number between 0.0 and 1.0. Higher values lead to more detailed "
+        "building models, lower values to simpler models.",
+        cfg_.complexity_factor, {check::InRange<float>(0, 1)});
+    reconstruction.add(
+        "clip-terrain",
+        "Set to true to activate the procedure that clips parts from the "
+        "input roofprint wherever patches of ground points are detected."
+        "May cause irregular outlines in reconstruction result.",
+        cfg_.clip_ground, {});
+    reconstruction.add(
+        "lod13-step-height",
+        "Step height in meters, used for LoD 1.3 generalisation."
+        "Adjacent roofparts with a height discontinuity that is smaller "
+        "than this value are merged. Only affects LoD 1.3 geometry.",
+        cfg_.lod13_step_height, {check::HigherThan<float>(0)});
     reconstruction.add("plane-detect-k", "plane detect k", cfg_.plane_detect_k,
                        {check::HigherThan<int>(0)});
-    reconstruction.add("plane-detect-min-points", "plane detect min points",
+    reconstruction.add("plane-detect-min-points",
+                       "Minimum number of points required for "
+                       "detecting a plane in the pointcloud.",
                        cfg_.plane_detect_min_points,
                        {check::HigherThan<int>(2)});
-    reconstruction.add("plane-detect-epsilon", "plane detect epsilon",
+    reconstruction.add("plane-detect-epsilon",
+                       "Maximum distance (in meters) from inliers to"
+                       " plane during plane fitting procedure. Higher values "
+                       "offer more robustness "
+                       "against oversegmentation, but may result in less "
+                       "accurate plane detection.",
                        cfg_.plane_detect_epsilon,
                        {check::HigherThan<float>(0)});
     reconstruction
-        .add("h-terrain-strategy", "Terrain height strategy",
+        .add("h-terrain-strategy",
+             "Strategy to determine terrain elevation"
+             "that is used to set the height of building floors. "
+             "`buffer_tile`: use the 5th percentile lowest elevation point in "
+             "a 3 meter buffer around the roofprint. If no points are found, "
+             "we fall back to the lowest elevation point in the current tile. "
+             "This may give undesired results for hilly areas. "
+             "`buffer_user`: same as `buffer_tile`, but with now with a "
+             "fallback to the elevation provided via `--h-terrain-attribute`. "
+             "`user`: always use the elevation provided via "
+             "`--h-terrain-attribute`.",
              cfg_.h_terrain_strategy)
         .example_ = "\"buffer_tile\"";
-    reconstruction.add("lod11-fallback-planes",
-                       "Number of planes for LOD11 fallback",
-                       cfg_.lod11_fallback_planes, {check::HigherThan<int>(0)});
-    reconstruction.add("lod11-fallback-time", "Time for LOD11 fallback",
-                       cfg_.lod11_fallback_time, {check::HigherThan<int>(0)}),
+    reconstruction.add(
+        "lod11-fallback-planes",
+        "Number of planes required for LoD 1.1 fallback. When more than this "
+        "number of planes is detected, abort the reconstruction process and "
+        "fallback to LoD 1.1 extrusion. Primarily used to limit the "
+        "reconstruction time per building.",
+        cfg_.lod11_fallback_planes, {check::HigherThan<int>(0)});
+    reconstruction.add(
+        "lod11-fallback-time",
+        "Time for LOD 1.1 fallback in milliseconds. When more than this time "
+        "is spent on expensive parts of the reconstruction algorithm, abort "
+        "and fallback to LoD 1.1 extrusion.",
+        cfg_.lod11_fallback_time, {check::HigherThan<int>(0)}),
 
-        output.add("tiling", "Disable/enable tiling", _tiling);
-    output.add("tilesize", "Tilesize used for output tiles", cfg_.tilesize,
-               {check::HigherThan<roofer::arr2f>({0, 0})});
+        output.add("tiling", "Enable or disable output tiling.", _tiling);
+    output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
+               cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
     output.add("split-cjseq",
                "Output CityJSONSequence file for each building instead of one "
-               "file per tile",
+               "file per tile.",
                cfg_.split_cjseq);
-    output.add("omit-metadata", "Omit metadata in CityJSON output",
+    output.add("omit-metadata",
+               "Omit metadata line in CityJSONSequence output.",
                cfg_.omit_metadata);
     output.add("cj-scale", "Scaling applied to CityJSON output vertices",
                cfg_.cj_scale);
     output
         .add("cj-translate",
-             "Translation applied to CityJSON output vertices. Uses tile "
-             "center by "
-             "default.",
+             "Translation applied to CityJSON output vertices. Uses dataset "
+             "center by default.",
              cfg_.cj_translate)
         .example_ = "[100000, 200000, 0]";
 
     output_attr_.emplace("success",
                          DocAttrib(&cfg_.a_success,
-                                   "indicates if processing completed without "
+                                   "Indicates if processing completed without "
                                    "unexpected errors"));
     output_attr_.emplace("reconstruction_time",
                          DocAttrib(&cfg_.a_reconstruction_time,
-                                   "Indicates reconstruction time in ms"));
-    output_attr_.emplace("val3dity_lod12",
-                         DocAttrib(&cfg_.a_val3dity_lod12,
-                                   "Lists val3dity codes for LOD12 geometry"));
-    output_attr_.emplace("val3dity_lod13",
-                         DocAttrib(&cfg_.a_val3dity_lod13,
-                                   "Lists val3dity codes for LOD13 geometry"));
-    output_attr_.emplace("val3dity_lod22",
-                         DocAttrib(&cfg_.a_val3dity_lod22,
-                                   "Lists val3dity codes for LOD22 geometry"));
+                                   "Reconstruction time in milliseconds"));
+    output_attr_.emplace(
+        "val3dity_lod12",
+        DocAttrib(&cfg_.a_val3dity_lod12,
+                  "Lists val3dity codes for LoD 1.2 geometry"));
+    output_attr_.emplace(
+        "val3dity_lod13",
+        DocAttrib(&cfg_.a_val3dity_lod13,
+                  "Lists val3dity codes for LoD 1.3 geometry"));
+    output_attr_.emplace(
+        "val3dity_lod22",
+        DocAttrib(&cfg_.a_val3dity_lod22,
+                  "Lists val3dity codes for LoD 2.2 geometry"));
     output_attr_.emplace("is_glass_roof",
                          DocAttrib(&cfg_.a_is_glass_roof,
                                    "Indicates if a glass roof was detected"));
-    output_attr_.emplace("nodata_frac",
-                         DocAttrib(&cfg_.a_nodata_frac,
-                                   "Indicates the fraction of the roofprint "
-                                   "that is not covered by pointcloud data"));
+    output_attr_.emplace(
+        "nodata_frac", DocAttrib(&cfg_.a_nodata_frac,
+                                 "Indicates fraction (in the range [0,1]) "
+                                 "of the roofprint area that is not covered by"
+                                 " pointcloud data"));
     output_attr_.emplace(
         "nodata_r",
         DocAttrib(
@@ -507,10 +577,11 @@ struct RooferConfigHandler {
                   "between multiple input pointclouds (if multiple input "
                   "pointclouds were "
                   "provided)"));
-    output_attr_.emplace("pc_select",
-                         DocAttrib(&cfg_.a_pc_select,
-                                   "Indicates why the input pointcloud was "
-                                   "selected for reconstruction"));
+    output_attr_.emplace(
+        "pc_select", DocAttrib(&cfg_.a_pc_select,
+                               "Indicates why the input pointcloud was "
+                               "selected for reconstruction. Only relevant "
+                               "if multiple input pointclouds were provided"));
     output_attr_.emplace("pc_source",
                          DocAttrib(&cfg_.a_pc_source,
                                    "Indicates which input pointcloud was used "
@@ -519,89 +590,93 @@ struct RooferConfigHandler {
                          DocAttrib(&cfg_.a_pc_year,
                                    "Indicates the acquisition year of the "
                                    "selected input pointcloud"));
-    output_attr_.emplace("force_lod11",
-                         DocAttrib(&cfg_.a_force_lod11,
-                                   "Indicates if LOD11 was forced for the "
-                                   "building"));
     output_attr_.emplace(
-        "roof_type", DocAttrib(&cfg_.a_roof_type, "Indicates the roof type"));
+        "force_lod11",
+        DocAttrib(&cfg_.a_force_lod11,
+                  "Indicates if LoD 1.1 extrusion was forced for "
+                  "the building"));
     output_attr_.emplace(
-        "h_roof_50p", DocAttrib(&cfg_.a_h_roof_50p,
-                                "Indicates the 50th percentile roof height"));
+        "roof_type",
+        DocAttrib(&cfg_.a_roof_type,
+                  "Roof type. Can be `no points`, `no planes`, `horizontal`, "
+                  "`multiple horizontal`, or `slanted`"));
     output_attr_.emplace(
-        "h_roof_70p", DocAttrib(&cfg_.a_h_roof_70p,
-                                "Indicates the 70th percentile roof height"));
+        "h_roof_50p",
+        DocAttrib(&cfg_.a_h_roof_50p, "The 50th percentile roof elevation"));
     output_attr_.emplace(
-        "h_roof_min",
-        DocAttrib(&cfg_.a_h_roof_min, "Indicates the minimum roof height"));
-    output_attr_.emplace(
-        "h_roof_max",
-        DocAttrib(&cfg_.a_h_roof_max, "Indicates the maximum roof height"));
-    output_attr_.emplace(
-        "h_roof_ridge",
-        DocAttrib(&cfg_.a_h_roof_ridge, "Indicates the main ridge height"));
+        "h_roof_70p",
+        DocAttrib(&cfg_.a_h_roof_70p, "The 70th percentile roof elevation"));
+    output_attr_.emplace("h_roof_min", DocAttrib(&cfg_.a_h_roof_min,
+                                                 "The minimum roof elevation"));
+    output_attr_.emplace("h_roof_max", DocAttrib(&cfg_.a_h_roof_max,
+                                                 "The maximum roof elevation"));
+    output_attr_.emplace("h_roof_ridge", DocAttrib(&cfg_.a_h_roof_ridge,
+                                                   "The main ridge elevation"));
     output_attr_.emplace("h_pc_98p",
                          DocAttrib(&cfg_.a_h_pc_98p,
-                                   "Indicates the 98th percentile height of "
-                                   "the pointcloud"));
+                                   "The 98th percentile elevation of "
+                                   "the building pointcloud"));
     output_attr_.emplace(
         "roof_n_planes",
         DocAttrib(&cfg_.a_roof_n_planes,
-                  "Indicates the number of roofplanes "
+                  "The number of roofplanes "
                   "detected in the pointcloud (could be different from the "
-                  "generated mesh "
-                  "model)"));
+                  "generated mesh model)"));
     output_attr_.emplace(
         "roof_n_ridgelines",
         DocAttrib(&cfg_.a_roof_n_ridgelines,
-                  "Indicates the number of ridgelines "
+                  "The number of ridgelines "
                   "detected in the pointcloud (could be different from the "
-                  "generated mesh "
-                  "model)"));
+                  "generated mesh model)"));
     output_attr_.emplace("rmse_lod12",
                          DocAttrib(&cfg_.a_rmse_lod12,
-                                   "Indicates the Root Mean Square Erorr of "
+                                   "The Root Mean Square Erorr of "
                                    "the LOD12 geometry"));
     output_attr_.emplace("rmse_lod13",
                          DocAttrib(&cfg_.a_rmse_lod13,
-                                   "Indicates the Root Mean Square Erorr of "
+                                   "The Root Mean Square Erorr of "
                                    "the LOD13 geometry"));
     output_attr_.emplace("rmse_lod22",
                          DocAttrib(&cfg_.a_rmse_lod22,
-                                   "Indicates the Root Mean Square Erorr of "
+                                   "The Root Mean Square Erorr of "
                                    "the LOD22 geometry"));
     output_attr_.emplace("volume_lod12",
                          DocAttrib(&cfg_.a_volume_lod12,
-                                   "Indicates the volume of the LOD12 "
+                                   "The volume in cubic meters of the LoD 1.2 "
                                    "geometry"));
     output_attr_.emplace("volume_lod13",
                          DocAttrib(&cfg_.a_volume_lod13,
-                                   "Indicates the volume of the LOD13 "
+                                   "The volume in cubic meters of the LoD 1.3 "
                                    "geometry"));
     output_attr_.emplace("volume_lod22",
                          DocAttrib(&cfg_.a_volume_lod22,
-                                   "Indicates the volume of the LOD22 "
+                                   "The volume in cubic meters of the LoD 2.2 "
                                    "geometry"));
     output_attr_.emplace("h_ground",
                          DocAttrib(&cfg_.a_h_ground,
-                                   "Indicates the height of floor of the "
+                                   "The elevation of the floor of the "
                                    "building"));
     output_attr_.emplace(
-        "slope", DocAttrib(&cfg_.a_slope, "Indicates the slope of a roofpart"));
+        "slope",
+        DocAttrib(&cfg_.a_slope, "The slope of a roofpart in degrees"));
     output_attr_.emplace(
         "azimuth",
-        DocAttrib(&cfg_.a_azimuth, "Indicates the azimuth of a roofpart"));
-    output_attr_.emplace("extrusion_mode",
-                         DocAttrib(&cfg_.a_extrusion_mode,
-                                   "Indicates what extrusion mode was used "
-                                   "for the building"));
+        DocAttrib(&cfg_.a_azimuth, "The azimuth of a roofpart in degrees"));
+    output_attr_.emplace(
+        "extrusion_mode",
+        DocAttrib(
+            &cfg_.a_extrusion_mode,
+            "Indicates what extrusion mode was used "
+            "for the building. `standard`: the regular LoD 1.2, 1.3 or 2.2 "
+            "extrusion. `lod11_fallback`: all geometry was substituted with an "
+            "LoD 1.1 extrusion. `skip`: no 3D geometry was generated"));
     output_attr_.emplace("pointcloud_unusable",
                          DocAttrib(&cfg_.a_pointcloud_unusable,
                                    "Indicates if the pointcloud was found "
-                                   "unusable for reconstruction"));
+                                   "to be insufficient for reconstruction"));
     output.add("attribute-rename",
-               "Rename output attributes. Use 'old_name=new_name' format. "
-               "If the new name is empty, the attribute will be removed.",
+               "Rename output attributes. "
+               "If no value is provided, the attribute will not be written.",
                output_attr_);
     // Move groups into param_group_map
     param_groups_.emplace_back("Input", std::move(input));

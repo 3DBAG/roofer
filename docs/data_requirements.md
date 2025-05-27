@@ -1,4 +1,4 @@
-# Requirements on the input data
+# Input data requirements
 
 To achieve good results with the roofer building reconstruction software, the input data should meet the following requirements.
 
@@ -20,3 +20,5 @@ To achieve good results with the roofer building reconstruction software, the in
 + Preferably a roofprint, since the input point cloud was also acquired from the air.
 + I should be well aligned with the point cloud.
 + Can be in any [default OGR supported format](https://gdal.org/en/latest/drivers/vector/index.html). This includes GeoPackage, Shapefile, PostGIS, etc.
+
+Moreover all input data is assumed to be in the same SRS (Spatial Reference System). This SRS is assumed to be a projected system with coordinates in meters. The output data will also be in this SRS.

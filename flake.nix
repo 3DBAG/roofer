@@ -49,7 +49,7 @@
               # docs
               doxygen
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [mono];
+              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [mono]; # this is needed to make gh actions binary caching work with vcpkg
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
