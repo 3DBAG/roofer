@@ -455,7 +455,7 @@ struct RooferConfigHandler {
                        cfg_.lod_22);
     reconstruction.add(
         "complexity-factor",
-        "Complexity factor for building model geometry."
+        "Complexity factor for building model geometry. "
         "A number between 0.0 and 1.0. Higher values lead to more detailed "
         "building models, lower values to simpler models.",
         cfg_.complexity_factor, {check::InRange<float>(0, 1)});
