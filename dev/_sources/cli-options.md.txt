@@ -100,7 +100,7 @@ Generate LoD 1.3 geometries in CityJSONSeq output.
 Generate LoD 2.2 geometries in CityJSONSeq output.
 ```
 ```{option} --complexity-factor <float> (default: 0.888)
-Complexity factor for building model geometry.A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.
+Complexity factor for building model geometry. A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.
 ```
 ```{option} --[no-]clip-terrain  (default: true)
 Set to true to activate the procedure that clips parts from the input roofprint wherever patches of ground points are detected.May cause irregular outlines in reconstruction result.
