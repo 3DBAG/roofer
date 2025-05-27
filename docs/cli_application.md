@@ -50,7 +50,7 @@ The output of the {program}`roofer` CLI application are [CityJSONSequence](https
 ```
 
 ## Example config file
-Below is an example of a [TOML](https://toml.io/en/) configuration file for the {program}`roofer` CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
+Below is an example of a [TOML](https://toml.io/en/) configuration file for the {program}`roofer` CLI application. It shows all the available options. Noticed that these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
 
 ```{literalinclude} example_full.toml
 :language: toml

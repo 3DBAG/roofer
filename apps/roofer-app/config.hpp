@@ -1043,6 +1043,22 @@ struct RooferConfigHandler {
           get_toml_value(config, "polygon-source", cfg_.source_footprints);
         } else if (key == "output-directory") {
           get_toml_value(config, "output-directory", cfg_.output_path);
+        } else if (key == "output-attributes") {
+          if (toml::table* tb = config["output-attributes"].as_table()) {
+            for (const auto& [key, value] : *tb) {
+              if (auto p = output_attr_.find(key.data());
+                  p != output_attr_.end()) {
+                std::string name = "";
+                get_toml_value(*tb, key.data(), *(p->second.value));
+                // if (!name.empty()) {
+                //   p->second = name;
+                // }
+              } else {
+                throw std::runtime_error(
+                    fmt::format("Unknown output attribute: {}.", key.data()));
+              }
+            }
+          }
         } else if (auto p = param_index_.find(key.data());
                    p != param_index_.end()) {
           p->second->set_from_toml(config, key.data());

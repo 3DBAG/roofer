@@ -35,8 +35,14 @@ void print_params(RooferConfigHandler::param_group_map& params) {
 }
 
 void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
+  std::cout << "## Path to roofprint polygons source. Can be an OGR supported "
+               "file (eg. GPKG) or database connection string.\n";
+  std::cout << "# polygon-source = \"\"\n";
+  std::cout << "## Output directory. The building models will be written to a "
+               "CityJSONSequence file in this directory.\n";
+  std::cout << "# output-directory = \"\"\n\n";
   for (const auto& [group_name, param_list] : params) {
-    std::cout << std::format("[{}]\n", group_name);
+    std::cout << std::format("### {} options\n", group_name);
     for (const auto& param : param_list) {
       std::cout << std::format("## {}\n", param->description());
       // check if param is a string
@@ -51,7 +57,8 @@ void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
         std::cout << std::format("{} = \"{}\"\n", param->longname_,
                                  param->to_string());
       } else if (param->longname_ == "attribute-rename") {
-        std::cout << std::format("[{}.{}]\n", group_name, param->longname_);
+        std::cout << std::format("\n[output-attributes]\n", group_name,
+                                 param->longname_);
         std::cout << param->to_toml();
       } else {
         std::cout << std::format("{} = {}\n", param->longname_,
