@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Roofer CLI App" href="cli_application.html" /><link rel="prev" title="Reconstruction algorithm and parameters" href="reconstruct_params.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>Requirements on the input data - roofer documentation</title>
+        <title>Input data requirements - roofer documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -205,7 +205,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Requirements on the input data</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Input data requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
@@ -254,8 +254,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="requirements-on-the-input-data">
-<h1>Requirements on the input data<a class="headerlink" href="#requirements-on-the-input-data" title="Link to this heading">¶</a></h1>
+          <section id="input-data-requirements">
+<h1>Input data requirements<a class="headerlink" href="#input-data-requirements" title="Link to this heading">¶</a></h1>
 <p>To achieve good results with the roofer building reconstruction software, the input data should meet the following requirements.</p>
 <section id="point-cloud">
 <h2>Point cloud<a class="headerlink" href="#point-cloud" title="Link to this heading">¶</a></h2>
@@ -279,6 +279,7 @@
 <li><p>I should be well aligned with the point cloud.</p></li>
 <li><p>Can be in any <a class="reference external" href="https://gdal.org/en/latest/drivers/vector/index.html">default OGR supported format</a>. This includes GeoPackage, Shapefile, PostGIS, etc.</p></li>
 </ul>
+<p>Moreover all input data is assumed to be in the same SRS (Spatial Reference System). This SRS is assumed to be a projected system with coordinates in meters. The output data will also be in this SRS.</p>
 </section>
 </section>
 
@@ -344,7 +345,7 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Requirements on the input data</a><ul>
+<li><a class="reference internal" href="#">Input data requirements</a><ul>
 <li><a class="reference internal" href="#point-cloud">Point cloud</a></li>
 <li><a class="reference internal" href="#d-building-roofprint-polygon">2D building roofprint polygon</a></li>
 </ul>

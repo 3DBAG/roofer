@@ -1,32 +1,32 @@
 ```{option} azimuth (default name: rf_azimuth)
-Indicates the azimuth of a roofpart
+The azimuth of a roofpart in degrees
 ```
 ```{option} extrusion_mode (default name: rf_extrusion_mode)
-Indicates what extrusion mode was used for the building
+Indicates what extrusion mode was used for the building. `standard`: the regular LoD 1.2, 1.3 or 2.2 extrusion. `lod11_fallback`: all geometry was substituted with an LoD 1.1 extrusion. `skip`: no 3D geometry was generated
 ```
 ```{option} force_lod11 (default name: rf_force_lod11)
-Indicates if LOD11 was forced for the building
+Indicates if LoD 1.1 extrusion was forced for the building
 ```
 ```{option} h_ground (default name: rf_h_ground)
-Indicates the height of floor of the building
+The elevation of the floor of the building
 ```
 ```{option} h_pc_98p (default name: rf_h_pc_98p)
-Indicates the 98th percentile height of the pointcloud
+The 98th percentile elevation of the building pointcloud
 ```
 ```{option} h_roof_50p (default name: rf_h_roof_50p)
-Indicates the 50th percentile roof height
+The 50th percentile roof elevation
 ```
 ```{option} h_roof_70p (default name: rf_h_roof_70p)
-Indicates the 70th percentile roof height
+The 70th percentile roof elevation
 ```
 ```{option} h_roof_max (default name: rf_h_roof_max)
-Indicates the maximum roof height
+The maximum roof elevation
 ```
 ```{option} h_roof_min (default name: rf_h_roof_min)
-Indicates the minimum roof height
+The minimum roof elevation
 ```
 ```{option} h_roof_ridge (default name: rf_h_roof_ridge)
-Indicates the main ridge height
+The main ridge elevation
 ```
 ```{option} is_glass_roof (default name: rf_is_glass_roof)
 Indicates if a glass roof was detected
@@ -35,13 +35,13 @@ Indicates if a glass roof was detected
 Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)
 ```
 ```{option} nodata_frac (default name: rf_nodata_frac)
-Indicates the fraction of the roofprint that is not covered by pointcloud data
+Indicates fraction (in the range [0,1]) of the roofprint area that is not covered by pointcloud data
 ```
 ```{option} nodata_r (default name: rf_nodata_r)
 Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data
 ```
 ```{option} pc_select (default name: rf_pc_select)
-Indicates why the input pointcloud was selected for reconstruction
+Indicates why the input pointcloud was selected for reconstruction. Only relevant if multiple input pointclouds were provided
 ```
 ```{option} pc_source (default name: rf_pc_source)
 Indicates which input pointcloud was used for reconstruction
@@ -50,53 +50,53 @@ Indicates which input pointcloud was used for reconstruction
 Indicates the acquisition year of the selected input pointcloud
 ```
 ```{option} pointcloud_unusable (default name: rf_pointcloud_unusable)
-Indicates if the pointcloud was found unusable for reconstruction
+Indicates if the pointcloud was found to be insufficient for reconstruction
 ```
 ```{option} pt_density (default name: rf_pt_density)
 Indicates the point density inside the roofprint
 ```
 ```{option} reconstruction_time (default name: rf_t_run)
-Indicates reconstruction time in ms
+Reconstruction time in milliseconds
 ```
 ```{option} rmse_lod12 (default name: rf_rmse_lod12)
-Indicates the Root Mean Square Erorr of the LOD12 geometry
+The Root Mean Square Erorr of the LOD12 geometry
 ```
 ```{option} rmse_lod13 (default name: rf_rmse_lod13)
-Indicates the Root Mean Square Erorr of the LOD13 geometry
+The Root Mean Square Erorr of the LOD13 geometry
 ```
 ```{option} rmse_lod22 (default name: rf_rmse_lod22)
-Indicates the Root Mean Square Erorr of the LOD22 geometry
+The Root Mean Square Erorr of the LOD22 geometry
 ```
 ```{option} roof_n_planes (default name: rf_roof_planes)
-Indicates the number of roofplanes detected in the pointcloud (could be different from the generated mesh model)
+The number of roofplanes detected in the pointcloud (could be different from the generated mesh model)
 ```
 ```{option} roof_n_ridgelines (default name: rf_ridgelines)
-Indicates the number of ridgelines detected in the pointcloud (could be different from the generated mesh model)
+The number of ridgelines detected in the pointcloud (could be different from the generated mesh model)
 ```
 ```{option} roof_type (default name: rf_roof_type)
-Indicates the roof type
+Roof type. Can be `no points`, `no planes`, `horizontal`, `multiple horizontal`, or `slanted`
 ```
 ```{option} slope (default name: rf_slope)
-Indicates the slope of a roofpart
+The slope of a roofpart in degrees
 ```
 ```{option} success (default name: rf_success)
-indicates if processing completed without unexpected errors
+Indicates if processing completed without unexpected errors
 ```
 ```{option} val3dity_lod12 (default name: rf_val3dity_lod12)
-Lists val3dity codes for LOD12 geometry
+Lists val3dity codes for LoD 1.2 geometry
 ```
 ```{option} val3dity_lod13 (default name: rf_val3dity_lod13)
-Lists val3dity codes for LOD13 geometry
+Lists val3dity codes for LoD 1.3 geometry
 ```
 ```{option} val3dity_lod22 (default name: rf_val3dity_lod22)
-Lists val3dity codes for LOD22 geometry
+Lists val3dity codes for LoD 2.2 geometry
 ```
 ```{option} volume_lod12 (default name: rf_volume_lod12)
-Indicates the volume of the LOD12 geometry
+The volume in cubic meters of the LoD 1.2 geometry
 ```
 ```{option} volume_lod13 (default name: rf_volume_lod13)
-Indicates the volume of the LOD13 geometry
+The volume in cubic meters of the LoD 1.3 geometry
 ```
 ```{option} volume_lod22 (default name: rf_volume_lod22)
-Indicates the volume of the LOD22 geometry
+The volume in cubic meters of the LoD 2.2 geometry
 ```

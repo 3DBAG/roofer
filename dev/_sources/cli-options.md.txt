@@ -13,10 +13,10 @@ Number of threads to use
 Configuration file
 ```
 ```{option} --trace-interval <int> (default: 10)
-Interval for tracing (in seconds)
+Interval for tracing in seconds
 ```
 ```{option} --loglevel (trace|debug|info) (default: info)
-Specify loglevel. Can be info, warning, debug, trace
+Specify loglevel
 ```
 ### Input options
 
@@ -24,37 +24,37 @@ Specify loglevel. Can be info, warning, debug, trace
 Building ID attribute to be used as identifier in CityJSONSeq output.
 ```
 ```{option} --force-lod11-attribute <string> (default: <no value>)
-Building attribute (bool) for forcing LoD1.1
+Input attribute (boolean) to force individual buildings to always be reconstructed using simple extrusion (LoD 1.1).
 ```
 ```{option} --yoc-attribute <string> (default: <no value>)
-Attribute (int) containing building year of construction
+Input attribute (integer) containing the building's year of construction. Only relevant when multiple pointclouds are provided.
 ```
 ```{option} --h-terrain-attribute <string> (default: <no value>)
-Attribute (float) containing (fallback) terrain height for buildings, in case no terrain height can be derived from the pointcloud. See also --h-terrain-strategy
+Input attribute (float) that contains (fallback) terrain height for building. It is used in case no terrain height can be derived from the pointcloud. See also --h-terrain-strategy
 ```
 ```{option} --h-roof-attribute <string> (default: <no value>)
-Attribute containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.
+Input attribute (float) containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.
 ```
 ```{option} --polygon-source-layer <string> (default: <no value>)
-Select this layername from <polygon-source>. By default the first layer is used.
+Select this layer name from `<polygon-source>`. By default the first layer is used.
 ```
 ```{option} --filter <string> (default: <no value>)
-Specify WHERE clause in OGR SQL to select specfic features from <polygon-source>
+Specify WHERE clause in OGR SQL to select specfic features from `<polygon-source>`.
 ```
 ```{option} --box (xmin ymin xmax ymax) (default: <no value>)
-Region of interest. Data outside of this region will be ignored
+Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.
 ```
 ```{option} --srs <string> (default: <no value>)
-Manually set Spatial Reference System for input data
+Manually set or override Spatial Reference System for input data.
 ```
 ```{option} --bld-class <int> (default: 6)
-LAS classification code for building points
+LAS classification code that contains the building points.
 ```
 ```{option} --grnd-class <int> (default: 2)
-LAS classification code for ground points
+LAS classification code that constains the ground points.
 ```
 ```{option} --[no-]skip-pc-check  (default: false)
-Disable/enable check if all supplied pointcloud files exist
+Disable/enable check if all supplied pointcloud files exist.
 ```
 ### Crop options
 
@@ -62,90 +62,90 @@ Disable/enable check if all supplied pointcloud files exist
 Enforce this point density ceiling on each building pointcloud.
 ```
 ```{option} --cellsize <float> (default: 0.5)
-Cellsize used for quick pointcloud analysis
+Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).
 ```
 ```{option} --lod11-fallback-area <int> (default: 69000)
-lod11 fallback area
+LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.
 ```
 ```{option} --[no-]clear-insufficient  (default: true)
-reconstruct buildings with insufficient pointcloud data
+Do not attempt to reconstruct buildings with insufficient pointcloud data. If `--h-roof-attribute` is set, an LoD 1.1 extrusion will be performed, otherwise no 3D model will be generated.
 ```
 ```{option} --[no-]compute-pc-98p  (default: false)
-compute 98th percentile of pointcloud height for each building
+Compute and output the 98th percentile of pointcloud height for each building.
 ```
 ```{option} --[no-]crop-only  (default: false)
-Crop only, no reconstruction
+Only perform the crop phase, do not perform reconstruction,
 ```
 ```{option} --[no-]crop-output  (default: false)
-Output cropped building pointclouds
+Output building pointclouds from crop phase as LAS files.
 ```
 ```{option} --[no-]crop-output-all  (default: false)
-Output files for each candidate pointcloud instead of only the optimal candidate. Implies --crop-output
+Output building pointclouds for each pointcloud. Only relevant when multiple pointclouds are provided.Implies `--crop-output`
 ```
 ```{option} --[no-]crop-rasters  (default: false)
-Output rasterised crop pointclouds. Implies --crop-output
+Output rasterised pointcloud analytics from crop phase as GeoTIFF files. Implies `--crop-output`
 ```
 ```{option} --[no-]index  (default: false)
-Output index.gpkg file with crop analytics.
+Output index.gpkg file with quick pointcloud analystics from crop phase.
 ```
 ### Reconstruction options
 
 ```{option} --[no-]lod12  (default: false)
-Generate LoD 1.2 geometry
+Generate LoD 1.2 geometries in CityJSONSeq output.
 ```
 ```{option} --[no-]lod13  (default: false)
-Generate LoD 1.3 geometry
+Generate LoD 1.3 geometries in CityJSONSeq output.
 ```
 ```{option} --[no-]lod22  (default: true)
-Generate LoD 2.2 geometry
+Generate LoD 2.2 geometries in CityJSONSeq output.
 ```
 ```{option} --complexity-factor <float> (default: 0.888)
-Complexity factor building reconstruction
+Complexity factor for building model geometry.A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.
 ```
 ```{option} --[no-]clip-terrain  (default: true)
-Clip terrain parts from roofprint
+Set to true to activate the procedure that clips parts from the input roofprint wherever patches of ground points are detected.May cause irregular outlines in reconstruction result.
 ```
 ```{option} --lod13-step-height <float> (default: 3)
-Step height used for LoD 1.3 generation
+Step height in meters, used for LoD 1.3 generalisation.Adjacent roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 geometry.
 ```
 ```{option} --plane-detect-k <int> (default: 15)
 plane detect k
 ```
 ```{option} --plane-detect-min-points <int> (default: 15)
-plane detect min points
+Minimum number of points required for detecting a plane in the pointcloud.
 ```
 ```{option} --plane-detect-epsilon <float> (default: 0.3)
-plane detect epsilon
+Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.
 ```
 ```{option} --h-terrain-strategy (buffer_tile|buffer_user|user) (default: buffer_tile)
-Terrain height strategy
+Strategy to determine terrain elevationthat is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: same as `buffer_tile`, but with now with a fallback to the elevation provided via `--h-terrain-attribute`. `user`: always use the elevation provided via `--h-terrain-attribute`.
 ```
 ```{option} --lod11-fallback-planes <int> (default: 900)
-Number of planes for LOD11 fallback
+Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.
 ```
 ```{option} --lod11-fallback-time <int> (default: 1800000)
-Time for LOD11 fallback
+Time for LOD 1.1 fallback in milliseconds. When more than this time is spent on expensive parts of the reconstruction algorithm, abort and fallback to LoD 1.1 extrusion.
 ```
 ### Output options
 
 ```{option} --[no-]tiling  (default: false)
-Disable/enable tiling
+Enable or disable output tiling.
 ```
 ```{option} --tilesize (x y) (default: [1000,1000])
-Tilesize used for output tiles
+Tilesize for rectangular output tiles in meters.
 ```
 ```{option} --[no-]split-cjseq  (default: false)
-Output CityJSONSequence file for each building instead of one file per tile
+Output CityJSONSequence file for each building instead of one file per tile.
 ```
 ```{option} --[no-]omit-metadata  (default: false)
-Omit metadata in CityJSON output
+Omit metadata line in CityJSONSequence output.
 ```
 ```{option} --cj-scale (x y z) (default: [0.001,0.001,0.001])
 Scaling applied to CityJSON output vertices
 ```
 ```{option} --cj-translate (x y z) (default: <no value>)
-Translation applied to CityJSON output vertices. Uses tile center by default.
+Translation applied to CityJSON output vertices. Uses dataset center by default.
 ```
 ```{option} --attribute-rename key=value[,...] (default: azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)
-Rename output attributes. Use 'old_name=new_name' format. If the new name is empty, the attribute will be removed.
+Rename output attributes. If no value is provided, the attribute will not be written.
 ```
