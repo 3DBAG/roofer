@@ -60,7 +60,7 @@ COPY --link ./src $ROOFER_ROOT/src
 COPY --link ./CMakeLists.txt $ROOFER_ROOT/CMakeLists.txt
 COPY --link ./CMakePresets.json $ROOFER_ROOT/CMakePresets.json
 COPY --link ./LICENSE $ROOFER_ROOT/LICENSE
-COPY --link ./README.rst $ROOFER_ROOT/README.rst
+COPY --link ./README.md $ROOFER_ROOT/README.md
 # COPY --link ./requirements.txt $ROOFER_ROOT/requirements.txt
 COPY --link ./vcpkg.json $ROOFER_ROOT/vcpkg.json
 
