@@ -1,12 +1,12 @@
 # Roofer CLI App
 
-{program}`roofer` is a command line application for generating LoD1.2, LoD1.3 and LoD2 building models from pointclouds.
+{program}`roofer` is a command line application for generating LoD 1.2, LoD 1.3 and LoD 2.2 building models from pointclouds in the [CityJSONSeq](https://www.cityjson.org/cityjsonseq/) format.
 
 With the {program}`roofer` CLI application you can:
 
-+ Generate 3D building models for very large areas with a reasonably small memory footprint. This is achieved by processing the input data in square tiles. No pre-tiling is needed.
++ Generate 3D building models for large areas with a reasonably small memory footprint. This is achieved by processing the input data in square tiles. No pre-tiling is needed.
 + Benefit from multi-threading for faster processing.
-+ Read common vector input sources and filter them based on attributes or spatial extent. This means you do not need to crop the input data beforehand if it is already in a supported format.
++ Read common vector input sources and filter them based on attributes or spatial extent. This means you do not need to crop the input data beforehand.
 + Obtain detailed information per building object about the reconstruction process and the quality of the generated models and the input point cloud.
 
 

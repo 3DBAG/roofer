@@ -313,6 +313,10 @@ int main(int argc, const char* argv[]) {
     handler.print_help(cli_args.program_name);
     return EXIT_SUCCESS;
   }
+  if (handler._print_attributes) {
+    handler.print_attributes();
+    return EXIT_SUCCESS;
+  }
   if (handler._print_version) {
     handler.print_version();
     return EXIT_SUCCESS;

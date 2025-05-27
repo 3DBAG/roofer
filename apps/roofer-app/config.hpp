@@ -304,6 +304,7 @@ struct RooferConfigHandler {
 
   // flags
   bool _print_help = false;
+  bool _print_attributes = false;
   bool _print_version = false;
   bool _crop_only = false;
   bool _tiling = false;
@@ -319,6 +320,7 @@ struct RooferConfigHandler {
     ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
+    general.add("attributes", 'a', "List output attributes", _print_attributes);
     general.add("version", 'v', "Show version", _print_version);
     general.add("jobs", 'j', "Number of threads to use", _jobs);
     general.add("config", 'c', "Configuration file", _config_path,
@@ -346,10 +348,9 @@ struct RooferConfigHandler {
               cfg_.yoc_attribute);
     input.add(
         "h-terrain-attribute",
-        "Input attribute (float) that contains (fallback) terrain height for "
-        "building. It is used in case no terrain height can be derived from "
-        "the "
-        "pointcloud. See also --h-terrain-strategy",
+        "Input attribute (float) with fallback terrain elevation for each "
+        "building. Used in case no terrain elevation can be derived from "
+        "the pointcloud. See also --h-terrain-strategy",
         cfg_.h_terrain_attribute);
     input.add(
         "h-roof-attribute",
@@ -471,8 +472,12 @@ struct RooferConfigHandler {
         "Adjacent roofparts with a height discontinuity that is smaller "
         "than this value are merged. Only affects LoD 1.3 geometry.",
         cfg_.lod13_step_height, {check::HigherThan<float>(0)});
-    reconstruction.add("plane-detect-k", "plane detect k", cfg_.plane_detect_k,
-                       {check::HigherThan<int>(0)});
+    reconstruction.add("plane-detect-k",
+                       "Number of points used in nearest neighbour queries for "
+                       "plane detection. Higher values will lead to longer "
+                       "processing times, but may help with growing plane "
+                       "regions through areas with a poor point distribution.",
+                       cfg_.plane_detect_k, {check::HigherThan<int>(0)});
     reconstruction.add("plane-detect-min-points",
                        "Minimum number of points required for "
                        "detecting a plane in the pointcloud.",
@@ -488,7 +493,7 @@ struct RooferConfigHandler {
                        {check::HigherThan<float>(0)});
     reconstruction
         .add("h-terrain-strategy",
-             "Strategy to determine terrain elevation"
+             "Strategy to determine terrain elevation "
              "that is used to set the height of building floors. "
              "`buffer_tile`: use the 5th percentile lowest elevation point in "
              "a 3 meter buffer around the roofprint. If no points are found, "
@@ -676,7 +681,9 @@ struct RooferConfigHandler {
                                    "to be insufficient for reconstruction"));
     output.add("attribute-rename",
                "Rename output attributes. "
-               "If no value is provided, the attribute will not be written.",
+               "If no value is provided, the attribute will not be written."
+               " See the list of available attributes with `--attributes`."
+               " By default attribute names are prefixed with `rf_`.",
                output_attr_);
     // Move groups into param_group_map
     param_groups_.emplace_back("Input", std::move(input));
@@ -772,28 +779,125 @@ struct RooferConfigHandler {
     print_params(param_groups_);
   }
 
+  void print_attributes() {
+    const size_t name_column_width =
+        24;  // Fixed width for attribute name column
+    const size_t desc_column_width =
+        66;  // Fixed width for description column (total ~80 chars)
+
+    std::cout << "\033[1mOutput attributes:\033[0m\n";
+    for (const auto& [name, attrib] : output_attr_) {
+      // Wrap the description text
+      auto wrapped_desc =
+          wrap_text(attrib.description, name_column_width + desc_column_width,
+                    name_column_width + 2);
+
+      // Print attribute name and first line of description
+      std::cout << " " << std::setw(name_column_width) << std::left << name;
+      if (!wrapped_desc.empty()) {
+        std::cout << wrapped_desc[0].substr(name_column_width + 2) << "\n";
+      } else {
+        std::cout << "\n";
+      }
+
+      // Print remaining wrapped description lines
+      for (size_t i = 1; i < wrapped_desc.size(); ++i) {
+        std::cout << wrapped_desc[i] << "\n";
+      }
+    }
+  }
+
+  // Utility function to wrap text to a specified width with proper indentation
+  std::vector<std::string> wrap_text(const std::string& text, size_t max_width,
+                                     size_t indent = 0) {
+    std::vector<std::string> lines;
+    std::string indent_str(indent, ' ');
+    std::string current_line = indent_str;
+    size_t current_width = indent;
+
+    std::istringstream iss(text);
+    std::string word;
+
+    while (iss >> word) {
+      // Check if adding the word exceeds max_width
+      if (current_width + word.length() + (current_line.empty() ? 0 : 1) >
+          max_width) {
+        if (!current_line.empty() && current_line != indent_str) {
+          lines.push_back(current_line);
+          current_line = indent_str;
+          current_width = indent;
+        }
+      }
+      if (!current_line.empty() && current_line != indent_str) {
+        current_line += " ";
+        current_width += 1;
+      }
+      current_line += word;
+      current_width += word.length();
+    }
+    if (!current_line.empty() && current_line != indent_str) {
+      lines.push_back(current_line);
+    }
+    return lines;
+  }
+
   void print_params(param_group_map& params) {
+    const size_t param_column_width = 35;  // Fixed width for parameter column
+    const size_t desc_column_width = 65;   // Fixed width for description column
+
     for (auto& [group_name, group] : params) {
       if (group.empty()) continue;
       std::cout << "\n";
       std::cout << "\033[1m" << group_name << " options:\033[0m\n";
       for (auto& param : group) {
-        auto tdesc = param->type_description();
-        auto desc = param->description();
-        if (param->longname_.size() + tdesc.size() + 1 <= 33) {
-          std::cout << "  " << std::setw(35) << std::left
-                    << (param->cli_flag() + " " + tdesc) << desc << "\n";
-          std::cout << "    " << std::setw(33) << std::left
-                    << ""  // 5 characters of padding
-                    << "\033[34mDefault: " << param->default_to_string()
-                    << "\033[0m" << "\n";
+        std::string param_text =
+            param->cli_flag() + " " + param->type_description();
+        std::string desc = param->description();
+        std::string default_text = "Default: " + param->default_to_string();
+
+        // Wrap the description and default text
+        auto wrapped_desc =
+            wrap_text(desc, param_column_width + desc_column_width,
+                      param_column_width + 2);
+        auto wrapped_default =
+            wrap_text(default_text, param_column_width + desc_column_width,
+                      param_column_width + 2);
+
+        // Print parameter and first line of description
+        if (param_text.size() <= param_column_width - 2) {
+          std::cout << "  " << std::setw(param_column_width) << std::left
+                    << param_text;
+          if (!wrapped_desc.empty()) {
+            std::cout << wrapped_desc[0].substr(param_column_width + 2) << "\n";
+          } else {
+            std::cout << "\n";
+          }
         } else {
-          std::cout << "  " << std::setw(35) << std::left << (param->cli_flag())
-                    << desc << "\n";
-          std::cout << "    " << std::setw(33) << std::left
-                    << tdesc  // 5 characters of padding
-                    << "\033[34mDefault: " << param->default_to_string()
-                    << "\033[0m" << "\n";
+          // If parameter text is too long, print it on its own line
+          std::cout << "  " << param_text << "\n";
+          if (!wrapped_desc.empty()) {
+            std::cout << std::string(param_column_width + 2, ' ')
+                      << wrapped_desc[0].substr(param_column_width + 2) << "\n";
+          }
+        }
+
+        // Print remaining wrapped description lines
+        for (size_t i = 1; i < wrapped_desc.size(); ++i) {
+          std::cout << wrapped_desc[i] << "\n";
+        }
+
+        // Print default value lines in blue
+        for (const auto& line : wrapped_default) {
+          if (line.size() > param_column_width + desc_column_width - 3) {
+            // trim the line to fit within the column width and add ellipsis
+            std::string trimmed_line =
+                line.substr(0, param_column_width + desc_column_width - 3) +
+                "...";
+            std::cout << "\033[34m" << trimmed_line << "\033[0m" << "\n";
+          } else {
+            // print the line as is
+            std::cout << "\033[34m" << line << "\033[0m" << "\n";
+          }
         }
       }
     }
