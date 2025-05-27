@@ -3,11 +3,10 @@ name: Documentation
 on:
   push:
     # tags:
-      # - "*"
+    # - "*"
     # branches: [ "develop" ]
     pull_request:
-      branches: [ "develop" ]
-
+      branches: ["develop"]
 
 jobs:
   deploy:
@@ -84,11 +83,6 @@ jobs:
 
       - name: Generate Docs
         run: |
-          mkdir docs/rooferpy
-          cp build/rooferpy/*.so docs/rooferpy
-          ./build/apps/roofer-app/doc-helper config > docs/example_full.toml
-          ./build/apps/roofer-app/doc-helper params > docs/cli-options.md
-          ./build/apps/roofer-app/doc-helper attr > docs/output-attributes.md
           cd docs
           make html
 
