@@ -4,10 +4,9 @@ name: Build and Test (vcpkg)
 
 on:
   pull_request:
-    branches: [ "develop"]
+    branches: ["develop"]
 
   workflow_dispatch:
-
 
 jobs:
   build:
@@ -20,109 +19,162 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       # See: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
       matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, windows-2022, macos-14 ]
-        build_type: [ Release ]
-        c_compiler: [ gcc, clang, cl ]
+        os: [ubuntu-24.04, windows-2022, macos-15]
+        build_type: [Release]
+        # c_compiler: [gcc, clang, cl]
         # Default compilers:
         #   - Ubuntu 22.04 (jammy): gcc-11, clang-14
         #   - Ubuntu 24.04 (noble): gcc-13, clang-18
         #   - macOS 14: clang-15
-        include:
-          - os: ubuntu-22.04
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-22.04
-            c_compiler: clang
-            cpp_compiler: clang++
-          - os: ubuntu-24.04
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-24.04
-            c_compiler: clang
-            cpp_compiler: clang++
-          - os: windows-2022
-            c_compiler: cl
-            cpp_compiler: cl
-          - os: macos-14
-            c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-          - os: ubuntu-22.04
-            c_compiler: cl
-          - os: ubuntu-24.04
-            c_compiler: cl
-          - os: windows-2022
-            c_compiler: gcc
-          - os: windows-2022
-            c_compiler: clang
-          - os: macos-14
-            c_compiler: cl
-          - os: macos-14
-            c_compiler: gcc
+        # include:
+        #   - os: ubuntu-24.04
+        #     c_compiler: gcc
+        #     cpp_compiler: g++
+        #   - os: ubuntu-24.04
+        #     c_compiler: clang
+        #     cpp_compiler: clang++
+        #   - os: windows-2022
+        #     c_compiler: cl
+        #     cpp_compiler: cl
+        #   - os: macos-15
+        #     c_compiler: clang
+        #     cpp_compiler: clang++
+        # exclude:
+        #   - os: ubuntu-24.04
+        #     c_compiler: cl
+        #   - os: windows-2022
+        #     c_compiler: gcc
+        #   - os: windows-2022
+        #     c_compiler: clang
+        #   - os: macos-15
+        #     c_compiler: cl
+        #   - os: macos-15
+        #     c_compiler: gcc
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      USERNAME: 3DBAG
+      FEED_URL: https://nuget.pkg.github.com/3DBAG/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/3DBAG/index.json,readwrite"
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       # Need python for running the tests on the installed exes
       - uses: actions/setup-python@v5
+        if: runner.os == 'Windows'
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: '3.13'
+      - name: Install the latest version of uv and set the python version to 3.13
+        if: runner.os == 'Windows'
+        uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+          enable-cache: true
       - name: Install python dependencies
-        run: pip install -r "${{ github.workspace }}/requirements.txt"
+        if: runner.os == 'Windows'
+        run: uv sync
 
       - name: Set reusable strings
+        if: runner.os == 'Windows'
         # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         shell: bash
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
           echo "pybind11_ROOT=$(python -m pybind11 --cmakedir)" >> $GITHUB_ENV
 
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: "Install vcpkg"
+      - if: runner.os == 'Windows'
+        name: "Install vcpkg"
         shell: bash
         run: |
           git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout dbe35ceb30c688bf72e952ab23778e009a578f18
           echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
+          echo "VCPKG_EXE=${{ github.workspace }}/vcpkg/vcpkg" >> "$GITHUB_ENV"
           echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
 
       - if: runner.os == 'Windows'
         name: "Bootstrap vcpkg"
         run: |
           vcpkg/bootstrap-vcpkg.bat
-      - if: runner.os != 'Windows'
-        name: "Bootstrap vcpkg"
-        run: |
-          ./vcpkg/bootstrap-vcpkg.sh
 
-      - if: runner.os == 'macOS'
-        name: "Install additional macOS build tools"
+      - if: runner.os == 'Windows'
+        name: Add NuGet sources
+        shell: pwsh
         run: |
-          brew install autoconf autoconf-archive automake libtool
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
+            -StorePasswordInClearText `
+            -Name GitHubPackages `
+            -UserName "${{ env.USERNAME }}" `
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+            -Source "${{ env.FEED_URL }}"
+
+      - if: runner.os != 'Windows'
+        uses: nixbuild/nix-quick-install-action@v30
+        # uses: cachix/install-nix-action@v31
+        # with:
+        #   nix_path: nixpkgs=channel:nixos-unstable
+        name: "install nix"
+
+      - if: runner.os != 'Windows'
+        name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.uv-cache
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+            uv-${{ runner.os }}
+
+      - if: runner.os != 'Windows'
+        uses: nicknovitski/nix-develop@v1
+        env:
+          # Configure a constant location for the uv cache
+          UV_CACHE_DIR: /tmp/.uv-cache
+        with:
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep UV_CACHE_DIR --impure"
+        name: "nix develop"
+
+      - if: runner.os != 'Windows'
+        name: Add NuGet sources
+        shell: bash
+        run: |
+          mono `vcpkg fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        # -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        # -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        # -DVCPKG_INSTALL_OPTIONS="--debug"
         run: >
           cmake -B build
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
           --preset gh-${{ runner.os }}
           -S ${{ github.workspace }}
 
-      - name: Show error logs
-        if: ${{ failure() }}
-        shell: bash
-        run: >
-          cat D:/a/roofer/roofer/vcpkg/buildtrees/gmp/build-x64-windows-dbg-out.log
-          cat D:/a/roofer/roofer/vcpkg/buildtrees/gmp/build-x64-windows-dbg-err.log
+      # - name: Show error logs
+      #   if: ${{ failure() }}
+      #   shell: bash
+      #   run: >
+      #     cat /Users/runner/work/roofer/roofer/build/vcpkg-manifest-install.log
 
       - name: Build
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -136,16 +188,34 @@ jobs:
       - name: Install
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
 
+      - if: runner.os == 'Windows'
+        name: show contents install dir
+        run: |
+          cd install
+          tree /F
+      - if: runner.os != 'Windows'
+        name: show contents install dir
+        run: |
+          cd install
+          ls -R
+      - if: runner.os == 'macOS'
+        name: show contents install dir
+        run: |
+          cd install/bin
+          bundle_libcxx.sh roofer
+
       - name: Test installed
         shell: bash
         run: ctest --preset test-installed --build-config ${{ matrix.build_type }} --test-dir build --output-on-failure
 
-      - name: Upload Windows binaries
-        if: runner.os == 'Windows'
+      - if: runner.os != 'Windows'
+        name: Minimize uv cache
+        run: uv cache prune --ci
+
+      - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: roofer-windows-${{ matrix.build_type }}
+          name: roofer-${{ runner.os }}-${{ matrix.build_type }}
           path: |
-            build/apps/roofer-app/${{ matrix.build_type }}/*.exe
-            build/apps/roofer-app/${{ matrix.build_type }}/*.dll
+            install
           retention-days: 7

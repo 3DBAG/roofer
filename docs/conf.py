@@ -16,7 +16,13 @@ release = ''
 
 extensions = [
     'breathe',
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'myst_parser'
+]
+
+myst_enable_extensions = [
+  "colon_fence",
+  "html_admonition"
 ]
 
 # make rooferpy module findable for autodoc
@@ -63,3 +69,47 @@ html_theme_options = {
     "source_directory": "docs/",
     # "announcement": "Roofer is still under active development.",
 }
+
+_GITHUB_ADMONITIONS = {
+    "> [!NOTE]": "note",
+    "> [!TIP]": "tip",
+    "> [!IMPORTANT]": "important",
+    "> [!WARNING]": "warning",
+    "> [!CAUTION]": "caution",
+}
+
+# based on https://github.com/executablebooks/MyST-Parser/issues/845#issuecomment-2793118480
+def run_convert_github_admonitions_to_rst_source(app, filename, lines):
+    run_convert_github_admonitions_to_rst(app, filename, None, lines)
+
+def run_convert_github_admonitions_to_rst(app, relative_path, parent_docname, lines):
+    # loop through lines, replace github admonitions
+    for i, orig_line in enumerate(lines):
+        orig_line_splits = orig_line.split("\n")
+        replacing = False
+        for j, line in enumerate(orig_line_splits):
+            # look for admonition key
+            for admonition_key in _GITHUB_ADMONITIONS:
+                if admonition_key in line:
+                    line = line.replace(admonition_key, ":::{" + _GITHUB_ADMONITIONS[admonition_key] + "}\n")
+                    # start replacing quotes in subsequent lines
+                    replacing = True
+                    break
+            else:
+                # replace indent to match directive
+                if replacing and "> " in line:
+                    line = line.replace("> ", "  ")
+                elif replacing:
+                    # missing "> ", so stop replacing and terminate directive
+                    line = f"\n:::\n{line}"
+                    replacing = False
+            # swap line back in splits
+            orig_line_splits[j] = line
+        # swap line back in original
+        lines[i] = "\n".join(orig_line_splits)
+
+
+def setup(app):
+    print("setupset")
+    app.connect("include-read", run_convert_github_admonitions_to_rst)
+    app.connect("source-read", run_convert_github_admonitions_to_rst_source)

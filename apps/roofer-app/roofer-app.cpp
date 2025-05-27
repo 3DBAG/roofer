@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2024 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
+// Copyright (c) 2018-2025 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
 // and Balazs Dukai (3DGI)
 
 // This file is part of roofer (https://github.com/3DBAG/roofer)
@@ -76,12 +76,17 @@ namespace fs = std::filesystem;
 
 #include "BS_thread_pool.hpp"
 
+#ifdef RF_USE_RERUN
+#include <rerun.hpp>
+#endif
+
 #if defined(IS_LINUX) || defined(IS_MACOS)
 #include <new>
 #include <mimalloc-override.h>
 #else
 #undef RF_ENABLE_HEAP_TRACING
 #endif
+#include "allocators.hpp"
 
 #include "config.hpp"
 
@@ -284,210 +289,6 @@ std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
   return tiles;
 }
 
-#ifdef RF_ENABLE_HEAP_TRACING
-// Overrides for heap allocation counting
-// Ref.: https://www.youtube.com/watch?v=sLlGEUO_EGE
-namespace {
-  struct HeapAllocationCounter {
-    std::atomic<size_t> total_allocated = 0;
-    std::atomic<size_t> total_freed = 0;
-    [[nodiscard]] size_t current_usage() const {
-      return total_allocated - total_freed;
-    };
-  };
-  HeapAllocationCounter heap_allocation_counter;
-}  // namespace
-#endif
-
-/*
- * Code snippet below is taken from
- * https://github.com/microsoft/mimalloc/blob/dev/include/mimalloc-new-delete.h
- * and modified to work with the roofer trace feature for heap memory usage.
- */
-#if defined(IS_LINUX) || defined(IS_MACOS)
-#if defined(_MSC_VER) && defined(_Ret_notnull_) && \
-    defined(_Post_writable_byte_size_)
-   // stay consistent with VCRT definitions
-#define mi_decl_new(n) \
-  mi_decl_nodiscard mi_decl_restrict _Ret_notnull_ _Post_writable_byte_size_(n)
-#define mi_decl_new_nothrow(n)                                                 \
-  mi_decl_nodiscard mi_decl_restrict _Ret_maybenull_ _Success_(return != NULL) \
-      _Post_writable_byte_size_(n)
-#else
-#define mi_decl_new(n) mi_decl_nodiscard mi_decl_restrict
-#define mi_decl_new_nothrow(n) mi_decl_nodiscard mi_decl_restrict
-#endif
-
-void operator delete(void* p) noexcept { mi_free(p); };
-void operator delete[](void* p) noexcept { mi_free(p); };
-
-void operator delete(void* p, const std::nothrow_t&) noexcept { mi_free(p); }
-void operator delete[](void* p, const std::nothrow_t&) noexcept { mi_free(p); }
-
-mi_decl_new(n) void* operator new(std::size_t n) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new(n);
-}
-mi_decl_new(n) void* operator new[](std::size_t n) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new(n);
-}
-
-mi_decl_new_nothrow(n) void* operator new(std::size_t n,
-                                          const std::nothrow_t& tag) noexcept {
-  (void)(tag);
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_nothrow(n);
-}
-mi_decl_new_nothrow(n) void* operator new[](
-    std::size_t n, const std::nothrow_t& tag) noexcept {
-  (void)(tag);
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_nothrow(n);
-}
-
-#if (__cplusplus >= 201402L || _MSC_VER >= 1916)
-void operator delete(void* p, std::size_t n) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size(p, n);
-};
-void operator delete[](void* p, std::size_t n) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size(p, n);
-};
-#endif
-
-#if (__cplusplus > 201402L || defined(__cpp_aligned_new))
-void operator delete(void* p, std::align_val_t al) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete[](void* p, std::align_val_t al) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete(void* p, std::size_t n, std::align_val_t al) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size_aligned(p, n, static_cast<size_t>(al));
-};
-void operator delete[](void* p, std::size_t n, std::align_val_t al) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size_aligned(p, n, static_cast<size_t>(al));
-};
-void operator delete(void* p, std::align_val_t al,
-                     const std::nothrow_t&) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete[](void* p, std::align_val_t al,
-                       const std::nothrow_t&) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-
-void* operator new(std::size_t n, std::align_val_t al) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned(n, static_cast<size_t>(al));
-}
-void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned(n, static_cast<size_t>(al));
-}
-void* operator new(std::size_t n, std::align_val_t al,
-                   const std::nothrow_t&) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
-}
-void* operator new[](std::size_t n, std::align_val_t al,
-                     const std::nothrow_t&) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
-}
-#endif
-#endif
-/*
- * Author:  David Robert Nadeau
- * Site:    http://NadeauSoftware.com/
- * License: Creative Commons Attribution 3.0 Unported License
- *          http://creativecommons.org/licenses/by/3.0/deed.en_US
- * Ref.:
- * https://lemire.me/blog/2022/11/10/measuring-the-memory-usage-of-your-c-program/
- */
-#if defined(IS_WINDOWS)
-#include <windows.h>
-#include <psapi.h>
-
-#elif defined(IS_LINUX) || defined(IS_MACOS)
-#include <sys/resource.h>
-#include <unistd.h>
-
-#if defined(IS_MACOS)
-#include <mach/mach.h>
-#elif defined(IS_LINUX)
-#include <cstdio>
-#endif
-
-#endif
-
-/**
- * Returns the current resident set size (physical memory use) measured
- * in bytes, or zero if the value cannot be determined on this OS.
- */
-inline size_t GetCurrentRSS() {
-#if defined(IS_WINDOWS)
-  /* Windows -------------------------------------------------- */
-  PROCESS_MEMORY_COUNTERS info;
-  GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
-  return (size_t)info.WorkingSetSize;
-
-#elif defined(IS_MACOS)
-  /* OSX ------------------------------------------------------ */
-  struct mach_task_basic_info info;
-  mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
-  if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info,
-                &infoCount) != KERN_SUCCESS)
-    return (size_t)0L; /* Can't access? */
-  return (size_t)info.resident_size;
-
-#elif defined(IS_LINUX)
-  /* Linux ---------------------------------------------------- */
-  long rss = 0L;
-  FILE* fp = NULL;
-  if ((fp = fopen("/proc/self/statm", "r")) == NULL)
-    return (size_t)0L; /* Can't open? */
-  if (fscanf(fp, "%*s%ld", &rss) != 1) {
-    fclose(fp);
-    return (size_t)0L; /* Can't read? */
-  }
-  fclose(fp);
-  return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
-
-#else
-  /* AIX, BSD, Solaris, and Unknown OS ------------------------ */
-  return (size_t)0L; /* Unsupported. */
-#endif
-}
-
 int main(int argc, const char* argv[]) {
   // auto cmdl = argh::parser({"-c", "--config"});
   // cmdl.add_params({"trace-interval", "-j", "--jobs"});
@@ -496,41 +297,41 @@ int main(int argc, const char* argv[]) {
   auto& logger = roofer::logger::Logger::get_logger();
 
   // read cmdl options
-  RooferConfig roofer_cfg;
-  std::vector<InputPointcloud> input_pointclouds;
   CLIArgs cli_args(argc, argv);
-  RooferConfigHandler roofer_cfg_handler(roofer_cfg, input_pointclouds);
-  roofer_cfg.rec.lod = 0;
+  RooferConfigHandler handler;
 
   // Parse basic command line arguments (not yet the configuration parameters)
   try {
-    roofer_cfg_handler.parse_cli_first_pass(cli_args);
+    handler.parse_cli_first_pass(cli_args);
   } catch (const std::exception& e) {
     logger.error("Failed to parse command line arguments.");
     logger.error("{} Use '-h' to print usage information.", e.what());
-    // roofer_cfg_handler.print_help(cli_args.program_name);
+    // handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
-  if (roofer_cfg_handler._print_help) {
-    roofer_cfg_handler.print_help(cli_args.program_name);
+  if (handler._print_help) {
+    handler.print_help(cli_args.program_name);
     return EXIT_SUCCESS;
   }
-  if (roofer_cfg_handler._print_version) {
-    roofer_cfg_handler.print_version();
+  if (handler._print_attributes) {
+    handler.print_attributes();
+    return EXIT_SUCCESS;
+  }
+  if (handler._print_version) {
+    handler.print_version();
     return EXIT_SUCCESS;
   }
 
   // Read configuration file, config path has already been checked for existence
-  if (roofer_cfg_handler._config_path.size()) {
-    logger.info("Reading configuration from file {}",
-                roofer_cfg_handler._config_path);
+  if (handler._config_path.size()) {
+    logger.info("Reading configuration from file {}", handler._config_path);
     try {
-      roofer_cfg_handler.parse_config_file();
+      handler.parse_config_file();
     } catch (const std::exception& e) {
       logger.error(
           "Unable to parse config file {}. {} Use '-h' to print usage "
           "information.",
-          roofer_cfg_handler._config_path, e.what());
+          handler._config_path, e.what());
       return EXIT_FAILURE;
     }
   }
@@ -538,61 +339,69 @@ int main(int argc, const char* argv[]) {
   // Parse further command line arguments, those will override values from
   // config file
   try {
-    roofer_cfg_handler.parse_cli_second_pass(cli_args);
+    handler.parse_cli_second_pass(cli_args);
   } catch (const std::exception& e) {
     logger.error(
         "Failed to parse command line arguments. {} Use '-h' to print usage "
         "information.",
         e.what());
-    // roofer_cfg_handler.print_help(cli_args.program_name);
+    // handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
 
   // validate configuration parameters
   try {
-    roofer_cfg_handler.validate();
+    handler.validate();
   } catch (const std::exception& e) {
     logger.error(
         "Failed to validate parameter values. {} Use '-h' to print usage "
         "information.",
         e.what());
-    // roofer_cfg_handler.print_help(cli_args.program_name);
+    // handler.print_help(cli_args.program_name);
     return EXIT_FAILURE;
   }
 
   bool do_tracing = false;
-  auto trace_interval =
-      std::chrono::seconds(roofer_cfg_handler._trace_interval);
-  if (roofer_cfg_handler._loglevel == "info") {
-    logger.set_level(roofer::logger::LogLevel::info);
-  } else if (roofer_cfg_handler._loglevel == "debug") {
-    logger.set_level(roofer::logger::LogLevel::debug);
-  } else if (roofer_cfg_handler._loglevel == "trace") {
-    logger.set_level(roofer::logger::LogLevel::trace);
-    trace_interval = std::chrono::seconds(roofer_cfg_handler._trace_interval);
+  auto trace_interval = std::chrono::seconds(handler._trace_interval);
+  logger.set_level(handler._loglevel);
+  if (handler._loglevel == roofer::logger::LogLevel::trace) {
+    trace_interval = std::chrono::seconds(handler._trace_interval);
     do_tracing = true;
     logger.debug("trace interval is set to {} seconds", trace_interval.count());
-  } else {
-    logger.set_level(roofer::logger::LogLevel::warning);
   }
+
+// rerun
+#ifdef RF_USE_RERUN
+// if (handler.cfg_.use_rerun) {
+//   // Create a new `RecordingStream` which sends data over TCP to the viewer
+//   // process.
+//   const auto rec = rerun::RecordingStream("Roofer");
+//   // Try to spawn a new viewer instance.
+//   rec.spawn().exit_on_failure();
+//   rec.set_global();
+//   roofer::vec3f testpts;
+//   testpts.push_back({1.0f, 2.0f, 3.0f});
+//   rec.log("test", rerun::Points3D(testpts));
+// }
+#endif
 
   // precomputation for tiling
   std::deque<BuildingTile> initial_tiles;
   auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
 
-  if (!roofer_cfg.srs_override.empty()) {
-    project_srs->import(roofer_cfg.srs_override);
+  if (!handler.cfg_.srs_override.empty()) {
+    project_srs->import(handler.cfg_.srs_override);
     if (!project_srs->is_valid()) {
-      logger.error("Invalid user override SRS: {}", roofer_cfg.srs_override);
+      logger.error("Invalid user override SRS: {}", handler.cfg_.srs_override);
       return EXIT_FAILURE;
     } else {
-      logger.info("Using user override SRS: {}", roofer_cfg.srs_override);
+      logger.info("Using user override SRS: {}", handler.cfg_.srs_override);
     }
   }
 
-  logger.debug("{}", roofer_cfg);
+  logger.debug("{}", handler);
 
-  for (auto& ipc : input_pointclouds) {
+  for (auto& ipc : handler.input_pointclouds_) {
     get_las_extents(ipc, project_srs.get());
     ipc.rtree = roofer::misc::createRTreeGEOS();
     for (auto& item : ipc.file_extents) {
@@ -604,11 +413,11 @@ int main(int argc, const char* argv[]) {
   {
     auto pj = roofer::misc::createProjHelper();
     auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
-    VectorReader->layer_name = roofer_cfg.layer_name;
-    VectorReader->layer_id = roofer_cfg.layer_id;
-    VectorReader->attribute_filter = roofer_cfg.attribute_filter;
+    VectorReader->layer_name = handler.cfg_.layer_name;
+    VectorReader->layer_id = handler.cfg_.layer_id;
+    VectorReader->attribute_filter = handler.cfg_.attribute_filter;
     try {
-      VectorReader->open(roofer_cfg.source_footprints);
+      VectorReader->open(handler.cfg_.source_footprints);
     } catch (const std::exception& e) {
       logger.error("{}", e.what());
       return EXIT_FAILURE;
@@ -617,12 +426,12 @@ int main(int argc, const char* argv[]) {
       VectorReader->get_crs(project_srs.get());
     }
     // logger.info("region_of_interest.has_value()? {}",
-    //             roofer_cfg.region_of_interest.has_value());
+    //             handler.cfg_.region_of_interest.has_value());
 
     roofer::TBox<double> roi;
-    if (roofer_cfg.region_of_interest.has_value()) {
-      // VectorReader->region_of_interest = *roofer_cfg.region_of_interest;
-      roi = *roofer_cfg.region_of_interest;
+    if (handler.cfg_.region_of_interest.has_value()) {
+      // VectorReader->region_of_interest = *handler.cfg_.region_of_interest;
+      roi = *handler.cfg_.region_of_interest;
     } else {
       roi = VectorReader->layer_extent;
     }
@@ -633,14 +442,14 @@ int main(int argc, const char* argv[]) {
                 VectorReader->get_feature_count());
 
     // actual tiling
-    if (roofer_cfg_handler._no_tiling) {
+    if (!handler._tiling) {
       auto& building_tile = initial_tiles.emplace_back();
       building_tile.id = 0;
       building_tile.extent = roi;
       building_tile.proj_helper = roofer::misc::createProjHelper();
     } else {
       auto tile_extents =
-          create_tiles(roi, roofer_cfg.tilesize[0], roofer_cfg.tilesize[1]);
+          create_tiles(roi, handler.cfg_.tilesize[0], handler.cfg_.tilesize[1]);
 
       for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
         // intersect with roi, to avoid creating buildings outside of the roi
@@ -673,11 +482,11 @@ int main(int argc, const char* argv[]) {
   }
 
   // Limit the parallelism
-  if (roofer_cfg_handler._jobs < nthreads_reserved + 1) {
+  if (handler._jobs < nthreads_reserved + 1) {
     // Only one thread will be available for the reconstructor pool
     nthreads = nthreads_reserved + 1;
   } else {
-    nthreads = roofer_cfg_handler._jobs;
+    nthreads = handler._jobs;
   }
 
   size_t nthreads_reconstructor_pool = nthreads - nthreads_reserved;
@@ -759,10 +568,10 @@ int main(int argc, const char* argv[]) {
         // crop each tile
         logger.debug("[cropper] Cropping tile {}", building_tile);
         // crop_tile returns true if at least one building was cropped
-        if (!crop_tile(building_tile.extent,  // tile extent
-                       input_pointclouds,     // input pointclouds
-                       building_tile,         // output building data
-                       roofer_cfg,            // configuration parameters
+        if (!crop_tile(building_tile.extent,        // tile extent
+                       handler.input_pointclouds_,  // input pointclouds
+                       building_tile,               // output building data
+                       handler.cfg_,                // configuration parameters
                        project_srs.get())) {
           logger.info("No footprints found in tile {}, skipping...",
                       building_tile.id);
@@ -791,7 +600,7 @@ int main(int argc, const char* argv[]) {
     cropped_pending.notify_one();
   });
 
-  if (!roofer_cfg_handler._crop_only) {
+  if (!handler._crop_only) {
     BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
     reconstructor_thread = std::thread([&]() {
       while (crop_running.load() || !cropped_tiles.empty()) {
@@ -846,7 +655,8 @@ int main(int argc, const char* argv[]) {
           ++reconstructed_started_cnt;
 
           reconstructor_pool.detach_task([bref = std::move(building_ref),
-                                          &roofer_cfg, &reconstructed_buildings,
+                                          cfg = &handler.cfg_,
+                                          &reconstructed_buildings,
                                           &reconstructed_buildings_cnt,
                                           &reconstructed_buildings_mutex] {
             // TODO: It seems that I need to assign the moved 'building_ref' to
@@ -861,7 +671,7 @@ int main(int argc, const char* argv[]) {
               auto start = std::chrono::high_resolution_clock::now();
               logger.debug("[reconstructor] start: {}",
                            building_object_ref.building.jsonl_path.string());
-              reconstruct_building(building_object_ref.building, &roofer_cfg);
+              reconstruct_building(building_object_ref.building, cfg);
               logger.debug("[reconstructor] finish: {}",
                            building_object_ref.building.jsonl_path.string());
               // TODO: These two seem to be redundant
@@ -976,7 +786,8 @@ int main(int argc, const char* argv[]) {
     });
 
     serializer_thread = std::thread([&]() {
-      logger.info("[serializer] Writing output to {}", roofer_cfg.output_path);
+      logger.info("[serializer] Writing output to {}",
+                  handler.cfg_.output_path);
       while (sorting_running.load() || !sorted_tiles.empty()) {
         logger.debug("[serializer] before lock sorted_tiles_mutex");
         std::unique_lock lock{sorted_tiles_mutex};
@@ -994,8 +805,8 @@ int main(int argc, const char* argv[]) {
           logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
-          auto& attr_success = building_tile.attributes.insert_vec<bool>(
-              roofer_cfg.n["success"]);
+          auto& attr_success =
+              building_tile.attributes.insert_vec<bool>(handler.cfg_.a_success);
           for (auto& progress : building_tile.buildings_progresses) {
             if (progress == RECONSTRUCTION_SUCCEEDED) {
               attr_success.push_back(true);
@@ -1005,7 +816,7 @@ int main(int argc, const char* argv[]) {
           }
           // create time attribute
           auto& attr_time = building_tile.attributes.insert_vec<int>(
-              roofer_cfg.n["reconstruction_time"]);
+              handler.cfg_.a_reconstruction_time);
           for (auto& building : building_tile.buildings) {
             attr_time.push_back(building.reconstruction_time);
           }
@@ -1013,12 +824,12 @@ int main(int argc, const char* argv[]) {
           auto CityJsonWriter =
               roofer::io::createCityJsonWriter(*building_tile.proj_helper);
           CityJsonWriter->written_features_count = serialized_buildings_cnt;
-          CityJsonWriter->identifier_attribute = roofer_cfg.id_attribute;
+          CityJsonWriter->identifier_attribute = handler.cfg_.id_attribute;
           // user provided offset
-          if (roofer_cfg.cj_translate.has_value()) {
-            CityJsonWriter->translate_x_ = (*roofer_cfg.cj_translate)[0];
-            CityJsonWriter->translate_y_ = (*roofer_cfg.cj_translate)[1];
-            CityJsonWriter->translate_z_ = (*roofer_cfg.cj_translate)[2];
+          if (handler.cfg_.cj_translate.has_value()) {
+            CityJsonWriter->translate_x_ = (*handler.cfg_.cj_translate)[0];
+            CityJsonWriter->translate_y_ = (*handler.cfg_.cj_translate)[1];
+            CityJsonWriter->translate_z_ = (*handler.cfg_.cj_translate)[2];
             // auto offset from data
           } else if (building_tile.proj_helper->data_offset.has_value()) {
             CityJsonWriter->translate_x_ =
@@ -1032,33 +843,29 @@ int main(int argc, const char* argv[]) {
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          if (roofer_cfg.cj_scale.has_value()) {
-            CityJsonWriter->scale_x_ = (*roofer_cfg.cj_scale)[0];
-            CityJsonWriter->scale_y_ = (*roofer_cfg.cj_scale)[1];
-            CityJsonWriter->scale_z_ = (*roofer_cfg.cj_scale)[2];
-          } else {
-            CityJsonWriter->scale_x_ = 0.001;
-            CityJsonWriter->scale_y_ = 0.001;
-            CityJsonWriter->scale_z_ = 0.001;
-          }
+          CityJsonWriter->scale_x_ = handler.cfg_.cj_scale[0];
+          CityJsonWriter->scale_y_ = handler.cfg_.cj_scale[1];
+          CityJsonWriter->scale_z_ = handler.cfg_.cj_scale[2];
 
           std::ofstream ofs;
-          if (!roofer_cfg.split_cjseq) {
+          if (!handler.cfg_.split_cjseq) {
+            // get bottom left corner coordinates
+            int minx = building_tile.extent.min()[0];
+            int miny = building_tile.extent.min()[1];
             auto jsonl_tile_path =
-                fs::path(roofer_cfg.output_path) / "tiles" /
-                fmt::format("{}_{:05d}.city.jsonl", roofer_cfg.output_stem,
-                            building_tile.id);
+                fs::path(handler.cfg_.output_path) /
+                fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
             fs::create_directories(jsonl_tile_path.parent_path());
             ofs.open(jsonl_tile_path);
-            if (!roofer_cfg.omit_metadata)
+            if (!handler.cfg_.omit_metadata)
               CityJsonWriter->write_metadata(
                   ofs, project_srs.get(), building_tile.extent,
                   {.identifier = std::to_string(building_tile.id)});
           } else {
-            if (!roofer_cfg.omit_metadata) {
-              std::string metadata_json_file =
-                  fmt::format(fmt::runtime(roofer_cfg.metadata_json_file_spec),
-                              fmt::arg("path", roofer_cfg.output_path));
+            if (!handler.cfg_.omit_metadata) {
+              std::string metadata_json_file = fmt::format(
+                  fmt::runtime(handler.cfg_.metadata_json_file_spec),
+                  fmt::arg("path", handler.cfg_.output_path));
               fs::create_directories(
                   fs::path(metadata_json_file).parent_path());
               ofs.open(metadata_json_file);
@@ -1070,7 +877,7 @@ int main(int argc, const char* argv[]) {
           }
 
           for (auto& building : building_tile.buildings) {
-            if (roofer_cfg.split_cjseq) {
+            if (handler.cfg_.split_cjseq) {
               fs::create_directories(building.jsonl_path.parent_path());
               ofs.open(building.jsonl_path);
             }
@@ -1078,63 +885,77 @@ int main(int argc, const char* argv[]) {
               auto attrow = roofer::AttributeMapRow(building_tile.attributes,
                                                     building.attribute_index);
 
-              attrow.insert(roofer_cfg.n["h_ground"], building.h_ground);
-              attrow.insert(roofer_cfg.n["h_pc_98p"], building.h_pc_98p);
-              attrow.insert(roofer_cfg.n["is_glass_roof"],
+              attrow.insert(handler.cfg_.a_h_ground, building.h_ground);
+              attrow.insert(handler.cfg_.a_h_pc_98p, building.h_pc_98p);
+              attrow.insert(handler.cfg_.a_is_glass_roof,
                             building.is_glass_roof);
-              attrow.insert(roofer_cfg.n["pointcloud_unusable"],
+              attrow.insert(handler.cfg_.a_pointcloud_unusable,
                             building.pointcloud_insufficient);
-              attrow.insert(roofer_cfg.n["roof_type"], building.roof_type);
-              attrow.insert_optional(roofer_cfg.n["h_roof_50p"],
+              attrow.insert(handler.cfg_.a_roof_type, building.roof_type);
+              attrow.insert_optional(handler.cfg_.a_h_roof_50p,
                                      building.roof_elevation_50p);
-              attrow.insert_optional(roofer_cfg.n["h_roof_70p"],
+              attrow.insert_optional(handler.cfg_.a_h_roof_70p,
                                      building.roof_elevation_70p);
-              attrow.insert_optional(roofer_cfg.n["h_roof_min"],
+              attrow.insert_optional(handler.cfg_.a_h_roof_min,
                                      building.roof_elevation_min);
-              attrow.insert_optional(roofer_cfg.n["h_roof_max"],
+              attrow.insert_optional(handler.cfg_.a_h_roof_max,
                                      building.roof_elevation_max);
-              attrow.insert_optional(roofer_cfg.n["h_roof_ridge"],
+              attrow.insert_optional(handler.cfg_.a_h_roof_ridge,
                                      building.roof_elevation_ridge);
-              attrow.insert_optional(roofer_cfg.n["roof_n_planes"],
+              attrow.insert_optional(handler.cfg_.a_roof_n_planes,
                                      building.roof_n_planes);
-              attrow.insert_optional(roofer_cfg.n["roof_n_ridgelines"],
+              attrow.insert_optional(handler.cfg_.a_roof_n_ridgelines,
                                      building.roof_n_ridgelines);
-              attrow.insert(roofer_cfg.n["extrusion_mode"],
-                            building.extrusion_mode);
+              std::string extrusion_mode_str;
+              switch (building.extrusion_mode) {
+                case STANDARD:
+                  extrusion_mode_str = "standard";
+                  break;
+                case LOD11_FALLBACK:
+                  extrusion_mode_str = "lod11_fallback";
+                  break;
+                case SKIP:
+                  extrusion_mode_str = "skip";
+                  break;
+                default:
+                  extrusion_mode_str = "unknown";
+                  break;
+              }
+              attrow.insert(handler.cfg_.a_extrusion_mode, extrusion_mode_str);
 
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
-              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 12) {
+              if (handler.cfg_.lod_12) {
                 ms12 = &building.multisolids_lod12;
-                attrow.insert_optional(roofer_cfg.n["rmse_lod12"],
+                attrow.insert_optional(handler.cfg_.a_rmse_lod12,
                                        building.rmse_lod12);
-                attrow.insert_optional(roofer_cfg.n["volume_lod12"],
+                attrow.insert_optional(handler.cfg_.a_volume_lod12,
                                        building.volume_lod12);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(roofer_cfg.n["val3dity_lod12"],
+                attrow.insert_optional(handler.cfg_.a_val3dity_lod12,
                                        building.val3dity_lod12);
 #endif
               }
-              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 13) {
+              if (handler.cfg_.lod_13) {
                 ms13 = &building.multisolids_lod13;
-                attrow.insert_optional(roofer_cfg.n["rmse_lod13"],
+                attrow.insert_optional(handler.cfg_.a_rmse_lod13,
                                        building.rmse_lod13);
-                attrow.insert_optional(roofer_cfg.n["volume_lod13"],
+                attrow.insert_optional(handler.cfg_.a_volume_lod13,
                                        building.volume_lod13);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(roofer_cfg.n["val3dity_lod13"],
+                attrow.insert_optional(handler.cfg_.a_val3dity_lod13,
                                        building.val3dity_lod13);
 #endif
               }
-              if (roofer_cfg.rec.lod == 0 || roofer_cfg.rec.lod == 22) {
+              if (handler.cfg_.lod_22) {
                 ms22 = &building.multisolids_lod22;
-                attrow.insert_optional(roofer_cfg.n["rmse_lod22"],
+                attrow.insert_optional(handler.cfg_.a_rmse_lod22,
                                        building.rmse_lod22);
-                attrow.insert_optional(roofer_cfg.n["volume_lod22"],
+                attrow.insert_optional(handler.cfg_.a_volume_lod22,
                                        building.volume_lod22);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(roofer_cfg.n["val3dity_lod22"],
+                attrow.insert_optional(handler.cfg_.a_val3dity_lod22,
                                        building.val3dity_lod22);
 #endif
               }
@@ -1142,7 +963,7 @@ int main(int argc, const char* argv[]) {
               building.footprint.set_z(building.h_ground);
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
                                             ms22, attrow);
-              if (roofer_cfg.split_cjseq) {
+              if (handler.cfg_.split_cjseq) {
                 ofs.close();
               }
               ++serialized_buildings_cnt;
@@ -1151,7 +972,7 @@ int main(int argc, const char* argv[]) {
                            building.jsonl_path.string(), e.what());
             }
           }
-          if (!roofer_cfg.split_cjseq) {
+          if (!handler.cfg_.split_cjseq) {
             ofs.close();
           }
           pending_serialized.pop_front();
@@ -1171,13 +992,13 @@ int main(int argc, const char* argv[]) {
     tracer_thread->join();
   }
 
-  if (!cropped_tiles.empty() && !roofer_cfg_handler._crop_only) {
+  if (!cropped_tiles.empty() && !handler._crop_only) {
     logger.error(
         "all threads have been joined, but cropped_tiles is "
         "not empty, it still contains {} items",
         cropped_tiles.size());
   }
-  if (!reconstructed_buildings.empty() && !roofer_cfg_handler._crop_only) {
+  if (!reconstructed_buildings.empty() && !handler._crop_only) {
     logger.error(
         "all threads have been joined, but reconstructed_buildings is "
         "not empty, it still contains {} items",

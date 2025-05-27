@@ -71,6 +71,7 @@
         "RF_USE_LOGGER_SPDLOG": "OFF",
         "RF_BUILD_TESTING": "OFF",
         "RF_BUILD_APPS": "OFF",
+        "RF_BUILD_DOC_HELPER": "ON",
         "RF_BUILD_BINDINGS": "ON"
       }
     },

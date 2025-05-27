@@ -2,11 +2,12 @@ name: Documentation
 
 on:
   push:
-    tags:
-      - "*"
-    branches: [ "develop" ]
+    # tags:
+    # - "*"
+    # branches: [ "develop" ]
     pull_request:
-      branches: [ "develop" ]
+      branches: ["develop"]
+
 jobs:
   deploy:
     name: Build and publish documentation
@@ -16,44 +17,54 @@ jobs:
       contents: write
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      USERNAME: 3DBAG
+      FEED_URL: https://nuget.pkg.github.com/3DBAG/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/3DBAG/index.json,readwrite"
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-      - name: Install python dependencies
-        run: |
-          pip install -r "${{ github.workspace }}/requirements.txt"
-          pip install -r "${{ github.workspace }}/docs/requirements.txt"
-
-      - name: Set reusable strings
-        # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-        shell: bash
-        run: |
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
-          echo "pybind11_ROOT=$(python -m pybind11 --cmakedir)" >> $GITHUB_ENV
-
-      - name: "Install vcpkg"
-        shell: bash
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> "$GITHUB_ENV"
-          echo "${{ github.workspace }}/vcpkg" >> $GITHUB_PATH
-
       - uses: actions/github-script@v7
         with:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - name: Update vcpkg baseline
-        run: vcpkg x-update-baseline
+      - uses: nixbuild/nix-quick-install-action@v30
+        # uses: cachix/install-nix-action@v31
+        # with:
+        #   nix_path: nixpkgs=channel:nixos-unstable
+        name: "install nix"
+
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.uv-cache
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+            uv-${{ runner.os }}
+
+      - uses: nicknovitski/nix-develop@v1
+        env:
+          # Configure a constant location for the uv cache
+          UV_CACHE_DIR: /tmp/.uv-cache
+        with:
+          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep UV_CACHE_DIR --impure"
+        name: "nix develop"
+
+      - name: Add NuGet sources
+        shell: bash
+        run: |
+          mono `vcpkg fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -61,17 +72,17 @@ jobs:
         run: >
           cmake -B build
           --preset vcpkg-docs
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
           -S ${{ github.workspace }}
 
       - name: Build bindings
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
+        run: |
+          cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
+          cmake --install build --config Release --verbose
 
       - name: Generate Docs
         run: |
-          sudo apt-get install doxygen graphviz
-          mkdir docs/rooferpy
-          cp build/rooferpy/*.so docs/rooferpy
           cd docs
           make html
 
@@ -80,4 +91,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ${{ github.workspace }}/docs/_build/html
+          destination_dir: dev
           publish_branch: gh-pages

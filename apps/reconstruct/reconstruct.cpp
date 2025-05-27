@@ -412,12 +412,11 @@ int main(int argc, const char* argv[]) {
 
 #ifdef RF_USE_RERUN
   rec.log("world/raw_points",
-          rerun::Collection{rerun::components::AnnotationContext{
-              rerun::datatypes::AnnotationInfo(
-                  6, "BUILDING", rerun::datatypes::Rgba32(255, 0, 0)),
-              rerun::datatypes::AnnotationInfo(2, "GROUND"),
-              rerun::datatypes::AnnotationInfo(1, "UNCLASSIFIED"),
-          }});
+          rerun::AnnotationContext({
+              rerun::AnnotationInfo(6, "BUILDING", rerun::Rgba32(255, 0, 0)),
+              rerun::AnnotationInfo(2, "GROUND"),
+              rerun::AnnotationInfo(1, "UNCLASSIFIED"),
+          }));
   rec.log("world/raw_points",
           rerun::Points3D(points).with_class_ids(classification));
 #endif
@@ -460,9 +459,8 @@ int main(int argc, const char* argv[]) {
 
 #ifdef RF_USE_RERUN
   rec.log("world/segmented_points",
-          rerun::Collection{rerun::components::AnnotationContext{
-              rerun::datatypes::AnnotationInfo(
-                  0, "no plane", rerun::datatypes::Rgba32(30, 30, 30))}});
+          rerun::AnnotationContext({rerun::AnnotationInfo(
+              0, "no plane", rerun::Rgba32(30, 30, 30))}));
   rec.log("world/segmented_points",
           rerun::Points3D(points_roof).with_class_ids(PlaneDetector->plane_id));
 #endif

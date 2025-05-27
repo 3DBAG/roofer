@@ -18,7 +18,7 @@
 
 // Author(s):
 // Ravi Peters
-
+#pragma once
 bool crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, const RooferConfig& cfg,
@@ -109,7 +109,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
   }
 
   // create force_lod11 vector, initialize with user input and area check
-  auto& force_lod11_vec = attributes.insert_vec<bool>(cfg.n.at("force_lod11"));
+  auto& force_lod11_vec = attributes.insert_vec<bool>(cfg.a_force_lod11);
   force_lod11_vec.resize(N_fp, false);
 
   if (auto user_force_lod11_vec =
@@ -195,11 +195,11 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
     auto& nodata_r =
-        attributes.insert_vec<float>(cfg.n.at("nodata_r") + "_" + ipc.name);
+        attributes.insert_vec<float>(cfg.a_nodata_r + "_" + ipc.name);
     auto& nodata_frac =
-        attributes.insert_vec<float>(cfg.n.at("nodata_frac") + "_" + ipc.name);
+        attributes.insert_vec<float>(cfg.a_nodata_frac + "_" + ipc.name);
     auto& pt_density =
-        attributes.insert_vec<float>(cfg.n.at("pt_density") + "_" + ipc.name);
+        attributes.insert_vec<float>(cfg.a_pt_density + "_" + ipc.name);
     nodata_r.reserve(N_fp);
     nodata_frac.reserve(N_fp);
     pt_density.reserve(N_fp);
@@ -219,7 +219,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       auto& ipc1 = input_pointclouds[i];
       auto& ipc2 = input_pointclouds[i + 1];
       auto& is_mutated = attributes.insert_vec<bool>(
-          cfg.n.at("is_mutated") + "_" + ipc1.name + "_" + ipc2.name);
+          cfg.a_is_mutated + "_" + ipc1.name + "_" + ipc2.name);
       is_mutated.reserve(N_fp);
       for (unsigned j = 0; j < N_fp; ++j) {
         is_mutated.push_back(roofer::misc::isMutated(
@@ -237,9 +237,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
   auto h_ground_fallback_vec =
       attributes.get_if<float>(cfg.h_terrain_attribute);
   auto h_roof_fallback_vec = attributes.get_if<float>(cfg.h_roof_attribute);
-  auto& pc_select = attributes.insert_vec<std::string>(cfg.n.at("pc_select"));
-  auto& pc_source = attributes.insert_vec<std::string>(cfg.n.at("pc_source"));
-  auto& pc_year = attributes.insert_vec<int>(cfg.n.at("pc_year"));
+  auto& pc_select = attributes.insert_vec<std::string>(cfg.a_pc_select);
+  auto& pc_source = attributes.insert_vec<std::string>(cfg.a_pc_source);
+  auto& pc_year = attributes.insert_vec<int>(cfg.a_pc_year);
   std::unordered_map<std::string, roofer::vec1s> jsonl_paths;
   std::string bid;
   bool only_write_selected = !cfg.output_all;
@@ -334,6 +334,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       BuildingObject& building = output_building_tile.buildings.emplace_back();
       building.attribute_index = i;
       building.z_offset = (*pj->data_offset)[2];
+      using TerrainStrategy = roofer::enums::TerrainStrategy;
 
       auto& points = input_pointclouds[selected->index].building_clouds[i];
       auto classification = points.attributes.get_if<int>("classification");
@@ -353,14 +354,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
-      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_WITH_MIN_H_TILE) {
+      if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_TILE) {
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
           building.h_ground = PointCloudCropper->get_min_terrain_elevation();
         }
-      } else if (cfg.h_terrain_strategy ==
-                 TerrainStrategy::BUFFER_WITH_USER_ATTRIBUTE) {
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_USER) {
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
@@ -380,7 +380,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
             exit(1);
           }
         }
-      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER_ATTRIBUTE) {
+      } else if (cfg.h_terrain_strategy == TerrainStrategy::USER) {
         if (h_ground_fallback_vec) {
           if ((*h_ground_fallback_vec)[i].has_value()) {
             building.h_ground = (*h_ground_fallback_vec)[i].value();

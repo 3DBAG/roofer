@@ -7,6 +7,7 @@ option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
+option(RF_BUILD_DOC_HELPER "Build documentation generation helper app" OFF)
 option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
@@ -25,6 +26,9 @@ endif()
 if(RF_USE_VAL3DITY)
   list(APPEND VCPKG_MANIFEST_FEATURES "val3dity")
 endif()
+if(RF_USE_RERUN)
+  list(APPEND VCPKG_MANIFEST_FEATURES "app-rerun")
+endif()
 # if(RF_BUILD_BINDINGS)
 #   list(APPEND VCPKG_MANIFEST_FEATURES "python")
 # endif()
@@ -38,6 +42,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use extensions, because they might affect compiler compatibility
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 # Enable position independent code for shared libraries in case we build them
 if(BUILD_SHARED_LIBS OR RF_BUILD_BINDINGS)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -72,6 +78,7 @@ cpmaddpackage(
 set(GIT_IGNORE_UNTRACKED TRUE)
 
 if(RF_USE_RERUN)
+  set(RERUN_DOWNLOAD_AND_BUILD_ARROW OFF)
   cpmaddpackage(
     NAME rerun_sdk URL
     https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
@@ -100,6 +107,6 @@ if(RF_BUILD_BINDINGS)
 endif()
 
 # EXECUTABLES
-if(RF_BUILD_APPS)
+if(RF_BUILD_APPS OR RF_BUILD_DOC_HELPER)
   add_subdirectory(apps)
 endif()

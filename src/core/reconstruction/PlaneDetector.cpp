@@ -277,6 +277,11 @@ namespace roofer {
             }
           }
           total_plane_cnt = R.regions.size();
+
+          for (auto region : R.regions) {
+            total_pt_cnt += region.inliers.size();
+          }
+
           // classify horizontal/vertical planes using plane normals
           unsigned shape_id = 0;
           for (auto region : R.regions) {
@@ -299,13 +304,15 @@ namespace roofer {
               std::vector<Point> segpts;
               for (auto& i : region.inliers) {
                 segpts.push_back(boost::get<0>(pnl_points[i]));
-                roof_elevations.push_back(
-                    float(boost::get<0>(pnl_points[i]).z()));
+                if (region.inliers.size() > cfg.metrics_plane_min_points * 4 ||
+                    total_pt_cnt <= cfg.metrics_plane_min_points * 4) {
+                  roof_elevations.push_back(
+                      float(boost::get<0>(pnl_points[i]).z()));
+                }
                 boost::get<2>(pnl_points[i]) = shape_id;
                 boost::get<3>(pnl_points[i]) = is_wall;
                 boost::get<9>(pnl_points[i]) = is_horizontal;
               }
-              total_pt_cnt += segpts.size();
               pts_per_roofplane[shape_id].second = segpts;
               pts_per_roofplane[shape_id].first = plane;
 
@@ -486,8 +493,8 @@ namespace roofer {
         if (roof_elevations.size()) {
           roof_elevation_70p = compute_percentile(roof_elevations, 0.7);
           roof_elevation_50p = compute_percentile(roof_elevations, 0.5);
-          roof_elevation_min = compute_percentile(roof_elevations, 0.0);
-          roof_elevation_max = compute_percentile(roof_elevations, 1.0);
+          roof_elevation_min = compute_percentile(roof_elevations, 0.02);
+          roof_elevation_max = compute_percentile(roof_elevations, 0.99);
         }
       }
     };
