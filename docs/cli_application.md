@@ -12,12 +12,13 @@ With the {program}`roofer` CLI application you can:
 
 ## Usage
 ```{code-block} text
-Automatic LoD 2.2 building reconstruction from a pointcloud
+Automatic LoD 2.2 building reconstruction from airborne lidar pointclouds
 
 Usage:
   roofer [options] <pointcloud-path>... <polygon-source> <output-directory>
   roofer [options] (-c | --config) <config-file> [(<pointcloud-path>... <polygon-source>)] <output-directory>
   roofer -h | --help
+  roofer -a | --attributes
   roofer -v | --version
 ```
 
