@@ -3,6 +3,9 @@
 ```{option} -h, --help  (default: false)
 Show help message
 ```
+```{option} -a, --attributes  (default: false)
+List output attributes
+```
 ```{option} -v, --version  (default: false)
 Show version
 ```
@@ -30,7 +33,7 @@ Input attribute (boolean) to force individual buildings to always be reconstruct
 Input attribute (integer) containing the building's year of construction. Only relevant when multiple pointclouds are provided.
 ```
 ```{option} --h-terrain-attribute <string> (default: <no value>)
-Input attribute (float) that contains (fallback) terrain height for building. It is used in case no terrain height can be derived from the pointcloud. See also --h-terrain-strategy
+Input attribute (float) with fallback terrain elevation for each building. Used in case no terrain elevation can be derived from the pointcloud. See also --h-terrain-strategy
 ```
 ```{option} --h-roof-attribute <string> (default: <no value>)
 Input attribute (float) containing fallback roof height for buildings in case no roof height can be derived from the pointcloud.
@@ -109,7 +112,7 @@ Set to true to activate the procedure that clips parts from the input roofprint 
 Step height in meters, used for LoD 1.3 generalisation.Adjacent roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 geometry.
 ```
 ```{option} --plane-detect-k <int> (default: 15)
-plane detect k
+Number of points used in nearest neighbour queries for plane detection. Higher values will lead to longer processing times, but may help with growing plane regions through areas with a poor point distribution.
 ```
 ```{option} --plane-detect-min-points <int> (default: 15)
 Minimum number of points required for detecting a plane in the pointcloud.
@@ -118,7 +121,7 @@ Minimum number of points required for detecting a plane in the pointcloud.
 Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.
 ```
 ```{option} --h-terrain-strategy (buffer_tile|buffer_user|user) (default: buffer_tile)
-Strategy to determine terrain elevationthat is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: same as `buffer_tile`, but with now with a fallback to the elevation provided via `--h-terrain-attribute`. `user`: always use the elevation provided via `--h-terrain-attribute`.
+Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: same as `buffer_tile`, but with now with a fallback to the elevation provided via `--h-terrain-attribute`. `user`: always use the elevation provided via `--h-terrain-attribute`.
 ```
 ```{option} --lod11-fallback-planes <int> (default: 900)
 Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.
@@ -147,5 +150,5 @@ Scaling applied to CityJSON output vertices
 Translation applied to CityJSON output vertices. Uses dataset center by default.
 ```
 ```{option} --attribute-rename key=value[,...] (default: azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)
-Rename output attributes. If no value is provided, the attribute will not be written.
+Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.
 ```

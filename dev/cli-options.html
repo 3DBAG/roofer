@@ -263,6 +263,12 @@
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-a">
+<span id="cmdoption-attributes"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--attributes</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-a" title="Link to this definition">¶</a></dt>
+<dd><p>List output attributes</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-v">
 <span id="cmdoption-version"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-v" title="Link to this definition">¶</a></dt>
 <dd><p>Show version</p>
@@ -316,7 +322,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-attribute">
 <span class="sig-name descname"><span class="pre">--h-terrain-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-h-terrain-attribute" title="Link to this definition">¶</a></dt>
-<dd><p>Input attribute (float) that contains (fallback) terrain height for building. It is used in case no terrain height can be derived from the pointcloud. See also –h-terrain-strategy</p>
+<dd><p>Input attribute (float) with fallback terrain elevation for each building. Used in case no terrain elevation can be derived from the pointcloud. See also –h-terrain-strategy</p>
 </dd></dl>
 
 <dl class="std option">
@@ -472,7 +478,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-k">
 <span class="sig-name descname"><span class="pre">--plane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-k" title="Link to this definition">¶</a></dt>
-<dd><p>plane detect k</p>
+<dd><p>Number of points used in nearest neighbour queries for plane detection. Higher values will lead to longer processing times, but may help with growing plane regions through areas with a poor point distribution.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -490,7 +496,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
 <span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
-<dd><p>Strategy to determine terrain elevationthat is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: same as <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>, but with now with a fallback to the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>. <code class="docutils literal notranslate"><span class="pre">user</span></code>: always use the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>.</p>
+<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: same as <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>, but with now with a fallback to the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>. <code class="docutils literal notranslate"><span class="pre">user</span></code>: always use the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -547,7 +553,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-attribute-rename">
 <span class="sig-name descname"><span class="pre">--attribute-rename</span></span><span class="sig-prename descclassname"> <span class="pre">key=value[,...]</span> <span class="pre">(default:</span> <span class="pre">azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-attribute-rename" title="Link to this definition">¶</a></dt>
-<dd><p>Rename output attributes. If no value is provided, the attribute will not be written.</p>
+<dd><p>Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with <code class="docutils literal notranslate"><span class="pre">--attributes</span></code>. By default attribute names are prefixed with <code class="docutils literal notranslate"><span class="pre">rf_</span></code>.</p>
 </dd></dl>
 
 </section>
