@@ -27,3 +27,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - switch from pip to uv for managing python dependencies
 - Tiling is disabled by default
 - Some boolean options have changed in default value
+- Switched documentation website from RST to markdown
