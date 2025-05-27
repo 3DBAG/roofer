@@ -204,7 +204,7 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Input data requirements</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
@@ -818,8 +818,13 @@ Usage:
 </section>
 <section id="example-config-file">
 <h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
-<p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Noticed that many of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[Input]</span>
+<p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Noticed that these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1">## Path to roofprint polygons source. Can be an OGR supported file (eg. GPKG) or database connection string.</span>
+<span class="c1"># polygon-source = &quot;&quot;</span>
+<span class="c1">## Output directory. The building models will be written to a CityJSONSequence file in this directory.</span>
+<span class="c1"># output-directory = &quot;&quot;</span>
+
+<span class="c1">### Input options</span>
 <span class="c1">## Building ID attribute to be used as identifier in CityJSONSeq output.</span>
 <span class="c1"># id-attribute = </span>
 <span class="c1">## Input attribute (boolean) to force individual buildings to always be reconstructed using simple extrusion (LoD 1.1).</span>
@@ -845,7 +850,7 @@ Usage:
 <span class="c1">## Disable/enable check if all supplied pointcloud files exist.</span>
 <span class="n">skip-pc-check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
-<span class="k">[Crop]</span>
+<span class="c1">### Crop options</span>
 <span class="c1">## Enforce this point density ceiling on each building pointcloud.</span>
 <span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
 <span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</span>
@@ -867,7 +872,7 @@ Usage:
 <span class="c1">## Output index.gpkg file with quick pointcloud analystics from crop phase.</span>
 <span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
-<span class="k">[Reconstruction]</span>
+<span class="c1">### Reconstruction options</span>
 <span class="c1">## Generate LoD 1.2 geometries in CityJSONSeq output.</span>
 <span class="n">lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1">## Generate LoD 1.3 geometries in CityJSONSeq output.</span>
@@ -893,7 +898,7 @@ Usage:
 <span class="c1">## Time for LOD 1.1 fallback in milliseconds. When more than this time is spent on expensive parts of the reconstruction algorithm, abort and fallback to LoD 1.1 extrusion.</span>
 <span class="n">lod11-fallback-time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1800000</span>
 
-<span class="k">[Output]</span>
+<span class="c1">### Output options</span>
 <span class="c1">## Enable or disable output tiling.</span>
 <span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1">## Tilesize for rectangular output tiles in meters.</span>
@@ -907,7 +912,8 @@ Usage:
 <span class="c1">## Translation applied to CityJSON output vertices. Uses dataset center by default.</span>
 <span class="c1"># cj-translate = [100000, 200000, 0]</span>
 <span class="c1">## Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.</span>
-<span class="k">[Output.attribute-rename]</span>
+
+<span class="k">[output-attributes]</span>
 <span class="c1">## The azimuth of a roofpart in degrees</span>
 <span class="n">azimuth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_azimuth&quot;</span>
 <span class="c1">## Indicates what extrusion mode was used for the building. `standard`: the regular LoD 1.2, 1.3 or 2.2 extrusion. `lod11_fallback`: all geometry was substituted with an LoD 1.1 extrusion. `skip`: no 3D geometry was generated</span>

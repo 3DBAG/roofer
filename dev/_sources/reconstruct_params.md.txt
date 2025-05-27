@@ -1,4 +1,4 @@
-# Reconstruction algorithm and parameters
+# Reconstruction algorithm
 
 ## Assumptions
 The following assumptions are made in the reconstruction algorithm:
@@ -30,13 +30,13 @@ The roofer building reconstruction algorithm consists of the following steps:
       {math}`\lambda` is the complexity factor.
 6. **Extrusion**: The final roof-partition is extruded to a 3D building model with the help of the assigned plane labels.
 
+The roofer building reconstruction algorithm is largely data-driven, so the quality of the result depends on the quality of the input data.
 
-The roofer building reconstruction algorithm is largely data-driven, so the quality of the result depends on the quality of the input data. The following parameters can be tuned to optimise the performance for a given point cloud.
-
-### Parameters
+<!-- ### Parameters
+The following parameters can be tuned to optimise the performance for a given point cloud.
 
 ```{doxygenstruct} roofer::ReconstructionConfig
 :project: Roofer
 :members:
 :members-only:
-```
+``` -->
