@@ -34,7 +34,7 @@ endif()
 # endif()
 
 # TODO: add version number
-project(roofer LANGUAGES C CXX)
+project(roofer VERSION 1.0.0 LANGUAGES C CXX)
 
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang

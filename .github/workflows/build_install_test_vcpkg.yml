@@ -3,6 +3,9 @@
 name: Build and Test (vcpkg)
 
 on:
+  # push to main branch
+  push:
+    branches: ["main"]
   pull_request:
     branches: ["develop"]
 

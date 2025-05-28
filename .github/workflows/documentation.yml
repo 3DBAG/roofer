@@ -4,9 +4,9 @@ on:
   push:
     # tags:
     # - "*"
-    # branches: [ "develop" ]
-    pull_request:
-      branches: ["develop"]
+    branches: [ "main" ]
+    # pull_request:
+    #   branches: ["develop"]
 
 jobs:
   deploy:
@@ -91,5 +91,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ${{ github.workspace }}/docs/_build/html
-          destination_dir: dev
+          # destination_dir: dev
           publish_branch: gh-pages
