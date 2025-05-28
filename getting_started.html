@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Reconstruction algorithm and parameters" href="reconstruct_params.html" /><link rel="prev" title="roofer - automatic building reconstruction from pointclouds" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Reconstruction algorithm" href="reconstruct_params.html" /><link rel="prev" title="roofer - automatic building reconstruction from pointclouds" href="index.html" />
 
-    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
         <title>Getting started - roofer documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -204,11 +204,12 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Input data requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="related_software.html">Related software</a></li>
 </ul>
 
 </div>
@@ -229,12 +230,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/getting_started.rst?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/getting_started.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/getting_started.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/getting_started.md" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -255,10 +256,27 @@
         <article role="main" id="furo-main-content">
           <section id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
+<section id="using-the-precompiled-binaries">
+<h2>Using the precompiled binaries<a class="headerlink" href="#using-the-precompiled-binaries" title="Link to this heading">¶</a></h2>
 <p>At this moment we do not yet provide separate pre-compiled binaries for roofer. To get started with roofer you need to either compile it from the sourcecode yourself or you can use the automatically built <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a>. Once roofer version 1.0 will be released, we expect to provide pre-compiled binaries for the most common platforms.</p>
-<section id="compilation-from-source">
-<h2>Compilation from source<a class="headerlink" href="#compilation-from-source" title="Link to this heading">¶</a></h2>
-<p>To ease getting the required dependencies it is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
+</section>
+<section id="compilation-from-source-developers">
+<h2>Compilation from source (developers)<a class="headerlink" href="#compilation-from-source-developers" title="Link to this heading">¶</a></h2>
+<p>The easiest way to get all the required dependencies to build roofer is to use <a class="reference external" href="https://nixos.org">Nix</a>. To install nix you can use the <a class="reference external" href="https://zero-to-nix.com/start/install/#run">install script from Determinate Systems</a>. At this moment Nix only works on Linux and macOS.</p>
+<p>Once Nix is installed you can setup the development environment and build roofer like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="mi">3</span><span class="n">DBAG</span><span class="o">/</span><span class="n">roofer</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">roofer</span>
+<span class="n">nix</span> <span class="n">develop</span>
+<span class="n">mkdir</span> <span class="n">build</span>
+<span class="n">cmake</span> <span class="o">--</span><span class="n">preset</span> <span class="n">vcpkg</span><span class="o">-</span><span class="n">minimal</span> <span class="o">-</span><span class="n">S</span> <span class="o">.</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
+<span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span>
+<span class="c1"># Optionally, install roofer</span>
+<span class="n">cmake</span> <span class="o">--</span><span class="n">install</span> <span class="n">build</span>
+</pre></div>
+</div>
+<section id="compilation-without-nix">
+<h3>Compilation without Nix<a class="headerlink" href="#compilation-without-nix" title="Link to this heading">¶</a></h3>
+<p>It is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
 <p>Follow the <a class="reference external" href="https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd">vcpkg instructions</a> to set it up.</p>
 <p>After <em>vcpkg</em> is set up, set the <code class="docutils literal notranslate"><span class="pre">VCPKG_ROOT</span></code> environment variable to point to the directory where vcpkg is installed.</p>
 <p>On <em>macOS</em> you need to install additional build tools:</p>
@@ -282,6 +300,7 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
 </div>
 </section>
 </section>
+</section>
 
         </article>
       </div>
@@ -293,7 +312,7 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Reconstruction algorithm and parameters</div>
+                <div class="title">Reconstruction algorithm</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -346,7 +365,11 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Getting started</a><ul>
-<li><a class="reference internal" href="#compilation-from-source">Compilation from source</a></li>
+<li><a class="reference internal" href="#using-the-precompiled-binaries">Using the precompiled binaries</a></li>
+<li><a class="reference internal" href="#compilation-from-source-developers">Compilation from source (developers)</a><ul>
+<li><a class="reference internal" href="#compilation-without-nix">Compilation without Nix</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -359,7 +382,7 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
     </body>

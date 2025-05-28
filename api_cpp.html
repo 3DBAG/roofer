@@ -5,9 +5,9 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference Python" href="api_py.html" /><link rel="prev" title="Roofer CLI App" href="cli_application.html" />
 
-    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
         <title>API Reference C++ - roofer documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -204,11 +204,12 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Input data requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="related_software.html">Related software</a></li>
 </ul>
 
 </div>
@@ -229,12 +230,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/api_cpp.rst?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/api_cpp.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/api_cpp.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/api_cpp.md" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -255,10 +256,10 @@
         <article role="main" id="furo-main-content">
           <section id="api-reference-c">
 <h1>API Reference C++<a class="headerlink" href="#api-reference-c" title="Link to this heading">¶</a></h1>
-<p>The roofer C++ API allows you to use the roofer as a C++ library. Most notably it provides a <cite>reconstruct()</cite> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
+<p>The roofer C++ API allows you to use the roofer as a C++ library. Most notably it provides a <code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <cite>reconstruct()</cite> to prevent loss of precision.</p>
+<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code> to prevent loss of precision.</p>
 </div>
 <p>See <a class="reference external" href="https://github.com/3DBAG/roofer/blob/develop/tests/test_reconstruct_api.cpp">this file</a> for a short example of how to use the C++ bindings.</p>
 <dl class="cpp type">
@@ -328,7 +329,7 @@
 <dt class="sig sig-object cpp" id="_CPPv4N6roofer20ReconstructionConfigE">
 <span id="_CPPv3N6roofer20ReconstructionConfigE"></span><span id="_CPPv2N6roofer20ReconstructionConfigE"></span><span id="roofer::ReconstructionConfig"></span><span class="target" id="structroofer_1_1ReconstructionConfig"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ReconstructionConfig</span></span></span><a class="headerlink" href="#_CPPv4N6roofer20ReconstructionConfigE" title="Link to this definition">¶</a><br /></dt>
 <dd><div class="docutils container">
-<em>#include &lt;ReconstructionConfig.hpp&gt;</em></div>
+<em>#include &lt;roofer.h&gt;</em></div>
 <p>Configuration parameters for the roofer building reconstruction algorithm. </p>
 <p>Coordinate units are assumed to be in meters. </p>
 <div class="breathe-sectiondef docutils container">
@@ -437,6 +438,11 @@
 
 </dd></dl>
 
+<!-- .. .. doxygenfunction:: triangulate_mesh
+
+.. .. doxygenstruct:: roofer::ReconstructionConfig
+..    :members:
+..    :undoc-members: -->
 </section>
 
         </article>
@@ -503,24 +509,24 @@
             <ul>
 <li><a class="reference internal" href="#">API Reference C++</a><ul>
 <li><a class="reference internal" href="#_CPPv46roofer"><code class="docutils literal notranslate"><span class="pre">roofer</span></code></a><ul>
-<li><a class="reference internal" href="#_CPPv4I0EN6roofer11reconstructENSt6vectorI4MeshEERK15PointCollectionRK15PointCollectionR9Footprint20ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">roofer::reconstruct()</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4I0EN6roofer11reconstructENSt6vectorI4MeshEERK15PointCollectionR9Footprint20ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">roofer::reconstruct()</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer16triangulate_meshERK4Mesh"><code class="docutils literal notranslate"><span class="pre">roofer::triangulate_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN6roofer11reconstructENSt6vectorI4MeshEERK15PointCollectionRK15PointCollectionR9Footprint20ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN6roofer11reconstructENSt6vectorI4MeshEERK15PointCollectionR9Footprint20ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer16triangulate_meshERK4Mesh"><code class="docutils literal notranslate"><span class="pre">triangulate_mesh()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfigE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig</span></code></a><ul>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig17complexity_factorE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::complexity_factor</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig11clip_groundE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::clip_ground</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig3lodE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::lod</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig17lod13_step_heightE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::lod13_step_height</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig15floor_elevationE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::floor_elevation</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig29override_with_floor_elevationE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::override_with_floor_elevation</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig14plane_detect_kE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_k</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig23plane_detect_min_pointsE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_min_points</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig20plane_detect_epsilonE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_epsilon</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig25plane_detect_normal_angleE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::plane_detect_normal_angle</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig19line_detect_epsilonE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::line_detect_epsilon</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig11thres_alphaE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::thres_alpha</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig19thres_reg_line_distE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::thres_reg_line_dist</span></code></a></li>
-<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig18thres_reg_line_extE"><code class="docutils literal notranslate"><span class="pre">roofer::ReconstructionConfig::thres_reg_line_ext</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig17complexity_factorE"><code class="docutils literal notranslate"><span class="pre">complexity_factor</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig11clip_groundE"><code class="docutils literal notranslate"><span class="pre">clip_ground</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig3lodE"><code class="docutils literal notranslate"><span class="pre">lod</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig17lod13_step_heightE"><code class="docutils literal notranslate"><span class="pre">lod13_step_height</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig15floor_elevationE"><code class="docutils literal notranslate"><span class="pre">floor_elevation</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig29override_with_floor_elevationE"><code class="docutils literal notranslate"><span class="pre">override_with_floor_elevation</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig14plane_detect_kE"><code class="docutils literal notranslate"><span class="pre">plane_detect_k</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig23plane_detect_min_pointsE"><code class="docutils literal notranslate"><span class="pre">plane_detect_min_points</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig20plane_detect_epsilonE"><code class="docutils literal notranslate"><span class="pre">plane_detect_epsilon</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig25plane_detect_normal_angleE"><code class="docutils literal notranslate"><span class="pre">plane_detect_normal_angle</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig19line_detect_epsilonE"><code class="docutils literal notranslate"><span class="pre">line_detect_epsilon</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig11thres_alphaE"><code class="docutils literal notranslate"><span class="pre">thres_alpha</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig19thres_reg_line_distE"><code class="docutils literal notranslate"><span class="pre">thres_reg_line_dist</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N6roofer20ReconstructionConfig18thres_reg_line_extE"><code class="docutils literal notranslate"><span class="pre">thres_reg_line_ext</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -537,7 +543,7 @@
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
     </body>

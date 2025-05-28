@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="API Reference C++" href="api_cpp.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Related software" href="related_software.html" /><link rel="prev" title="API Reference C++" href="api_cpp.html" />
 
-    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
         <title>API Reference Python - roofer documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -204,11 +204,12 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm and parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Requirements on the input data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Input data requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API Reference Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="related_software.html">Related software</a></li>
 </ul>
 
 </div>
@@ -229,12 +230,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/api_py.rst?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/api_py.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/api_py.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/api_py.md" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -255,28 +256,28 @@
         <article role="main" id="furo-main-content">
           <section id="api-reference-python">
 <h1>API Reference Python<a class="headerlink" href="#api-reference-python" title="Link to this heading">¶</a></h1>
-<p>The roofer python API allows you to use the roofer library from Python. Most notably it provides a <cite>reconstruct()</cite> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
+<p>The roofer python API allows you to use the roofer library from Python. Most notably it provides a <code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code> function that takes a pointcloud and a roofprint polygon for a single building object and returns a reconstructed building model mesh.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <cite>reconstruct()</cite> to prevent loss of precision.</p>
+<p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code> to prevent loss of precision.</p>
 </div>
 <p>See <a class="reference external" href="https://github.com/3DBAG/roofer/blob/develop/rooferpy/example_rooferpy.py">this script</a> for a simple example of how to use the Python bindings.</p>
 <dl class="py class" id="module-roofer">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">ReconstructionConfig</span></span><a class="headerlink" href="#roofer.ReconstructionConfig" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">ReconstructionConfig</span></span><a class="headerlink" href="#roofer.ReconstructionConfig" title="Link to this definition">¶</a></dt>
 <dd><dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.clip_ground">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clip_ground</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.clip_ground" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clip_ground</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.clip_ground" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.complexity_factor">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">complexity_factor</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.complexity_factor" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">complexity_factor</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.complexity_factor" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.floor_elevation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">floor_elevation</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.floor_elevation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">floor_elevation</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.floor_elevation" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -286,17 +287,17 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.lod">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lod</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.lod" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lod</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.lod" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.lod13_step_height">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lod13_step_height</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.lod13_step_height" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lod13_step_height</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.lod13_step_height" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig.override_with_floor_elevation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">override_with_floor_elevation</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.override_with_floor_elevation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">override_with_floor_elevation</span></span><a class="headerlink" href="#roofer.ReconstructionConfig.override_with_floor_elevation" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -306,11 +307,11 @@
 <span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roofer.reconstruct" title="Link to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
-<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], points_ground: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7fa857b67470&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
+<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], points_ground: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7fda86c13830&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
 </ol>
 <p>Reconstruct a single instance of a building from a point cloud with ground points</p>
 <ol class="arabic simple" start="2">
-<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7fa857b675f0&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
+<li><p>reconstruct(points_roof: list[Annotated[list[float], FixedSize(3)]], footprint: list[list[Annotated[list[float], FixedSize(3)]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7fda86efbb70&gt;) -&gt; list[list[list[list[Annotated[list[float], FixedSize(3)]]]]]</p></li>
 </ol>
 <p>Reconstruct a single instance of a building from a point cloud without ground points</p>
 </dd></dl>
@@ -328,7 +329,15 @@
       <footer>
         
         <div class="related-pages">
-          
+          <a class="next-page" href="related_software.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Related software</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
           <a class="prev-page" href="api_cpp.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -402,7 +411,7 @@
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
     </body>
