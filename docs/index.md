@@ -8,6 +8,7 @@ getting_started
 reconstruct_params
 data_requirements
 cli_application
+developers
 api_cpp
 api_py
 related_software
