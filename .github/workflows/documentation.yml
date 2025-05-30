@@ -2,9 +2,10 @@ name: Documentation
 
 on:
   push:
-    # tags:
-    # - "*"
-    branches: [ "main" ]
+    tags:
+      - "*"
+    branches:
+      - 'main'
     # pull_request:
     #   branches: ["develop"]
 

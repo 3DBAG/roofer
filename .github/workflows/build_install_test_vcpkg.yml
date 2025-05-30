@@ -8,7 +8,12 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["develop"]
-
+  # push:
+  #   branches:
+  #     - 'main'
+  push:
+    tags:
+      - "*"
   workflow_dispatch:
 
 jobs:
