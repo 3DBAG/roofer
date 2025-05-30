@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Input data requirements" href="data_requirements.html" /><link rel="prev" title="Getting started" href="getting_started.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference C++" href="api_cpp.html" /><link rel="prev" title="Roofer CLI App" href="cli_application.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>Reconstruction algorithm - roofer documentation</title>
+        <title>Building from source - roofer documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -204,10 +204,10 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Reconstruction algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reconstruct_params.html">Reconstruction algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Input data requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_application.html">Roofer CLI App</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developers.html">Building from source</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Building from source</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_cpp.html">API Reference C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_py.html">API Reference Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="related_software.html">Related software</a></li>
@@ -231,12 +231,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/reconstruct_params.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/blob/develop/docs/developers.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/reconstruct_params.md" title="Edit this page">
+  <a class="muted-link" href="https://github.com/3DBAG/roofer/edit/develop/docs/developers.md" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -255,48 +255,47 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="reconstruction-algorithm">
-<h1>Reconstruction algorithm<a class="headerlink" href="#reconstruction-algorithm" title="Link to this heading">¶</a></h1>
-<section id="assumptions">
-<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">¶</a></h2>
-<p>The following assumptions are made in the reconstruction algorithm:</p>
-<ul class="simple">
-<li><p>Roof shapes are approximated with planar faces extracted from a point cloud – in other words, they are <strong>piecewise planar</strong>,</p></li>
-<li><p>Building models are <strong>2.5D</strong> with vertical walls. This simplifies the problem and results in a fast algorithm and makes sense for Airborne lidar scans; however, this also means that features like roof overhangs and balconies cannot be modelled.</p></li>
-<li><p>Point clouds and footprints are properly aligned. Not only must the input data be in the same coordinate reference system (CRS), but also the positional error (horizontal shift) is assumed to be minimal.</p></li>
-<li><p>Point clouds should be free of outliers and classified with at least buildings and terrain classes. In case the building points contain vegetation and other off-ground artefacts it might interfere with the reconstruction. For more information on the requirements of the input data, see <a class="reference internal" href="data_requirements.html"><span class="doc">Input data requirements</span></a>.</p></li>
-</ul>
-</section>
-<section id="algorithm-overview">
-<h2>Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Link to this heading">¶</a></h2>
-<a class="reference internal image-reference" href="_images/algo-steps.png"><img alt="The roofer reconstruction algorithm" class="align-center" src="_images/algo-steps.png" style="width: 600px;" />
-</a>
-<p>The roofer building reconstruction algorithm consists of the following steps:</p>
-<ol class="arabic">
-<li><p><strong>Plane detection</strong>: Roofplanes are detected in the point cloud using a region growing algorithm. Planes are used to approximate the roof shape.</p></li>
-<li><p><strong>Line detection</strong>: Rooflines are detected by intersecting the roofplanes and by fitting lines to the edges of the plane segments. The edges of the planes are detected using <span class="math notranslate nohighlight">\(\alpha\)</span>-shapes.</p></li>
-<li><p><strong>Line clustering and regularisation</strong>: The detected lines are clustered by their orientation and distance to eachother. For each cluster one represenative line is selected.</p></li>
-<li><p><strong>Initial roof-partition</strong>: The regularised rooflines are used to partition the roofprint polygon into faces. This results in a 2D arrangement that we call the roof-partition.</p></li>
-<li><p><strong>Graph-cut optimisation</strong>: The roof-partition is optimised using a graph-cut algorithm. The algorithm minimises the energy function that balances the data term <span class="math notranslate nohighlight">\(D_p\left(f_p\right)\)</span> and the smoothness term <span class="math notranslate nohighlight">\(S_{p, q}\left(f_p, f_q\right)\)</span>:</p>
-<div class="math-wrapper docutils container">
-<div class="math notranslate nohighlight">
-\[\begin{split}   E(f) &amp;= \lambda \sum_{p \in P} D_p\left (f_p\right) \\
-      &amp;+ \left( 1 - \lambda \right) \sum_{\{p, q\} \in N} S_{p, q}\left(f_p, f_q\right)\end{split}\]</div>
+          <section id="building-from-source">
+<h1>Building from source<a class="headerlink" href="#building-from-source" title="Link to this heading">¶</a></h1>
+<section id="compilation-with-nix">
+<h2>Compilation with Nix<a class="headerlink" href="#compilation-with-nix" title="Link to this heading">¶</a></h2>
+<p>The easiest way to get all the required dependencies to build roofer is to use <a class="reference external" href="https://nixos.org">Nix</a>. To install nix you can use the <a class="reference external" href="https://zero-to-nix.com/start/install/#run">install script from Determinate Systems</a>. At this moment Nix only works on Linux and macOS.</p>
+<p>Once Nix is installed you can setup the development environment and build roofer like this:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3DBAG/roofer.git
+<span class="nb">cd</span><span class="w"> </span>roofer
+nix<span class="w"> </span>develop
+mkdir<span class="w"> </span>build
+cmake<span class="w"> </span>--preset<span class="w"> </span>vcpkg-minimal<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+<span class="c1"># Optionally, install roofer</span>
+cmake<span class="w"> </span>--install<span class="w"> </span>build
+</pre></div>
 </div>
-<p>During this optimisation step each face <span class="math notranslate nohighlight">\(p\)</span> is assigned one of the detected roofplanes <span class="math notranslate nohighlight">\(f_p\)</span>. When to adjacent faces get assigned the same roofplane, the shared edge is removed. The result is the final roof-partition.
-<span class="math notranslate nohighlight">\(\lambda\)</span> is the complexity factor.</p>
-</li>
-<li><p><strong>Extrusion</strong>: The final roof-partition is extruded to a 3D building model with the help of the assigned plane labels.</p></li>
-</ol>
-<p>The roofer building reconstruction algorithm is largely data-driven, so the quality of the result depends on the quality of the input data.</p>
-<!-- ### Parameters
-The following parameters can be tuned to optimise the performance for a given point cloud.
-
-```{doxygenstruct} roofer::ReconstructionConfig
-:project: Roofer
-:members:
-:members-only:
-``` -->
+</section>
+<section id="compilation-without-nix">
+<h2>Compilation without Nix<a class="headerlink" href="#compilation-without-nix" title="Link to this heading">¶</a></h2>
+<p>It is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
+<p>Follow the <a class="reference external" href="https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd">vcpkg instructions</a> to set it up.</p>
+<p>After <em>vcpkg</em> is set up, set the <code class="docutils literal notranslate"><span class="pre">VCPKG_ROOT</span></code> environment variable to point to the directory where vcpkg is installed.</p>
+<p>On <em>macOS</em> you need to install additional build tools:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>autoconf<span class="w"> </span>autoconf-archive<span class="w"> </span>automake<span class="w"> </span>libtool
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/homebrew/opt/m4/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>On <em>Ubuntu</em> you need to install additional build tools:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>apt<span class="w"> </span>install<span class="w"> </span>autoconf<span class="w"> </span>bison<span class="w"> </span>flex<span class="w"> </span>libtool
+</pre></div>
+</div>
+<p>Clone the roofer repository and use one of the CMake presets to build the roofer.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3DBAG/roofer.git
+<span class="nb">cd</span><span class="w"> </span>roofer
+mkdir<span class="w"> </span>build
+cmake<span class="w"> </span>--preset<span class="w"> </span>vcpkg-minimal<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+<span class="c1"># Optionally, install roofer</span>
+cmake<span class="w"> </span>--install<span class="w"> </span>build
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -305,23 +304,23 @@ The following parameters can be tuned to optimise the performance for a given po
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="data_requirements.html">
+          <a class="next-page" href="api_cpp.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Input data requirements</div>
+                <div class="title">API Reference C++</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="getting_started.html">
+          <a class="prev-page" href="cli_application.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Getting started</div>
+                <div class="title">Roofer CLI App</div>
                 
               </div>
             </a>
@@ -362,9 +361,9 @@ The following parameters can be tuned to optimise the performance for a given po
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Reconstruction algorithm</a><ul>
-<li><a class="reference internal" href="#assumptions">Assumptions</a></li>
-<li><a class="reference internal" href="#algorithm-overview">Algorithm overview</a></li>
+<li><a class="reference internal" href="#">Building from source</a><ul>
+<li><a class="reference internal" href="#compilation-with-nix">Compilation with Nix</a></li>
+<li><a class="reference internal" href="#compilation-without-nix">Compilation without Nix</a></li>
 </ul>
 </li>
 </ul>
@@ -380,6 +379,5 @@ The following parameters can be tuned to optimise the performance for a given po
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>
