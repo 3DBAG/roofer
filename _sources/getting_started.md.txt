@@ -1,55 +1,41 @@
 # Getting started
 
-## Using the precompiled binaries
+## Installation
 
-At this moment we do not yet provide separate pre-compiled binaries for roofer. To get started with roofer you need to either compile it from the sourcecode yourself or you can use the automatically built [Docker image](https://hub.docker.com/r/3dgi/roofer/tags). Once roofer version 1.0 will be released, we expect to provide pre-compiled binaries for the most common platforms.
+The easiest way to get roofer is to download the latest binary as available via [GitHub](https://github.com/3DBAG/roofer/releases/latest). Alternatively you can use the [Docker image](https://hub.docker.com/r/3dgi/roofer/tags) or you can [built roofer from source](#developers).
 
-## Compilation from source (developers)
+## Running roofer
+To test if roofer is correctly installed you can try to run it with our small [test dataset](https://data.3dbag.nl/testdata/roofer/wippolder.zip). To download this data you can do:
 
-The easiest way to get all the required dependencies to build roofer is to use [Nix](https://nixos.org). To install nix you can use the [install script from Determinate Systems](https://zero-to-nix.com/start/install/#run). At this moment Nix only works on Linux and macOS.
-
-Once Nix is installed you can setup the development environment and build roofer like this:
-
-```
-git clone https://github.com/3DBAG/roofer.git
-cd roofer
-nix develop
-mkdir build
-cmake --preset vcpkg-minimal -S . -B build
-cmake --build build
-# Optionally, install roofer
-cmake --install build
+```bash
+curl -LO https://data.3dbag.nl/testdata/roofer/wippolder.zip
+unzip wippolder.zip
 ```
 
-### Compilation without Nix
+Then, assuming you have installed roofer, you can run with the test dataset as follows:
 
-It is recommended to use [vcpkg](https://vcpkg.io) to build **roofer**.
-
-Follow the [vcpkg instructions](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd) to set it up.
-
-After *vcpkg* is set up, set the ``VCPKG_ROOT`` environment variable to point to the directory where vcpkg is installed.
-
-On *macOS* you need to install additional build tools:
-
-```{code-block} shell
-brew install autoconf autoconf-archive automake libtool
-export PATH="/opt/homebrew/opt/m4/bin:$PATH"
+```bash
+roofer wippolder/wippolder.las wippolder/wippolder.gpkg output
 ```
 
-On *Ubuntu* you need to install additional build tools:
+This should give an output like:
 
-```{code-block} shell
-apt install autoconf bison flex libtool
+```bash
+[2025-05-28 10:53:32.420651]    INFO    Region of interest: 85289.898 447042.018, 85466.683 447163.476
+[2025-05-28 10:53:32.420827]    INFO    Number of source footprints: 60
+[2025-05-28 10:53:32.421427]    INFO    Using 5 threads for the reconstructor pool, 10 threads in total (system offers 10)
+[2025-05-28 10:53:32.421755]    INFO    [serializer] Writing output to output
+[2025-05-28 10:53:32.424692]    INFO    Simplifying and buffering footprints...
+[2025-05-28 10:53:32.428223]    INFO    Cropping pointcloud ...
+[2025-05-28 10:53:32.551549]    INFO    Analysing pointcloud ...
 ```
 
-Clone the roofer repository and use one of the CMake presets to build the roofer.
+And an output file `085289_447042.city.jsonl` should have been produced in the `output` folder. This is a [CityJSONSeq](https://www.cityjson.org/cityjsonseq/) file. You can convert it to a regular CityJSON file using [cjseq](https://github.com/cityjson/cjseq), eg:
 
-```{code-block} shell
-git clone https://github.com/3DBAG/roofer.git
-cd roofer
-mkdir build
-cmake --preset vcpkg-minimal -S . -B build
-cmake --build build
-# Optionally, install roofer
-cmake --install build
+```bash
+cat output/085289_447042.city.jsonl.city.jsonl | cjseq collect > output/085289_447042.city.json
 ```
+
+The resulting CityJSON file you can inspect in ninja or another [CityJSON compatible software](https://www.cityjson.org/software/).
+
+To learn more about roofer's various configuration check out the [roofer CLI documentation](#cli_application).

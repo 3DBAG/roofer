@@ -256,49 +256,37 @@
         <article role="main" id="furo-main-content">
           <section id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
-<section id="using-the-precompiled-binaries">
-<h2>Using the precompiled binaries<a class="headerlink" href="#using-the-precompiled-binaries" title="Link to this heading">¶</a></h2>
-<p>At this moment we do not yet provide separate pre-compiled binaries for roofer. To get started with roofer you need to either compile it from the sourcecode yourself or you can use the automatically built <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a>. Once roofer version 1.0 will be released, we expect to provide pre-compiled binaries for the most common platforms.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p>The easiest way to get roofer is to download the latest binary as available via <a class="reference external" href="https://github.com/3DBAG/roofer/releases/latest">GitHub</a>. Alternatively you can use the <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a> or you can <a class="reference internal" href="#developers"><span class="xref myst">built roofer from source</span></a>.</p>
 </section>
-<section id="compilation-from-source-developers">
-<h2>Compilation from source (developers)<a class="headerlink" href="#compilation-from-source-developers" title="Link to this heading">¶</a></h2>
-<p>The easiest way to get all the required dependencies to build roofer is to use <a class="reference external" href="https://nixos.org">Nix</a>. To install nix you can use the <a class="reference external" href="https://zero-to-nix.com/start/install/#run">install script from Determinate Systems</a>. At this moment Nix only works on Linux and macOS.</p>
-<p>Once Nix is installed you can setup the development environment and build roofer like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="mi">3</span><span class="n">DBAG</span><span class="o">/</span><span class="n">roofer</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">roofer</span>
-<span class="n">nix</span> <span class="n">develop</span>
-<span class="n">mkdir</span> <span class="n">build</span>
-<span class="n">cmake</span> <span class="o">--</span><span class="n">preset</span> <span class="n">vcpkg</span><span class="o">-</span><span class="n">minimal</span> <span class="o">-</span><span class="n">S</span> <span class="o">.</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
-<span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span>
-<span class="c1"># Optionally, install roofer</span>
-<span class="n">cmake</span> <span class="o">--</span><span class="n">install</span> <span class="n">build</span>
+<section id="running-roofer">
+<h2>Running roofer<a class="headerlink" href="#running-roofer" title="Link to this heading">¶</a></h2>
+<p>To test if roofer is correctly installed you can try to run it with our small <a class="reference external" href="https://data.3dbag.nl/testdata/roofer/wippolder.zip">test dataset</a>. To download this data you can do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LO<span class="w"> </span>https://data.3dbag.nl/testdata/roofer/wippolder.zip
+unzip<span class="w"> </span>wippolder.zip
 </pre></div>
 </div>
-<section id="compilation-without-nix">
-<h3>Compilation without Nix<a class="headerlink" href="#compilation-without-nix" title="Link to this heading">¶</a></h3>
-<p>It is recommended to use <a class="reference external" href="https://vcpkg.io">vcpkg</a> to build <strong>roofer</strong>.</p>
-<p>Follow the <a class="reference external" href="https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd">vcpkg instructions</a> to set it up.</p>
-<p>After <em>vcpkg</em> is set up, set the <code class="docutils literal notranslate"><span class="pre">VCPKG_ROOT</span></code> environment variable to point to the directory where vcpkg is installed.</p>
-<p>On <em>macOS</em> you need to install additional build tools:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>autoconf<span class="w"> </span>autoconf-archive<span class="w"> </span>automake<span class="w"> </span>libtool
-<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/homebrew/opt/m4/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<p>Then, assuming you have installed roofer, you can run with the test dataset as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>roofer<span class="w"> </span>wippolder/wippolder.las<span class="w"> </span>wippolder/wippolder.gpkg<span class="w"> </span>output
 </pre></div>
 </div>
-<p>On <em>Ubuntu</em> you need to install additional build tools:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>apt<span class="w"> </span>install<span class="w"> </span>autoconf<span class="w"> </span>bison<span class="w"> </span>flex<span class="w"> </span>libtool
+<p>This should give an output like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.420651<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Region<span class="w"> </span>of<span class="w"> </span>interest:<span class="w"> </span><span class="m">85289</span>.898<span class="w"> </span><span class="m">447042</span>.018,<span class="w"> </span><span class="m">85466</span>.683<span class="w"> </span><span class="m">447163</span>.476
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.420827<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Number<span class="w"> </span>of<span class="w"> </span><span class="nb">source</span><span class="w"> </span>footprints:<span class="w"> </span><span class="m">60</span>
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.421427<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Using<span class="w"> </span><span class="m">5</span><span class="w"> </span>threads<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>reconstructor<span class="w"> </span>pool,<span class="w"> </span><span class="m">10</span><span class="w"> </span>threads<span class="w"> </span><span class="k">in</span><span class="w"> </span>total<span class="w"> </span><span class="o">(</span>system<span class="w"> </span>offers<span class="w"> </span><span class="m">10</span><span class="o">)</span>
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.421755<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span><span class="o">[</span>serializer<span class="o">]</span><span class="w"> </span>Writing<span class="w"> </span>output<span class="w"> </span>to<span class="w"> </span>output
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.424692<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Simplifying<span class="w"> </span>and<span class="w"> </span>buffering<span class="w"> </span>footprints...
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.428223<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Cropping<span class="w"> </span>pointcloud<span class="w"> </span>...
+<span class="o">[</span><span class="m">2025</span>-05-28<span class="w"> </span><span class="m">10</span>:53:32.551549<span class="o">]</span><span class="w">    </span>INFO<span class="w">    </span>Analysing<span class="w"> </span>pointcloud<span class="w"> </span>...
 </pre></div>
 </div>
-<p>Clone the roofer repository and use one of the CMake presets to build the roofer.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3DBAG/roofer.git
-<span class="nb">cd</span><span class="w"> </span>roofer
-mkdir<span class="w"> </span>build
-cmake<span class="w"> </span>--preset<span class="w"> </span>vcpkg-minimal<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
-cmake<span class="w"> </span>--build<span class="w"> </span>build
-<span class="c1"># Optionally, install roofer</span>
-cmake<span class="w"> </span>--install<span class="w"> </span>build
+<p>And an output file <code class="docutils literal notranslate"><span class="pre">085289_447042.city.jsonl</span></code> should have been produced in the <code class="docutils literal notranslate"><span class="pre">output</span></code> folder. This is a <a class="reference external" href="https://www.cityjson.org/cityjsonseq/">CityJSONSeq</a> file. You can convert it to a regular CityJSON file using <a class="reference external" href="https://github.com/cityjson/cjseq">cjseq</a>, eg:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span>output/085289_447042.city.jsonl.city.jsonl<span class="w"> </span><span class="p">|</span><span class="w"> </span>cjseq<span class="w"> </span>collect<span class="w"> </span>&gt;<span class="w"> </span>output/085289_447042.city.json
 </pre></div>
 </div>
-</section>
+<p>The resulting CityJSON file you can inspect in ninja or another <a class="reference external" href="https://www.cityjson.org/software/">CityJSON compatible software</a>.</p>
+<p>To learn more about roofer’s various configuration check out the <a class="reference internal" href="cli_application.html"><span class="doc std std-doc">roofer CLI documentation</span></a>.</p>
 </section>
 </section>
 
@@ -365,11 +353,8 @@ cmake<span class="w"> </span>--install<span class="w"> </span>build
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Getting started</a><ul>
-<li><a class="reference internal" href="#using-the-precompiled-binaries">Using the precompiled binaries</a></li>
-<li><a class="reference internal" href="#compilation-from-source-developers">Compilation from source (developers)</a><ul>
-<li><a class="reference internal" href="#compilation-without-nix">Compilation without Nix</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#running-roofer">Running roofer</a></li>
 </ul>
 </li>
 </ul>
