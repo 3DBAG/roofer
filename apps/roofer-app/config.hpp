@@ -964,7 +964,7 @@ struct RooferConfigHandler {
 
       try {
         if (arg.starts_with("--no")) {
-          auto argname = arg.substr(4);
+          auto argname = arg.substr(5);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
             it = c.args.erase(it);
             p->second->unset();
