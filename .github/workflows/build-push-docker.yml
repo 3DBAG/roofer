@@ -2,13 +2,11 @@ name: Docker Builder Image
 
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - "v*"
-    paths-ignore:
-      - '**.md'
-      - '**.rst'
+    # paths-ignore:
+    #   - '**.md'
+    #   - '**.rst'
 
 jobs:
   build:
