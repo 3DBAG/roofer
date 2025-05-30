@@ -5,9 +5,10 @@ name: Build and Test (vcpkg)
 on:
   # push to main branch
   push:
-    branches: ["main"]
+    branches:
+      - 'main'
     tags:
-      - "*"
+      - "v*"
   pull_request:
     branches: ["develop"]
 
