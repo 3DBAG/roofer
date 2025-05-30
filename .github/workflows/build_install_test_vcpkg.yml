@@ -6,14 +6,11 @@ on:
   # push to main branch
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["develop"]
-  # push:
-  #   branches:
-  #     - 'main'
-  push:
     tags:
       - "*"
+  pull_request:
+    branches: ["develop"]
+
   workflow_dispatch:
 
 jobs:
