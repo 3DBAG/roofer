@@ -46,7 +46,8 @@ TMP_DIR=$(mktemp -d)
 
 if [ -d "$INSTALL_DIR" ]; then
     echo "⚠️  $INSTALL_DIR already exists."
-    read -p "Do you want to remove it and reinstall? [y/N]: " choice < /dev/tty
+    printf "Do you want to remove it and reinstall? [y/N]: "
+    read choice < /dev/tty
     case "$choice" in
         y|Y ) rm -rf "$INSTALL_DIR";;
         * ) echo "Aborted."; exit 1;;
