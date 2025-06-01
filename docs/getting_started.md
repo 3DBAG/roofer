@@ -4,6 +4,15 @@
 
 The easiest way to get roofer is to download the latest binary as available via [GitHub](https://github.com/3DBAG/roofer/releases/latest). Alternatively you can use the [Docker image](https://hub.docker.com/r/3dgi/roofer/tags) or you can [built roofer from source](#developers).
 
+If you are on Linux or macOS, you can try to use the install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/distribution/install.sh | sh
+```
+
+> [!TIP]
+>  Currently only binaries for Windows and macOS (arm64) are available.
+
 ## Running roofer
 To test if roofer is correctly installed you can try to run it with our small [test dataset](https://data.3dbag.nl/testdata/roofer/wippolder.zip). To download this data you can do:
 
