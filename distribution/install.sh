@@ -75,7 +75,7 @@ case ":$PATH:" in
   *)
     echo
     echo "➤ Add the following to your shell profile (e.g., ~/.bashrc or ~/.zshrc):"
-    echo "  export PATH=\"\$PATH:$INSTALL_DIR/bin\""
+    echo "  export PATH=\"$INSTALL_DIR/bin\":\$PATH"
     echo
     echo "➤ You can uninstall roofer using:"
     echo "  rm -r ~/.roofer"
