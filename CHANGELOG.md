@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [1.0.0] - 2025-05-27 -->
 ## [Unreleased]
 
+### Added
+- install script for curl pipe install
+
 ### Fixed
 - fix handling of negative flags like --no-lod22
+- fix handling of polygon inputs with duplicate vertices
+- more robust calculation of nodata circle
 
 ## [1.0.0-beta.1] - 2025-05-28
 
