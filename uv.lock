@@ -396,8 +396,8 @@ wheels = [
 ]
 
 [[package]]
-name = "roofer-dev"
-version = "0.1.0"
+name = "roofer"
+version = "1.0.0b1"
 source = { virtual = "." }
 dependencies = [
     { name = "breathe" },
