@@ -40,6 +40,7 @@
               libtool
               zip
               zstd
+              bison # thrift/arrow/rerun
 
               # python tools
               py
