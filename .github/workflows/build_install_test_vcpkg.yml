@@ -219,7 +219,7 @@ jobs:
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: roofer-${{ runner.os }}-${{ matrix.build_type }}
+          name: roofer-${{ runner.os }}-v${{ github.ref_name }}
           path: |
             install
           retention-days: 7

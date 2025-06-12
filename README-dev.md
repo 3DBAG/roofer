@@ -133,7 +133,7 @@ To check the available bump options:
 bump-my-version show-bump
 ```
 
-To bump eg. from beta to release:
+To bump eg. the beta counter:
 ```shell
 bump-my-version bump beta
 ```
