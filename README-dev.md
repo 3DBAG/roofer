@@ -108,15 +108,11 @@ add_test(
 
 ## Documentation
 
-Dependencies:
-- [Doxygen](https://www.doxygen.nl/index.html)
-- [graphviz](https://www.graphviz.org) for the graphs (using `dot`)
-
-To build the documentation locally, run doxygen from the `docs` directory.
+To build the documentation locally:
 
 ```shell
 cd docs
-doxygen
+make html
 ```
 
 The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
@@ -127,3 +123,18 @@ This library uses the Javadoc style to document the code.
 That is the comment block starts with two *'s.
 
 Full [Doxygen documentation](https://www.doxygen.nl/manual/docblocks.html#specialblock).
+
+## Version bumping
+Use bump-my-version.
+
+To check the available bump options:
+
+```shell
+bump-my-version show-bump
+```
+
+To bump eg. from beta to release:
+```shell
+bump-my-version bump beta
+```
+Tip: first run with `--dry-run -v` to check what would change before applying the changes.

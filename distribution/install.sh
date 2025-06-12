@@ -39,7 +39,8 @@ echo "[*] Detected platform: $PLATFORM-$ARCH"
 
 # Set the binary URL (replace with your actual binary URLs)
 # BINARY_URL="https://example.com/downloads/mytool-${PLATFORM}-${ARCH}"
-BINARY_URL="https://github.com/3DBAG/roofer/releases/download/v1.0.0-beta.1/roofer-${PLATFORM}-Release-v1.0.0-beta.1.zip"
+VERSION="1.0.0-beta.1"
+BINARY_URL="https://github.com/3DBAG/roofer/releases/download/v${VERSION}/roofer-${PLATFORM}-v${VERSION}.zip"
 INSTALL_DIR="$HOME/.roofer"
 INSTALL_BIN="$INSTALL_DIR/bin/roofer"
 TMP_DIR=$(mktemp -d)

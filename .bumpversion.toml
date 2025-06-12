@@ -1,0 +1,68 @@
+[tool.bumpversion]
+current_version = "1.0.0-beta.1"
+parse = """(?x)
+    (?P<major>0|[1-9]\\d*)\\.
+    (?P<minor>0|[1-9]\\d*)\\.
+    (?P<patch>0|[1-9]\\d*)
+    (?:
+        -                          # dash separator for pre-release section
+        (?P<label>[a-zA-Z-]+)\\.   # pre-release label
+        (?P<beta>[1-9]\\d*)        # pre-release version number
+    )?                             # pre-release section is optional
+"""
+serialize = [
+    "{major}.{minor}.{patch}-{label}.{beta}",
+    "{major}.{minor}.{patch}",
+]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+ignore_missing_files = false
+tag = true
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = false
+commit = false
+message = "Bump version: {current_version} → {new_version}"
+moveable_tags = []
+commit_args = ""
+setup_hooks = []
+pre_commit_hooks = []
+post_commit_hooks = []
+
+[tool.bumpversion.parts.beta]
+first_value = 1
+
+[tool.bumpversion.parts.label]
+values = ["beta", "final"]
+optional_value = "final"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "distribution/install.sh"
+search = "VERSION=\"{current_version}\""
+replace = "VERSION=\"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "docs/conf.py"
+search = "release = '{current_version}'"
+replace = "release = '{new_version}'"
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+search = "## [Unreleased]"
+replace = "## [Unreleased]\n\n## [{new_version}] - {now:%Y-%m-%d}"
+
+[[tool.bumpversion.files]]
+filename = "CMakeLists.txt"
+serialize = [
+    "{major}.{minor}.{patch}"
+]
+search = "project(roofer VERSION {current_version}"
+replace = "project(roofer VERSION {new_version}"
