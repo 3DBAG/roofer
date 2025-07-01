@@ -195,6 +195,12 @@ namespace roofer {
     float signed_area() const;
     void set_z(const float z);
   };
+  class LinearRingWithOffset : public LinearRing {
+   public:
+    arr3d data_offset;  // offset in the original pointcloud
+    LinearRingWithOffset(const LinearRing& lr, const arr3d& offset)
+        : LinearRing(lr), data_offset(offset){};
+  };
   class Segment : public std::array<arr3f, 2>, public Geometry {
    protected:
     void compute_box();

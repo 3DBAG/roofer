@@ -30,7 +30,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
   auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
   auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
   auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
-  auto vector_ops = roofer::misc::createVector2DOpsGEOS();
+  auto vector_ops = roofer::misc::createVector2DOpsGEOS(*pj);
   auto LASWriter = roofer::io::createLASWriter(*pj);
 
   // logger.info("region_of_interest.has_value()? {}",

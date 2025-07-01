@@ -21,6 +21,7 @@
 
 #include <geos_c.h>
 #include <roofer/logger/logger.h>
+#include <roofer/common/formatters.hpp>
 
 #include <roofer/misc/Vector2DOps.hpp>
 #include <vector>
@@ -194,6 +195,8 @@ namespace roofer::misc {
   };
 
   struct Vector2DOpsGEOS : public Vector2DOpsInterface {
+    Vector2DOpsGEOS(roofer::misc::projHelperInterface& pjh)
+        : Vector2DOpsInterface(pjh){};
     void simplify_polygons(std::vector<LinearRing>& polygons, float tolerance,
                            // bool output_failures,
                            bool orient_after_simplify) override {
@@ -214,8 +217,10 @@ namespace roofer::misc {
         to_geos_polygon(lr, g_polygon);
 
         if (GEOSisValid_r(gc, g_polygon) != 1) {
-          logger.error("Encountered feature that is not valid. WKT: {}",
-                       GEOSGeomToWKT_r(gc, g_polygon));
+          roofer::LinearRingWithOffset tlr(from_geos_polygon(g_polygon),
+                                           *pjHelper.data_offset);
+          std::string t = std::format("{}", tlr);
+          logger.error("Encountered feature that is not valid. WKT: {}", t);
           GEOSGeom_destroy_r(gc, g_polygon);
           // if (output_failures) polygons_out.push_back(lr);
           throw std::runtime_error("feature not valid");
@@ -224,9 +229,13 @@ namespace roofer::misc {
         GEOSGeometry* simplified_geom =
             GEOSSimplify_r(gc, g_polygon, double(tolerance));
         if (GEOSisValid_r(gc, simplified_geom) != 1) {
+          roofer::LinearRingWithOffset tlr(from_geos_polygon(simplified_geom),
+                                           *pjHelper.data_offset);
+          std::string t = std::format("{}", tlr);
           logger.error(
               "Encountered feature that is not valid after simplify. WKT: {}",
-              GEOSGeomToWKT_r(gc, simplified_geom));
+              // GEOSGeomToWKT_r(gc, simplified_geom)
+              t);
           GEOSGeom_destroy_r(gc, g_polygon);
           GEOSGeom_destroy_r(gc, simplified_geom);
           // if (output_failures) polygons_out.push_back(lr);
@@ -236,8 +245,9 @@ namespace roofer::misc {
         if (GEOSGetNumGeometries_r(gc, simplified_geom) != 1) {
           logger.error(
               "Encountered feature that is a multi-geometry after simplify. "
-              "WKT: {}",
-              GEOSGeomToWKT_r(gc, simplified_geom));
+              "WKT with offset {}, {}, {}: {}",
+              (*pjHelper.data_offset)[0], (*pjHelper.data_offset)[1],
+              (*pjHelper.data_offset)[2], GEOSGeomToWKT_r(gc, simplified_geom));
           GEOSGeom_destroy_r(gc, g_polygon);
           GEOSGeom_destroy_r(gc, simplified_geom);
           // if (output_failures) polygons_out.push_back(lr);
@@ -292,8 +302,9 @@ namespace roofer::misc {
     }
   };
 
-  std::unique_ptr<Vector2DOpsInterface> createVector2DOpsGEOS() {
-    return std::make_unique<Vector2DOpsGEOS>();
+  std::unique_ptr<Vector2DOpsInterface> createVector2DOpsGEOS(
+      roofer::misc::projHelperInterface& pjh) {
+    return std::make_unique<Vector2DOpsGEOS>(pjh);
   };
 
   // void GEOSMergeLinesNode::process()

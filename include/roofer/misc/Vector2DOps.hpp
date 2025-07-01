@@ -23,6 +23,7 @@
 #include <memory>
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/misc/projHelper.hpp>
 #include <vector>
 
 namespace roofer::misc {
@@ -34,6 +35,9 @@ namespace roofer::misc {
   };
 
   struct Vector2DOpsInterface {
+    roofer::misc::projHelperInterface& pjHelper;
+    Vector2DOpsInterface(roofer::misc::projHelperInterface& pjh)
+        : pjHelper(pjh) {}
     virtual ~Vector2DOpsInterface() = default;
 
     virtual void simplify_polygons(std::vector<LinearRing>& polygons,
@@ -45,6 +49,7 @@ namespace roofer::misc {
                                  float offset = 4) = 0;
   };
 
-  std::unique_ptr<Vector2DOpsInterface> createVector2DOpsGEOS();
+  std::unique_ptr<Vector2DOpsInterface> createVector2DOpsGEOS(
+      roofer::misc::projHelperInterface& pjh);
   std::unique_ptr<RTreeInterface> createRTreeGEOS();
 }  // namespace roofer::misc
