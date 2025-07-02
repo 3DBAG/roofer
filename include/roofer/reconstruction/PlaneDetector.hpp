@@ -28,7 +28,6 @@
 namespace roofer::reconstruction {
 
   struct PlaneDetectorConfig {
-    float horiz_min_count = 0.95;
     int metrics_normal_k = 5;
     int metrics_plane_k = 15;
     int metrics_plane_min_points = 20;

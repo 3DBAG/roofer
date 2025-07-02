@@ -471,8 +471,6 @@ namespace roofer {
         AdjacencyFinder adj_finder(pnl_points, cfg.metrics_plane_k);
         plane_adjacencies = adj_finder.adjacencies;
 
-        bool b_is_horizontal =
-            float(horiz_pt_cnt) / float(total_pt_cnt) > cfg.horiz_min_count;
         // int roof_type=-2; // as built: -2=undefined; -1=no pts; 0=LOD1,
         // 1=LOD1.3, 2=LOD2
         roof_type = "no planes";
@@ -482,7 +480,7 @@ namespace roofer {
         } else if (horiz_roofplane_cnt == 1 && slant_roofplane_cnt == 0) {
           // roof_type=0;
           roof_type = "horizontal";
-        } else if (b_is_horizontal) {
+        } else if (horiz_roofplane_cnt > 1 && slant_roofplane_cnt == 0) {
           // roof_type=1;
           roof_type = "multiple horizontal";
         } else if (slant_roofplane_cnt > 0) {
