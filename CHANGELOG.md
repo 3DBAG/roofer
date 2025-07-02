@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - install script for curl pipe install
 - automatic versioning
+- CLI flag to disable input polygon simplification:: `--no-simplify`
 
 ### Fixed
 - fix handling of negative flags like --no-lod22
