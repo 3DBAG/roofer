@@ -109,6 +109,7 @@ struct RooferConfig {
   roofer::arr2f tilesize = {1000, 1000};
   bool clear_if_insufficient = true;
   bool compute_pc_98p = false;
+  bool simplify = true;
 
   bool write_crop_outputs = false;
   bool output_all = false;
@@ -400,6 +401,10 @@ struct RooferConfigHandler {
               "Disable/enable check if all supplied pointcloud files exist.",
               _skip_pc_check);
 
+    crop.add(
+        "simplify",
+        "Simplify input footprints to remove (nearly) duplicated vertices.",
+        cfg_.simplify);
     crop.add("ceil-point-density",
              "Enforce this point density ceiling on each building pointcloud.",
              cfg_.ceil_point_density, {check::HigherThan<float>(0)});
