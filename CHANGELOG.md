@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - install script for curl pipe install
+- automatic versioning
 
 ### Fixed
 - fix handling of negative flags like --no-lod22
 - fix handling of polygon inputs with duplicate vertices
 - more robust calculation of nodata circle
+- fix bug causing skipping reconstruction of some buildings with flat roofs
+
+### Changed
+- WKT logging from geos module now prints true coordinates instead of translated ones
 
 ## [1.0.0-beta.1] - 2025-05-28
 
