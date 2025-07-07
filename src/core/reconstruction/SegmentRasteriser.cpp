@@ -68,7 +68,7 @@ namespace roofer::reconstruction {
 
       Box box;
       box.add(roof_triangles.box());
-      if (cfg.use_ground) {
+      if (cfg.use_ground && ground_triangles.size() > 0) {
         box.add(ground_triangles.box());
       }
       auto cellsize_ = cfg.cellsize;
