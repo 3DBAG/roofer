@@ -32,7 +32,7 @@ namespace roofer::reconstruction {
     float thres_alpha = 0.25;
     bool use_ground = true;
     int megapixel_limit = 600;
-    bool fill_nodata_ = true;
+    bool fill_nodata_ = false;
     int fill_nodata_window_size_ = 5;
   };
 
