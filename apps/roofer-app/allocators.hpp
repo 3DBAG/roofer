@@ -12,134 +12,18 @@ namespace {
   };
   HeapAllocationCounter heap_allocation_counter;
 }  // namespace
-#endif
 
-/*
- * Code snippet below is taken from
- * https://github.com/microsoft/mimalloc/blob/dev/include/mimalloc-new-delete.h
- * and modified to work with the roofer trace feature for heap memory usage.
- */
-#if defined(IS_LINUX) || defined(IS_MACOS)
-#if defined(_MSC_VER) && defined(_Ret_notnull_) && \
-    defined(_Post_writable_byte_size_)
-   // stay consistent with VCRT definitions
-#define mi_decl_new(n) \
-  mi_decl_nodiscard mi_decl_restrict _Ret_notnull_ _Post_writable_byte_size_(n)
-#define mi_decl_new_nothrow(n)                                                 \
-  mi_decl_nodiscard mi_decl_restrict _Ret_maybenull_ _Success_(return != NULL) \
-      _Post_writable_byte_size_(n)
-#else
-#define mi_decl_new(n) mi_decl_nodiscard mi_decl_restrict
-#define mi_decl_new_nothrow(n) mi_decl_nodiscard mi_decl_restrict
-#endif
-
-void operator delete(void* p) noexcept { mi_free(p); };
-void operator delete[](void* p) noexcept { mi_free(p); };
-
-void operator delete(void* p, const std::nothrow_t&) noexcept { mi_free(p); }
-void operator delete[](void* p, const std::nothrow_t&) noexcept { mi_free(p); }
-
-mi_decl_new(n) void* operator new(std::size_t n) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new(n);
+void* operator new(size_t size) {
+  heap_allocation_counter.total_allocated += size;
+  return malloc(size);
 }
-mi_decl_new(n) void* operator new[](std::size_t n) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new(n);
-}
-
-mi_decl_new_nothrow(n) void* operator new(std::size_t n,
-                                          const std::nothrow_t& tag) noexcept {
-  (void)(tag);
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_nothrow(n);
-}
-mi_decl_new_nothrow(n) void* operator new[](
-    std::size_t n, const std::nothrow_t& tag) noexcept {
-  (void)(tag);
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_nothrow(n);
-}
-
-#if (__cplusplus >= 201402L || _MSC_VER >= 1916)
-void operator delete(void* p, std::size_t n) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size(p, n);
+void operator delete(void* memory, size_t size) noexcept {
+  heap_allocation_counter.total_freed += size;
+  free(memory);
 };
-void operator delete[](void* p, std::size_t n) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size(p, n);
-};
+
 #endif
 
-#if (__cplusplus > 201402L || defined(__cpp_aligned_new))
-void operator delete(void* p, std::align_val_t al) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete[](void* p, std::align_val_t al) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete(void* p, std::size_t n, std::align_val_t al) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size_aligned(p, n, static_cast<size_t>(al));
-};
-void operator delete[](void* p, std::size_t n, std::align_val_t al) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_freed += n;
-#endif
-  mi_free_size_aligned(p, n, static_cast<size_t>(al));
-};
-void operator delete(void* p, std::align_val_t al,
-                     const std::nothrow_t&) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-void operator delete[](void* p, std::align_val_t al,
-                       const std::nothrow_t&) noexcept {
-  mi_free_aligned(p, static_cast<size_t>(al));
-}
-
-void* operator new(std::size_t n, std::align_val_t al) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned(n, static_cast<size_t>(al));
-}
-void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned(n, static_cast<size_t>(al));
-}
-void* operator new(std::size_t n, std::align_val_t al,
-                   const std::nothrow_t&) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
-}
-void* operator new[](std::size_t n, std::align_val_t al,
-                     const std::nothrow_t&) noexcept {
-#ifdef RF_ENABLE_HEAP_TRACING
-  heap_allocation_counter.total_allocated += n;
-#endif
-  return mi_new_aligned_nothrow(n, static_cast<size_t>(al));
-}
-#endif
-#endif
 /*
  * Author:  David Robert Nadeau
  * Site:    http://NadeauSoftware.com/

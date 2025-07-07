@@ -80,10 +80,7 @@ namespace fs = std::filesystem;
 #include <rerun.hpp>
 #endif
 
-#if defined(IS_LINUX) || defined(IS_MACOS)
-#include <new>
-#include <mimalloc-override.h>
-#else
+#if defined(IS_WINDOWS)
 #undef RF_ENABLE_HEAP_TRACING
 #endif
 #include "allocators.hpp"
