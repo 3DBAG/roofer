@@ -1133,7 +1133,7 @@ struct fmt::formatter<RooferConfigHandler> {
   static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
   template <typename Context>
   auto format(RooferConfigHandler const& cfgh, Context& ctx) const {
-    fmt::format_to(ctx.out(), "RooferConfig(source_rootprints={}",
+    fmt::format_to(ctx.out(), "RooferConfig(source_roofprints={}",
                    cfgh.cfg_.source_footprints);
 
     // Add all parameters
