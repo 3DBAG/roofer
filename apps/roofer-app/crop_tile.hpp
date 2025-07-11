@@ -194,19 +194,21 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
-    auto& nodata_r =
-        attributes.insert_vec<float>(cfg.a_nodata_r + "_" + ipc.name);
-    auto& nodata_frac =
-        attributes.insert_vec<float>(cfg.a_nodata_frac + "_" + ipc.name);
-    auto& pt_density =
-        attributes.insert_vec<float>(cfg.a_pt_density + "_" + ipc.name);
-    nodata_r.reserve(N_fp);
-    nodata_frac.reserve(N_fp);
-    pt_density.reserve(N_fp);
+    auto nodata_r =
+        attributes.maybe_insert_vec<float>(cfg.a_nodata_r + "_" + ipc.name);
+    auto nodata_frac =
+        attributes.maybe_insert_vec<float>(cfg.a_nodata_frac + "_" + ipc.name);
+    auto pt_density =
+        attributes.maybe_insert_vec<float>(cfg.a_pt_density + "_" + ipc.name);
+    if (nodata_r.has_value()) nodata_r->get().reserve(N_fp);
+    if (nodata_frac.has_value()) nodata_frac->get().reserve(N_fp);
+    if (pt_density.has_value()) pt_density->get().reserve(N_fp);
     for (unsigned i = 0; i < N_fp; ++i) {
-      nodata_r.push_back(ipc.nodata_radii[i]);
-      nodata_frac.push_back(ipc.nodata_fractions[i]);
-      pt_density.push_back(ipc.pt_densities[i]);
+      if (nodata_r.has_value()) nodata_r->get().push_back(ipc.nodata_radii[i]);
+      if (nodata_frac.has_value())
+        nodata_frac->get().push_back(ipc.nodata_fractions[i]);
+      if (pt_density.has_value())
+        pt_density->get().push_back(ipc.pt_densities[i]);
     }
   }
 
@@ -218,14 +220,16 @@ bool crop_tile(const roofer::TBox<double>& tile,
     for (unsigned i = 0; i < input_pointclouds.size() - 1; ++i) {
       auto& ipc1 = input_pointclouds[i];
       auto& ipc2 = input_pointclouds[i + 1];
-      auto& is_mutated = attributes.insert_vec<bool>(
+      auto is_mutated = attributes.maybe_insert_vec<bool>(
           cfg.a_is_mutated + "_" + ipc1.name + "_" + ipc2.name);
-      is_mutated.reserve(N_fp);
-      for (unsigned j = 0; j < N_fp; ++j) {
-        is_mutated.push_back(roofer::misc::isMutated(
-            ipc1.building_rasters[j], ipc2.building_rasters[j],
-            select_pc_cfg.threshold_mutation_fraction,
-            select_pc_cfg.threshold_mutation_difference));
+      if (is_mutated.has_value()) {
+        is_mutated->get().reserve(N_fp);
+        for (unsigned j = 0; j < N_fp; ++j) {
+          is_mutated->get().push_back(roofer::misc::isMutated(
+              ipc1.building_rasters[j], ipc2.building_rasters[j],
+              select_pc_cfg.threshold_mutation_fraction,
+              select_pc_cfg.threshold_mutation_difference));
+        }
       }
     }
   }
@@ -237,9 +241,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
   auto h_ground_fallback_vec =
       attributes.get_if<float>(cfg.h_terrain_attribute);
   auto h_roof_fallback_vec = attributes.get_if<float>(cfg.h_roof_attribute);
-  auto& pc_select = attributes.insert_vec<std::string>(cfg.a_pc_select);
-  auto& pc_source = attributes.insert_vec<std::string>(cfg.a_pc_source);
-  auto& pc_year = attributes.insert_vec<int>(cfg.a_pc_year);
+  auto pc_select = attributes.maybe_insert_vec<std::string>(cfg.a_pc_select);
+  auto pc_source = attributes.maybe_insert_vec<std::string>(cfg.a_pc_source);
+  auto pc_year = attributes.maybe_insert_vec<int>(cfg.a_pc_year);
   std::unordered_map<std::string, roofer::vec1s> jsonl_paths;
   std::string bid;
   bool only_write_selected = !cfg.output_all;
@@ -304,28 +308,34 @@ bool crop_tile(const roofer::TBox<double>& tile,
       }
     }
 
-    if (sresult.explanation ==
-        roofer::misc::PointCloudSelectExplanation::PREFERRED_AND_LATEST)
-      pc_select.push_back("PREFERRED_AND_LATEST");
-    else if (sresult.explanation ==
-             roofer::misc::PointCloudSelectExplanation::PREFERRED_NOT_LATEST)
-      pc_select.push_back("PREFERRED_NOT_LATEST");
-    else if (sresult.explanation ==
-             roofer::misc::PointCloudSelectExplanation::LATEST_WITH_MUTATION)
-      pc_select.push_back("LATEST_WITH_MUTATION");
-    else if (sresult.explanation == roofer::misc::PointCloudSelectExplanation::
-                                        _HIGHEST_YET_INSUFFICIENT_COVERAGE)
-      pc_select.push_back("_HIGHEST_YET_INSUFFICIENT_COVERAGE");
-    else if (sresult.explanation ==
-             roofer::misc::PointCloudSelectExplanation::_LATEST) {
-      pc_select.push_back("_LATEST");
-      // // clear pc
-      // ipc[selected->index].building_clouds[i].clear();
-    } else
-      pc_select.push_back("NONE");
-
-    pc_source.push_back(selected->name);
-    pc_year.push_back(selected->date);
+    if (pc_select.has_value()) {
+      if (sresult.explanation ==
+          roofer::misc::PointCloudSelectExplanation::PREFERRED_AND_LATEST)
+        pc_select->get().push_back("PREFERRED_AND_LATEST");
+      else if (sresult.explanation ==
+               roofer::misc::PointCloudSelectExplanation::PREFERRED_NOT_LATEST)
+        pc_select->get().push_back("PREFERRED_NOT_LATEST");
+      else if (sresult.explanation ==
+               roofer::misc::PointCloudSelectExplanation::LATEST_WITH_MUTATION)
+        pc_select->get().push_back("LATEST_WITH_MUTATION");
+      else if (sresult.explanation ==
+               roofer::misc::PointCloudSelectExplanation::
+                   _HIGHEST_YET_INSUFFICIENT_COVERAGE)
+        pc_select->get().push_back("_HIGHEST_YET_INSUFFICIENT_COVERAGE");
+      else if (sresult.explanation ==
+               roofer::misc::PointCloudSelectExplanation::_LATEST) {
+        pc_select->get().push_back("_LATEST");
+        // // clear pc
+        // ipc[selected->index].building_clouds[i].clear();
+      } else
+        pc_select->get().push_back("NONE");
+    }
+    if (pc_source.has_value()) {
+      pc_source->get().push_back(selected->name);
+    }
+    if (pc_year.has_value()) {
+      pc_year->get().push_back(selected->date);
+    }
 
     // output to BuildingTile
     // set force_lod11 on building (for reconstruct) and attribute vec (for
