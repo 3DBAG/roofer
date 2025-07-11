@@ -42,9 +42,10 @@ namespace roofer::misc {
       for (auto& p : polygon) {
         pts.push_back(K::Point_3(p[0], p[1], p[2]));
       }
-      // Fit a plane to the polygon vertices using CGAL's linear least squares fitting
-      // The Dimension_tag<0> indicates we're fitting to a set of points (0-dimensional objects)
-      // This computes the best-fit plane through the 3D points that minimizes squared distances
+      // Fit a plane to the polygon vertices using CGAL's linear least squares
+      // fitting The Dimension_tag<0> indicates we're fitting to a set of points
+      // (0-dimensional objects) This computes the best-fit plane through the 3D
+      // points that minimizes squared distances
       linear_least_squares_fitting_3(pts.begin(), pts.end(), plane,
                                      CGAL::Dimension_tag<0>());
 
@@ -101,7 +102,9 @@ namespace roofer::misc {
       }
     };
 
-    RasterTools::Raster get_heightmap(std::unordered_map<int, roofer::Mesh>& multisolid, float cellsize) override {
+    RasterTools::Raster get_heightmap(
+        std::unordered_map<int, roofer::Mesh>& multisolid,
+        float cellsize) override {
       Box box;
 
       for (auto& [i, mesh] : multisolid) {
@@ -113,9 +116,9 @@ namespace roofer::misc {
         auto& attributes = mesh.get_attributes();
         assert(attributes.size() == n_faces);
         for (size_t i = 0; i < n_faces; ++i) {
-            if (labels[i] == 1) {
-                box.add(faces[i].box());
-            }
+          if (labels[i] == 1) {
+            box.add(faces[i].box());
+          }
         }
       }
       auto boxmin = box.min();
@@ -130,9 +133,9 @@ namespace roofer::misc {
         auto& labels = mesh.get_labels();
         size_t n_faces = faces.size();
         for (size_t i = 0; i < n_faces; ++i) {
-            if (labels[i] == 1) {
-                rasterise_ring(faces[i], r_lod22);
-            }
+          if (labels[i] == 1) {
+            rasterise_ring(faces[i], r_lod22);
+          }
         }
       }
       return r_lod22;

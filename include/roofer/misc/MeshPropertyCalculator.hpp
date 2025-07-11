@@ -43,7 +43,8 @@ namespace roofer::misc {
 
   struct MeshPropertyCalculatorInterface {
     virtual ~MeshPropertyCalculatorInterface() = default;
-    virtual RasterTools::Raster get_heightmap(std::unordered_map<int, roofer::Mesh>& multisolid, float cellsize) = 0;
+    virtual RasterTools::Raster get_heightmap(
+        std::unordered_map<int, roofer::Mesh>& multisolid, float cellsize) = 0;
     virtual void calculate_h_attr(Mesh& mesh, RasterTools::Raster& r_lod22,
                                   ComputeRoofHeightConfig cfg) = 0;
     virtual void compute_roof_orientation(
