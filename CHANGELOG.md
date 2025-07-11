@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - more robust calculation of nodata circle
 - fix bug causing skipping reconstruction of some buildings with flat roofs
 - fix issue with SegmentRasteriser that sometimes led to very high memory usage
+- fix bug that caused incorrect height attribute calculation foor roofparts
 
 ### Changed
 - WKT logging from geos module now prints true coordinates instead of translated ones
