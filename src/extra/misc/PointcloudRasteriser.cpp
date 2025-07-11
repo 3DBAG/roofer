@@ -171,8 +171,10 @@ namespace roofer::misc {
     const auto max_cnt_per_cell =
         max_density * (cnt_image.cellsize * cnt_image.cellsize);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    // use a fixed seed to make the result deterministic over multiple runs
+    // std::random_device rd;
+    // std::mt19937 gen(rd);
+    std::mt19937 gen(31415);
     std::uniform_real_distribution<> dis(0.0, 1.0);
 
     PointCollection thinned_points;
