@@ -1,8 +1,6 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 add_subdirectory(roofer-app)
-# add_subdirectory(crop)
-# add_subdirectory(reconstruct)
 
 # add polyscope
 # if(${RF_BUILD_GUI})
