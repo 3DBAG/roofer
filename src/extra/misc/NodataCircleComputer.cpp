@@ -175,7 +175,12 @@ namespace roofer::misc {
     Point c_max;
     for (const auto& face : t.finite_face_handles()) {
       // get the voronoi node, but check for collinearity first
-      if (1E-5 > CGAL::area(face->vertex(0)->point(), face->vertex(1)->point(),
+      // if (1E-5 > CGAL::area(face->vertex(0)->point(),
+      // face->vertex(1)->point(),
+      //                       face->vertex(2)->point())) {
+      if (!CGAL::collinear(face->vertex(0)->point(), face->vertex(1)->point(),
+                           face->vertex(2)->point()) &&
+          1E-5 > CGAL::area(face->vertex(0)->point(), face->vertex(1)->point(),
                             face->vertex(2)->point())) {
         // try {
         auto c = t.dual(face);
