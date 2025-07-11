@@ -26,22 +26,22 @@
 #include "common.hpp"
 
 // Formatter for roofer::TBox<double>
-template <>
-struct std::formatter<roofer::TBox<double>> {
+template <typename T>
+struct std::formatter<roofer::TBox<T>> {
   constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-  auto format(const roofer::TBox<double>& box, std::format_context& ctx) const {
+  auto format(const roofer::TBox<T>& box, std::format_context& ctx) const {
     return std::format_to(ctx.out(), "[{},{},{},{}]", box.pmin[0], box.pmin[1],
                           box.pmax[0], box.pmax[1]);
   }
 };
 
 // Formatter for std::optional<roofer::TBox<double>>
-template <>
-struct std::formatter<std::optional<roofer::TBox<double>>> {
+template <typename T>
+struct std::formatter<std::optional<roofer::TBox<T>>> {
   constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-  auto format(const std::optional<roofer::TBox<double>>& box,
+  auto format(const std::optional<roofer::TBox<T>>& box,
               std::format_context& ctx) const {
     if (!box.has_value()) {
       return std::format_to(ctx.out(), "");
@@ -85,6 +85,38 @@ struct std::formatter<std::optional<roofer::arr3d>> {
       return std::format_to(ctx.out(), "[{},{},{}]", (*arr)[0], (*arr)[1],
                             (*arr)[2]);
     }
+  }
+};
+
+// Formatter for LinearRingWithOffset as WKT, includes interior rings. Eg a WKT
+// with one interior ring would look like: 	POLYGON ((35 10, 45 45, 15 40,
+// 10 20, 35 10), (20 30, 35 35, 30 20, 20 30)) attempts to use the
+// std::weak_ptr<arr3d> data_offset member
+template <>
+struct std::formatter<roofer::LinearRing> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+  auto format(const roofer::LinearRing& lr, std::format_context& ctx) const {
+    std::string wkt = "POLYGON ((";
+    for (size_t i = 0; i < lr.size(); ++i) {
+      wkt += std::format("{:.6f} {:.6f}", lr[i][0], lr[i][1]);
+      if (i < lr.size() - 1) {
+        wkt += ", ";
+      }
+    }
+    wkt += ")";
+    for (const auto& interior : lr.interior_rings()) {
+      wkt += ", (";
+      for (size_t i = 0; i < interior.size(); ++i) {
+        wkt += std::format("{:.6f} {:.6f}", interior[i][0], interior[i][1]);
+        if (i < interior.size() - 1) {
+          wkt += ", ";
+        }
+      }
+      wkt += ")";
+    }
+    wkt += ")";
+    return std::format_to(ctx.out(), "{}", wkt);
   }
 };
 
