@@ -21,8 +21,10 @@
 
 #include <CGAL/linear_least_squares_fitting_3.h>
 
+#include <cassert>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/misc/MeshPropertyCalculator.hpp>
+#include <roofer/common/formatters.hpp>
 
 namespace roofer::misc {
 
@@ -40,7 +42,9 @@ namespace roofer::misc {
       for (auto& p : polygon) {
         pts.push_back(K::Point_3(p[0], p[1], p[2]));
       }
-      // fit plane to polygon pts
+      // Fit a plane to the polygon vertices using CGAL's linear least squares fitting
+      // The Dimension_tag<0> indicates we're fitting to a set of points (0-dimensional objects)
+      // This computes the best-fit plane through the 3D points that minimizes squared distances
       linear_least_squares_fitting_3(pts.begin(), pts.end(), plane,
                                      CGAL::Dimension_tag<0>());
 
@@ -89,27 +93,29 @@ namespace roofer::misc {
           elevation_id = std::floor(0.7 * float(N - 1));
           attributes[i].insert(
               cfg.h_70p, float(part_points[elevation_id][2] + cfg.z_offset));
-          attributes[i].insert(cfg.h_min,
-                               float(part_points[0][2] + cfg.z_offset));
-          attributes[i].insert(cfg.h_max,
-                               float(part_points[N - 1][2] + cfg.z_offset));
+          auto h_min = float(part_points[0][2] + cfg.z_offset);
+          auto h_max = float(part_points[N - 1][2] + cfg.z_offset);
+          attributes[i].insert(cfg.h_min, h_min);
+          attributes[i].insert(cfg.h_max, h_max);
         }
       }
     };
 
-    RasterTools::Raster get_heightmap(Mesh& mesh, float cellsize) override {
-      auto& faces = mesh.get_polygons();
-      auto& labels = mesh.get_labels();
-      assert(faces.size() == labels.size());
-      size_t n_faces = faces.size();
-
-      auto& attributes = mesh.get_attributes();
-      assert(attributes.size() == n_faces);
-
+    RasterTools::Raster get_heightmap(std::unordered_map<int, roofer::Mesh>& multisolid, float cellsize) override {
       Box box;
-      for (size_t i = 0; i < n_faces; ++i) {
-        if (labels[i] == 1) {
-          box.add(faces[i].box());
+
+      for (auto& [i, mesh] : multisolid) {
+        auto& faces = mesh.get_polygons();
+        auto& labels = mesh.get_labels();
+        assert(faces.size() == labels.size());
+        size_t n_faces = faces.size();
+
+        auto& attributes = mesh.get_attributes();
+        assert(attributes.size() == n_faces);
+        for (size_t i = 0; i < n_faces; ++i) {
+            if (labels[i] == 1) {
+                box.add(faces[i].box());
+            }
         }
       }
       auto boxmin = box.min();
@@ -119,9 +125,14 @@ namespace roofer::misc {
           RasterTools::Raster(cellsize, boxmin[0] - 0.5, boxmax[0] + 0.5,
                               boxmin[1] - 0.5, boxmax[1] + 0.5);
       r_lod22.prefill_arrays(RasterTools::MAX);
-      for (size_t i = 0; i < n_faces; ++i) {
-        if (labels[i] == 1) {
-          rasterise_ring(faces[i], r_lod22);
+      for (auto& [i, mesh] : multisolid) {
+        auto& faces = mesh.get_polygons();
+        auto& labels = mesh.get_labels();
+        size_t n_faces = faces.size();
+        for (size_t i = 0; i < n_faces; ++i) {
+            if (labels[i] == 1) {
+                rasterise_ring(faces[i], r_lod22);
+            }
         }
       }
       return r_lod22;

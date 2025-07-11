@@ -69,12 +69,12 @@ void compute_mesh_properties(
     std::unordered_map<int, roofer::Mesh>& multisolid_lod22, float z_offset,
     RooferConfig* cfg) {
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  for (size_t i = 0; i < multisolid_lod22.size(); ++i) {
-    auto& mesh22 = multisolid_lod22.at(i);
+  auto heightmap =
+      MeshPropertyCalculator->get_heightmap(multisolid_lod22, cfg->cellsize);
+
+  for (auto& [i, mesh22] : multisolid_lod22) {
     mesh22.get_attributes().resize(mesh22.get_polygons().size());
 
-    auto heightmap =
-        MeshPropertyCalculator->get_heightmap(mesh22, cfg->cellsize);
     MeshPropertyCalculator->calculate_h_attr(mesh22, heightmap,
                                              {.z_offset = z_offset,
                                               .h_50p = cfg->a_h_roof_50p,
