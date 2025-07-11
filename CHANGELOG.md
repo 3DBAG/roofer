@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - WKT logging from geos module now prints true coordinates instead of translated ones
 - Turn off fill_nodata_ in SegmentRasteriser by default.
+- gridthinPointcloud: use fixed seed to make output deterministic over multiple runs
 
 ## [1.0.0-beta.1] - 2025-05-28
 
