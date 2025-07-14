@@ -109,7 +109,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
   }
 
   // create force_lod11 vector, initialize with user input and area check
-  auto& force_lod11_vec = attributes.insert_vec<bool>(cfg.a_force_lod11);
+  // auto& force_lod11_vec = attributes.insert_vec<bool>(cfg.a_force_lod11);
+  std::vector<std::optional<bool>> force_lod11_vec;
   force_lod11_vec.resize(N_fp, false);
 
   if (auto user_force_lod11_vec =
@@ -419,15 +420,23 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
       if (input_pointclouds[selected->index].lod11_forced[i]) {
         building.extrusion_mode = ExtrusionMode::LOD11_FALLBACK;
-        force_lod11_vec[i] = input_pointclouds[selected->index].lod11_forced[i];
+        force_lod11_vec[i] = true;
       }
 
-      output_building_tile.attributes = attributes;
       building.jsonl_path = fmt::format(
           fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
           fmt::arg("pc_name", input_pointclouds[selected->index].name),
           fmt::arg("path", cfg.output_path));
     }
+
+    // update tile attributes
+    auto a_force_lod11 = attributes.maybe_insert_vec<bool>(cfg.a_force_lod11);
+    if (a_force_lod11.has_value()) {
+      a_force_lod11->get().insert(a_force_lod11->get().begin(),
+                                  force_lod11_vec.begin(),
+                                  force_lod11_vec.end());
+    }
+    output_building_tile.attributes = attributes;
 
     if (cfg.write_crop_outputs) {
       {
