@@ -805,20 +805,21 @@ int main(int argc, const char* argv[]) {
           logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
-          auto& attr_success =
-              building_tile.attributes.insert_vec<bool>(handler.cfg_.a_success);
-          for (auto& progress : building_tile.buildings_progresses) {
-            if (progress == RECONSTRUCTION_SUCCEEDED) {
-              attr_success.push_back(true);
-            } else {
-              attr_success.push_back(false);
+          auto attr_success = building_tile.attributes.maybe_insert_vec<bool>(
+              handler.cfg_.a_success);
+          if (attr_success.has_value()) {
+            for (auto& progress : building_tile.buildings_progresses) {
+              attr_success->get().push_back(progress ==
+                                            RECONSTRUCTION_SUCCEEDED);
             }
           }
           // create time attribute
-          auto& attr_time = building_tile.attributes.insert_vec<int>(
+          auto attr_time = building_tile.attributes.maybe_insert_vec<int>(
               handler.cfg_.a_reconstruction_time);
-          for (auto& building : building_tile.buildings) {
-            attr_time.push_back(building.reconstruction_time);
+          if (attr_time.has_value()) {
+            for (auto& building : building_tile.buildings) {
+              attr_time->get().push_back(building.reconstruction_time);
+            }
           }
           // output reconstructed buildings
           auto CityJsonWriter =
