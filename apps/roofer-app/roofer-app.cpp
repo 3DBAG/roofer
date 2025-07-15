@@ -805,20 +805,21 @@ int main(int argc, const char* argv[]) {
           logger.debug("[serializer] Serializing tile {}", building_tile);
 
           // create status attribute
-          auto& attr_success =
-              building_tile.attributes.insert_vec<bool>(handler.cfg_.a_success);
-          for (auto& progress : building_tile.buildings_progresses) {
-            if (progress == RECONSTRUCTION_SUCCEEDED) {
-              attr_success.push_back(true);
-            } else {
-              attr_success.push_back(false);
+          auto attr_success = building_tile.attributes.maybe_insert_vec<bool>(
+              handler.cfg_.a_success);
+          if (attr_success.has_value()) {
+            for (auto& progress : building_tile.buildings_progresses) {
+              attr_success->get().push_back(progress ==
+                                            RECONSTRUCTION_SUCCEEDED);
             }
           }
           // create time attribute
-          auto& attr_time = building_tile.attributes.insert_vec<int>(
+          auto attr_time = building_tile.attributes.maybe_insert_vec<int>(
               handler.cfg_.a_reconstruction_time);
-          for (auto& building : building_tile.buildings) {
-            attr_time.push_back(building.reconstruction_time);
+          if (attr_time.has_value()) {
+            for (auto& building : building_tile.buildings) {
+              attr_time->get().push_back(building.reconstruction_time);
+            }
           }
           // output reconstructed buildings
           auto CityJsonWriter =
@@ -885,78 +886,103 @@ int main(int argc, const char* argv[]) {
               auto attrow = roofer::AttributeMapRow(building_tile.attributes,
                                                     building.attribute_index);
 
-              attrow.insert(handler.cfg_.a_h_ground, building.h_ground);
-              attrow.insert(handler.cfg_.a_h_pc_98p, building.h_pc_98p);
-              attrow.insert(handler.cfg_.a_is_glass_roof,
-                            building.is_glass_roof);
-              attrow.insert(handler.cfg_.a_pointcloud_unusable,
-                            building.pointcloud_insufficient);
-              attrow.insert(handler.cfg_.a_roof_type, building.roof_type);
-              attrow.insert_optional(handler.cfg_.a_h_roof_50p,
-                                     building.roof_elevation_50p);
-              attrow.insert_optional(handler.cfg_.a_h_roof_70p,
-                                     building.roof_elevation_70p);
-              attrow.insert_optional(handler.cfg_.a_h_roof_min,
-                                     building.roof_elevation_min);
-              attrow.insert_optional(handler.cfg_.a_h_roof_max,
-                                     building.roof_elevation_max);
-              attrow.insert_optional(handler.cfg_.a_h_roof_ridge,
-                                     building.roof_elevation_ridge);
-              attrow.insert_optional(handler.cfg_.a_roof_n_planes,
-                                     building.roof_n_planes);
-              attrow.insert_optional(handler.cfg_.a_roof_n_ridgelines,
-                                     building.roof_n_ridgelines);
-              std::string extrusion_mode_str;
-              switch (building.extrusion_mode) {
-                case STANDARD:
-                  extrusion_mode_str = "standard";
-                  break;
-                case LOD11_FALLBACK:
-                  extrusion_mode_str = "lod11_fallback";
-                  break;
-                case SKIP:
-                  extrusion_mode_str = "skip";
-                  break;
-                default:
-                  extrusion_mode_str = "unknown";
-                  break;
+              if (!handler.cfg_.a_h_ground.empty())
+                attrow.insert(handler.cfg_.a_h_ground, building.h_ground);
+              if (!handler.cfg_.a_h_pc_98p.empty())
+                attrow.insert(handler.cfg_.a_h_pc_98p, building.h_pc_98p);
+              if (!handler.cfg_.a_is_glass_roof.empty())
+                attrow.insert(handler.cfg_.a_is_glass_roof,
+                              building.is_glass_roof);
+              if (!handler.cfg_.a_pointcloud_unusable.empty())
+                attrow.insert(handler.cfg_.a_pointcloud_unusable,
+                              building.pointcloud_insufficient);
+              if (!handler.cfg_.a_roof_type.empty())
+                attrow.insert(handler.cfg_.a_roof_type, building.roof_type);
+              if (!handler.cfg_.a_h_roof_50p.empty())
+                attrow.insert_optional(handler.cfg_.a_h_roof_50p,
+                                       building.roof_elevation_50p);
+              if (!handler.cfg_.a_h_roof_70p.empty())
+                attrow.insert_optional(handler.cfg_.a_h_roof_70p,
+                                       building.roof_elevation_70p);
+              if (!handler.cfg_.a_h_roof_min.empty())
+                attrow.insert_optional(handler.cfg_.a_h_roof_min,
+                                       building.roof_elevation_min);
+              if (!handler.cfg_.a_h_roof_max.empty())
+                attrow.insert_optional(handler.cfg_.a_h_roof_max,
+                                       building.roof_elevation_max);
+              if (!handler.cfg_.a_h_roof_ridge.empty())
+                attrow.insert_optional(handler.cfg_.a_h_roof_ridge,
+                                       building.roof_elevation_ridge);
+              if (!handler.cfg_.a_roof_n_planes.empty())
+                attrow.insert_optional(handler.cfg_.a_roof_n_planes,
+                                       building.roof_n_planes);
+              if (!handler.cfg_.a_roof_n_ridgelines.empty())
+                attrow.insert_optional(handler.cfg_.a_roof_n_ridgelines,
+                                       building.roof_n_ridgelines);
+              if (!handler.cfg_.a_extrusion_mode.empty()) {
+                std::string extrusion_mode_str;
+                switch (building.extrusion_mode) {
+                  case STANDARD:
+                    extrusion_mode_str = "standard";
+                    break;
+                  case LOD11_FALLBACK:
+                    extrusion_mode_str = "lod11_fallback";
+                    break;
+                  case SKIP:
+                    extrusion_mode_str = "skip";
+                    break;
+                  default:
+                    extrusion_mode_str = "unknown";
+                    break;
+                }
+                attrow.insert(handler.cfg_.a_extrusion_mode,
+                              extrusion_mode_str);
               }
-              attrow.insert(handler.cfg_.a_extrusion_mode, extrusion_mode_str);
 
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
               if (handler.cfg_.lod_12) {
                 ms12 = &building.multisolids_lod12;
-                attrow.insert_optional(handler.cfg_.a_rmse_lod12,
-                                       building.rmse_lod12);
-                attrow.insert_optional(handler.cfg_.a_volume_lod12,
-                                       building.volume_lod12);
+
+                if (!handler.cfg_.a_rmse_lod12.empty())
+                  attrow.insert_optional(handler.cfg_.a_rmse_lod12,
+                                         building.rmse_lod12);
+                if (!handler.cfg_.a_volume_lod12.empty())
+                  attrow.insert_optional(handler.cfg_.a_volume_lod12,
+                                         building.volume_lod12);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(handler.cfg_.a_val3dity_lod12,
-                                       building.val3dity_lod12);
+                if (!handler.cfg_.a_val3dity_lod12.empty())
+                  attrow.insert_optional(handler.cfg_.a_val3dity_lod12,
+                                         building.val3dity_lod12);
 #endif
               }
               if (handler.cfg_.lod_13) {
                 ms13 = &building.multisolids_lod13;
-                attrow.insert_optional(handler.cfg_.a_rmse_lod13,
-                                       building.rmse_lod13);
-                attrow.insert_optional(handler.cfg_.a_volume_lod13,
-                                       building.volume_lod13);
+                if (!handler.cfg_.a_rmse_lod13.empty())
+                  attrow.insert_optional(handler.cfg_.a_rmse_lod13,
+                                         building.rmse_lod13);
+                if (!handler.cfg_.a_volume_lod13.empty())
+                  attrow.insert_optional(handler.cfg_.a_volume_lod13,
+                                         building.volume_lod13);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(handler.cfg_.a_val3dity_lod13,
-                                       building.val3dity_lod13);
+                if (!handler.cfg_.a_val3dity_lod13.empty())
+                  attrow.insert_optional(handler.cfg_.a_val3dity_lod13,
+                                         building.val3dity_lod13);
 #endif
               }
               if (handler.cfg_.lod_22) {
                 ms22 = &building.multisolids_lod22;
-                attrow.insert_optional(handler.cfg_.a_rmse_lod22,
-                                       building.rmse_lod22);
-                attrow.insert_optional(handler.cfg_.a_volume_lod22,
-                                       building.volume_lod22);
+                if (!handler.cfg_.a_rmse_lod22.empty())
+                  attrow.insert_optional(handler.cfg_.a_rmse_lod22,
+                                         building.rmse_lod22);
+                if (!handler.cfg_.a_volume_lod22.empty())
+                  attrow.insert_optional(handler.cfg_.a_volume_lod22,
+                                         building.volume_lod22);
 #if RF_USE_VAL3DITY
-                attrow.insert_optional(handler.cfg_.a_val3dity_lod22,
-                                       building.val3dity_lod22);
+                if (!handler.cfg_.a_val3dity_lod22.empty())
+                  attrow.insert_optional(handler.cfg_.a_val3dity_lod22,
+                                         building.val3dity_lod22);
 #endif
               }
               // lift lod 0 footprint to h_ground

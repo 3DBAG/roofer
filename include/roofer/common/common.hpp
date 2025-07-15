@@ -111,6 +111,16 @@ namespace roofer {
     template <typename T>
     std::vector<std::optional<T>>& insert_vec(const std::string& name);
 
+    template <typename T>
+    std::optional<std::reference_wrapper<std::vector<std::optional<T>>>>
+    maybe_insert_vec(const std::string& name,
+                     const std::string& appendix = "") {
+      if (name.empty()) {
+        return std::nullopt;
+      }
+      return std::ref(insert_vec<T>(name + "_" + appendix));
+    }
+
     AttributeVecMapDS& get_attributes();
     const AttributeVecMapDS& get_attributes() const;
     bool has_attributes() const;

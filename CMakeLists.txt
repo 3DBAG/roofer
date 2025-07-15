@@ -61,6 +61,10 @@ find_package(
   COMPONENTS Core
   REQUIRED)
 
+# Add CGAL thread-safe FPU rounding mode to prevent hanging in multi-threaded
+# environments
+add_compile_definitions("CGAL_HAS_THREADS=1" "CGAL_ALWAYS_ROUND_TO_NEAREST=1")
+
 if(RF_USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")
   set(SPDLOG_FMT_EXTERNAL ON)
