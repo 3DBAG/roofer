@@ -196,11 +196,11 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // add raster stats attributes from PointCloudCropper to footprint attributes
   for (auto& ipc : input_pointclouds) {
     auto nodata_r =
-        attributes.maybe_insert_vec<float>(cfg.a_nodata_r + "_" + ipc.name);
+        attributes.maybe_insert_vec<float>(cfg.a_nodata_r, ipc.name);
     auto nodata_frac =
-        attributes.maybe_insert_vec<float>(cfg.a_nodata_frac + "_" + ipc.name);
+        attributes.maybe_insert_vec<float>(cfg.a_nodata_frac, ipc.name);
     auto pt_density =
-        attributes.maybe_insert_vec<float>(cfg.a_pt_density + "_" + ipc.name);
+        attributes.maybe_insert_vec<float>(cfg.a_pt_density, ipc.name);
     if (nodata_r.has_value()) nodata_r->get().reserve(N_fp);
     if (nodata_frac.has_value()) nodata_frac->get().reserve(N_fp);
     if (pt_density.has_value()) pt_density->get().reserve(N_fp);
@@ -222,7 +222,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       auto& ipc1 = input_pointclouds[i];
       auto& ipc2 = input_pointclouds[i + 1];
       auto is_mutated = attributes.maybe_insert_vec<bool>(
-          cfg.a_is_mutated + "_" + ipc1.name + "_" + ipc2.name);
+          cfg.a_is_mutated, ipc1.name + "_" + ipc2.name);
       if (is_mutated.has_value()) {
         is_mutated->get().reserve(N_fp);
         for (unsigned j = 0; j < N_fp; ++j) {

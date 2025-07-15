@@ -89,15 +89,17 @@ namespace roofer::misc {
 
           size_t N = part_points.size();
           int elevation_id = std::floor(0.5 * float(N - 1));
-          attributes[i].insert(
-              cfg.h_50p, float(part_points[elevation_id][2] + cfg.z_offset));
+          if (!cfg.h_50p.empty())
+            attributes[i].insert(
+                cfg.h_50p, float(part_points[elevation_id][2] + cfg.z_offset));
           elevation_id = std::floor(0.7 * float(N - 1));
-          attributes[i].insert(
-              cfg.h_70p, float(part_points[elevation_id][2] + cfg.z_offset));
+          if (!cfg.h_70p.empty())
+            attributes[i].insert(
+                cfg.h_70p, float(part_points[elevation_id][2] + cfg.z_offset));
           auto h_min = float(part_points[0][2] + cfg.z_offset);
           auto h_max = float(part_points[N - 1][2] + cfg.z_offset);
-          attributes[i].insert(cfg.h_min, h_min);
-          attributes[i].insert(cfg.h_max, h_max);
+          if (!cfg.h_min.empty()) attributes[i].insert(cfg.h_min, h_min);
+          if (!cfg.h_max.empty()) attributes[i].insert(cfg.h_max, h_max);
         }
       }
     };
@@ -195,8 +197,8 @@ namespace roofer::misc {
             azimuth = azimuth * (180 / pi);
           }
           // push attributes
-          attributes[i].insert(cfg.slope, slope);
-          attributes[i].insert(cfg.azimuth, azimuth);
+          if (!cfg.slope.empty()) attributes[i].insert(cfg.slope, slope);
+          if (!cfg.azimuth.empty()) attributes[i].insert(cfg.azimuth, azimuth);
 
           // std::string roof_type = "could not detect";
           // if (cnt_slant)
