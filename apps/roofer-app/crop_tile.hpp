@@ -132,10 +132,10 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.building_rasters.resize(N_fp);
     ipc.nodata_fractions.resize(N_fp);
     ipc.pt_densities.resize(N_fp);
-    ipc.is_glass_roof.reserve(N_fp);
-    ipc.roof_elevations.reserve(N_fp);
-    ipc.lod11_forced.reserve(N_fp);
-    ipc.pointcloud_insufficient.reserve(N_fp);
+    ipc.is_glass_roof.resize(N_fp);
+    ipc.roof_elevations.resize(N_fp);
+    ipc.lod11_forced.resize(N_fp);
+    ipc.pointcloud_insufficient.resize(N_fp);
     if (cfg.write_index) ipc.nodata_circles.resize(N_fp);
 
     // auto& r_nodata = attributes.insert_vec<float>("r_nodata_"+ipc.name);
