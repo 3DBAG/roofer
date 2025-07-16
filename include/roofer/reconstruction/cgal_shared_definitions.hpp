@@ -29,8 +29,9 @@
 
 namespace roofer {
 
-  typedef CGAL::Exact_predicates_exact_constructions_kernel EPECK;
+  // typedef CGAL::Exact_predicates_exact_constructions_kernel EPECK;
   typedef CGAL::Exact_predicates_inexact_constructions_kernel EPICK;
+  typedef EPICK EPECK;
   typedef EPICK::Point_3 Point;
   typedef EPICK::Vector_3 Vector;
   typedef EPICK::Vector_2 Vector_2;

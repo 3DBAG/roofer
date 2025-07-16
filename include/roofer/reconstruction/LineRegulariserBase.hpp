@@ -30,8 +30,8 @@
 #include <roofer/common/datastructures.hpp>
 
 namespace roofer::linereg {
-  using K = CGAL::Exact_predicates_exact_constructions_kernel;
-  // typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+  // using K = CGAL::Exact_predicates_exact_constructions_kernel;
+  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
   using Point_2 = K::Point_2;
   using Point_3 = K::Point_3;
