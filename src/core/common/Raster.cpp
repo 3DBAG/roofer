@@ -159,7 +159,13 @@ namespace roofer {
       std::array<float, 3> p;
       p[0] = minx_ + col * cellSize_ + cellSize_ / 2;
       p[1] = miny_ + row * cellSize_ + cellSize_ / 2;
-      p[2] = (*vals_)[col + row * dimx_];
+
+      // Bounds check to prevent buffer overflow
+      if (col >= dimx_ || row >= dimy_) {
+        p[2] = noDataVal_;
+      } else {
+        p[2] = (*vals_)[col + row * dimx_];
+      }
       return p;
     }
 

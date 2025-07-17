@@ -106,29 +106,13 @@ namespace roofer::misc {
 
     RasterTools::Raster get_heightmap(
         std::unordered_map<int, roofer::Mesh>& multisolid,
-        float cellsize) override {
-      Box box;
-
-      for (auto& [i, mesh] : multisolid) {
-        auto& faces = mesh.get_polygons();
-        auto& labels = mesh.get_labels();
-        assert(faces.size() == labels.size());
-        size_t n_faces = faces.size();
-
-        auto& attributes = mesh.get_attributes();
-        assert(attributes.size() == n_faces);
-        for (size_t i = 0; i < n_faces; ++i) {
-          if (labels[i] == 1) {
-            box.add(faces[i].box());
-          }
-        }
-      }
+        const roofer::Box& box, float cellsize) override {
       auto boxmin = box.min();
       auto boxmax = box.max();
 
-      RasterTools::Raster r_lod22 =
-          RasterTools::Raster(cellsize, boxmin[0] - 0.5, boxmax[0] + 0.5,
-                              boxmin[1] - 0.5, boxmax[1] + 0.5);
+      RasterTools::Raster r_lod22 = RasterTools::Raster(
+          cellsize, boxmin[0] - cellsize, boxmax[0] + cellsize,
+          boxmin[1] - cellsize, boxmax[1] + cellsize);
       r_lod22.prefill_arrays(RasterTools::MAX);
       for (auto& [i, mesh] : multisolid) {
         auto& faces = mesh.get_polygons();

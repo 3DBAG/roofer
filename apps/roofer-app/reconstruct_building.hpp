@@ -63,14 +63,46 @@ struct rerun::CollectionAdapter<rerun::Position3D, roofer::TriangleCollection> {
 
 enum LOD { LOD11 = 11, LOD12 = 12, LOD13 = 13, LOD22 = 22 };
 
+void add_ms_to_bbox(roofer::Box& box,
+                    std::unordered_map<int, roofer::Mesh>& multisolid) {
+  for (auto& [i, mesh] : multisolid) {
+    auto& faces = mesh.get_polygons();
+    auto& labels = mesh.get_labels();
+    assert(faces.size() == labels.size());
+    size_t n_faces = faces.size();
+
+    auto& attributes = mesh.get_attributes();
+    assert(attributes.size() == n_faces);
+    for (size_t i = 0; i < n_faces; ++i) {
+      // 1 is the roof label
+      if (labels[i] == 1) {
+        box.add(faces[i].box());
+      }
+    }
+  }
+}
+
 void compute_mesh_properties(
     std::unordered_map<int, roofer::Mesh>& multisolid_lod12,
     std::unordered_map<int, roofer::Mesh>& multisolid_lod13,
     std::unordered_map<int, roofer::Mesh>& multisolid_lod22, float z_offset,
     RooferConfig* cfg) {
   auto MeshPropertyCalculator = roofer::misc::createMeshPropertyCalculator();
-  auto heightmap =
-      MeshPropertyCalculator->get_heightmap(multisolid_lod22, cfg->cellsize);
+
+  // make sure bbox is initialized properly
+  roofer::Box bbox;
+  if (multisolid_lod12.size()) {
+    add_ms_to_bbox(bbox, multisolid_lod12);
+  }
+  if (multisolid_lod13.size()) {
+    add_ms_to_bbox(bbox, multisolid_lod13);
+  }
+  if (multisolid_lod22.size()) {
+    add_ms_to_bbox(bbox, multisolid_lod22);
+  }
+
+  auto heightmap = MeshPropertyCalculator->get_heightmap(multisolid_lod22, bbox,
+                                                         cfg->cellsize);
 
   for (auto& [i, mesh22] : multisolid_lod22) {
     mesh22.get_attributes().resize(mesh22.get_polygons().size());

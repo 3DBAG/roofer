@@ -123,9 +123,10 @@ namespace roofer {
         std::vector<point3d> result;
 
         // perhaps we can specialise these to the bounding box of the polygon
-        int IMAGE_TOP = std::floor(cr_min[1]), IMAGE_BOT = std::ceil(cr_max[1]),
-            IMAGE_LEFT = std::ceil(cr_min[0]),
-            IMAGE_RIGHT = std::floor(cr_max[0]);
+        int IMAGE_TOP = std::max(0, (int)std::floor(cr_min[1])),
+            IMAGE_BOT = std::min((int)dimy_, (int)std::ceil(cr_max[1])),
+            IMAGE_LEFT = std::max(0, (int)std::ceil(cr_min[0])),
+            IMAGE_RIGHT = std::min((int)dimx_, (int)std::floor(cr_max[0]));
 
         // Loop through the rows of the image.
         for (pixelY = IMAGE_TOP; pixelY < IMAGE_BOT; pixelY++) {
