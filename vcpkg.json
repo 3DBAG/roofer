@@ -47,7 +47,8 @@
         {
           "name": "nlohmann-json",
           "version>=": "3.11.3"
-        }
+        },
+        "pybind11"
       ]
     },
     "app-rerun": {
