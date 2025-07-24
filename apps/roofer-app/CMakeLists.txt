@@ -1,5 +1,6 @@
 if(RF_BUILD_APPS)
-  set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/roofer-app.cpp")
+  set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/roofer-app.cpp"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/BuildingTileSerializer.cpp")
 
   set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt cmake_git_version_tracking)
 

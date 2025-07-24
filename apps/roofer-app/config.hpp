@@ -201,7 +201,7 @@ struct RooferConfig {
   std::string a_pointcloud_unusable = "rf_pointcloud_unusable";
 };
 
-std::vector<std::string> find_filepaths(
+inline std::vector<std::string> find_filepaths(
     const std::list<std::string>& filepath_parts,
     std::initializer_list<std::string> extensions,
     bool no_throw_on_missing = false) {
@@ -229,7 +229,8 @@ std::vector<std::string> find_filepaths(
 
 namespace roofer::validators {
   // Path exists validator
-  auto PathExists = [](const std::string& path) -> std::optional<std::string> {
+  inline auto PathExists =
+      [](const std::string& path) -> std::optional<std::string> {
     if (!std::filesystem::exists(path)) {
       return std::format("Path {} does not exist.", path);
     }
@@ -237,7 +238,7 @@ namespace roofer::validators {
   };
 
   // Create a validator for file path writeability
-  auto DirIsWritable =
+  inline auto DirIsWritable =
       [](const std::string& path) -> std::optional<std::string> {
     std::filesystem::path fs_path(path);
 

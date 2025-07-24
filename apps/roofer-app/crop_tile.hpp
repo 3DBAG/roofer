@@ -19,19 +19,19 @@
 // Author(s):
 // Ravi Peters
 #pragma once
-bool crop_tile(const roofer::TBox<double>& tile,
-               std::vector<InputPointcloud>& input_pointclouds,
-               BuildingTile& output_building_tile, const RooferConfig& cfg,
-               const roofer::io::SpatialReferenceSystemInterface* srs) {
+std::pair<std::vector<BuildingObject>, roofer::AttributeVecMap> crop_tile(
+    const roofer::TBox<double>& tile,
+    std::vector<InputPointcloud>& input_pointclouds, const RooferConfig& cfg,
+    const roofer::io::SpatialReferenceSystemInterface* srs,
+    roofer::misc::projHelperInterface& proj_helper) {
   auto& logger = roofer::logger::Logger::get_logger();
 
-  auto& pj = output_building_tile.proj_helper;
-  auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
-  auto vector_writer = roofer::io::createVectorWriterOGR(*pj);
-  auto PointCloudCropper = roofer::io::createPointCloudCropper(*pj);
-  auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
-  auto vector_ops = roofer::misc::createVector2DOpsGEOS(*pj);
-  auto LASWriter = roofer::io::createLASWriter(*pj);
+  auto vector_reader = roofer::io::createVectorReaderOGR(proj_helper);
+  auto vector_writer = roofer::io::createVectorWriterOGR(proj_helper);
+  auto PointCloudCropper = roofer::io::createPointCloudCropper(proj_helper);
+  auto RasterWriter = roofer::io::createRasterWriterGDAL(proj_helper);
+  auto vector_ops = roofer::misc::createVector2DOpsGEOS(proj_helper);
+  auto LASWriter = roofer::io::createLASWriter(proj_helper);
 
   // logger.info("region_of_interest.has_value()? {}",
   // region_of_interest.has_value()); if(region_of_interest.has_value())
@@ -46,14 +46,17 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   const unsigned N_fp = footprints.size();
   if (N_fp == 0) {
-    return false;
+    return {{}, {}};  // Return empty buildings and empty attributes
   }
 
-  if (!pj->data_offset.has_value()) {
+  if (!proj_helper.data_offset.has_value()) {
     logger.error("No data offset set after reading inputs");
     exit(1);
-    return false;
+    return {{}, {}};  // Return empty buildings and empty attributes
   }
+
+  // Create vector to hold the result buildings
+  std::vector<BuildingObject> buildings;
 
   // get yoc attribute vector (nullptr if it does not exist)
   auto yoc_vec = attributes.get_if<int>(cfg.yoc_attribute);
@@ -76,9 +79,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // transform back to input coordinates
   roofer::TBox<double> polygon_extent_untransformed;
-  polygon_extent_untransformed.add(pj->coord_transform_rev(
+  polygon_extent_untransformed.add(proj_helper.coord_transform_rev(
       polygon_extent.pmin[0], polygon_extent.pmin[1], polygon_extent.pmin[2]));
-  polygon_extent_untransformed.add(pj->coord_transform_rev(
+  polygon_extent_untransformed.add(proj_helper.coord_transform_rev(
       polygon_extent.pmax[0], polygon_extent.pmax[1], polygon_extent.pmax[2]));
 
   // Crop all pointclouds
@@ -342,9 +345,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
     // set force_lod11 on building (for reconstruct) and attribute vec (for
     // output)
     {
-      BuildingObject& building = output_building_tile.buildings.emplace_back();
-      building.attribute_index = i;
-      building.z_offset = (*pj->data_offset)[2];
+      BuildingObject& building = buildings.emplace_back();
+      building.vector_source_index = i;
+      building.z_offset = proj_helper.data_offset.value()[2];
       using TerrainStrategy = roofer::enums::TerrainStrategy;
 
       auto& points = input_pointclouds[selected->index].building_clouds[i];
@@ -360,7 +363,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
       }
       if (cfg.compute_pc_98p && points.size() > 0) {
         building.h_pc_98p =
-            points.get_z_percentile(0.98) + (*pj->data_offset)[2];
+            points.get_z_percentile(0.98) + proj_helper.data_offset.value()[2];
       }
       building.footprint = footprints[i];
       auto h_ground_pc =
@@ -436,7 +439,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
                                   force_lod11_vec.begin(),
                                   force_lod11_vec.end());
     }
-    output_building_tile.attributes = attributes;
+    // Note: attributes are stored in each individual building object
 
     if (cfg.write_crop_outputs) {
       {
@@ -533,5 +536,5 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.acquisition_years.clear();
   }
 
-  return true;
+  return {buildings, attributes};
 }

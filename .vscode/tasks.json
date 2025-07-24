@@ -1,0 +1,142 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "configure-vcpkg-minimal",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "vcpkg-minimal"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "configure-vcpkg-full-test",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "vcpkg-full-test"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "configure-gh-Linux",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "gh-Linux"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build-gh-Linux",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "gh-Linux"
+            ],
+            "dependsOn": "configure-gh-Linux",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build-vcpkg-minimal",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "out/build/vcpkg-minimal",
+                "--parallel",
+                "8"
+            ],
+            "dependsOn": "configure-vcpkg-minimal",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rf",
+                "out/build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--preset",
+                "test-built"
+            ],
+            "dependsOn": "build-gh-Linux",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

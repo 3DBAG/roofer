@@ -89,122 +89,10 @@ namespace fs = std::filesystem;
 #include "allocators.hpp"
 
 #include "config.hpp"
+#include "types.hpp"
+#include "BuildingTileSerializer.hpp"
 
-enum ExtrusionMode { STANDARD, LOD11_FALLBACK, SKIP };
-
-/**
- * @brief A single building object
- *
- * Contains the footprint polygon, the point cloud, the reconstructed model and
- * some attributes that are set during the reconstruction.
- */
-struct BuildingObject {
-  roofer::PointCollection pointcloud_ground;
-  roofer::PointCollection pointcloud_building;
-  roofer::LinearRing footprint;
-  float z_offset = 0;
-
-  std::unordered_map<int, roofer::Mesh> multisolids_lod12;
-  std::unordered_map<int, roofer::Mesh> multisolids_lod13;
-  std::unordered_map<int, roofer::Mesh> multisolids_lod22;
-
-  size_t attribute_index;
-  bool reconstruction_success = false;
-  int reconstruction_time = 0;
-
-  // set in crop
-  fs::path jsonl_path;
-  float h_ground;       // without offset
-  float h_pc_98p;       // without offset
-  float h_pc_roof_70p;  // with offset!
-  bool force_lod11;     // force_lod11 / fallback_lod11
-  bool pointcloud_insufficient;
-  bool is_glass_roof;
-  std::optional<float> roof_h_fallback;
-  ExtrusionMode extrusion_mode = STANDARD;
-
-  // set in reconstruction
-  // optionals may not get assigned a valid value
-  std::string roof_type = "unknown";
-  std::optional<float> roof_elevation_50p;
-  std::optional<float> roof_elevation_70p;
-  std::optional<float> roof_elevation_min;
-  std::optional<float> roof_elevation_max;
-  std::optional<float> roof_elevation_ridge;
-  std::optional<int> roof_n_planes;
-  std::optional<float> rmse_lod12;
-  std::optional<float> rmse_lod13;
-  std::optional<float> rmse_lod22;
-  std::optional<float> volume_lod12;
-  std::optional<float> volume_lod13;
-  std::optional<float> volume_lod22;
-  std::optional<int> roof_n_ridgelines;
-  std::optional<std::string> val3dity_lod12;
-  std::optional<std::string> val3dity_lod13;
-  std::optional<std::string> val3dity_lod22;
-  // bool was_skipped;  // b3_reconstructie_onvolledig;
-};
-
-/**
- * @brief Indicates the progress of the object through the whole roofer process.
- */
-enum Progress : std::uint8_t {
-  CROP_NOT_STARTED,
-  CROP_IN_PROGRESS,
-  CROP_SUCCEEDED,
-  CROP_FAILED,
-  RECONSTRUCTION_IN_PROGRESS,
-  RECONSTRUCTION_SUCCEEDED,
-  RECONSTRUCTION_FAILED,
-  SERIALIZATION_IN_PROGRESS,
-  SERIALIZATION_SUCCEEDED,
-  SERIALIZATION_FAILED,
-};
-
-auto format_as(Progress p) { return fmt::underlying(p); }
-
-/**
- * @brief Used for passing a BuildingObject reference to the parallel
- * reconstructor.
- *
- * We cannot guarantee the order of reconstructed buildings, thus we need to
- * keep track of their tile and place in the BuildingTile.buildings container,
- * so that the BuildingTile.attributes will match the building after
- * reconstruction.
- *
- * ( BuildingTile.id, index of a BuildingObject in BuildingTile.buildings,
- * a BuildingObject from BuildingTile.buildings )
- */
-struct BuildingObjectRef {
-  size_t tile_id;
-  size_t building_idx;
-  BuildingObject building;
-  Progress progress;
-  BuildingObjectRef(size_t tile_id, size_t building_idx,
-                    BuildingObject building, Progress progress)
-      : tile_id(tile_id),
-        building_idx(building_idx),
-        building(building),
-        progress(progress) {}
-};
-
-/**
- * @brief A single batch for processing
- *
- * It contains a tile ID, all the buildings of the tile, their attributes,
- * the progress of each building, the tile extent and projection information.
- * Buildings and attributes are stored in separate containers and they are
- * matched on their index in the container.
- */
-struct BuildingTile {
-  std::size_t id = 0;
-  std::vector<BuildingObject> buildings;
-  roofer::AttributeVecMap attributes;
-  // offset
-  std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
-  // extent
-  roofer::TBox<double> extent;
-};
+// Structures defined in types.hpp
 
 #include "crop_tile.hpp"
 #include "reconstruct_building.hpp"
@@ -220,29 +108,7 @@ void get_las_extents(InputPointcloud& ipc,
   }
 }
 
-std::vector<roofer::TBox<double>> create_tiles(roofer::TBox<double>& roi,
-                                               double tilesize_x,
-                                               double tilesize_y) {
-  size_t dimx_ = (roi.max()[0] - roi.min()[0]) / tilesize_x + 1;
-  size_t dimy_ = (roi.max()[1] - roi.min()[1]) / tilesize_y + 1;
-  std::vector<roofer::TBox<double>> tiles;
-
-  for (size_t col = 0; col < dimx_; ++col) {
-    for (size_t row = 0; row < dimy_; ++row) {
-      tiles.emplace_back(roofer::TBox<double>{
-          roi.min()[0] + col * tilesize_x, roi.min()[1] + row * tilesize_y, 0.,
-          roi.min()[0] + (col + 1) * tilesize_x,
-          roi.min()[1] + (row + 1) * tilesize_y, 0.});
-    }
-  }
-  return tiles;
-}
-
 int main(int argc, const char* argv[]) {
-  // auto cmdl = argh::parser({"-c", "--config"});
-  // cmdl.add_params({"trace-interval", "-j", "--jobs"});
-
-  // cmdl.parse(argc, argv);
   auto& logger = roofer::logger::Logger::get_logger();
 
   // read cmdl options
@@ -271,31 +137,30 @@ int main(int argc, const char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  // Read configuration file, config path has already been checked for existence
-  if (handler._config_path.size()) {
+  // Helper lambda for error handling
+  auto handle_config_error = [&](const std::string& context,
+                                 const std::exception& e) -> int {
+    logger.error("Failed to {}: {}. Use '-h' for usage information.", context,
+                 e.what());
+    return EXIT_FAILURE;
+  };
+
+  // Read configuration file if provided
+  if (!handler._config_path.empty()) {
     logger.info("Reading configuration from file {}", handler._config_path);
     try {
       handler.parse_config_file();
     } catch (const std::exception& e) {
-      logger.error(
-          "Unable to parse config file {}. {} Use '-h' to print usage "
-          "information.",
-          handler._config_path, e.what());
-      return EXIT_FAILURE;
+      return handle_config_error("parse config file " + handler._config_path,
+                                 e);
     }
   }
 
-  // Parse further command line arguments, those will override values from
-  // config file
+  // Parse command line arguments (these override config file values)
   try {
     handler.parse_cli_second_pass(cli_args);
   } catch (const std::exception& e) {
-    logger.error(
-        "Failed to parse command line arguments. {} Use '-h' to print usage "
-        "information.",
-        e.what());
-    // handler.print_help(cli_args.program_name);
-    return EXIT_FAILURE;
+    return handle_config_error("parse command line arguments", e);
   }
 
   // validate configuration parameters
@@ -341,7 +206,6 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  
   auto pj = roofer::misc::createProjHelper();
   auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
   VectorReader->layer_name = handler.cfg_.layer_name;
@@ -364,193 +228,69 @@ int main(int argc, const char* argv[]) {
     roi = VectorReader->layer_extent;
   }
 
+  // Create building tile with basic setup
   BuildingTile building_tile;
   building_tile.id = 0;
   building_tile.extent = roi;
   building_tile.proj_helper = roofer::misc::createProjHelper();
 
+  // Stage 1: Crop point clouds to extract building footprints and point data
+  std::vector<BuildingObject> cropped_buildings;
+  roofer::AttributeVecMap tile_attributes;
   try {
-    logger.debug("[cropper] Cropping tile");
-    crop_tile(building_tile.extent, handler.input_pointclouds_, building_tile, handler.cfg_, project_srs.get());
-
-    for (auto& building : building_tile.buildings) {
-      reconstruct_building(building, &handler.cfg_);
-    }
-    
+    logger.debug("[cropper] Cropping tile to extract building data");
+    auto [buildings, attributes] =
+        crop_tile(roi, handler.input_pointclouds_, handler.cfg_,
+                  project_srs.get(), *building_tile.proj_helper);
+    cropped_buildings = std::move(buildings);
+    tile_attributes = std::move(attributes);
+    logger.info("[cropper] Successfully cropped {} buildings",
+                cropped_buildings.size());
+  } catch (const std::exception& e) {
+    logger.error("[cropper] Failed to crop tile: {}", e.what());
+    return EXIT_FAILURE;
   } catch (...) {
-    logger.debug("[cropper] Failed cropping tile");
-    exit(EXIT_FAILURE);
+    logger.error("[cropper] Failed to crop tile: unknown error");
+    return EXIT_FAILURE;
   }
+
+  // Stage 2: Reconstruct 3D models for each building
+  std::vector<BuildingObject> reconstructed_buildings;
+  try {
+    logger.debug("[reconstructor] Processing {} buildings",
+                 cropped_buildings.size());
+    reconstructed_buildings.reserve(cropped_buildings.size());
+
+    for (auto& building : cropped_buildings) {
+      auto reconstructed_building =
+          reconstruct_building(building, &handler.cfg_);
+      reconstructed_buildings.push_back(std::move(reconstructed_building));
+    }
+
+    logger.info("[reconstructor] Successfully reconstructed {} buildings",
+                reconstructed_buildings.size());
+  } catch (const std::exception& e) {
+    logger.error("[reconstructor] Failed to reconstruct buildings: {}",
+                 e.what());
+    return EXIT_FAILURE;
+  }
+
+  // Stage 3: Prepare final building tile for serialization
+  building_tile.buildings = std::move(reconstructed_buildings);
+  building_tile.attributes = std::move(tile_attributes);
 
   logger.info("[serializer] Serializing tile {} with {} buildings",
-               building_tile.id, building_tile.buildings.size());
+              building_tile.id, building_tile.buildings.size());
 
-  // create status attribute
-  building_tile.attributes.maybe_insert_vec<bool>(handler.cfg_.a_success);
-  
-  // create time attribute
-  auto attr_time = building_tile.attributes.maybe_insert_vec<int>(handler.cfg_.a_reconstruction_time);
-  if (attr_time.has_value()) {
-    for (auto& building : building_tile.buildings) {
-      attr_time->get().push_back(building.reconstruction_time);
-    }
-  }
-  // output reconstructed buildings
-  auto CityJsonWriter = roofer::io::createCityJsonWriter(*building_tile.proj_helper);
-  CityJsonWriter->written_features_count = building_tile.buildings.size();
-  CityJsonWriter->identifier_attribute = handler.cfg_.id_attribute;
-  // user provided offset
-  if (handler.cfg_.cj_translate.has_value()) {
-    CityJsonWriter->translate_x_ = (*handler.cfg_.cj_translate)[0];
-    CityJsonWriter->translate_y_ = (*handler.cfg_.cj_translate)[1];
-    CityJsonWriter->translate_z_ = (*handler.cfg_.cj_translate)[2];
-    // auto offset from data
-  } else if (building_tile.proj_helper->data_offset.has_value()) {
-    CityJsonWriter->translate_x_ = (*building_tile.proj_helper->data_offset)[0];
-    CityJsonWriter->translate_y_ = (*building_tile.proj_helper->data_offset)[1];
-    CityJsonWriter->translate_z_ = (*building_tile.proj_helper->data_offset)[2];
-  } else {
-    throw std::runtime_error(fmt::format(
-        "Tile {} has no data offset, cannot write to cityjson",
-        building_tile.id));
-  }
-  CityJsonWriter->scale_x_ = handler.cfg_.cj_scale[0];
-  CityJsonWriter->scale_y_ = handler.cfg_.cj_scale[1];
-  CityJsonWriter->scale_z_ = handler.cfg_.cj_scale[2];
+  // Create and use the serializer
+  BuildingTileSerializer serializer(handler.cfg_, project_srs.get());
+  bool serialization_success = serializer.serialize(building_tile);
 
-  std::ofstream ofs;
-  if (!handler.cfg_.split_cjseq) {
-    // get bottom left corner coordinates
-    int minx = building_tile.extent.min()[0];
-    int miny = building_tile.extent.min()[1];
-    auto jsonl_tile_path = fs::path(handler.cfg_.output_path) / fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
-    fs::create_directories(jsonl_tile_path.parent_path());
-    ofs.open(jsonl_tile_path);
-    if (!handler.cfg_.omit_metadata)
-      CityJsonWriter->write_metadata(
-          ofs, project_srs.get(), building_tile.extent,
-          {.identifier = std::to_string(building_tile.id)});
-  } else {
-    if (!handler.cfg_.omit_metadata) {
-      std::string metadata_json_file = fmt::format(
-          fmt::runtime(handler.cfg_.metadata_json_file_spec),
-          fmt::arg("path", handler.cfg_.output_path));
-      fs::create_directories(
-          fs::path(metadata_json_file).parent_path());
-      ofs.open(metadata_json_file);
-      CityJsonWriter->write_metadata(
-          ofs, project_srs.get(), building_tile.extent,
-          {.identifier = std::to_string(building_tile.id)});
-      ofs.close();
-    }
+  if (!serialization_success) {
+    logger.error("[serializer] Failed to serialize tile {}", building_tile.id);
+    return EXIT_FAILURE;
   }
 
-  for (auto& building : building_tile.buildings) {
-    if (handler.cfg_.split_cjseq) {
-      fs::create_directories(building.jsonl_path.parent_path());
-      ofs.open(building.jsonl_path);
-    }
-    try {
-      auto attrow = roofer::AttributeMapRow(building_tile.attributes,
-                                            building.attribute_index);
-
-      if (!handler.cfg_.a_h_ground.empty())
-        attrow.insert(handler.cfg_.a_h_ground, building.h_ground);
-      if (!handler.cfg_.a_h_pc_98p.empty())
-        attrow.insert(handler.cfg_.a_h_pc_98p, building.h_pc_98p);
-      if (!handler.cfg_.a_is_glass_roof.empty())
-        attrow.insert(handler.cfg_.a_is_glass_roof, building.is_glass_roof);
-      if (!handler.cfg_.a_pointcloud_unusable.empty())
-        attrow.insert(handler.cfg_.a_pointcloud_unusable, building.pointcloud_insufficient);
-      if (!handler.cfg_.a_roof_type.empty())
-        attrow.insert(handler.cfg_.a_roof_type, building.roof_type);
-      if (!handler.cfg_.a_h_roof_50p.empty())
-        attrow.insert_optional(handler.cfg_.a_h_roof_50p, building.roof_elevation_50p);
-      if (!handler.cfg_.a_h_roof_70p.empty())
-        attrow.insert_optional(handler.cfg_.a_h_roof_70p, building.roof_elevation_70p);
-      if (!handler.cfg_.a_h_roof_min.empty())
-        attrow.insert_optional(handler.cfg_.a_h_roof_min, building.roof_elevation_min);
-      if (!handler.cfg_.a_h_roof_max.empty())
-        attrow.insert_optional(handler.cfg_.a_h_roof_max, building.roof_elevation_max);
-      if (!handler.cfg_.a_h_roof_ridge.empty())
-        attrow.insert_optional(handler.cfg_.a_h_roof_ridge, building.roof_elevation_ridge);
-      if (!handler.cfg_.a_roof_n_planes.empty())
-        attrow.insert_optional(handler.cfg_.a_roof_n_planes, building.roof_n_planes);
-      if (!handler.cfg_.a_roof_n_ridgelines.empty())
-        attrow.insert_optional(handler.cfg_.a_roof_n_ridgelines, building.roof_n_ridgelines);
-      if (!handler.cfg_.a_extrusion_mode.empty()) {
-        std::string extrusion_mode_str;
-        switch (building.extrusion_mode) {
-          case STANDARD:
-            extrusion_mode_str = "standard";
-            break;
-          case LOD11_FALLBACK:
-            extrusion_mode_str = "lod11_fallback";
-            break;
-          case SKIP:
-            extrusion_mode_str = "skip";
-            break;
-          default:
-            extrusion_mode_str = "unknown";
-            break;
-        }
-        attrow.insert(handler.cfg_.a_extrusion_mode,
-                      extrusion_mode_str);
-      }
-
-      std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
-      std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
-      std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
-      if (handler.cfg_.lod_12) {
-        ms12 = &building.multisolids_lod12;
-
-        if (!handler.cfg_.a_rmse_lod12.empty())
-          attrow.insert_optional(handler.cfg_.a_rmse_lod12, building.rmse_lod12);
-        if (!handler.cfg_.a_volume_lod12.empty())
-          attrow.insert_optional(handler.cfg_.a_volume_lod12, building.volume_lod12);
-#if RF_USE_VAL3DITY
-        if (!handler.cfg_.a_val3dity_lod12.empty())
-          attrow.insert_optional(handler.cfg_.a_val3dity_lod12,
-                                  building.val3dity_lod12);
-#endif
-      }
-      if (handler.cfg_.lod_13) {
-        ms13 = &building.multisolids_lod13;
-        if (!handler.cfg_.a_rmse_lod13.empty())
-          attrow.insert_optional(handler.cfg_.a_rmse_lod13,
-                                  building.rmse_lod13);
-        if (!handler.cfg_.a_volume_lod13.empty())
-          attrow.insert_optional(handler.cfg_.a_volume_lod13,
-                                  building.volume_lod13);
-#if RF_USE_VAL3DITY
-        if (!handler.cfg_.a_val3dity_lod13.empty())
-          attrow.insert_optional(handler.cfg_.a_val3dity_lod13,
-                                  building.val3dity_lod13);
-#endif
-      }
-      if (handler.cfg_.lod_22) {
-        ms22 = &building.multisolids_lod22;
-        if (!handler.cfg_.a_rmse_lod22.empty())
-          attrow.insert_optional(handler.cfg_.a_rmse_lod22,
-                                  building.rmse_lod22);
-        if (!handler.cfg_.a_volume_lod22.empty())
-          attrow.insert_optional(handler.cfg_.a_volume_lod22,
-                                  building.volume_lod22);
-#if RF_USE_VAL3DITY
-        if (!handler.cfg_.a_val3dity_lod22.empty())
-          attrow.insert_optional(handler.cfg_.a_val3dity_lod22,
-                                  building.val3dity_lod22);
-#endif
-      }
-      // lift lod 0 footprint to h_ground
-      building.footprint.set_z(building.h_ground);
-      CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13, ms22, attrow);
-      if (handler.cfg_.split_cjseq) {
-        ofs.close();
-      }
-    } catch (const std::exception& e) {
-      logger.error("[serializer] Failed to serialize {}. {}", building.jsonl_path.string(), e.what());
-    }
-  }
-
+  logger.info("[serializer] Successfully serialized tile {}", building_tile.id);
+  return EXIT_SUCCESS;
 }

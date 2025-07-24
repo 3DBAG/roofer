@@ -279,8 +279,12 @@ void extrude_lod11(BuildingObject& building, float extrusion_h,
   building.roof_elevation_70p = building.h_pc_roof_70p + building.z_offset;
 }
 
-void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
+BuildingObject reconstruct_building(const BuildingObject& input_building,
+                                    RooferConfig* cfg) {
   auto& logger = roofer::logger::Logger::get_logger();
+
+  // Create a copy to work with
+  BuildingObject building = input_building;
 
 #ifdef RF_USE_RERUN
   // const auto& rec = rerun::RecordingStream::current();
@@ -320,10 +324,10 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     if (building.roof_h_fallback.has_value()) {
       extrude_lod11(building, *building.roof_h_fallback, cfg);
     }
-    return;
+    return building;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
     extrude_lod11(building, building.h_pc_roof_70p, cfg);
-    return;
+    return building;
   } else if (building.extrusion_mode == STANDARD) {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
@@ -365,13 +369,13 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
         if (building.roof_h_fallback.has_value()) {
           extrude_lod11(building, *building.roof_h_fallback, cfg);
         }
-        return;
+        return building;
       }
     } catch (const std::runtime_error& e) {
       extrude_lod11(building, building.h_pc_roof_70p, cfg);
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
                      building.jsonl_path.string(), e.what());
-      return;
+      return building;
     }
     // #ifdef RF_USE_RERUN
     //     rec.log("world/segmented_points",
@@ -559,4 +563,6 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     }
     logger.debug("{})", timings_str);
   }
+
+  return building;
 }

@@ -93,7 +93,7 @@ namespace roofer::validators {
   };
 
   // Box validator
-  auto ValidBox =
+  inline auto ValidBox =
       [](const roofer::TBox<double>& box) -> std::optional<std::string> {
     if (box.pmin[0] >= box.pmax[0] || box.pmin[1] >= box.pmax[1]) {
       return "Box is invalid.";

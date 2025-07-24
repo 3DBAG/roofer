@@ -4,6 +4,7 @@
     {
       "name": "vcpkg-full-test",
       "description": "Build with vcpkg with all dependencies, to test a full build.",
+      "binaryDir": "${sourceDir}/out/build/vcpkg-full-test",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -18,6 +19,7 @@
     {
       "name": "vcpkg-minimal",
       "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
+      "binaryDir": "${sourceDir}/out/build/vcpkg-minimal",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -61,8 +63,9 @@
       }
     },
     {
-      "name" : "vcpkg-docs",
+      "name": "vcpkg-docs",
       "description": "Build python bindings needed for documentation generation",
+      "binaryDir": "${sourceDir}/out/build/vcpkg-docs",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -78,23 +81,26 @@
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux configure",
+      "binaryDir": "${sourceDir}/out/build/gh-Linux",
       "inherits": "vcpkg-full-test"
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS configure",
+      "binaryDir": "${sourceDir}/out/build/gh-macOS",
       "inherits": "vcpkg-full-test"
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows configure",
+      "binaryDir": "${sourceDir}/out/build/gh-Windows",
       "inherits": "vcpkg-full-test",
       "cacheVariables": {
         "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
       }
     }
   ],
-  "buildPresets" : [
+  "buildPresets": [
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux build",
