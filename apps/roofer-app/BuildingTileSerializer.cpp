@@ -31,7 +31,7 @@ bool BuildingTileSerializer::serialize(BuildingTile& building_tile) {
     auto output_path = getOutputPath(building_tile);
     fs::create_directories(output_path.parent_path());
     std::ofstream ofs(output_path);
-    
+
     if (!config_.omit_metadata) {
       writeMetadata(cityJsonWriter, ofs, building_tile);
     }
@@ -130,7 +130,6 @@ bool BuildingTileSerializer::serializeBuilding(
     BuildingObject& building, BuildingTile& building_tile,
     std::unique_ptr<roofer::io::CityJsonWriterInterface>& writer,
     std::ofstream& ofs) {
-
   try {
     // Setup building attributes
     auto accessor = setupBuildingAttributes(building, building_tile);
@@ -280,7 +279,8 @@ void BuildingTileSerializer::processLodAttributes(
   }
 }
 
-fs::path BuildingTileSerializer::getOutputPath(const BuildingTile& building_tile) {
+fs::path BuildingTileSerializer::getOutputPath(
+    const BuildingTile& building_tile) {
   // Create filename based on tile extent
   int minx = static_cast<int>(building_tile.extent.min()[0]);
   int miny = static_cast<int>(building_tile.extent.min()[1]);

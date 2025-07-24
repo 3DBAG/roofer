@@ -116,9 +116,10 @@ void get_las_extents(InputPointcloud& ipc,
 // CONFIGURATION HANDLING
 // ============================================================================
 
-int handle_configuration(int argc, const char* argv[], RooferConfigHandler& handler) {
+int handle_configuration(int argc, const char* argv[],
+                         RooferConfigHandler& handler) {
   auto& logger = roofer::logger::Logger::get_logger();
-  
+
   CLIArgs cli_args(argc, argv);
 
   // Parse basic command line arguments (help, version, etc.)
@@ -158,7 +159,8 @@ int handle_configuration(int argc, const char* argv[], RooferConfigHandler& hand
     try {
       handler.parse_config_file();
     } catch (const std::exception& e) {
-      return handle_config_error("parse config file " + handler._config_path, e);
+      return handle_config_error("parse config file " + handler._config_path,
+                                 e);
     }
   }
 
@@ -188,14 +190,14 @@ int handle_configuration(int argc, const char* argv[], RooferConfigHandler& hand
   }
 
   logger.debug("{}", handler);
-  return 0; // Success, continue processing
+  return 0;  // Success, continue processing
 }
 
 // ============================================================================
 // SPATIAL REFERENCE SYSTEM SETUP
 // ============================================================================
 
-std::unique_ptr<roofer::io::SpatialReferenceSystemInterface> 
+std::unique_ptr<roofer::io::SpatialReferenceSystemInterface>
 setup_spatial_reference_system(const RooferConfigHandler& handler) {
   auto& logger = roofer::logger::Logger::get_logger();
   auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
@@ -220,8 +222,8 @@ setup_spatial_reference_system(const RooferConfigHandler& handler) {
 bool prepare_pointcloud_data(RooferConfigHandler& handler,
                              roofer::io::SpatialReferenceSystemInterface* srs) {
   auto& logger = roofer::logger::Logger::get_logger();
-  
-  logger.debug("Preparing point cloud data for {} input pointclouds", 
+
+  logger.debug("Preparing point cloud data for {} input pointclouds",
                handler.input_pointclouds_.size());
 
   for (auto& ipc : handler.input_pointclouds_) {
@@ -237,136 +239,110 @@ bool prepare_pointcloud_data(RooferConfigHandler& handler,
 }
 
 // ============================================================================
-// VECTOR DATA READING
+// VECTOR DATA PREPARATION
 // ============================================================================
 
-std::tuple<std::unique_ptr<roofer::io::VectorReaderInterface>, roofer::TBox<double>>
-read_vector_data(const RooferConfigHandler& handler,
-                 roofer::io::SpatialReferenceSystemInterface* project_srs) {
+bool read_vector_roi(const RooferConfigHandler& handler,
+                     roofer::io::SpatialReferenceSystemInterface* project_srs,
+                     roofer::TBox<double>& roi) {
   auto& logger = roofer::logger::Logger::get_logger();
-  
-  logger.debug("Reading vector footprint data from: {}", handler.cfg_.source_footprints);
 
-  auto pj = roofer::misc::createProjHelper();
-  auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
-  VectorReader->layer_name = handler.cfg_.layer_name;
-  VectorReader->layer_id = handler.cfg_.layer_id;
-  VectorReader->attribute_filter = handler.cfg_.attribute_filter;
+  // Only read vector data if we need to determine ROI or SRS
+  if (!project_srs->is_valid() ||
+      !handler.cfg_.region_of_interest.has_value()) {
+    logger.debug("Reading vector file to determine SRS and/or ROI");
 
-  try {
-    VectorReader->open(handler.cfg_.source_footprints);
+    auto pj = roofer::misc::createProjHelper();
+    auto VectorReader = roofer::io::createVectorReaderOGR(*pj);
+    VectorReader->layer_name = handler.cfg_.layer_name;
+    VectorReader->layer_id = handler.cfg_.layer_id;
+    VectorReader->attribute_filter = handler.cfg_.attribute_filter;
 
-    if (!project_srs->is_valid()) {
-      VectorReader->get_crs(project_srs);
+    try {
+      VectorReader->open(handler.cfg_.source_footprints);
+
+      if (!project_srs->is_valid()) {
+        VectorReader->get_crs(project_srs);
+        logger.info("Extracted SRS from vector file");
+      }
+
+      // Determine region of interest
+      if (handler.cfg_.region_of_interest.has_value()) {
+        roi = *handler.cfg_.region_of_interest;
+        logger.info("Using user-defined region of interest");
+      } else {
+        roi = VectorReader->layer_extent;
+        logger.info("Using layer extent as region of interest");
+      }
+
+    } catch (const std::exception& e) {
+      logger.error("Failed to read vector metadata: {}", e.what());
+      return false;
     }
-  } catch (const std::exception& e) {
-    logger.error("Failed to read vector data: {}", e.what());
-    throw;
-  }
-
-  // Determine region of interest
-  roofer::TBox<double> roi;
-  if (handler.cfg_.region_of_interest.has_value()) {
-    roi = *handler.cfg_.region_of_interest;
-    logger.info("Using user-defined region of interest");
   } else {
-    roi = VectorReader->layer_extent;
-    logger.info("Using layer extent as region of interest");
+    // We have both SRS and ROI from user config
+    roi = *handler.cfg_.region_of_interest;
+    logger.info("Using user-defined SRS and region of interest");
   }
 
-  logger.info("Successfully read vector data with extent: [{}, {}, {}, {}]",
-              roi.min()[0], roi.min()[1], 
-              roi.max()[0], roi.max()[1]);
-
-  return std::make_tuple(std::move(VectorReader), roi);
+  logger.info("Vector ROI determined: [{}, {}, {}, {}]", roi.min()[0],
+              roi.min()[1], roi.max()[0], roi.max()[1]);
+  return true;
 }
 
 // ============================================================================
-// CROPPING STAGE
+// PROCESSING STAGES
 // ============================================================================
 
-std::tuple<std::vector<BuildingObject>, roofer::AttributeVecMap>
-perform_cropping(const roofer::TBox<double>& roi,
-                 std::vector<InputPointcloud>& input_pointclouds,
-                 const RooferConfig& config,
-                 roofer::io::SpatialReferenceSystemInterface* srs,
-                 roofer::misc::projHelperInterface& proj_helper) {
+bool process_building_tile(const roofer::TBox<double>& roi,
+                       std::vector<InputPointcloud>& input_pointclouds,
+                       RooferConfig& config,
+                       roofer::io::SpatialReferenceSystemInterface* srs,
+                       roofer::misc::projHelperInterface& proj_helper,
+                       BuildingTile& building_tile) {
   auto& logger = roofer::logger::Logger::get_logger();
-  
-  logger.info("[CROP] Starting cropping stage for region of interest");
-  
-  try {
-    logger.debug("[CROP] Extracting building footprints and point data");
-    auto [buildings, attributes] = crop_tile(roi, input_pointclouds, config, srs, proj_helper);
-    
-    logger.info("[CROP] Successfully cropped {} buildings", buildings.size());
-    return std::make_tuple(std::move(buildings), std::move(attributes));
-    
-  } catch (const std::exception& e) {
-    logger.error("[CROP] Failed to crop tile: {}", e.what());
-    throw;
-  } catch (...) {
-    logger.error("[CROP] Failed to crop tile: unknown error");
-    throw;
-  }
-}
-
-// ============================================================================
-// RECONSTRUCTION STAGE
-// ============================================================================
-
-std::vector<BuildingObject> 
-perform_reconstruction(std::vector<BuildingObject>& cropped_buildings,
-                      RooferConfig* config) {
-  auto& logger = roofer::logger::Logger::get_logger();
-  
-  logger.info("[RECONSTRUCT] Starting reconstruction stage for {} buildings", 
-              cropped_buildings.size());
-
-  std::vector<BuildingObject> reconstructed_buildings;
-  reconstructed_buildings.reserve(cropped_buildings.size());
 
   try {
+    // Cropping stage
+    logger.debug("Cropping buildings from point clouds...");
+    auto [cropped_buildings, tile_attributes] =
+        crop_tile(roi, input_pointclouds, config, srs, proj_helper);
+    logger.info("Cropped {} buildings", cropped_buildings.size());
+
+    // Reconstruction stage
+    logger.debug("Reconstructing 3D building models...");
+    std::vector<BuildingObject> reconstructed_buildings;
+    reconstructed_buildings.reserve(cropped_buildings.size());
+
     for (auto& building : cropped_buildings) {
-      auto reconstructed_building = reconstruct_building(building, config);
+      auto reconstructed_building = reconstruct_building(building, &config);
       reconstructed_buildings.push_back(std::move(reconstructed_building));
     }
+    logger.info("Reconstructed {} buildings", reconstructed_buildings.size());
 
-    logger.info("[RECONSTRUCT] Successfully reconstructed {} buildings",
-                reconstructed_buildings.size());
-    return reconstructed_buildings;
-    
-  } catch (const std::exception& e) {
-    logger.error("[RECONSTRUCT] Failed to reconstruct buildings: {}", e.what());
-    throw;
-  }
-}
+    // Prepare building tile for serialization
+    building_tile.buildings = std::move(reconstructed_buildings);
+    building_tile.attributes = std::move(tile_attributes);
 
-// ============================================================================
-// SERIALIZATION STAGE
-// ============================================================================
-
-bool perform_serialization(BuildingTile& building_tile,
-                           const RooferConfig& config,
-                           roofer::io::SpatialReferenceSystemInterface* srs) {
-  auto& logger = roofer::logger::Logger::get_logger();
-  
-  logger.info("[SERIALIZE] Starting serialization for tile {} with {} buildings",
-              building_tile.id, building_tile.buildings.size());
-
-  try {
+    // Serialization stage
+    logger.debug("Serializing to CityJSON...");
     BuildingTileSerializer serializer(config, srs);
     bool success = serializer.serialize(building_tile);
 
     if (success) {
-      logger.info("[SERIALIZE] Successfully serialized tile {}", building_tile.id);
+      logger.info("Successfully processed and serialized {} buildings",
+                  building_tile.buildings.size());
     } else {
-      logger.error("[SERIALIZE] Failed to serialize tile {}", building_tile.id);
+      logger.error("Failed to serialize buildings");
     }
 
     return success;
+
   } catch (const std::exception& e) {
-    logger.error("[SERIALIZE] Serialization failed: {}", e.what());
+    logger.error("Processing failed: {}", e.what());
+    return false;
+  } catch (...) {
+    logger.error("Processing failed: unknown error");
     return false;
   }
 }
@@ -384,7 +360,8 @@ int main(int argc, const char* argv[]) {
   RooferConfigHandler handler;
   int config_result = handle_configuration(argc, argv, handler);
   if (config_result != 0) {
-    return config_result; // EXIT_SUCCESS for help/version, EXIT_FAILURE for errors
+    return config_result;  // EXIT_SUCCESS for help/version, EXIT_FAILURE for
+                           // errors
   }
 
   // -------------------------------------------------------------------------
@@ -403,13 +380,10 @@ int main(int argc, const char* argv[]) {
   }
 
   // -------------------------------------------------------------------------
-  // 4. VECTOR DATA READING
+  // 4. VECTOR ROI DETERMINATION
   // -------------------------------------------------------------------------
   roofer::TBox<double> roi;
-  std::unique_ptr<roofer::io::VectorReaderInterface> VectorReader;
-  try {
-    std::tie(VectorReader, roi) = read_vector_data(handler, project_srs.get());
-  } catch (const std::exception& e) {
+  if (!read_vector_roi(handler, project_srs.get(), roi)) {
     return EXIT_FAILURE;
   }
 
@@ -422,36 +396,11 @@ int main(int argc, const char* argv[]) {
   building_tile.proj_helper = roofer::misc::createProjHelper();
 
   // -------------------------------------------------------------------------
-  // 6. CROPPING STAGE
+  // 6. PROCESSING (CROP, RECONSTRUCT, SERIALIZE)
   // -------------------------------------------------------------------------
-  std::vector<BuildingObject> cropped_buildings;
-  roofer::AttributeVecMap tile_attributes;
-  try {
-    std::tie(cropped_buildings, tile_attributes) = 
-        perform_cropping(roi, handler.input_pointclouds_, handler.cfg_,
-                        project_srs.get(), *building_tile.proj_helper);
-  } catch (const std::exception& e) {
-    return EXIT_FAILURE;
-  }
-
-  // -------------------------------------------------------------------------
-  // 7. RECONSTRUCTION STAGE
-  // -------------------------------------------------------------------------
-  std::vector<BuildingObject> reconstructed_buildings;
-  try {
-    reconstructed_buildings = perform_reconstruction(cropped_buildings, &handler.cfg_);
-  } catch (const std::exception& e) {
-    return EXIT_FAILURE;
-  }
-
-  // -------------------------------------------------------------------------
-  // 8. SERIALIZATION STAGE
-  // -------------------------------------------------------------------------
-  building_tile.buildings = std::move(reconstructed_buildings);
-  building_tile.attributes = std::move(tile_attributes);
-
-  bool serialization_success = perform_serialization(building_tile, handler.cfg_, project_srs.get());
-  if (!serialization_success) {
+  if (!process_building_tile(roi, handler.input_pointclouds_, handler.cfg_,
+                         project_srs.get(), *building_tile.proj_helper,
+                         building_tile)) {
     return EXIT_FAILURE;
   }
 
