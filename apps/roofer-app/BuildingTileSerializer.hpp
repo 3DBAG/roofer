@@ -122,11 +122,9 @@ class BuildingTileSerializer {
                             const BuildingObject& building);
 
   /**
-   * @brief Get the output path for a building or tile
+   * @brief Get the output path for a tile
    * @param building_tile The building tile
-   * @param building Optional building for split mode
    * @return The output file path
    */
-  fs::path getOutputPath(const BuildingTile& building_tile,
-                         const BuildingObject* building = nullptr);
+  fs::path getOutputPath(const BuildingTile& building_tile);
 };

@@ -28,27 +28,12 @@ bool BuildingTileSerializer::serialize(BuildingTile& building_tile) {
     configureCityJsonWriter(cityJsonWriter, building_tile);
 
     // Handle output file setup
-    std::ofstream ofs;
-    if (!config_.split_cjseq) {
-      // Single file mode - write all buildings to one file
-      auto output_path = getOutputPath(building_tile);
-      fs::create_directories(output_path.parent_path());
-      ofs.open(output_path);
-
-      if (!config_.omit_metadata) {
-        writeMetadata(cityJsonWriter, ofs, building_tile);
-      }
-    } else {
-      // Split mode - metadata in separate file
-      if (!config_.omit_metadata) {
-        std::string metadata_json_file =
-            fmt::format(fmt::runtime(config_.metadata_json_file_spec),
-                        fmt::arg("path", config_.output_path));
-        fs::create_directories(fs::path(metadata_json_file).parent_path());
-        ofs.open(metadata_json_file);
-        writeMetadata(cityJsonWriter, ofs, building_tile);
-        ofs.close();
-      }
+    auto output_path = getOutputPath(building_tile);
+    fs::create_directories(output_path.parent_path());
+    std::ofstream ofs(output_path);
+    
+    if (!config_.omit_metadata) {
+      writeMetadata(cityJsonWriter, ofs, building_tile);
     }
 
     // Serialize each building
@@ -59,10 +44,7 @@ bool BuildingTileSerializer::serialize(BuildingTile& building_tile) {
       }
     }
 
-    if (!config_.split_cjseq && ofs.is_open()) {
-      ofs.close();
-    }
-
+    ofs.close();
     return all_succeeded;
 
   } catch (const std::exception& e) {
@@ -148,17 +130,8 @@ bool BuildingTileSerializer::serializeBuilding(
     BuildingObject& building, BuildingTile& building_tile,
     std::unique_ptr<roofer::io::CityJsonWriterInterface>& writer,
     std::ofstream& ofs) {
-  std::ofstream local_ofs;
-  std::ofstream* output_stream = &ofs;
 
   try {
-    // Handle split mode - each building gets its own file
-    if (config_.split_cjseq) {
-      fs::create_directories(building.jsonl_path.parent_path());
-      local_ofs.open(building.jsonl_path);
-      output_stream = &local_ofs;
-    }
-
     // Setup building attributes
     auto accessor = setupBuildingAttributes(building, building_tile);
 
@@ -181,21 +154,12 @@ bool BuildingTileSerializer::serializeBuilding(
     building.footprint.set_z(building.h_ground);
 
     // Write the feature
-    writer->write_feature(*output_stream, building.footprint, ms12, ms13, ms22,
-                          accessor);
-
-    if (config_.split_cjseq && local_ofs.is_open()) {
-      local_ofs.close();
-    }
+    writer->write_feature(ofs, building.footprint, ms12, ms13, ms22, accessor);
 
     return true;
 
   } catch (const std::exception& e) {
-    logger_.error("[serializer] Failed to serialize {}: {}",
-                  building.jsonl_path.string(), e.what());
-    if (config_.split_cjseq && local_ofs.is_open()) {
-      local_ofs.close();
-    }
+    logger_.error("[serializer] Failed to serialize building: {}", e.what());
     return false;
   }
 }
@@ -316,15 +280,10 @@ void BuildingTileSerializer::processLodAttributes(
   }
 }
 
-fs::path BuildingTileSerializer::getOutputPath(
-    const BuildingTile& building_tile, const BuildingObject* building) {
-  if (config_.split_cjseq && building) {
-    return building->jsonl_path;
-  } else {
-    // Single file mode - create filename based on tile extent
-    int minx = static_cast<int>(building_tile.extent.min()[0]);
-    int miny = static_cast<int>(building_tile.extent.min()[1]);
-    return fs::path(config_.output_path) /
-           fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
-  }
+fs::path BuildingTileSerializer::getOutputPath(const BuildingTile& building_tile) {
+  // Create filename based on tile extent
+  int minx = static_cast<int>(building_tile.extent.min()[0]);
+  int miny = static_cast<int>(building_tile.extent.min()[1]);
+  return fs::path(config_.output_path) /
+         fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
 }

@@ -124,7 +124,6 @@ struct RooferConfig {
 #endif
 
   // crop output
-  bool split_cjseq = false;
   bool omit_metadata = false;
   roofer::arr3d cj_scale = {0.001, 0.001, 0.001};
   std::optional<roofer::arr3d> cj_translate;
@@ -139,7 +138,6 @@ struct RooferConfig {
       "{path}/objects/{bid}/reconstruct/{bid}.city.jsonl";
   std::string jsonl_list_file_spec = "{path}/features.txt";
   std::string index_file_spec = "{path}/index.gpkg";
-  std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
 
   // reconstruct
@@ -528,10 +526,6 @@ struct RooferConfigHandler {
         output.add("tiling", "Enable or disable output tiling.", _tiling);
     output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
                cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
-    output.add("split-cjseq",
-               "Output CityJSONSequence file for each building instead of one "
-               "file per tile.",
-               cfg_.split_cjseq);
     output.add("omit-metadata",
                "Omit metadata line in CityJSONSequence output.",
                cfg_.omit_metadata);
