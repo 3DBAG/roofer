@@ -22,17 +22,9 @@
 /**
  * Logger library for roofer.
  *
- * Implements a generic logger facade that can use different logging backends.
- * The logging backend is selected compile time with the RF_USE_LOGGER_* option.
- * Currently available backends:
- *  - internal (default)
- *  - spdlog (enable with RF_USE_LOGGER_SPDLOG)
- *
- * Each implementation is thread-safe.
- * The spdlog backend writes the messages to a JSON file in addition to logging
- * to the console. If you enable tracing, it is recommended to use the spdlog
- * backend, because the JSON log allows efficient log processing.
- *
+ * Implements a logger using the spdlog library as the backend.
+ * The logger is thread-safe and writes messages to a JSON file in addition to 
+ * logging to the console. The JSON log allows efficient log processing.
  *
  * References:
  * - https://hnrck.io/post/singleton-design-pattern/
@@ -45,8 +37,12 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <mutex>
 
 #include "fmt/format.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 namespace roofer::logger {
 
@@ -78,10 +74,21 @@ namespace roofer::logger {
      * @brief Set the minimum level for the logger implementation. Messages
      * with a level below will be ignored.
      */
-    void set_level(LogLevel level);
+    void set_level(LogLevel level) {
+      if (impl_) {
+        impl_->set_level(level);
+      }
+    }
 
     /** @brief Returns a reference to the single logger instance. */
-    static Logger &get_logger();
+    static Logger &get_logger() {
+      static Logger singleton;
+      if (!singleton.impl_) {
+        auto impl = std::make_shared<Logger::logger_impl>();
+        singleton.impl_ = impl;
+      }
+      return singleton;
+    }
 
     /**
      * @brief Trace is used for logging counts on a process, eg. the number of
@@ -129,10 +136,100 @@ namespace roofer::logger {
 
     Logger() = default;
 
-    struct logger_impl;
+    struct logger_impl {
+      LogLevel level = LogLevel::default_level;
+
+      std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> stdout_sink =
+          std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+      std::shared_ptr<spdlog::sinks::stderr_color_sink_mt> stderr_sink =
+          std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+      std::shared_ptr<spdlog::sinks::basic_file_sink<std::mutex>> file_sink =
+          std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile_path_,
+                                                              true);
+
+      spdlog::logger logger_stdout =
+          spdlog::logger("stdout", {stdout_sink, file_sink});
+      spdlog::logger logger_stderr =
+          spdlog::logger("stderr", {stderr_sink, file_sink});
+
+      logger_impl() {
+        auto spdlog_level = cast_level(level);
+        stdout_sink->set_level(spdlog_level);
+        stderr_sink->set_level(spdlog_level);
+        file_sink->set_level(spdlog_level);
+        // Set up json logging in the logfile.
+        file_sink->set_pattern("{\n \"log\": [");
+        std::string jsonpattern = {
+            R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"},)"};
+        file_sink->set_pattern(jsonpattern);
+      }
+
+      ~logger_impl() {
+        // Finalize the json logfile.
+        std::string jsonlastlogpattern = {
+            R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"})"};
+        file_sink->set_pattern(jsonlastlogpattern);
+        file_sink->set_pattern("]\n}");
+        spdlog::drop_all();
+      }
+
+      void set_level(LogLevel new_level) {
+        level = new_level;
+        auto spdlog_level = cast_level(new_level);
+        stdout_sink->set_level(spdlog_level);
+        stderr_sink->set_level(spdlog_level);
+        file_sink->set_level(spdlog_level);
+        logger_stdout.set_level(spdlog_level);
+        logger_stderr.set_level(spdlog_level);
+      }
+
+      static spdlog::level::level_enum cast_level(LogLevel level) {
+        switch (level) {
+          case LogLevel::off:
+            return spdlog::level::off;
+          case LogLevel::trace:
+            return spdlog::level::trace;
+          case LogLevel::debug:
+            return spdlog::level::debug;
+          case LogLevel::info:
+            return spdlog::level::info;
+          case LogLevel::warning:
+            return spdlog::level::warn;
+          case LogLevel::error:
+            return spdlog::level::err;
+          case LogLevel::critical:
+            return spdlog::level::critical;
+        }
+        return spdlog::level::off;
+      }
+    };
     std::shared_ptr<logger_impl> impl_;
 
-    void log(LogLevel level, std::string_view message);
+    void log(LogLevel level, std::string_view message) {
+      if (!impl_) return;
+      switch (level) {
+        case LogLevel::off:
+          return;
+        case LogLevel::trace:
+          impl_->logger_stdout.trace(message);
+          return;
+        case LogLevel::debug:
+          impl_->logger_stdout.debug(message);
+          return;
+        case LogLevel::info:
+          impl_->logger_stdout.info(message);
+          return;
+        case LogLevel::warning:
+          impl_->logger_stdout.warn(message);
+          return;
+        case LogLevel::error:
+          impl_->logger_stderr.error(message);
+          return;
+        case LogLevel::critical:
+          impl_->logger_stderr.critical(message);
+          return;
+      }
+    }
   };
 
 }  // namespace roofer::logger

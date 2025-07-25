@@ -3,7 +3,6 @@
 cmake_minimum_required(VERSION 3.25)
 
 # Options
-option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
 option(RF_USE_VAL3DITY "Enable features dependent on Val3dity" OFF)
 option(RF_BUILD_APPS "Build applications in addition to library" ON)
@@ -14,9 +13,8 @@ option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 option(RF_ENABLE_HEAP_TRACING "Enable heap allocation overloads" OFF)
 
 # Enable the vcpkg features that are required by the options
-if(RF_USE_LOGGER_SPDLOG)
-  list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
-endif()
+# Always need spdlog for the header-only logger implementation
+list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
 if(RF_BUILD_TESTING)
   list(APPEND VCPKG_MANIFEST_FEATURES "test")
 endif()
@@ -65,13 +63,10 @@ find_package(
 # environments
 add_compile_definitions("CGAL_HAS_THREADS=1" "CGAL_ALWAYS_ROUND_TO_NEAREST=1")
 
-if(RF_USE_LOGGER_SPDLOG)
-  message(STATUS "Logging backend: spdlog")
-  set(SPDLOG_FMT_EXTERNAL ON)
-  find_package(spdlog REQUIRED)
-else()
-  message(STATUS "Logging backend: internal")
-endif()
+# Always need spdlog now since it's used directly in the header-only logger
+message(STATUS "Logging backend: spdlog (header-only)")
+set(SPDLOG_FMT_EXTERNAL ON)
+find_package(spdlog REQUIRED)
 
 # We have to use CPM (or FetchContent) even with vcpkg, because of
 # cmake-git-version-tracking, val3dity, rerun
