@@ -11,5 +11,9 @@
         "*.cpp": "cpp"
     },
     "editor.formatOnSave": true,
-    "C_Cpp.clang_format_style": "file"
+    "C_Cpp.clang_format_style": "file",
+    "editor.rulers": [],
+    "editor.wordWrap": "off",
+    "C_Cpp.formatting.newLine": "lf",
+    "C_Cpp.codeFolding": "enabled"
 }

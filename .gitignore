@@ -27,3 +27,5 @@ build-deps-balazs.sh
 .venv
 
 out/
+
+tests/output*.obj

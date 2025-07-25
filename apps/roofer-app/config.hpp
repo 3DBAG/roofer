@@ -1032,92 +1032,92 @@ struct RooferConfigHandler {
     toml::table config;
     try {
       config = toml::parse_file(_config_path);
+    } catch (const toml::parse_error& e) {
+      throw std::runtime_error(std::format("TOML parse error: {}", e.what()));
     } catch (const std::exception& e) {
-      throw std::runtime_error(std::format("Syntax error."));
+      throw std::runtime_error(std::format("Unable to parse toml file: {}", e.what()));
     }
 
     // iterate config table
-    for (const auto& [key, value] : config) {
-      try {
-        if (key == "polygon-source") {
-          get_toml_value(config, "polygon-source", cfg_.source_footprints);
-        } else if (key == "output-directory") {
-          get_toml_value(config, "output-directory", cfg_.output_path);
-        } else if (key == "output-attributes") {
-          if (toml::table* tb = config["output-attributes"].as_table()) {
-            for (const auto& [key, value] : *tb) {
-              if (auto p = output_attr_.find(key.data());
-                  p != output_attr_.end()) {
-                std::string name = "";
-                get_toml_value(*tb, key.data(), *(p->second.value));
-                // if (!name.empty()) {
-                //   p->second = name;
-                // }
-              } else {
-                throw std::runtime_error(
-                    fmt::format("Unknown output attribute: {}.", key.data()));
-              }
+    for (const auto& kv_pair : config) {
+      // Make copies of key and value to avoid lifetime issues
+      const std::string key_str = std::string(kv_pair.first);
+      const auto& value = kv_pair.second;
+
+      if (key_str == "polygon-source") {
+        get_toml_value(config, "polygon-source", cfg_.source_footprints);
+      } else if (key_str == "output-directory") {
+        get_toml_value(config, "output-directory", cfg_.output_path);
+      } else if (key_str == "output-attributes") {
+        if (toml::table* tb = config["output-attributes"].as_table()) {
+          for (const auto& attr_kv_pair : *tb) {
+            const std::string attr_key_str = std::string(attr_kv_pair.first);
+            if (auto p = output_attr_.find(attr_key_str);
+                p != output_attr_.end()) {
+              std::string name = "";
+              get_toml_value(*tb, attr_key_str.c_str(), *(p->second.value));
+              // if (!name.empty()) {
+              //   p->second = name;
+              // }
+            } else {
+              throw std::runtime_error(
+                  fmt::format("Unknown output attribute: {}.", attr_key_str));
             }
           }
-        } else if (auto p = param_index_.find(key.data());
-                   p != param_index_.end()) {
-          p->second->set_from_toml(config, key.data());
-        } else if (key == "pointclouds") {
-          if (toml::array* arr = config["pointclouds"].as_array()) {
-            // visitation with for_each() helps deal with heterogeneous data
-            for (auto& el : *arr) {
-              toml::table* tb = el.as_table();
-              auto& pc = input_pointclouds_.emplace_back();
-
-              for (const auto& [key, value] : *tb) {
-                if (key == "name") {
-                  get_toml_value(*tb, "name", pc.name);
-                } else if (key == "quality") {
-                  get_toml_value(*tb, "quality", pc.quality);
-                } else if (key == "date") {
-                  get_toml_value(*tb, "date", pc.date);
-                } else if (key == "force_lod11") {
-                  get_toml_value(*tb, "force_lod11", pc.force_lod11);
-                } else if (key == "select_only_for_date") {
-                  get_toml_value(*tb, "select_only_for_date",
-                                 pc.select_only_for_date);
-                } else if (key == "building_class") {
-                  get_toml_value(*tb, "building_class", pc.bld_class);
-                } else if (key == "ground_class") {
-                  get_toml_value(*tb, "ground_class", pc.grnd_class);
-                } else if (key == "source") {
-                  std::list<std::string> input_paths;
-                  if (toml::array* pc_paths = tb->at("source").as_array()) {
-                    for (auto& pc_path : *pc_paths) {
-                      input_paths.push_back(*pc_path.value<std::string>());
-                    }
-                  } else {
-                    throw std::runtime_error(
-                        "Failed to read pointclouds.source. Make sure it is "
-                        "a "
-                        "list of "
-                        "strings.");
-                  }
-                  pc.paths = find_filepaths(input_paths,
-                                            {".las", ".LAS", ".laz", ".LAZ"},
-                                            _skip_pc_check);
-                } else {
-                  throw std::runtime_error(std::format(
-                      "Unknown parameter in [[pointcloud]] table in "
-                      "config file: {}.",
-                      key.data()));
-                }
-              }
-            };
-          }
-        } else {
-          throw std::runtime_error(
-              std::format("Unknown parameter in config file: {}.", key.data()));
         }
-      } catch (const std::exception& e) {
-        throw std::runtime_error(
-            std::format("Failed to read value for {} from config file. {}",
-                        key.data(), e.what()));
+      } else if (auto p = param_index_.find(key_str); p != param_index_.end()) {
+        p->second->set_from_toml(config, key_str.c_str());
+      } else if (key_str == "pointclouds") {
+        if (toml::array* arr = config["pointclouds"].as_array()) {
+          // visitation with for_each() helps deal with heterogeneous data
+          for (auto& el : *arr) {
+            toml::table* tb = el.as_table();
+            auto& pc = input_pointclouds_.emplace_back();
+
+            for (const auto& pc_kv_pair : *tb) {
+              const std::string pc_key_str = std::string(pc_kv_pair.first);
+              if (pc_key_str == "name") {
+                get_toml_value(*tb, "name", pc.name);
+              } else if (pc_key_str == "quality") {
+                get_toml_value(*tb, "quality", pc.quality);
+              } else if (pc_key_str == "date") {
+                get_toml_value(*tb, "date", pc.date);
+              } else if (pc_key_str == "force_lod11") {
+                get_toml_value(*tb, "force_lod11", pc.force_lod11);
+              } else if (pc_key_str == "select_only_for_date") {
+                get_toml_value(*tb, "select_only_for_date",
+                               pc.select_only_for_date);
+              } else if (pc_key_str == "building_class") {
+                get_toml_value(*tb, "building_class", pc.bld_class);
+              } else if (pc_key_str == "ground_class") {
+                get_toml_value(*tb, "ground_class", pc.grnd_class);
+              } else if (pc_key_str == "source") {
+                std::list<std::string> input_paths;
+                if (toml::array* pc_paths = tb->at("source").as_array()) {
+                  for (auto& pc_path : *pc_paths) {
+                    input_paths.push_back(*pc_path.value<std::string>());
+                  }
+                } else {
+                  throw std::runtime_error(
+                      "Failed to read pointclouds.source. Make sure it is "
+                      "a "
+                      "list of "
+                      "strings.");
+                }
+                pc.paths = find_filepaths(input_paths,
+                                          {".las", ".LAS", ".laz", ".LAZ"},
+                                          _skip_pc_check);
+              } else {
+                throw std::runtime_error(std::format(
+                    "Unknown parameter in [[pointcloud]] table in "
+                    "config file: {}.",
+                    pc_key_str));
+              }
+            }
+          };
+        }
+      } else {
+        throw std::runtime_error(fmt::format("Unknown parameter in config file: {}", key_str));
       }
     }
   }

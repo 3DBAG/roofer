@@ -19,7 +19,11 @@
 // Author(s):
 // Ravi Peters
 #pragma once
-std::pair<std::vector<BuildingObject>, roofer::AttributeVecMap> crop_tile(
+
+#include "types.hpp"
+#include "BuildingFeature.hpp"
+
+BuildingFeatureCollection crop_tile(
     const roofer::TBox<double>& tile,
     std::vector<InputPointcloud>& input_pointclouds, const RooferConfig& cfg,
     const roofer::io::SpatialReferenceSystemInterface* srs,
@@ -46,13 +50,15 @@ std::pair<std::vector<BuildingObject>, roofer::AttributeVecMap> crop_tile(
 
   const unsigned N_fp = footprints.size();
   if (N_fp == 0) {
-    return {{}, {}};  // Return empty buildings and empty attributes
+    return BuildingFeatureCollection{};  // Return empty
+                                         // BuildingFeatureCollection
   }
 
   if (!proj_helper.data_offset.has_value()) {
     logger.error("No data offset set after reading inputs");
     exit(1);
-    return {{}, {}};  // Return empty buildings and empty attributes
+    return BuildingFeatureCollection{};  // Return empty
+                                         // BuildingFeatureCollection
   }
 
   // Create vector to hold the result buildings
@@ -341,7 +347,7 @@ std::pair<std::vector<BuildingObject>, roofer::AttributeVecMap> crop_tile(
       pc_year->get().push_back(selected->date);
     }
 
-    // output to BuildingTile
+    // output building object
     // set force_lod11 on building (for reconstruct) and attribute vec (for
     // output)
     {
@@ -536,5 +542,38 @@ std::pair<std::vector<BuildingObject>, roofer::AttributeVecMap> crop_tile(
     ipc.acquisition_years.clear();
   }
 
-  return {buildings, attributes};
+  // Convert legacy results to BuildingFeatureCollection
+  BuildingFeatureCollection features;
+  features.reserve(buildings.size());
+
+  for (size_t i = 0; i < buildings.size(); ++i) {
+    auto feature = features.emplaceFeature(buildings[i]);
+
+    // Copy attributes from AttributeVecMap using vector_source_index
+    size_t attr_index = buildings[i].vector_source_index;
+
+    // Copy all attributes from AttributeVecMap vectors at given index
+    for (const auto& [name, attr_vec] : attributes.get_attributes()) {
+      std::visit(
+          [&](const auto& vec) {
+            using VecType = std::decay_t<decltype(vec)>;
+            using ValueType =
+                typename VecType::value_type::value_type;  // T from
+                                                           // std::optional<T>
+
+            if (attr_index < vec.size()) {
+              const auto& opt_val = vec[attr_index];
+              if (opt_val.has_value()) {
+                feature->setAttribute(name, opt_val.value());
+              } else {
+                feature->setAttributeNull(name);
+              }
+            }
+          },
+          attr_vec);
+    }
+  }
+
+  logger.info("Created {} building features from crop_tile", features.size());
+  return features;
 }

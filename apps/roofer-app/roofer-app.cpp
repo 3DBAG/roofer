@@ -90,7 +90,10 @@ namespace fs = std::filesystem;
 
 #include "config.hpp"
 #include "types.hpp"
-#include "BuildingTileSerializer.hpp"
+
+// New BuildingFeature architecture
+#include "BuildingFeature.hpp"
+#include "BuildingFeatureSerializer.hpp"
 
 // Structures defined in types.hpp
 
@@ -119,7 +122,7 @@ void get_las_extents(InputPointcloud& ipc,
 int handle_configuration(int argc, const char* argv[],
                          RooferConfigHandler& handler) {
   auto& logger = roofer::logger::Logger::get_logger();
-
+  logger.set_level(roofer::logger::LogLevel::info);
   CLIArgs cli_args(argc, argv);
 
   // Parse basic command line arguments (help, version, etc.)
@@ -145,22 +148,14 @@ int handle_configuration(int argc, const char* argv[],
     return EXIT_SUCCESS;
   }
 
-  // Helper lambda for error handling
-  auto handle_config_error = [&](const std::string& context,
-                                 const std::exception& e) -> int {
-    logger.error("Failed to {}: {}. Use '-h' for usage information.", context,
-                 e.what());
-    return EXIT_FAILURE;
-  };
-
   // Read configuration file if provided
   if (!handler._config_path.empty()) {
     logger.info("Reading configuration from file {}", handler._config_path);
     try {
       handler.parse_config_file();
     } catch (const std::exception& e) {
-      return handle_config_error("parse config file " + handler._config_path,
-                                 e);
+      logger.error("Failed to parse config file {}: {}. Use '-h' for usage information.", handler._config_path, e.what());
+      return EXIT_FAILURE;
     }
   }
 
@@ -168,38 +163,31 @@ int handle_configuration(int argc, const char* argv[],
   try {
     handler.parse_cli_second_pass(cli_args);
   } catch (const std::exception& e) {
-    return handle_config_error("parse command line arguments", e);
+    logger.error("Failed to parse command line arguments: {}. Use '-h' for usage information.", e.what());
+    return EXIT_FAILURE;
   }
 
   // Validate configuration parameters
   try {
     handler.validate();
   } catch (const std::exception& e) {
-    logger.error(
-        "Failed to validate parameter values. {} Use '-h' to print usage "
-        "information.",
-        e.what());
+    logger.error("Exception during configuration validation: {}", e.what());
     return EXIT_FAILURE;
   }
 
   // Configure logging
+  logger.debug("Configuring logging with level: {}", static_cast<int>(handler._loglevel));
   logger.set_level(handler._loglevel);
-  if (handler._loglevel == roofer::logger::LogLevel::trace) {
-    auto trace_interval = std::chrono::seconds(handler._trace_interval);
-    logger.debug("trace interval is set to {} seconds", trace_interval.count());
-  }
-
-  logger.debug("{}", handler);
   return 0;  // Success, continue processing
 }
 
 // ============================================================================
 // SPATIAL REFERENCE SYSTEM SETUP
 // ============================================================================
-
 std::unique_ptr<roofer::io::SpatialReferenceSystemInterface>
 setup_spatial_reference_system(const RooferConfigHandler& handler) {
   auto& logger = roofer::logger::Logger::get_logger();
+  logger.info("Setting up spatial reference system");
   auto project_srs = roofer::io::createSpatialReferenceSystemOGR();
 
   if (!handler.cfg_.srs_override.empty()) {
@@ -218,13 +206,12 @@ setup_spatial_reference_system(const RooferConfigHandler& handler) {
 // ============================================================================
 // POINT CLOUD DATA PREPARATION
 // ============================================================================
-
 bool prepare_pointcloud_data(RooferConfigHandler& handler,
                              roofer::io::SpatialReferenceSystemInterface* srs) {
   auto& logger = roofer::logger::Logger::get_logger();
 
-  logger.debug("Preparing point cloud data for {} input pointclouds",
-               handler.input_pointclouds_.size());
+  logger.info("Preparing point cloud data for {} input pointclouds",
+              handler.input_pointclouds_.size());
 
   for (auto& ipc : handler.input_pointclouds_) {
     get_las_extents(ipc, srs);
@@ -246,7 +233,7 @@ bool read_vector_roi(const RooferConfigHandler& handler,
                      roofer::io::SpatialReferenceSystemInterface* project_srs,
                      roofer::TBox<double>& roi) {
   auto& logger = roofer::logger::Logger::get_logger();
-
+  logger.info("Reading vector file to determine SRS and/or ROI");
   // Only read vector data if we need to determine ROI or SRS
   if (!project_srs->is_valid() ||
       !handler.cfg_.region_of_interest.has_value()) {
@@ -291,63 +278,6 @@ bool read_vector_roi(const RooferConfigHandler& handler,
 }
 
 // ============================================================================
-// PROCESSING STAGES
-// ============================================================================
-
-bool process_building_tile(const roofer::TBox<double>& roi,
-                       std::vector<InputPointcloud>& input_pointclouds,
-                       RooferConfig& config,
-                       roofer::io::SpatialReferenceSystemInterface* srs,
-                       roofer::misc::projHelperInterface& proj_helper,
-                       BuildingTile& building_tile) {
-  auto& logger = roofer::logger::Logger::get_logger();
-
-  try {
-    // Cropping stage
-    logger.debug("Cropping buildings from point clouds...");
-    auto [cropped_buildings, tile_attributes] =
-        crop_tile(roi, input_pointclouds, config, srs, proj_helper);
-    logger.info("Cropped {} buildings", cropped_buildings.size());
-
-    // Reconstruction stage
-    logger.debug("Reconstructing 3D building models...");
-    std::vector<BuildingObject> reconstructed_buildings;
-    reconstructed_buildings.reserve(cropped_buildings.size());
-
-    for (auto& building : cropped_buildings) {
-      auto reconstructed_building = reconstruct_building(building, &config);
-      reconstructed_buildings.push_back(std::move(reconstructed_building));
-    }
-    logger.info("Reconstructed {} buildings", reconstructed_buildings.size());
-
-    // Prepare building tile for serialization
-    building_tile.buildings = std::move(reconstructed_buildings);
-    building_tile.attributes = std::move(tile_attributes);
-
-    // Serialization stage
-    logger.debug("Serializing to CityJSON...");
-    BuildingTileSerializer serializer(config, srs);
-    bool success = serializer.serialize(building_tile);
-
-    if (success) {
-      logger.info("Successfully processed and serialized {} buildings",
-                  building_tile.buildings.size());
-    } else {
-      logger.error("Failed to serialize buildings");
-    }
-
-    return success;
-
-  } catch (const std::exception& e) {
-    logger.error("Processing failed: {}", e.what());
-    return false;
-  } catch (...) {
-    logger.error("Processing failed: unknown error");
-    return false;
-  }
-}
-
-// ============================================================================
 // MAIN FUNCTION
 // ============================================================================
 
@@ -388,19 +318,62 @@ int main(int argc, const char* argv[]) {
   }
 
   // -------------------------------------------------------------------------
-  // 5. BUILDING TILE SETUP
+  // 5. PROCESSING (CROP, RECONSTRUCT, SERIALIZE)
   // -------------------------------------------------------------------------
-  BuildingTile building_tile;
-  building_tile.id = 0;
-  building_tile.extent = roi;
-  building_tile.proj_helper = roofer::misc::createProjHelper();
+  auto proj_helper = roofer::misc::createProjHelper();
 
-  // -------------------------------------------------------------------------
-  // 6. PROCESSING (CROP, RECONSTRUCT, SERIALIZE)
-  // -------------------------------------------------------------------------
-  if (!process_building_tile(roi, handler.input_pointclouds_, handler.cfg_,
-                         project_srs.get(), *building_tile.proj_helper,
-                         building_tile)) {
+  BuildingFeatureCollection building_features;
+  // Cropping stage - directly produces BuildingFeatures
+  try {
+    logger.info("Cropping buildings from point clouds...");
+    building_features = crop_tile(roi, handler.input_pointclouds_, handler.cfg_, project_srs.get(), *proj_helper);
+    logger.info("Cropped {} building features", building_features.size());
+
+    if (building_features.empty()) {
+      logger.error("No buildings found in region of interest");
+      return EXIT_FAILURE;
+    }
+  } catch (const std::exception& e) {
+    logger.error("Cropping failed: {}", e.what());
+    return EXIT_FAILURE;
+  }
+
+  // Reconstruction stage - work with BuildingFeatures directly
+  try {
+    logger.info("Reconstructing 3D building models...");
+    size_t reconstructed_count = 0;
+
+    for (auto& feature_ptr : building_features) {
+      auto& feature = *feature_ptr;
+
+      // Reconstruct using the new function that handles attributes internally
+      reconstruct_building_feature(feature, handler.cfg_);
+
+      if (feature.reconstruction_success) {
+        reconstructed_count++;
+      }
+    }
+
+    logger.info("Successfully reconstructed {}/{} buildings", reconstructed_count, building_features.size());
+  } catch (const std::exception& e) {
+    logger.error("Reconstruction failed: {}", e.what());
+    return EXIT_FAILURE;
+  }
+
+  // Serialization stage - direct BuildingFeature serialization
+  try {
+    logger.info("Serializing to CityJSON...");
+    BuildingFeatureSerializer serializer(handler.cfg_, project_srs.get());
+    bool success = serializer.serialize(building_features, *proj_helper);
+
+    if (success) {
+      logger.info("Successfully processed and serialized {} building features", building_features.size());
+    } else {
+      logger.error("Failed to serialize building features");
+      return EXIT_FAILURE;
+    }
+  } catch (const std::exception& e) {
+    logger.error("Serialization failed: {}", e.what());
     return EXIT_FAILURE;
   }
 

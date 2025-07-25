@@ -66,21 +66,3 @@ struct BuildingObject {
   std::optional<std::string> val3dity_lod22;
   // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
-
-/**
- * @brief A single batch for processing
- *
- * It contains a tile ID, all the buildings of the tile, their attributes,
- * the tile extent and projection information.
- * Buildings and attributes are stored in separate containers and they are
- * matched on their index in the container.
- */
-struct BuildingTile {
-  std::size_t id = 0;
-  std::vector<BuildingObject> buildings;
-  roofer::AttributeVecMap attributes;
-  // offset
-  std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
-  // extent
-  roofer::TBox<double> extent;
-};

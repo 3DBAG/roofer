@@ -63,4 +63,3 @@ namespace roofer::misc {
     return std::make_unique<projHelper>();
   };
 };  // namespace roofer::misc
-// std::unique_ptr<projHelperInterface> createProjHelper(projHelperInterface& );
