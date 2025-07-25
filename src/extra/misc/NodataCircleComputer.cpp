@@ -26,7 +26,6 @@
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 #include <CGAL/squared_distance_2.h>
-#include <roofer/common/ptinpoly.h>
 
 #include <chrono>
 #include <roofer/misc/NodataCircleComputer.hpp>
@@ -58,53 +57,45 @@ namespace roofer::misc {
     }
   }
 
-  class GridPIPTester {
-    pGridSet ext_gridset;
-    std::vector<pGridSet> hole_gridsets;
-    int Grid_Resolution = 20;
-
-    pGridSet build_grid(const Polygon& ring) {
-      int size = ring.size();
-      std::vector<pPipoint> pgon;
-      for (auto pi = ring.vertices_begin(); pi != ring.vertices_end(); ++pi) {
-        pgon.push_back(new Pipoint{pi->x(), pi->y()});
-      }
-      pGridSet grid_set = new GridSet();
-      // skip last point in the ring, ie the repetition of the first vertex
-      GridSetup(&pgon[0], pgon.size(), Grid_Resolution, grid_set);
-      for (int i = 0; i < size; i++) {
-        delete pgon[i];
-      }
-      return grid_set;
-    }
+  class CGALPolygonTester {
+    Polygon_with_holes polygon_with_holes;
 
    public:
-    GridPIPTester(const Polygon_with_holes& polygon) {
-      ext_gridset = build_grid(polygon.outer_boundary());
-      for (auto& hole : polygon.holes()) {
-        hole_gridsets.push_back(build_grid(hole));
-      }
-    }
-    ~GridPIPTester() {
-      GridCleanup(ext_gridset);
-      delete ext_gridset;
-      for (auto& h : hole_gridsets) {
-        GridCleanup(h);
-        delete h;
-      }
-    }
+    CGALPolygonTester(const Polygon_with_holes& polygon)
+        : polygon_with_holes(polygon) {}
 
     bool test(const Point& p) {
-      pPipoint pipoint = new Pipoint{p.x(), p.y()};
-      bool inside = GridTest(ext_gridset, pipoint);
-      if (inside) {
-        for (auto& hole_gridset : hole_gridsets) {
-          inside = inside && !GridTest(hole_gridset, pipoint);
-          if (!inside) break;
+      // First check if point is inside the outer boundary
+      auto outer_result = polygon_with_holes.outer_boundary().bounded_side(p);
+
+      // If point is outside the outer boundary, it's definitely outside
+      if (outer_result == CGAL::ON_UNBOUNDED_SIDE) {
+        return false;
+      }
+
+      // If point is on the boundary of outer polygon, consider it inside
+      if (outer_result == CGAL::ON_BOUNDARY) {
+        return true;
+      }
+
+      // Point is inside outer boundary, now check holes
+      for (auto hole_it = polygon_with_holes.holes_begin();
+           hole_it != polygon_with_holes.holes_end(); ++hole_it) {
+        auto hole_result = hole_it->bounded_side(p);
+
+        // If point is inside any hole, it's outside the polygon
+        if (hole_result == CGAL::ON_BOUNDED_SIDE) {
+          return false;
+        }
+
+        // If point is on the boundary of a hole, consider it outside
+        if (hole_result == CGAL::ON_BOUNDARY) {
+          return false;
         }
       }
-      delete pipoint;
-      return inside;
+
+      // Point is inside outer boundary and not inside any hole
+      return true;
     }
   };
 
@@ -165,7 +156,7 @@ namespace roofer::misc {
       // }
     }
     // build gridset for point in polygon checks
-    auto pip_tester = GridPIPTester(polygon);
+    auto pip_tester = CGALPolygonTester(polygon);
 
     // std::cout << 1000.0 * (std::clock()-c_start) / CLOCKS_PER_SEC << "ms
     // 1\n";

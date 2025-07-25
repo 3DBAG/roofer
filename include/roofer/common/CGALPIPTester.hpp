@@ -19,16 +19,36 @@
 // Author(s):
 // Ravi Peters
 
-#include <roofer/common/GridPIPTester.hpp>
+#pragma once
+
+#include <roofer/common/common.hpp>
+#include <roofer/common/datastructures.hpp>
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Polygon_with_holes_2.h>
+
+#include <vector>
+#include <memory>
 
 namespace roofer {
 
-  GridPIPTester::GridPIPTester(const LinearRing& polygon) {
-    cgal_tester = std::make_unique<CGALPIPTester>(polygon);
-  }
+  class CGALPIPTester {
+   private:
+    using K = CGAL::Exact_predicates_inexact_constructions_kernel;
+    using Point_2 = K::Point_2;
+    using Polygon_2 = CGAL::Polygon_2<K>;
+    using Polygon_with_holes_2 = CGAL::Polygon_with_holes_2<K>;
 
-  bool GridPIPTester::test(const arr3f& p) {
-    return cgal_tester->test(p);
-  }
+    std::unique_ptr<Polygon_with_holes_2> polygon_with_holes;
+
+   public:
+    CGALPIPTester(const LinearRing& polygon);
+    CGALPIPTester(const CGALPIPTester&) = delete;
+    CGALPIPTester& operator=(const CGALPIPTester&) = delete;
+    ~CGALPIPTester() = default;
+
+    bool test(const arr3f& p);
+  };
 
 }  // namespace roofer

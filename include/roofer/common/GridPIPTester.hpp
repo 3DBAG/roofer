@@ -21,23 +21,22 @@
 
 #pragma once
 
-#include <roofer/common/ptinpoly.h>
+#include <roofer/common/CGALPIPTester.hpp>
 
 #include <roofer/common/common.hpp>
 #include <roofer/common/datastructures.hpp>
-#include <vector>
+#include <memory>
 
 namespace roofer {
 
+  // Compatibility wrapper around CGALPIPTester that maintains the same interface
   class GridPIPTester {
-    pGridSet ext_gridset;
-    std::vector<pGridSet> hole_gridsets;
-    int Grid_Resolution = 20;
+    std::unique_ptr<CGALPIPTester> cgal_tester;
 
    public:
     GridPIPTester(const LinearRing& polygon);
     GridPIPTester(const GridPIPTester&) = delete;
-    ~GridPIPTester();
+    ~GridPIPTester() = default;
     bool test(const arr3f& p);
   };
 

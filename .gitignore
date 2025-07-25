@@ -29,3 +29,5 @@ build-deps-balazs.sh
 out/
 
 tests/output*.obj
+
+roofer.log.json
