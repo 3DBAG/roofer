@@ -10,6 +10,11 @@
                 "vcpkg-minimal"
             ],
             "group": "build",
+            "options": {
+                "env": {
+                    "VCPKG_ROOT": "/home/codespace/vcpkg"
+                }
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -29,6 +34,11 @@
                 "vcpkg-full-test"
             ],
             "group": "build",
+            "options": {
+                "env": {
+                    "VCPKG_ROOT": "/home/codespace/vcpkg"
+                }
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -48,6 +58,11 @@
                 "gh-Linux"
             ],
             "group": "build",
+            "options": {
+                "env": {
+                    "VCPKG_ROOT": "/home/codespace/vcpkg"
+                }
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",

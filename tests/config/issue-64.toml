@@ -7,7 +7,6 @@ lod12 = false
 lod13 = false
 lod22 = true
 
-split-cjseq = false
 output-directory = "output/issue-64"
 
 [[pointclouds]]

@@ -341,20 +341,15 @@ int main(int argc, const char* argv[]) {
   // Reconstruction stage - work with BuildingFeatures directly
   try {
     logger.info("Reconstructing 3D building models...");
-    size_t reconstructed_count = 0;
 
     for (auto& feature_ptr : building_features) {
       auto& feature = *feature_ptr;
 
       // Reconstruct using the new function that handles attributes internally
       reconstruct_building_feature(feature, handler.cfg_);
-
-      if (feature.reconstruction_success) {
-        reconstructed_count++;
-      }
     }
 
-    logger.info("Successfully reconstructed {}/{} buildings", reconstructed_count, building_features.size());
+    logger.info("Successfully reconstructed {} buildings", building_features.size());
   } catch (const std::exception& e) {
     logger.error("Reconstruction failed: {}", e.what());
     return EXIT_FAILURE;

@@ -339,10 +339,12 @@ BuildingObject reconstruct_building(const BuildingObject& input_building,
   if (building.extrusion_mode == SKIP) {
     if (building.roof_h_fallback.has_value()) {
       extrude_lod11(building, *building.roof_h_fallback, cfg);
+      building.reconstruction_success = true;  // Fallback geometry was created
     }
     return building;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
     extrude_lod11(building, building.h_pc_roof_70p, cfg);
+    building.reconstruction_success = true;  // LOD11 fallback is still a successful reconstruction
     return building;
   } else if (building.extrusion_mode == STANDARD) {
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -384,11 +386,13 @@ BuildingObject reconstruct_building(const BuildingObject& input_building,
         building.pointcloud_insufficient = true;
         if (building.roof_h_fallback.has_value()) {
           extrude_lod11(building, *building.roof_h_fallback, cfg);
+          building.reconstruction_success = true;  // Fallback geometry was created
         }
         return building;
       }
     } catch (const std::runtime_error& e) {
       extrude_lod11(building, building.h_pc_roof_70p, cfg);
+      building.reconstruction_success = true;  // LOD11 fallback after runtime error
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
                      building.jsonl_path.string(), e.what());
       return building;
@@ -569,6 +573,9 @@ BuildingObject reconstruct_building(const BuildingObject& input_building,
           building.multisolids_lod22, building.z_offset, cfg);
     }
     timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
+
+    // Mark reconstruction as successful if we reach this point
+    building.reconstruction_success = true;
 
     std::string timings_str =
         fmt::format("[reconstructor t] {} (", building.jsonl_path.string());
