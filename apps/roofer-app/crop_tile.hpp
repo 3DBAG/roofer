@@ -20,6 +20,7 @@
 // Ravi Peters
 #pragma once
 
+#include <cassert>
 #include "types.hpp"
 #include "BuildingFeature.hpp"
 
@@ -56,9 +57,7 @@ BuildingFeatureCollection crop_tile(
 
   if (!proj_helper.data_offset.has_value()) {
     logger.error("No data offset set after reading inputs");
-    exit(1);
-    return BuildingFeatureCollection{};  // Return empty
-                                         // BuildingFeatureCollection
+    return BuildingFeatureCollection{};
   }
 
   // Create vector to hold the result buildings
@@ -187,11 +186,10 @@ BuildingFeatureCollection crop_tile(
                                               footprints[i],
                                               &ipc.nodata_radii[i], &nodata_c);
         } catch (const std::exception& e) {
-          // logger.error(
-          exit(1);
-          //     "Failed to compute_nodata_circle in crop_tile for {}, setting "
-          //     "ipc.nodata_radii[i] = 0, what(): {}",
-          //     ipc.paths, e.what());
+          logger.error(
+              "Failed to compute_nodata_circle in crop_tile for {}, setting "
+              "ipc.nodata_radii[i] = 0, what(): {}",
+              ipc.name, e.what());
           ipc.nodata_radii[i] = 0;
         }
         if (cfg.write_index) {
@@ -295,11 +293,7 @@ BuildingFeatureCollection crop_tile(
         sresult.selected_pointcloud;
 
     // this is a sanity check and should never happen
-    if (!selected) {
-      logger.error("Unable to select pointcloud");
-      exit(1);
-      exit(1);
-    }
+    assert(selected && "Unable to select pointcloud");
 
     // check if yoc_attribute indicates this building to be built after selected
     // PC
@@ -397,7 +391,7 @@ BuildingFeatureCollection crop_tile(
             }
           } else {
             logger.error("No h_ground attribute found");
-            exit(1);
+            throw std::runtime_error("No h_ground attribute found for terrain strategy BUFFER_USER");
           }
         }
       } else if (cfg.h_terrain_strategy == TerrainStrategy::USER) {
@@ -412,7 +406,7 @@ BuildingFeatureCollection crop_tile(
           }
         } else {
           logger.error("No h_ground attribute found");
-          exit(1);
+          throw std::runtime_error("No h_ground attribute found for terrain strategy USER");
         }
       }
       if (h_roof_fallback_vec) {
