@@ -124,7 +124,6 @@ struct RooferConfig {
 #endif
 
   // crop output
-  bool omit_metadata = false;
   roofer::arr3d cj_scale = {0.001, 0.001, 0.001};
   std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
@@ -526,9 +525,6 @@ struct RooferConfigHandler {
         output.add("tiling", "Enable or disable output tiling.", _tiling);
     output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
                cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
-    output.add("omit-metadata",
-               "Omit metadata line in CityJSONSequence output.",
-               cfg_.omit_metadata);
     output.add("cj-scale", "Scaling applied to CityJSON output vertices",
                cfg_.cj_scale);
     output

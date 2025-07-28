@@ -48,13 +48,6 @@ class BuildingFeatureSerializer {
       size_t buildings_count, roofer::misc::projHelperInterface& proj_helper);
 
   /**
-   * @brief Write metadata to the output file
-   */
-  void writeMetadata(
-      std::unique_ptr<roofer::io::CityJsonWriterInterface>& writer,
-      std::ofstream& ofs, size_t buildings_count);
-
-  /**
    * @brief Serialize a single BuildingFeature
    */
   bool serializeFeature(

@@ -24,10 +24,6 @@ bool BuildingFeatureSerializer::serialize(
     fs::create_directories(output_path.parent_path());
     std::ofstream ofs(output_path);
 
-    if (!config_.omit_metadata) {
-      writeMetadata(cityJsonWriter, ofs, features.size());
-    }
-
     // Serialize each building feature
     bool all_succeeded = true;
     for (auto& feature_ptr : features) {
@@ -71,14 +67,6 @@ void BuildingFeatureSerializer::configureCityJsonWriter(
   writer->scale_x_ = config_.cj_scale[0];
   writer->scale_y_ = config_.cj_scale[1];
   writer->scale_z_ = config_.cj_scale[2];
-}
-
-void BuildingFeatureSerializer::writeMetadata(
-    std::unique_ptr<roofer::io::CityJsonWriterInterface>& writer,
-    std::ofstream& ofs, size_t buildings_count) {
-  // Use a default extent since we don't have tile-based extent anymore
-  roofer::TBox<double> default_extent;
-  writer->write_metadata(ofs, srs_, default_extent, {.identifier = "0"});
 }
 
 bool BuildingFeatureSerializer::serializeFeature(
