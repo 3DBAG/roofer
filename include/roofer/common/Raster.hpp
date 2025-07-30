@@ -36,7 +36,9 @@
 // #include <ogr_spatialref.h>
 namespace roofer {
   namespace RasterTools {
-    enum alg { MIN, MAX, ZERO };
+    enum alg { MIN,
+               MAX,
+               ZERO };
     class Raster {
      public:
       typedef std::array<float, 3> point3d;
@@ -45,8 +47,8 @@ namespace roofer {
              double max_y);
       Raster(const Raster &);
       void operator=(const Raster &r);
-      Raster(){};
-      ~Raster(){};
+      Raster() {};
+      ~Raster() {};
       /**
        * Prefills the raster array based on the specified method.
        * @param[in] a The method to be used for prefilling the raster arrays:
@@ -154,17 +156,8 @@ namespace roofer {
             j = i;
           }
 
-          // Sort the nodes, via a simple “Bubble” sort.
-          i = 0;
-          while (i < n_nodes - 1) {
-            if (intersect_x[i] > intersect_x[i + 1]) {
-              swap = intersect_x[i];
-              intersect_x[i] = intersect_x[i + 1];
-              intersect_x[i + 1] = swap;
-              if (i) i--;
-            } else {
-              i++;
-            }
+          if (n_nodes > 1) {
+            std::sort(intersect_x.begin(), intersect_x.begin() + n_nodes);
           }
 
           // Fill the pixels between node pairs.
