@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - install script for curl pipe install
 - automatic versioning
 - CLI flag to disable input polygon simplification:: `--no-simplify`
+- allow to omit output attributes by renaming them to an empty string
 
 ### Fixed
 - fix handling of negative flags like --no-lod22
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix bug causing skipping reconstruction of some buildings with flat roofs
 - fix issue with SegmentRasteriser that sometimes led to very high memory usage
 - fix bug that caused incorrect height attribute calculation foor roofparts
+- fix incorrect use of reserve/resize
 
 ### Changed
 - WKT logging from geos module now prints true coordinates instead of translated ones
