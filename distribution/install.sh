@@ -43,7 +43,6 @@ VERSION="1.0.0-beta.2"
 BINARY_URL="https://github.com/3DBAG/roofer/releases/download/v${VERSION}/roofer-${PLATFORM}-${ARCH}-v${VERSION}.zip"
 INSTALL_DIR="$HOME/.roofer"
 INSTALL_BIN="$INSTALL_DIR/bin/roofer"
-TMP_DIR=$(mktemp -d)
 
 if [ -d "$INSTALL_DIR" ]; then
     echo "⚠️  $INSTALL_DIR already exists."
@@ -60,9 +59,7 @@ mkdir -p "$INSTALL_DIR"
 echo "[*] Downloading binary..."
 curl -L --progress-bar "$BINARY_URL" -o "roofer.zip"
 # unzip contents
-unzip -qo "roofer.zip" -d "$TMP_DIR"
-mv "$TMP_DIR"/*/* "$INSTALL_DIR"      # assumes one top-level folder
-rm -r "$TMP_DIR"
+unzip -qo "roofer.zip" -d "$INSTALL_DIR"
 rm "roofer.zip"
 chmod +x "$INSTALL_BIN"
 
