@@ -216,11 +216,16 @@ jobs:
         name: Minimize uv cache
         run: uv cache prune --ci
 
+      - name: Set lowercase runner variables
+        run: |
+          echo "RUNNER_OS_LC=$(echo '${{ runner.os }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "RUNNER_ARCH_LC=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Upload binaries
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: roofer-${{ runner.os }}-v${{ github.ref_name }}
+          name: roofer-${{ env.RUNNER_OS_LC }}-${{ env.RUNNER_ARCH_LC }}-${{ github.ref_name }}
           path: |
             install
           retention-days: 7
