@@ -4,11 +4,12 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - main
     paths-ignore:
       - "**.md"
       - "**.rst"
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   build:
