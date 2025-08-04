@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Building from source" href="developers.html" /><link rel="prev" title="Input data requirements" href="data_requirements.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>Roofer CLI App - roofer documentation</title>
+        <title>Roofer CLI App - roofer 1.0.0-beta.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">roofer  documentation</div></a>
+      <a href="index.html"><div class="brand">roofer 1.0.0-beta.2 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -193,7 +193,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">roofer  documentation</span>
+  <span class="sidebar-brand-text">roofer 1.0.0-beta.2 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -420,6 +420,12 @@ Usage:
 </section>
 <section id="crop-options">
 <h3>Crop options<a class="headerlink" href="#crop-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-no-simplify">
+<span class="sig-name descname"><span class="pre">--[no-]simplify</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-simplify" title="Link to this definition">¶</a></dt>
+<dd><p>Simplify input footprints to remove (nearly) duplicated vertices.</p>
+</dd></dl>
+
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ceil-point-density">
 <span class="sig-name descname"><span class="pre">--ceil-point-density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">20)</span></span><a class="headerlink" href="#cmdoption-ceil-point-density" title="Link to this definition">¶</a></dt>
@@ -852,6 +858,8 @@ Usage:
 <span class="n">skip-pc-check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
 <span class="c1">### Crop options</span>
+<span class="c1">## Simplify input footprints to remove (nearly) duplicated vertices.</span>
+<span class="n">simplify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="c1">## Enforce this point density ceiling on each building pointcloud.</span>
 <span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
 <span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</span>
@@ -1094,7 +1102,7 @@ Usage:
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+</div><script src="_static/documentation_options.js?v=3b55456a"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>

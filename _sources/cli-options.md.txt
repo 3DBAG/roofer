@@ -61,6 +61,9 @@ Disable/enable check if all supplied pointcloud files exist.
 ```
 ### Crop options
 
+```{option} --[no-]simplify  (default: true)
+Simplify input footprints to remove (nearly) duplicated vertices.
+```
 ```{option} --ceil-point-density <float> (default: 20)
 Enforce this point density ceiling on each building pointcloud.
 ```
