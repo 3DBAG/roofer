@@ -4,9 +4,11 @@ on:
   push:
     tags:
       - "v*"
-    # paths-ignore:
-    #   - '**.md'
-    #   - '**.rst'
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - "**.rst"
 
 jobs:
   build:
