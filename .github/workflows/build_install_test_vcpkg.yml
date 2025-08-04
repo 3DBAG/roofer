@@ -217,6 +217,7 @@ jobs:
         run: uv cache prune --ci
 
       - name: Set lowercase runner variables
+        shell: bash
         run: |
           echo "RUNNER_OS_LC=$(echo '${{ runner.os }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
           echo "RUNNER_ARCH_LC=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
