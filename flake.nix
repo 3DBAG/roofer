@@ -56,6 +56,7 @@
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
             UV_NO_BINARY = 1;
             # VCPKG_FORCE_SYSTEM_BINARIES = 1;
+            scm_version = src.rev or "unknown";
 
             shellHook = ''
               ${pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
