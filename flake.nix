@@ -8,6 +8,68 @@
       supportedSystems = [ "aarch64-darwin" "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in {
+      packages = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
+          apple_sdk = pkgs.apple-sdk_15;
+          py = pkgs.python313;
+        in {
+          default = pkgs.stdenv.mkDerivation {
+            pname = "roofer";
+            version = "1.0.0";
+
+            src = ./.;
+
+            nativeBuildInputs = with pkgs; [
+              cmake
+              ninja
+              py
+              uv
+              git
+              cacert
+            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
+
+            buildInputs = with pkgs; [
+              # roofer deps
+              cgal
+              gmp
+              mpfr
+              boost
+              eigen
+              fmt
+
+              # apps
+              mimalloc
+              gdal
+              nlohmann_json
+              LAStools
+
+              # python tools
+              geos # for shapely
+            ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ];
+
+            cmakeFlags = [
+              "-DCMAKE_BUILD_TYPE=Release"
+              "-DRF_BUILD_APPS=ON"
+              "-DRF_BUILD_BINDINGS=OFF"
+              "-DRF_BUILD_TESTING=OFF"
+            ];
+
+            preConfigure = ''
+              export pybind11_DIR="$(${py}/bin/python -c "import pybind11; print(pybind11.get_cmake_dir())")"
+            '';
+
+            hardeningDisable = [ "fortify" ];
+
+            meta = with pkgs.lib; {
+              description = "3D building reconstruction from point clouds";
+              homepage = "https://github.com/3DBAG/roofer";
+              license = licenses.lgpl3;
+              platforms = platforms.unix;
+            };
+          };
+        });
+
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
