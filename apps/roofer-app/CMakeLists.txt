@@ -5,7 +5,7 @@ if(RF_BUILD_APPS)
 
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     find_package(mimalloc CONFIG REQUIRED)
-    list(APPEND ROOFER_LINK_LIBRARIES $<IF:$<TARGET_EXISTS:mimalloc-static>,mimalloc-static,mimalloc>)
+    list(APPEND ROOFER_LINK_LIBRARIES mimalloc)
   endif()
 
   add_executable("roofer" ${APP_SOURCES})
