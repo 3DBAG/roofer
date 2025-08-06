@@ -1,7 +1,7 @@
 {
   description = "Development environment for Roofer";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:Ylannl/nixpkgs/cgal";
 
   outputs = { nixpkgs, ... }:
     let
@@ -10,7 +10,7 @@
     in {
       devShells = forAllSystems (system:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
+          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
           apple_sdk = pkgs.apple-sdk_15;
           py = pkgs.python313;
         in {
@@ -20,27 +20,21 @@
           } {
             buildInputs = with pkgs; [
               cmakeCurses
-              vcpkg
               ninja
 
-              # to make vcpkg work
-              autoconf
-              automake
-              autoconf-archive
-              pkg-config-unwrapped
-              bash
-              cacert
-              coreutils
-              curl
-              gnumake
-              gzip
-              openssh
-              perl
-              pkg-config
-              libtool
-              zip
-              zstd
-              bison # thrift/arrow/rerun
+              # roofer deps
+              cgal
+              gmp
+              mpfr
+              boost
+              eigen
+              fmt
+
+              # apps
+              mimalloc
+              gdal
+              nlohmann_json
+              LAStools
 
               # python tools
               py
