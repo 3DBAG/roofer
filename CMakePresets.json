@@ -61,7 +61,7 @@
       }
     },
     {
-      "name" : "vcpkg-docs",
+      "name": "vcpkg-docs",
       "description": "Build python bindings needed for documentation generation",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
@@ -94,7 +94,7 @@
       }
     }
   ],
-  "buildPresets" : [
+  "buildPresets": [
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux build",
