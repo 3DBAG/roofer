@@ -61,9 +61,15 @@ find_package(
   COMPONENTS Core
   REQUIRED)
 
-# Add CGAL thread-safe FPU rounding mode to prevent hanging in multi-threaded
-# environments
-add_compile_definitions("CGAL_HAS_THREADS=1" "CGAL_ALWAYS_ROUND_TO_NEAREST=1")
+# Make sure CGAL is thread-safe
+add_compile_definitions("CGAL_HAS_THREADS=1")
+
+# For arm64 set FPU rounding mode to prevent hanging in multi-threaded
+# environments (this occurred during testing on Apple Silicon)
+MESSAGE("CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+  add_compile_definitions("CGAL_ALWAYS_ROUND_TO_NEAREST=1")
+endif()
 
 if(RF_USE_LOGGER_SPDLOG)
   message(STATUS "Logging backend: spdlog")
