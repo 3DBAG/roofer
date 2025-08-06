@@ -82,9 +82,7 @@ endif()
 # We have to use CPM (or FetchContent) even with vcpkg, because of
 # cmake-git-version-tracking, val3dity, rerun
 include(CPM)
-cpmaddpackage(
-  "gh:andrew-hardin/cmake-git-version-tracking#6c0cb87edd029ddfb403a8e24577c144a03605a6"
-)
+
 set(GIT_IGNORE_UNTRACKED TRUE)
 
 if(RF_USE_RERUN)

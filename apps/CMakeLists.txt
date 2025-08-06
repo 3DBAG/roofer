@@ -1,5 +1,6 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
+add_subdirectory(cmake-git-version-tracking)
 add_subdirectory(roofer-app)
 
 # add polyscope
