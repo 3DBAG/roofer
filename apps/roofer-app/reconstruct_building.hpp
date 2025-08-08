@@ -312,7 +312,10 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
-  if (building.pointcloud_insufficient) {
+  // pointcloud_insufficient is set by StreamCropper to indicate if the
+  // pointcloud has a pt_density that is lower than 2 std deviations less
+  // than the mean pt_density of the tile
+  if (building.pointcloud_insufficient && cfg->clear_if_insufficient) {
     building.extrusion_mode = SKIP;
   }
 

@@ -33,7 +33,6 @@ namespace roofer::io {
     float coverage_threshold = 2.0;
     int ground_class = 2;
     int building_class = 6;
-    bool clear_if_insufficient = true;
     std::string wkt_ = "";
     bool handle_overlap_points = false;
     bool use_acquisition_year = true;
