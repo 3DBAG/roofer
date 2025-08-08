@@ -205,9 +205,9 @@ namespace roofer::io {
      *    cov_thres = mean_density - coverage_threshold * std_dev_density
      */
     void do_post_process(float& ground_percentile, float& max_density_delta,
-                         float& coverage_threshold, bool& clear_if_insufficient,
-                         vec1f& poly_areas, vec1i& poly_pt_counts_bld,
-                         vec1i& poly_pt_counts_grd, vec1f& poly_densities) {
+                         float& coverage_threshold, vec1f& poly_areas,
+                         vec1i& poly_pt_counts_bld, vec1i& poly_pt_counts_grd,
+                         vec1f& poly_densities) {
       // compute poly properties
       struct PolyInfo {
         size_t pt_count_bld;
@@ -525,8 +525,7 @@ namespace roofer::io {
 
       pip_collector.do_post_process(
           cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
-          cfg.clear_if_insufficient, poly_areas, poly_pt_counts_bld,
-          poly_pt_counts_grd, poly_densities);
+          poly_areas, poly_pt_counts_bld, poly_pt_counts_grd, poly_densities);
 
       _min_ground_elevation = pip_collector.min_ground_elevation;
     }

@@ -99,7 +99,6 @@ bool crop_tile(const roofer::TBox<double>& tile,
         ipc.pointcloud_insufficient, polygon_extent,
         {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
-         .clear_if_insufficient = cfg.clear_if_insufficient,
          .use_acquisition_year = static_cast<bool>(yoc_vec)});
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
