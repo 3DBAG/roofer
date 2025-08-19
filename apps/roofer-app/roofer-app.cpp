@@ -90,7 +90,7 @@ namespace fs = std::filesystem;
 
 #include "config.hpp"
 
-enum ExtrusionMode { STANDARD, LOD11_FALLBACK, SKIP };
+enum ExtrusionMode { STANDARD, LOD11_FALLBACK, SKIP, FAIL };
 
 /**
  * @brief A single building object
@@ -687,6 +687,7 @@ int main(int argc, const char* argv[]) {
               building_object_ref.building.multisolids_lod13.clear();
               building_object_ref.building.multisolids_lod22.clear();
               building_object_ref.progress = RECONSTRUCTION_FAILED;
+              building_object_ref.building.extrusion_mode = FAIL;
               auto& logger = roofer::logger::Logger::get_logger();
               logger.warning(
                   "[reconstructor] reconstruction failed for: {}. Exception: "
@@ -697,6 +698,7 @@ int main(int argc, const char* argv[]) {
               building_object_ref.building.multisolids_lod13.clear();
               building_object_ref.building.multisolids_lod22.clear();
               building_object_ref.progress = RECONSTRUCTION_FAILED;
+              building_object_ref.building.extrusion_mode = FAIL;
               auto& logger = roofer::logger::Logger::get_logger();
               logger.warning(
                   "[reconstructor] reconstruction failed for: {}. Unknown "
@@ -945,6 +947,9 @@ int main(int argc, const char* argv[]) {
                     break;
                   case SKIP:
                     extrusion_mode_str = "skip";
+                    break;
+                  case FAIL:
+                    extrusion_mode_str = "fail";
                     break;
                   default:
                     extrusion_mode_str = "unknown";
