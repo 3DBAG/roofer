@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The `--no-clear-insuffient` flag now works as expected.
+
+### Changed
+- In case of a failure during reconstruction, the mesh geomtries of all LoDs are cleared.
+- Extrusion_mode is now set to 'fail' if reconstruction fails
+- Only define CGAL_ALWAYS_ROUND_TO_NEAREST on arm64. This fixes some issues with infinite loops on other architectures.
+
 ## [1.0.0-beta.2] - 2025-08-04
 
 ### Added
