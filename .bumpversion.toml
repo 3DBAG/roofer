@@ -11,8 +11,8 @@ parse = """(?x)
     )?                             # pre-release section is optional
 """
 serialize = [
-    "{major}.{minor}.{patch}-{label}.{beta}",
-    "{major}.{minor}.{patch}",
+  "{major}.{minor}.{patch}-{label}.{beta}",
+  "{major}.{minor}.{patch}",
 ]
 search = "{current_version}"
 replace = "{new_version}"
@@ -24,7 +24,7 @@ sign_tags = false
 tag_name = "v{new_version}"
 tag_message = "Bump version: {current_version} → {new_version}"
 allow_dirty = false
-commit = false
+commit = true
 message = "Bump version: {current_version} → {new_version}"
 moveable_tags = []
 commit_args = ""
@@ -61,8 +61,6 @@ replace = "## [Unreleased]\n\n## [{new_version}] - {now:%Y-%m-%d}"
 
 [[tool.bumpversion.files]]
 filename = "CMakeLists.txt"
-serialize = [
-    "{major}.{minor}.{patch}"
-]
+serialize = ["{major}.{minor}.{patch}"]
 search = "project(roofer VERSION {current_version}"
 replace = "project(roofer VERSION {new_version}"
