@@ -1,13 +1,18 @@
 # Build dirs
 cmake-build-*
 vcpkg_installed
+build*
 
 # CMake
 CMakeUserPresets.json
+CmakeCache.txt
+CMakeFiles/cmake.check_cache
 
 # IDE
 .idea
 .run
+.vscode
+.zed
 
 # Test dirs
 tests/data/*
@@ -18,10 +23,18 @@ tests/output/*
 tests_local
 
 # Documentation
-docs/html
+docs/_build/*
+docs/xml/*
+docs/cli-options.md
+docs/example_full.toml
+docs/output-attributes.md
+docs/rooferpy/*
 
 # Local build scripts
 build-deps-balazs.sh
 
 # Virtual environments
 .venv
+
+# Other
+*.DS_Store
