@@ -1,7 +1,7 @@
 {
   description = "Development environment for Roofer";
 
-  inputs.nixpkgs.url = "github:Ylannl/nixpkgs/cgal";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
   outputs = { nixpkgs, ... }:
     let
