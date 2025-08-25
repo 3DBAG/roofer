@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Do not append an `_` to some attribute names (eg. t_run, t_pc_source)
+
 ## [1.0.0-beta.3] - 2025-08-19
 
 ### Fixed
