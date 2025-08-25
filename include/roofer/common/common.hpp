@@ -118,7 +118,11 @@ namespace roofer {
       if (name.empty()) {
         return std::nullopt;
       }
-      return std::ref(insert_vec<T>(name + "_" + appendix));
+      if (appendix.empty()) {
+        return std::ref(insert_vec<T>(name));
+      } else {
+        return std::ref(insert_vec<T>(name + "_" + appendix));
+      }
     }
 
     AttributeVecMapDS& get_attributes();
