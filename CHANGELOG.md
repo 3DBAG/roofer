@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix for rare cases where RoofSurfaces did not get height attributes
+- Fix illegal values for building terrain height in case of no terrain points near footprint
 
 ## [1.0.0-beta.4] - 2025-08-25
 
