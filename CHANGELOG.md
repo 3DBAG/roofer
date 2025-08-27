@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix for rare cases where RoofSurfaces did not get height attributes
+
 ## [1.0.0-beta.4] - 2025-08-25
 
 ### Fixed
