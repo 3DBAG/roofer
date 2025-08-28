@@ -106,7 +106,6 @@ void compute_mesh_properties(
 
   for (auto& [i, mesh22] : multisolid_lod22) {
     mesh22.get_attributes().resize(mesh22.get_polygons().size());
-
     MeshPropertyCalculator->calculate_h_attr(mesh22, heightmap,
                                              {.z_offset = z_offset,
                                               .h_50p = cfg->a_h_roof_50p,
@@ -116,27 +115,24 @@ void compute_mesh_properties(
 
     MeshPropertyCalculator->compute_roof_orientation(
         mesh22, {.slope = cfg->a_slope, .azimuth = cfg->a_azimuth});
-
-    if (multisolid_lod12.size() > i) {
-      auto& mesh12 = multisolid_lod12.at(i);
-      mesh12.get_attributes().resize(mesh12.get_polygons().size());
-      MeshPropertyCalculator->calculate_h_attr(mesh12, heightmap,
-                                               {.z_offset = z_offset,
-                                                .h_50p = cfg->a_h_roof_50p,
-                                                .h_70p = cfg->a_h_roof_70p,
-                                                .h_min = cfg->a_h_roof_min,
-                                                .h_max = cfg->a_h_roof_max});
-    }
-    if (multisolid_lod13.size() > i) {
-      auto& mesh13 = multisolid_lod13.at(i);
-      mesh13.get_attributes().resize(mesh13.get_polygons().size());
-      MeshPropertyCalculator->calculate_h_attr(mesh13, heightmap,
-                                               {.z_offset = z_offset,
-                                                .h_50p = cfg->a_h_roof_50p,
-                                                .h_70p = cfg->a_h_roof_70p,
-                                                .h_min = cfg->a_h_roof_min,
-                                                .h_max = cfg->a_h_roof_max});
-    }
+  }
+  for (auto& [i, mesh12] : multisolid_lod12) {
+    mesh12.get_attributes().resize(mesh12.get_polygons().size());
+    MeshPropertyCalculator->calculate_h_attr(mesh12, heightmap,
+                                             {.z_offset = z_offset,
+                                              .h_50p = cfg->a_h_roof_50p,
+                                              .h_70p = cfg->a_h_roof_70p,
+                                              .h_min = cfg->a_h_roof_min,
+                                              .h_max = cfg->a_h_roof_max});
+  }
+  for (auto& [i, mesh13] : multisolid_lod13) {
+    mesh13.get_attributes().resize(mesh13.get_polygons().size());
+    MeshPropertyCalculator->calculate_h_attr(mesh13, heightmap,
+                                             {.z_offset = z_offset,
+                                              .h_50p = cfg->a_h_roof_50p,
+                                              .h_70p = cfg->a_h_roof_70p,
+                                              .h_min = cfg->a_h_roof_min,
+                                              .h_max = cfg->a_h_roof_max});
   }
 }
 
@@ -231,7 +227,7 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
 
   auto ArrangementExtruder =
       roofer::reconstruction::createArrangementExtruder();
-  ArrangementExtruder->compute(arrangement, building.h_ground,
+  ArrangementExtruder->compute(arrangement, *building.h_ground,
                                {.LoD2 = extrude_LoD2});
   // logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
@@ -252,7 +248,7 @@ void extrude_lod11(BuildingObject& building, float extrusion_h,
                    RooferConfig* cfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
-  SimplePolygonExtruder->compute(building.footprint, building.h_ground,
+  SimplePolygonExtruder->compute(building.footprint, *building.h_ground,
                                  extrusion_h);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
@@ -315,7 +311,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
   // pointcloud_insufficient is set by StreamCropper to indicate if the
   // pointcloud has a pt_density that is lower than 2 std deviations less
   // than the mean pt_density of the tile
-  if (building.pointcloud_insufficient && cfg->clear_if_insufficient) {
+  if ((building.pointcloud_insufficient && cfg->clear_if_insufficient) ||
+      !building.h_ground.has_value()) {
     building.extrusion_mode = SKIP;
   }
 

@@ -24,6 +24,7 @@
 #include <bitset>
 #include <ctime>
 #include <filesystem>
+#include <iostream>
 #include <lasreader.hpp>
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/GridPIPTester.hpp>
@@ -132,6 +133,8 @@ namespace roofer::io {
     void add_point(arr3f point, int point_class, int acqusition_year) {
       // look up grid index cell and do pip for all polygons retreived from that
       // cell
+      min_ground_elevation = std::min(min_ground_elevation, point[2]);
+
       size_t lincoord = pindex.getLinearCoord(point[0], point[1]);
       if (lincoord >= pindex_vals.size() || lincoord < 0) {
         // std::cout << "Point (" << point[0] << ", " <<point[1] << ", "  <<
@@ -159,7 +162,6 @@ namespace roofer::io {
               point_cloud.attributes.get_if<int>("classification");
 
           if (point_class == ground_class) {
-            min_ground_elevation = std::min(min_ground_elevation, point[2]);
             z_ground[poly_i].push_back(point[2]);
           }
 
@@ -530,8 +532,11 @@ namespace roofer::io {
       _min_ground_elevation = pip_collector.min_ground_elevation;
     }
 
-    float get_min_terrain_elevation() const override {
-      return _min_ground_elevation;
+    std::optional<float> get_min_terrain_elevation() const override {
+      if (_min_ground_elevation != std::numeric_limits<float>::max()) {
+        return _min_ground_elevation;
+      } else
+        return std::nullopt;
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,

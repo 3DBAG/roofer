@@ -100,6 +100,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
         {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
          .use_acquisition_year = static_cast<bool>(yoc_vec)});
+    ipc.min_ground_elevation = PointCloudCropper->get_min_terrain_elevation();
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
@@ -368,7 +369,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
         } else {
-          building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+          building.h_ground =
+              input_pointclouds[selected->index].min_ground_elevation;
         }
       } else if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_USER) {
         if (h_ground_pc.has_value()) {
@@ -380,7 +382,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
             } else {
               // fallback to min terrain elevation if no value is found
               building.h_ground =
-                  PointCloudCropper->get_min_terrain_elevation();
+                  input_pointclouds[selected->index].min_ground_elevation;
               logger.warning(
                   "Falling back to minimum tile elevation for building {}",
                   bid);
@@ -396,7 +398,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
             building.h_ground = (*h_ground_fallback_vec)[i].value();
           } else {
             // fallback to min terrain elevation if no value is found
-            building.h_ground = PointCloudCropper->get_min_terrain_elevation();
+            building.h_ground =
+                input_pointclouds[selected->index].min_ground_elevation;
             logger.warning(
                 "Falling back to minimum tile elevation for building {}", bid);
           }

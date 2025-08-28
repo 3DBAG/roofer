@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Prevent building terrain elevation getting assigned a garbage value in case of multiple input pointclouds when one of them has no points
+
+## [1.0.0-beta.5] - 2025-08-27
+
+### Fixed
+- Fix for rare cases where RoofSurfaces did not get height attributes
+- Fix illegal values for building terrain height in case of no terrain points near footprint
+
+## [1.0.0-beta.4] - 2025-08-25
+
+### Fixed
+- Do not append an `_` to some attribute names (eg. t_run, t_pc_source)
+
 ## [1.0.0-beta.3] - 2025-08-19
 
 ### Fixed
