@@ -26,6 +26,7 @@
 #include <deque>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -114,10 +115,10 @@ struct BuildingObject {
 
   // set in crop
   fs::path jsonl_path;
-  float h_ground;       // without offset
-  float h_pc_98p;       // without offset
-  float h_pc_roof_70p;  // with offset!
-  bool force_lod11;     // force_lod11 / fallback_lod11
+  std::optional<float> h_ground;  // without offset
+  float h_pc_98p;                 // without offset
+  float h_pc_roof_70p;            // with offset!
+  bool force_lod11;               // force_lod11 / fallback_lod11
   bool pointcloud_insufficient;
   bool is_glass_roof;
   std::optional<float> roof_h_fallback;
@@ -904,7 +905,8 @@ int main(int argc, const char* argv[]) {
                                                     building.attribute_index);
 
               if (!handler.cfg_.a_h_ground.empty())
-                attrow.insert(handler.cfg_.a_h_ground, building.h_ground);
+                attrow.insert_optional(handler.cfg_.a_h_ground,
+                                       building.h_ground);
               if (!handler.cfg_.a_h_pc_98p.empty())
                 attrow.insert(handler.cfg_.a_h_pc_98p, building.h_pc_98p);
               if (!handler.cfg_.a_is_glass_roof.empty())
@@ -1006,7 +1008,9 @@ int main(int argc, const char* argv[]) {
 #endif
               }
               // lift lod 0 footprint to h_ground
-              building.footprint.set_z(building.h_ground);
+              if (!building.h_ground.has_value()) {
+                building.footprint.set_z(*building.h_ground);
+              }
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
                                             ms22, attrow);
               if (handler.cfg_.split_cjseq) {

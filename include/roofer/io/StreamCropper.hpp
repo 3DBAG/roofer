@@ -53,7 +53,7 @@ namespace roofer::io {
         const Box& polygon_extent,
         PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
 
-    virtual float get_min_terrain_elevation() const = 0;
+    virtual std::optional<float> get_min_terrain_elevation() const = 0;
     // virtual void process(
     //     std::string filepaths, std::vector<LinearRing>& polygons,
     //     std::vector<LinearRing>& buf_polygons,

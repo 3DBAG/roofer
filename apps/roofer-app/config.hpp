@@ -66,6 +66,7 @@ struct InputPointcloud {
   int grnd_class = 2;
   bool force_lod11 = false;
   bool select_only_for_date = false;
+  std::optional<float> min_ground_elevation;
 
   roofer::vec1f nodata_radii;
   roofer::vec1f nodata_fractions;

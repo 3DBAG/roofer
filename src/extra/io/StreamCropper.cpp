@@ -24,6 +24,7 @@
 #include <bitset>
 #include <ctime>
 #include <filesystem>
+#include <iostream>
 #include <lasreader.hpp>
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/GridPIPTester.hpp>
@@ -531,8 +532,11 @@ namespace roofer::io {
       _min_ground_elevation = pip_collector.min_ground_elevation;
     }
 
-    float get_min_terrain_elevation() const override {
-      return _min_ground_elevation;
+    std::optional<float> get_min_terrain_elevation() const override {
+      if (_min_ground_elevation != std::numeric_limits<float>::max()) {
+        return _min_ground_elevation;
+      } else
+        return std::nullopt;
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,

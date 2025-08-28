@@ -227,7 +227,7 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
 
   auto ArrangementExtruder =
       roofer::reconstruction::createArrangementExtruder();
-  ArrangementExtruder->compute(arrangement, building.h_ground,
+  ArrangementExtruder->compute(arrangement, *building.h_ground,
                                {.LoD2 = extrude_LoD2});
   // logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
@@ -248,7 +248,7 @@ void extrude_lod11(BuildingObject& building, float extrusion_h,
                    RooferConfig* cfg) {
   auto SimplePolygonExtruder =
       roofer::reconstruction::createSimplePolygonExtruder();
-  SimplePolygonExtruder->compute(building.footprint, building.h_ground,
+  SimplePolygonExtruder->compute(building.footprint, *building.h_ground,
                                  extrusion_h);
   // std::vector<std::unordered_map<int, roofer::Mesh>> multisolidvec;
   building.multisolids_lod12 = SimplePolygonExtruder->multisolid;
@@ -311,7 +311,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
   // pointcloud_insufficient is set by StreamCropper to indicate if the
   // pointcloud has a pt_density that is lower than 2 std deviations less
   // than the mean pt_density of the tile
-  if (building.pointcloud_insufficient && cfg->clear_if_insufficient) {
+  if ((building.pointcloud_insufficient && cfg->clear_if_insufficient) ||
+      !building.h_ground.has_value()) {
     building.extrusion_mode = SKIP;
   }
 
