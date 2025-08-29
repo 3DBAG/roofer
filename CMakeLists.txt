@@ -80,7 +80,7 @@ else()
 endif()
 
 # We have to use CPM (or FetchContent) even with vcpkg, because of
-# cmake-git-version-tracking, val3dity, rerun
+# val3dity, rerun
 include(CPM)
 
 set(GIT_IGNORE_UNTRACKED TRUE)
