@@ -38,7 +38,7 @@
 #include <list>
 #include <filesystem>
 #include <utility>
-#include "git.h"
+#include "version.hpp"
 
 namespace roofer::enums {
   enum TerrainStrategy {
@@ -912,11 +912,8 @@ struct RooferConfigHandler {
   }
 
   void print_version() {
-    std::cout << std::format(
-        "roofer {} ({}{}{})\n", git_Describe(),
-        std::strcmp(git_Branch(), "main") ? ""
-                                          : std::format("{}, ", git_Branch()),
-        git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
+    std::cout << std::format("roofer {} (git ref: {})\n", RF_VERSION,
+                             RF_GIT_HASH);
   }
 
   void parse_cli_first_pass(CLIArgs& c) {

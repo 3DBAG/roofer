@@ -1,7 +1,7 @@
 if(RF_BUILD_APPS)
   set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/roofer-app.cpp")
 
-  set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt cmake_git_version_tracking)
+  set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt)
 
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     find_package(mimalloc CONFIG REQUIRED)
@@ -56,7 +56,7 @@ endif()
 if(RF_BUILD_DOC_HELPER OR RF_BUILD_APPS)
   add_executable("doc-helper" "doc-helper.cpp")
   set_target_properties("doc-helper" PROPERTIES CXX_STANDARD 20)
-  target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt cmake_git_version_tracking)
+  target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt)
   # install(
   #   TARGETS "doc-helper"
   #   ARCHIVE DESTINATION lib

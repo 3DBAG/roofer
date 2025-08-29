@@ -59,8 +59,7 @@ include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_reconstruct_api.cpp")
 set_target_properties("reconstruct_api" PROPERTIES CXX_STANDARD 20)
-target_link_libraries("reconstruct_api" PRIVATE roofer-extra
-                                                cmake_git_version_tracking)
+target_link_libraries("reconstruct_api" PRIVATE roofer-extra)
 add_test(
   NAME "reconstruct-api-wippolder"
   COMMAND $<TARGET_FILE:reconstruct_api>
