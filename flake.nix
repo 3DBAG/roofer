@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-  outputs = { nixpkgs, ... }:
+  outputs = { self, nixpkgs, ... }:
     let
       supportedSystems = [ "aarch64-darwin" "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
@@ -16,7 +16,7 @@
         in {
           default = pkgs.stdenv.mkDerivation {
             pname = "roofer";
-            version = "1.0.0";
+            version = "1.0.0-beta.5";
 
             src = ./.;
 
@@ -25,7 +25,6 @@
               ninja
               py
               uv
-              git
               cacert
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
 
@@ -53,6 +52,7 @@
               "-DRF_BUILD_APPS=ON"
               "-DRF_BUILD_BINDINGS=OFF"
               "-DRF_BUILD_TESTING=OFF"
+              "-DRF_GIT_HASH=${self.dirtyShortRev}"
             ];
 
             preConfigure = ''
