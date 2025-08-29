@@ -912,8 +912,7 @@ struct RooferConfigHandler {
   }
 
   void print_version() {
-    std::cout << std::format("roofer {} (git ref: {})\n", RF_VERSION,
-                             RF_GIT_HASH);
+    std::cout << std::format("roofer {} ({})\n", RF_VERSION, RF_GIT_HASH);
   }
 
   void parse_cli_first_pass(CLIArgs& c) {
