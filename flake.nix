@@ -13,6 +13,7 @@
           pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
           apple_sdk = pkgs.apple-sdk_15;
           py = pkgs.python313;
+          shortRev = self.shortRev or self.dirtyShortRev or "unknown";
         in {
           default = pkgs.stdenv.mkDerivation {
             pname = "roofer";
@@ -52,7 +53,7 @@
               "-DRF_BUILD_APPS=ON"
               "-DRF_BUILD_BINDINGS=OFF"
               "-DRF_BUILD_TESTING=OFF"
-              "-DRF_GIT_HASH=${self.dirtyShortRev}"
+              "-DRF_GIT_HASH=${shortRev}"
             ];
 
             preConfigure = ''
