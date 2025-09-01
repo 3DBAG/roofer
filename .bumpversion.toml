@@ -64,3 +64,14 @@ filename = "CMakeLists.txt"
 serialize = ["{major}.{minor}.{patch}"]
 search = "project(roofer VERSION {current_version}"
 replace = "project(roofer VERSION {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "apps/roofer-app/version.hpp"
+search = "RF_VERSION \"{current_version}\""
+replace = "RF_VERSION \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "apps/roofer-app/version.hpp"
+regex = true
+search = '#define\s+RF_VERSION_GIT_HASH\s+"([^"]+)"'
+replace = '#define RF_VERSION_GIT_HASH "{short_commit_sha}"'
