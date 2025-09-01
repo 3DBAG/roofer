@@ -30,28 +30,29 @@
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
 
             buildInputs = with pkgs; [
-              # roofer deps
+              # core roofer deps
               cgal
               gmp
               mpfr
               boost
               eigen
-              fmt
 
-              # apps
+              # app deps
               mimalloc
               gdal
               nlohmann_json
               LAStools
+              geos
+              fmt
 
-              # python tools
-              geos # for shapely
+              # python binding deps
+              # python313Packages.pybind11
             ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ];
 
             cmakeFlags = [
               "-DCMAKE_BUILD_TYPE=Release"
               "-DRF_BUILD_APPS=ON"
-              "-DRF_BUILD_BINDINGS=OFF"
+              # "-DRF_BUILD_BINDINGS=ON"
               "-DRF_BUILD_TESTING=OFF"
               "-DRF_GIT_HASH=${shortRev}"
             ];
@@ -59,8 +60,6 @@
             preConfigure = ''
               export pybind11_DIR="$(${py}/bin/python -c "import pybind11; print(pybind11.get_cmake_dir())")"
             '';
-
-            hardeningDisable = [ "fortify" ];
 
             meta = with pkgs.lib; {
               description = "3D building reconstruction from point clouds";
@@ -106,11 +105,8 @@
 
               # docs
               doxygen
-            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals (builtins.getEnv "GITHUB_ACTIONS" == "true") [mono]; # this is needed to make gh actions binary caching work with vcpkg
+            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
 
-            hardeningDisable = [ "fortify" ];
-            VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
             UV_NO_BINARY = 1;
             # VCPKG_FORCE_SYSTEM_BINARIES = 1;
             scm_version = "unknown";
