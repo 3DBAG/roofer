@@ -36,13 +36,6 @@ endif()
 # TODO: add version number
 project(roofer VERSION 1.0.0 LANGUAGES C CXX)
 
-if(RF_GIT_HASH)
-  add_compile_definitions(RF_GIT_HASH="${RF_GIT_HASH}")
-else()
-  execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE RF_GIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE)
-  add_compile_definitions(RF_GIT_HASH="${RF_GIT_HASH}")
-endif()
-
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang
 set(CMAKE_CXX_STANDARD 20)
