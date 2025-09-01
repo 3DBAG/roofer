@@ -912,12 +912,7 @@ struct RooferConfigHandler {
   }
 
   void print_version() {
-    if (strcmp(RF_VERSION_GIT_HASH, RF_GIT_HASH) == 0) {
-      std::cout << std::format("roofer {} ({})\n", RF_VERSION,
-                               RF_VERSION_GIT_HASH);
-    } else {
-      std::cout << std::format("roofer {}-dev ({})\n", RF_VERSION, RF_GIT_HASH);
-    }
+    std::cout << std::format("roofer {} ({})\n", RF_VERSION, RF_GIT_HASH);
   }
 
   void parse_cli_first_pass(CLIArgs& c) {
