@@ -84,24 +84,29 @@
               cmakeCurses
               ninja
 
-              # roofer deps
+              # roofer core deps
               cgal
               gmp
               mpfr
-              boost
+              pkgsStatic.boost
               eigen
               fmt
+
+              # val3dity
+              spdlog
+              pugixml
+              tclap
 
               # apps
               mimalloc
               gdal
               nlohmann_json
               LAStools
+              geos
 
               # python tools
               py
               uv
-              geos # for shapely
 
               # docs
               doxygen
