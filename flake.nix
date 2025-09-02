@@ -23,10 +23,6 @@
 
             nativeBuildInputs = with pkgs; [
               cmake
-              ninja
-              py
-              uv
-              cacert
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
 
             buildInputs = with pkgs; [
@@ -46,6 +42,7 @@
               fmt
 
               # python binding deps
+              # py
               # python313Packages.pybind11
             ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ];
 
@@ -82,7 +79,6 @@
           } {
             buildInputs = with pkgs; [
               cmakeCurses
-              ninja
 
               # roofer core deps
               cgal
