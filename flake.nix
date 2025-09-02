@@ -23,6 +23,7 @@
 
             nativeBuildInputs = with pkgs; [
               cmake
+              ninja
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
 
             buildInputs = with pkgs; [
@@ -35,7 +36,7 @@
 
               # app deps
               mimalloc
-              gdal
+              pkgsStatic.gdalMinimal
               nlohmann_json
               LAStools
               geos
@@ -52,6 +53,7 @@
               # "-DRF_BUILD_BINDINGS=ON"
               "-DRF_BUILD_TESTING=OFF"
               "-DRF_GIT_HASH=${shortRev}"
+              "-G Ninja"
             ];
 
             preConfigure = ''
@@ -63,6 +65,7 @@
               homepage = "https://github.com/3DBAG/roofer";
               license = licenses.lgpl3;
               platforms = platforms.unix;
+              mainProgram = "roofer";
             };
           };
         });
@@ -84,7 +87,7 @@
               cgal
               gmp
               mpfr
-              pkgsStatic.boost
+              pkgsStatic.boost # need static for val3dity
               eigen
               fmt
 
