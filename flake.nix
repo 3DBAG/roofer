@@ -7,7 +7,7 @@
 
   outputs = { self, nixpkgs, val3dity-src, ... }:
     let
-      supportedSystems = [ "aarch64-darwin" "x86_64-linux" ];
+      supportedSystems = [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in {
       packages = forAllSystems (system:
@@ -33,7 +33,7 @@
               nlohmann_json
             ];
 
-            cmakeFlags = [ "-DVAL3DITY_LIBRARY=ON" "-DVAL3DITY_USE_INTERNAL_DEPS=OFF" ];
+            cmakeFlags = [ "-DVAL3DITY_LIBRARY=ON" "-DVAL3DITY_USE_INTERNAL_DEPS=OFF" "-G Ninja" ];
           };
 
           rooferDerivation = { withBindings ? false, withApps ? true }:
@@ -60,7 +60,6 @@
                 ++ lib.optionals withApps [
                   val3dity
                   spdlog
-                  pugixml
                   mimalloc
                   nlohmann_json
                   LAStools
@@ -77,6 +76,8 @@
                 "-DRF_GIT_HASH=${shortRev}"
                 "-DRF_USE_CPM=OFF"
                 "-DRF_USE_LOGGER_SPDLOG=ON"
+                # there is no nix package for rerun_cpp atm
+                "-DRF_USE_RERUN=OFF"
                 "-G Ninja"
               ];
 
@@ -94,7 +95,7 @@
             });
         in {
           default = rooferDerivation { withApps = true; withBindings = false; };
-          python = rooferDerivation { withApps = false; withBindings = true; };
+          rooferpy = rooferDerivation { withApps = false; withBindings = true; };
         });
 
       devShells = forAllSystems (system:
@@ -119,11 +120,11 @@
               fmt
 
               # val3dity
-              spdlog
               pugixml
               tclap
 
               # apps
+              spdlog
               mimalloc
               gdal
               nlohmann_json

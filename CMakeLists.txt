@@ -80,9 +80,10 @@ else()
   message(STATUS "Logging backend: internal")
 endif()
 
-# We have to use CPM (or FetchContent) even with vcpkg, because of
-# val3dity, rerun
-include(CPM)
+# CPM can be used to get val3dity and rerun
+if(RF_USE_CPM OR RF_USE_RERUN)
+  include(CPM)
+endif()
 
 set(GIT_IGNORE_UNTRACKED TRUE)
 

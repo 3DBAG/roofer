@@ -25,11 +25,11 @@
     "val3dity-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1757021996,
-        "narHash": "sha256-aX5kaHV9y9pmjEV/46dZhvFVFp/nPD/3QhEPxpnaCZc=",
+        "lastModified": 1757077225,
+        "narHash": "sha256-KzDmiPNqfm+iWK6omyAwWPk6rm64bhB4FLcl6q2Z+Oo=",
         "owner": "ylannl",
         "repo": "val3dity",
-        "rev": "ebac77bc3919868c3086c9763db0389d6d4d5672",
+        "rev": "4ebba86b84f0096a365ed67c87533742ddfa7877",
         "type": "github"
       },
       "original": {
