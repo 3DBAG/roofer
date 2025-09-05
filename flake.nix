@@ -2,8 +2,10 @@
   description = "Development environment for Roofer";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  inputs.val3dity-src.url = "github:ylannl/val3dity";
+  inputs.val3dity-src.flake = false;
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, val3dity-src, ... }:
     let
       supportedSystems = [ "aarch64-darwin" "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
@@ -14,60 +16,85 @@
           apple_sdk = pkgs.apple-sdk_15;
           py = pkgs.python313;
           shortRev = self.shortRev or self.dirtyShortRev or "unknown";
-        in {
-          default = pkgs.stdenv.mkDerivation {
-            pname = "roofer";
-            version = "1.0.0-beta.5";
 
-            src = ./.;
+          val3dity = pkgs.stdenv.mkDerivation {
+            pname = "val3dity";
+            version = "2.5.3";
+            src = val3dity-src;
 
-            nativeBuildInputs = with pkgs; [
-              cmake
-              ninja
-            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
-
+            nativeBuildInputs = with pkgs; [ cmake ninja ];
             buildInputs = with pkgs; [
-              # core roofer deps
-              cgal
-              gmp
-              mpfr
-              boost
-              eigen
-
-              # app deps
-              mimalloc
-              pkgsStatic.gdalMinimal
-              nlohmann_json
-              LAStools
+              cgal gmp mpfr eigen
               geos
-              fmt
-
-              # python binding deps
-              # py
-              # python313Packages.pybind11
-            ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ];
-
-            cmakeFlags = [
-              "-DCMAKE_BUILD_TYPE=Release"
-              "-DRF_BUILD_APPS=ON"
-              # "-DRF_BUILD_BINDINGS=ON"
-              "-DRF_BUILD_TESTING=OFF"
-              "-DRF_GIT_HASH=${shortRev}"
-              "-G Ninja"
+              spdlog
+              pugixml
+              tclap
+              boost
+              nlohmann_json
             ];
 
-            preConfigure = ''
-              export pybind11_DIR="$(${py}/bin/python -c "import pybind11; print(pybind11.get_cmake_dir())")"
-            '';
-
-            meta = with pkgs.lib; {
-              description = "3D building reconstruction from point clouds";
-              homepage = "https://github.com/3DBAG/roofer";
-              license = licenses.lgpl3;
-              platforms = platforms.unix;
-              mainProgram = "roofer";
-            };
+            cmakeFlags = [ "-DVAL3DITY_LIBRARY=ON" "-DVAL3DITY_USE_INTERNAL_DEPS=OFF" ];
           };
+
+          rooferDerivation = { withBindings ? false, withApps ? true }:
+            pkgs.stdenv.mkDerivation ({
+              pname = "roofer" + pkgs.lib.optionalString withBindings "py";
+              version = "1.0.0-beta.5";
+
+              src = ./.;
+
+              nativeBuildInputs = with pkgs; [
+                cmake
+                ninja
+              ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
+                ++ lib.optionals withBindings [ python313Packages.pybind11 ];
+
+              buildInputs = with pkgs; [
+                # core roofer deps
+                cgal gmp mpfr boost eigen
+                fmt
+              ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ]
+                ++ lib.optionals withBindings [
+                  py
+                ]
+                ++ lib.optionals withApps [
+                  val3dity
+                  spdlog
+                  pugixml
+                  mimalloc
+                  nlohmann_json
+                  LAStools
+                  geos
+                  gdal
+                ];
+
+              cmakeFlags = [
+                "-DCMAKE_BUILD_TYPE=Release"
+                "-DRF_BUILD_APPS=${if withApps then "ON" else "OFF"}"
+                "-DRF_BUILD_BINDINGS=${if withBindings then "ON" else "OFF"}"
+                "-DRF_USE_VAL3DITY=${if withApps then "ON" else "OFF"}"
+                "-DRF_BUILD_TESTING=OFF"
+                "-DRF_GIT_HASH=${shortRev}"
+                "-DRF_USE_CPM=OFF"
+                "-DRF_USE_LOGGER_SPDLOG=ON"
+                "-G Ninja"
+              ];
+
+              preConfigure = pkgs.lib.optionalString withBindings ''
+                export pybind11_DIR="$(${py}/bin/python -c "import pybind11; print(pybind11.get_cmake_dir())")"
+              '';
+
+              meta = with pkgs.lib; {
+                description = "3D building reconstruction from point clouds";
+                homepage = "https://github.com/3DBAG/roofer";
+                license = licenses.lgpl3;
+                platforms = platforms.unix;
+                mainProgram = "roofer";
+              };
+            });
+        in {
+          default = rooferDerivation { withApps = true; withBindings = false; };
+          python = rooferDerivation { withApps = false; withBindings = true; };
         });
 
       devShells = forAllSystems (system:

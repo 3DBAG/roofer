@@ -2,11 +2,11 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1756035328,
-        "narHash": "sha256-vC7SslUBCtdT3T37ZH3PLIWYmTkSeppL5BJJByUjYCM=",
+        "lastModified": 1756819007,
+        "narHash": "sha256-12V64nKG/O/guxSYnr5/nq1EfqwJCdD2+cIGmhz3nrE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "6b0b1559e918d4f7d1df398ee1d33aeac586d4d6",
+        "rev": "aaff8c16d7fc04991cac6245bee1baa31f72b1e1",
         "type": "github"
       },
       "original": {
@@ -18,7 +18,24 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "val3dity-src": "val3dity-src"
+      }
+    },
+    "val3dity-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1757021996,
+        "narHash": "sha256-aX5kaHV9y9pmjEV/46dZhvFVFp/nPD/3QhEPxpnaCZc=",
+        "owner": "ylannl",
+        "repo": "val3dity",
+        "rev": "ebac77bc3919868c3086c9763db0389d6d4d5672",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ylannl",
+        "repo": "val3dity",
+        "type": "github"
       }
     }
   },

@@ -7,7 +7,7 @@ set(LIBRARY_SOURCES
     "Vector2DOpsGEOS.cpp"
     "MeshPropertyCalculator.cpp")
 if(RF_USE_VAL3DITY)
-    list(APPEND LIBRARY_SOURCES "Val3dator.cpp")
+  list(APPEND LIBRARY_SOURCES "Val3dator.cpp")
 endif()
 set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/misc/NodataCircleComputer.hpp"
@@ -18,7 +18,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/misc/Vector2DOps.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/misc/MeshPropertyCalculator.hpp")
 if(RF_USE_VAL3DITY)
-    list(APPEND LIBRARY_HEADERS "${ROOFER_INCLUDE_DIR}/roofer/misc/Val3dator.hpp")
+  list(APPEND LIBRARY_HEADERS "${ROOFER_INCLUDE_DIR}/roofer/misc/Val3dator.hpp")
 endif()
 set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
@@ -33,13 +33,17 @@ set(MISC_LINK_LIBS
     GEOS::geos_c
 )
 if(RF_USE_VAL3DITY)
+  if(RF_USE_CPM)
     cpmaddpackage(
-        NAME val3dity
-        GITHUB_REPOSITORY "ylannl/val3dity"
-        GIT_TAG "master"
-        OPTIONS "VAL3DITY_LIBRARY ON"
-                "VAL3DITY_USE_INTERNAL_DEPS OFF")
-    list(APPEND MISC_LINK_LIBS val3dity)
+            NAME val3dity
+            GITHUB_REPOSITORY "ylannl/val3dity"
+            GIT_TAG "master"
+            OPTIONS "VAL3DITY_LIBRARY ON"
+                    "VAL3DITY_USE_INTERNAL_DEPS OFF")
+  else()
+    find_package(val3dity REQUIRED)
+  endif()
+  list(APPEND MISC_LINK_LIBS val3dity)
 endif()
 
 target_link_libraries("misc" PUBLIC ${MISC_LINK_LIBS})
