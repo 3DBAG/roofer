@@ -1,7 +1,7 @@
 {
   description = "Development environment for Roofer";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:ylannl/nixpkgs/gdalMinimal";
   inputs.val3dity-src.url = "github:ylannl/val3dity";
   inputs.val3dity-src.flake = false;
 
@@ -96,6 +96,24 @@
         in {
           default = rooferDerivation { withApps = true; withBindings = false; };
           rooferpy = rooferDerivation { withApps = false; withBindings = true; };
+        });
+
+      dockerImage = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
+        in {
+          roofer = pkgs.dockerTools.buildImage {
+            name = "roofer";
+            tag = self.packages.${system}.default.version;
+            copyToRoot = pkgs.buildEnv {
+                name = "image-root";
+                paths = [ self.packages.${system}.default ];
+                pathsToLink = [ "/bin" ];
+              };
+            config = {
+              Entrypoint = [ "roofer" ];
+            };
+          };
         });
 
       devShells = forAllSystems (system:
