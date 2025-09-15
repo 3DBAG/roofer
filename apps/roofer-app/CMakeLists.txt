@@ -57,11 +57,11 @@ if(RF_BUILD_DOC_HELPER)
   add_executable("doc-helper" "doc-helper.cpp")
   set_target_properties("doc-helper" PROPERTIES CXX_STANDARD 20)
   target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt)
-  # install(
-  #   TARGETS "doc-helper"
-  #   ARCHIVE DESTINATION lib
-  #   LIBRARY DESTINATION lib
-  #   RUNTIME DESTINATION bin)
+   install(
+     TARGETS "doc-helper"
+     ARCHIVE DESTINATION lib
+     LIBRARY DESTINATION lib
+     RUNTIME DESTINATION bin)
 endif()
 
 # get the --version flag working. Try to use RF_GIT_HASH if defined (eg by nix build), otherwise fallback to cmake helper function

@@ -79,6 +79,7 @@
                 # there is no nix package for rerun_cpp atm
                 "-DRF_USE_RERUN=OFF"
                 "-G Ninja"
+                "-DRF_BUILD_DOC_HELPER=ON"
               ];
 
               preConfigure = pkgs.lib.optionalString withBindings ''
