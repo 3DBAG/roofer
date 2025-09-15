@@ -43,6 +43,9 @@ if(RF_BUILD_APPS)
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
+  if(RF_GIT_HASH)
+    target_compile_definitions(roofer PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
+  endif()
   if(DEFINED CMAKE_TOOLCHAIN_FILE)
     install (DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj
             DESTINATION "share"
@@ -57,18 +60,19 @@ if(RF_BUILD_DOC_HELPER)
   add_executable("doc-helper" "doc-helper.cpp")
   set_target_properties("doc-helper" PROPERTIES CXX_STANDARD 20)
   target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt)
-   install(
+  install(
      TARGETS "doc-helper"
      ARCHIVE DESTINATION lib
      LIBRARY DESTINATION lib
      RUNTIME DESTINATION bin)
+  if(RF_GIT_HASH)
+    target_compile_definitions(doc-helper PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
+  endif()
 endif()
 
 # get the --version flag working. Try to use RF_GIT_HASH if defined (eg by nix build), otherwise fallback to cmake helper function
 if(RF_BUILD_DOC_HELPER OR RF_BUILD_APPS)
-  if(RF_GIT_HASH)
-    target_compile_definitions(roofer PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
-  else()
+  if(NOT RF_GIT_HASH)
     set(GIT_HASH_HEADER ${CMAKE_BINARY_DIR}/git_hash.h)
 
     add_custom_command(
