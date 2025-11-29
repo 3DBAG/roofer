@@ -8,7 +8,4 @@ cmake --preset vcpkg-with-bindings -S . -B build_python
 cmake --build build_python
 ```
 
-The rooferpy library will be located in `build/rooferpy/rooferpy.cpyton-<version-and-system>.so`. Import the .so file (e.g. place it in the same folder as .py script) to use roofer python API.
-
-
-todo: information on data structures
+The rooferpy library will be located in `build_python/rooferpy/rooferpy.cpyton-<version-and-system>.so`. Import the .so file (e.g. place it in the same folder as .py script) to use roofer python API.
