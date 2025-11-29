@@ -566,16 +566,14 @@ namespace roofer {
   }
 
   void pop_back_if_equal_to_front(LinearRing& linear_ring) {
-      auto it = linear_ring.end();
+    auto it = linear_ring.end();
+    --it;
+    if ((*linear_ring.begin()) == *it) linear_ring.erase(it);
+    for (auto& iring : linear_ring.interior_rings()) {
+      it = iring.end();
       --it;
-      if((*linear_ring.begin()) == *it)
-          linear_ring.erase(it);
-      for (auto& iring : linear_ring.interior_rings()) {
-          it = iring.end();
-          --it;
-          if((*iring.begin()) == *it)
-              iring.erase(it);
-      }
+      if ((*iring.begin()) == *it) iring.erase(it);
+    }
   }
 
   std::time_t Date::to_time_t() {
