@@ -212,7 +212,7 @@ namespace roofer::io {
       if (poLayer == nullptr) {
         throw(rooferException("[VectorReaderOGR] Layer is not open"));
       }
-      if (OGRSpatialReference* layerSRS = poLayer->GetSpatialRef()) {
+      if (auto* layerSRS = poLayer->GetSpatialRef()) {
         if (!srs->is_valid()) {
           char* pszWKT = NULL;
           layerSRS->exportToWkt(&pszWKT);
