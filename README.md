@@ -1,6 +1,6 @@
 # roofer - automatic building reconstruction from pointclouds
 
-**roofer** performs fully automatic LoD2 building reconstruction from a pointcloud and a building roofprint polygon. It was originally developed, and is still used, to create the [3DBAG dataset](https://3dbag.nl).
+**roofer** performs fully automatic LoD2 building reconstruction from a pointcloud and a building roofprint polygon. It was originally developed, and is still used, to create the [3DBAG dataset](https://3dbag.nl). To use it, read [how to get started](https://3dbag.github.io/roofer/getting_started.html).
 
 ![Building reconstruction with roofer](https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/docs/_static/img/banner.png)
 
