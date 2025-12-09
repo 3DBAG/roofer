@@ -31,7 +31,7 @@ namespace roofer::reconstruction {
     std::pair<int, int> min_cnt_range = {5, 10};
     int min_cnt_range_lower = 5;
     int min_cnt_range_upper = 10;
-    int k = 10;
+    int k = 15;
     float snap_threshold = 1;
     float line_extend = 0.05;
     bool perform_chaining = true;
