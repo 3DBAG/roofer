@@ -116,7 +116,7 @@ if(RF_BUILD_BINDINGS)
   add_subdirectory(rooferpy)
 endif()
 
-add_subdirectory(roofersharp)
+add_subdirectory(roofersharp/cpp)
 
 # EXECUTABLES
 if(RF_BUILD_APPS OR RF_BUILD_DOC_HELPER)
