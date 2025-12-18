@@ -614,11 +614,7 @@ wheels = [
 
 [[package]]
 name = "roofer"
-<<<<<<< HEAD
 version = "1.0.0b5"
-=======
-version = "1.0.0b3"
->>>>>>> 0c41ba1 (use official nixpkgs-unstable)
 source = { virtual = "." }
 dependencies = [
     { name = "breathe" },

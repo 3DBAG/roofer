@@ -1,7 +1,8 @@
 {
   description = "Development environment for Roofer";
 
-  inputs.nixpkgs.url = "github:ylannl/nixpkgs/gdalMinimal";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  # inputs.nixpkgs.url = "github:ylannl/nixpkgs/gdalMinimal";
   inputs.val3dity-src.url = "github:ylannl/val3dity";
   inputs.val3dity-src.flake = false;
 
@@ -36,7 +37,21 @@
             cmakeFlags = [ "-DVAL3DITY_LIBRARY=ON" "-DVAL3DITY_USE_INTERNAL_DEPS=OFF" "-G Ninja" ];
           };
 
-          rooferDerivation = { withBindings ? false, withApps ? true }:
+          rerun-sdk = pkgs.stdenv.mkDerivation {
+            pname = "rerun-sdk";
+            version = "0.27.3";
+            src = pkgs.fetchurl {
+              url = "https://github.com/rerun-io/rerun/releases/download/0.27.3/rerun_cpp_sdk.zip";
+              sha256 = "1aysn1jsl58vxaakv8j9awnnxll06ay4pwczfs8gi63w3w4yj920";
+            };
+            nativeBuildInputs = [ pkgs.unzip pkgs.cmake ];
+            buildInputs = [ pkgs.arrow-cpp ];
+            cmakeFlags = [
+              "-DRERUN_DOWNLOAD_AND_BUILD_ARROW=OFF"
+            ];
+          };
+
+          rooferDerivation = { withBindings ? false, withApps ? true, withRerun ? false }:
             pkgs.stdenv.mkDerivation ({
               pname = "roofer" + pkgs.lib.optionalString withBindings "py";
               version = "1.0.0-beta.5";
@@ -65,6 +80,10 @@
                   LAStools
                   geos
                   gdal
+                ]
+                ++ lib.optionals withRerun [
+                  rerun
+                  rerun-sdk
                 ];
 
               cmakeFlags = [
@@ -75,9 +94,9 @@
                 "-DRF_BUILD_TESTING=OFF"
                 "-DRF_GIT_HASH=${shortRev}"
                 "-DRF_USE_CPM=OFF"
-                "-DRF_USE_LOGGER_SPDLOG=ON"
+                "-DRF_USE_LOGGER_SPDLOG=${if withBindings then "OFF" else "ON"}"
                 # there is no nix package for rerun_cpp atm
-                "-DRF_USE_RERUN=OFF"
+                "-DRF_USE_RERUN=${if withRerun then "ON" else "OFF"}"
                 "-G Ninja"
                 "-DRF_BUILD_DOC_HELPER=ON"
               ];
@@ -97,6 +116,7 @@
         in {
           default = rooferDerivation { withApps = true; withBindings = false; };
           rooferpy = rooferDerivation { withApps = false; withBindings = true; };
+          roofer-rerun = rooferDerivation { withApps = true; withRerun = true; };
         });
 
       dockerImage = forAllSystems (system:

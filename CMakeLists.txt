@@ -89,10 +89,13 @@ set(GIT_IGNORE_UNTRACKED TRUE)
 
 if(RF_USE_RERUN)
   set(RERUN_DOWNLOAD_AND_BUILD_ARROW OFF)
-  cpmaddpackage(
-    NAME rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
-  )
+  find_package(rerun_sdk QUIET)
+  if(NOT rerun_sdk_FOUND)
+    CPMAddPackage(
+      NAME rerun_sdk
+      URL https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
+    )
+  endif()
 endif()
 
 if(MSVC)

@@ -2,16 +2,16 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1757319647,
-        "narHash": "sha256-bVZyYV7fYfHqAKrlnnpOveP3jyoN++HaUy0M5aWwlv8=",
-        "owner": "ylannl",
+        "lastModified": 1765934234,
+        "narHash": "sha256-pJjWUzNnjbIAMIc5gRFUuKCDQ9S1cuh3b2hKgA7Mc4A=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "bb8f29e420c5c4a7f37da1fec7dcb70d2a8a065b",
+        "rev": "af84f9d270d404c17699522fab95bbf928a2d92f",
         "type": "github"
       },
       "original": {
-        "owner": "ylannl",
-        "ref": "gdalMinimal",
+        "owner": "nixos",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -25,11 +25,11 @@
     "val3dity-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1757077225,
-        "narHash": "sha256-KzDmiPNqfm+iWK6omyAwWPk6rm64bhB4FLcl6q2Z+Oo=",
+        "lastModified": 1757079329,
+        "narHash": "sha256-ovrJ6Oqx3F8QECoWJJLHRaOczfqZ0jNV0TP99BL93M4=",
         "owner": "ylannl",
         "repo": "val3dity",
-        "rev": "4ebba86b84f0096a365ed67c87533742ddfa7877",
+        "rev": "54f7350a31ce30e0801b64bef5e9efdda1f358c3",
         "type": "github"
       },
       "original": {
