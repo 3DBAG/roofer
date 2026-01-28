@@ -1,0 +1,25 @@
+[package]
+name = "roofer-fcb-ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fcb_core = "0.6.0"
+cjseq2 = "0.1"
+cxx = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Use vendored OpenSSL if system OpenSSL is not available
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[build-dependencies]
+cxx-build = "1.0"

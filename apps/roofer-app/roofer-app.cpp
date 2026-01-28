@@ -26,9 +26,11 @@
 #include <deque>
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
+#include <sstream>
 namespace fs = std::filesystem;
 
 #include <stdlib.h>
@@ -73,6 +75,7 @@ namespace fs = std::filesystem;
 
 // serialisation
 #include <roofer/io/CityJsonWriter.hpp>
+#include <roofer/io/FcbWriter.hpp>
 
 #include "BS_thread_pool.hpp"
 
@@ -839,65 +842,184 @@ int main(int argc, const char* argv[]) {
             }
           }
           // output reconstructed buildings
-          auto CityJsonWriter =
-              roofer::io::createCityJsonWriter(*building_tile.proj_helper);
-          CityJsonWriter->written_features_count = serialized_buildings_cnt;
-          CityJsonWriter->identifier_attribute = handler.cfg_.id_attribute;
+          std::unique_ptr<roofer::io::CityJsonWriterInterface> writer;
+          if (handler.cfg_.output_format == "fcb") {
+            writer = roofer::io::createFcbWriter(*building_tile.proj_helper);
+          } else {
+            writer = roofer::io::createCityJsonWriter(*building_tile.proj_helper);
+          }
+          writer->written_features_count = serialized_buildings_cnt;
+          writer->identifier_attribute = handler.cfg_.id_attribute;
           // user provided offset
           if (handler.cfg_.cj_translate.has_value()) {
-            CityJsonWriter->translate_x_ = (*handler.cfg_.cj_translate)[0];
-            CityJsonWriter->translate_y_ = (*handler.cfg_.cj_translate)[1];
-            CityJsonWriter->translate_z_ = (*handler.cfg_.cj_translate)[2];
+            writer->translate_x_ = (*handler.cfg_.cj_translate)[0];
+            writer->translate_y_ = (*handler.cfg_.cj_translate)[1];
+            writer->translate_z_ = (*handler.cfg_.cj_translate)[2];
             // auto offset from data
           } else if (building_tile.proj_helper->data_offset.has_value()) {
-            CityJsonWriter->translate_x_ =
+            writer->translate_x_ =
                 (*building_tile.proj_helper->data_offset)[0];
-            CityJsonWriter->translate_y_ =
+            writer->translate_y_ =
                 (*building_tile.proj_helper->data_offset)[1];
-            CityJsonWriter->translate_z_ =
+            writer->translate_z_ =
                 (*building_tile.proj_helper->data_offset)[2];
           } else {
             throw std::runtime_error(fmt::format(
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          CityJsonWriter->scale_x_ = handler.cfg_.cj_scale[0];
-          CityJsonWriter->scale_y_ = handler.cfg_.cj_scale[1];
-          CityJsonWriter->scale_z_ = handler.cfg_.cj_scale[2];
+          writer->scale_x_ = handler.cfg_.cj_scale[0];
+          writer->scale_y_ = handler.cfg_.cj_scale[1];
+          writer->scale_z_ = handler.cfg_.cj_scale[2];
 
+          const bool use_fcb_output = (handler.cfg_.output_format == "fcb");
+
+          // We always pass some std::ostream into the writer, but in FCB mode
+          // the FcbWriter ignores the stream and uses writer->filepath_ to
+          // determine the .fcb path. To avoid creating empty .city.jsonl files
+          // when writing FCB, we use an ostringstream as a dummy sink.
           std::ofstream ofs;
+          std::ostringstream fcb_sink;
+          std::ostream* out = nullptr;
+          if (use_fcb_output) {
+            out = &fcb_sink;
+          } else {
+            out = &ofs;
+          }
+
           if (!handler.cfg_.split_cjseq) {
             // get bottom left corner coordinates
             int minx = building_tile.extent.min()[0];
             int miny = building_tile.extent.min()[1];
-            auto jsonl_tile_path =
-                fs::path(handler.cfg_.output_path) /
-                fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
+
+            fs::path jsonl_tile_path;
+            if (use_fcb_output) {
+              // Derive a more descriptive base name from the first input pointcloud.
+              std::string base_name;
+              if (!handler.input_pointclouds_.empty() &&
+                  !handler.input_pointclouds_.front().paths.empty()) {
+                fs::path pc0_path(handler.input_pointclouds_.front().paths.front());
+                base_name = pc0_path.stem().string();
+              } else {
+                // Fallback to the original tiling-based name.
+                base_name = fmt::format("{:06d}_{:06d}", minx, miny);
+              }
+              jsonl_tile_path = fs::path(handler.cfg_.output_path) /
+                                fmt::format("{}_{:06d}_{:06d}.city.jsonl", base_name,
+                                            minx, miny);
+            } else {
+              // Original JSONL naming: <minx>_<miny>.city.jsonl
+              jsonl_tile_path = fs::path(handler.cfg_.output_path) /
+                                fmt::format("{:06d}_{:06d}.city.jsonl", minx, miny);
+            }
+
             fs::create_directories(jsonl_tile_path.parent_path());
-            ofs.open(jsonl_tile_path);
-            if (!handler.cfg_.omit_metadata)
-              CityJsonWriter->write_metadata(
-                  ofs, project_srs.get(), building_tile.extent,
-                  {.identifier = std::to_string(building_tile.id)});
+
+            if (!use_fcb_output) {
+              ofs.open(jsonl_tile_path);
+            }
+
+            // Set filepath for writer; FcbWriter will convert this to .fcb
+            writer->filepath_ = jsonl_tile_path.string();
+
+            if (!handler.cfg_.omit_metadata) {
+              if (use_fcb_output) {
+                if (auto* fcb_writer =
+                        dynamic_cast<roofer::io::FcbWriter*>(writer.get())) {
+                  fcb_writer->set_expected_feature_count(
+                      static_cast<uint64_t>(building_tile.buildings.size()));
+                  
+                  // Build attribute schema JSON from all buildings to avoid per-feature
+                  // "own_schema" overhead, improving compression. Collect all unique
+                  // attribute keys and use the first non-null value of each to determine type.
+                  nlohmann::json combined_attrs = nlohmann::json::object();
+                  std::set<std::string> collected_keys;
+                  // First pass: collect all attribute keys from all buildings
+                  for (const auto& building : building_tile.buildings) {
+                    auto attrow = roofer::AttributeMapRow(building_tile.attributes,
+                                                          building.attribute_index);
+                    for (const auto& [name, _] : attrow) {
+                      collected_keys.insert(name);
+                    }
+                  }
+                  // Second pass: for each key, find first non-null value to determine type
+                  for (const auto& key : collected_keys) {
+                    bool found = false;
+                    for (const auto& building : building_tile.buildings) {
+                      auto attrow = roofer::AttributeMapRow(building_tile.attributes,
+                                                            building.attribute_index);
+                      if (attrow.has_name(key) && !attrow.is_null(key)) {
+                        if (auto val = attrow.get_if<bool>(key)) {
+                          combined_attrs[key] = *val;
+                          found = true;
+                          break;
+                        } else if (auto val = attrow.get_if<float>(key)) {
+                          combined_attrs[key] = *val;
+                          found = true;
+                          break;
+                        } else if (auto val = attrow.get_if<int>(key)) {
+                          combined_attrs[key] = *val;
+                          found = true;
+                          break;
+                        } else if (auto val = attrow.get_if<std::string>(key)) {
+                          combined_attrs[key] = *val;
+                          found = true;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  fcb_writer->set_attribute_schema_json(combined_attrs.dump());
+                }
+              }
+              writer->write_metadata(*out, project_srs.get(), building_tile.extent,
+                                     {.identifier = std::to_string(building_tile.id)});
+            }
           } else {
+            // split_cjseq: one file per building; metadata JSON file only used in
+            // JSONL mode. In FCB mode we still set filepath_ so FcbWriter can
+            // derive the .fcb name, but we do not create/write a JSONL file.
             if (!handler.cfg_.omit_metadata) {
               std::string metadata_json_file = fmt::format(
                   fmt::runtime(handler.cfg_.metadata_json_file_spec),
                   fmt::arg("path", handler.cfg_.output_path));
               fs::create_directories(
                   fs::path(metadata_json_file).parent_path());
-              ofs.open(metadata_json_file);
-              CityJsonWriter->write_metadata(
-                  ofs, project_srs.get(), building_tile.extent,
-                  {.identifier = std::to_string(building_tile.id)});
-              ofs.close();
+
+              // Set filepath for writer; FcbWriter will handle the .fcb name.
+              writer->filepath_ = metadata_json_file;
+
+              if (!use_fcb_output) {
+                ofs.open(metadata_json_file);
+                // JSONL path: feature count is encoded by line count; no need for FCB hint.
+                writer->write_metadata(*out, project_srs.get(), building_tile.extent,
+                                       {.identifier = std::to_string(building_tile.id)});
+                ofs.close();
+              } else {
+                if (auto* fcb_writer =
+                        dynamic_cast<roofer::io::FcbWriter*>(writer.get())) {
+                  fcb_writer->set_expected_feature_count(
+                      static_cast<uint64_t>(building_tile.buildings.size()));
+                  // For split mode, we can't build schema upfront (one feature per file),
+                  // so use empty schema
+                  fcb_writer->set_attribute_schema_json("{}");
+                }
+                writer->write_metadata(*out, project_srs.get(), building_tile.extent,
+                                       {.identifier = std::to_string(building_tile.id)});
+              }
             }
           }
 
           for (auto& building : building_tile.buildings) {
             if (handler.cfg_.split_cjseq) {
               fs::create_directories(building.jsonl_path.parent_path());
-              ofs.open(building.jsonl_path);
+              // In JSONL mode we open a real file; in FCB mode we only set
+              // the filepath_ so FcbWriter can compute the .fcb name.
+              if (!use_fcb_output) {
+                ofs.open(building.jsonl_path);
+              }
+              // Set filepath for FCB writer (for split mode, each building has its own file)
+              writer->filepath_ = building.jsonl_path.string();
             }
             try {
               auto attrow = roofer::AttributeMapRow(building_tile.attributes,
@@ -1007,10 +1129,18 @@ int main(int argc, const char* argv[]) {
               }
               // lift lod 0 footprint to h_ground
               building.footprint.set_z(building.h_ground);
-              CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
-                                            ms22, attrow);
+              writer->write_feature(*out, building.footprint, ms12, ms13,
+                                    ms22, attrow);
               if (handler.cfg_.split_cjseq) {
-                ofs.close();
+                if (!use_fcb_output) {
+                  ofs.close();
+                } else {
+                  // In split mode, each building has its own FCB file - close it after writing
+                  auto* fcb_writer = dynamic_cast<roofer::io::FcbWriter*>(writer.get());
+                  if (fcb_writer) {
+                    fcb_writer->close_current_file();
+                  }
+                }
               }
               ++serialized_buildings_cnt;
             } catch (const std::exception& e) {
@@ -1018,8 +1148,17 @@ int main(int argc, const char* argv[]) {
                            building.jsonl_path.string(), e.what());
             }
           }
-          if (!handler.cfg_.split_cjseq) {
-            ofs.close();
+          if (!handler.cfg_.split_cjseq && !use_fcb_output) {
+            if (ofs.is_open()) {
+              ofs.close();
+            }
+          }
+          // Explicitly close FCB writer to ensure index is written
+          if (use_fcb_output) {
+            auto* fcb_writer = dynamic_cast<roofer::io::FcbWriter*>(writer.get());
+            if (fcb_writer) {
+              fcb_writer->close_current_file();
+            }
           }
           pending_serialized.pop_front();
         }

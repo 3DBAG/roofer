@@ -41,6 +41,11 @@
               zip
               zstd
               bison # thrift/arrow/rerun
+              flex
+
+              # Rust toolchain for FCB FFI
+              rustc
+              cargo
 
               # python tools
               py
@@ -54,7 +59,7 @@
 
             hardeningDisable = [ "fortify" ];
             VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
-            UV_NO_BINARY = 1;
+           # UV_NO_BINARY = 1;
             # VCPKG_FORCE_SYSTEM_BINARIES = 1;
             scm_version = "unknown";
 

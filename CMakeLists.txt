@@ -95,6 +95,89 @@ if(RF_USE_RERUN)
   )
 endif()
 
+# Rust FFI for FCB output
+find_program(CARGO cargo)
+if(CARGO)
+  set(RUST_TARGET_DIR "${CMAKE_BINARY_DIR}/rust-target")
+  set(FCB_FFI_DIR "${CMAKE_SOURCE_DIR}/roofer-fcb-ffi")
+  
+  # Determine library extension based on platform
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(FCB_FFI_LIB_EXT "dll")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(FCB_FFI_LIB_EXT "dylib")
+  else()
+    set(FCB_FFI_LIB_EXT "so")
+  endif()
+  set(FCB_FFI_LIB "${RUST_TARGET_DIR}/release/libroofer_fcb_ffi.${FCB_FFI_LIB_EXT}")
+  # cxx also builds a static runtime library (libcxxbridge1.a) that contains
+  # implementations like rust::cxxbridge1::Str::Str(const char*). We need to
+  # link this alongside the cdylib to satisfy those symbols.
+  file(GLOB CXXBRIDGE1_LIB "${RUST_TARGET_DIR}/release/build/cxx-*/out/libcxxbridge1.a")
+  
+  # Prefer cargo from ~/.cargo/bin (rustup-managed, 1.93.0) over nix cargo (1.86.0)
+  # Nix provides cargo 1.86.0 which uses rustc 1.86.0, but we need 1.93.0 for time@0.3.46
+  find_program(CARGO_RUSTUP "$ENV{HOME}/.cargo/bin/cargo")
+  if(CARGO_RUSTUP)
+    set(CARGO_TO_USE ${CARGO_RUSTUP})
+    message(STATUS "Using rustup-managed cargo: ${CARGO_TO_USE}")
+  else()
+    set(CARGO_TO_USE ${CARGO})
+    message(STATUS "Using system cargo: ${CARGO_TO_USE}")
+  endif()
+  
+  # Build Rust library
+  # The cxx header will be generated in: target/release/build/roofer-fcb-ffi-<hash>/out/cxxbridge/roofer-fcb-ffi/src/lib.rs.h
+  # Use rustup-managed cargo to get rustc 1.93.0 instead of nix's 1.86.0
+  add_custom_target(roofer_fcb_ffi_build
+    COMMAND ${CMAKE_COMMAND} -E env "PATH=$ENV{HOME}/.cargo/bin:$ENV{PATH}" "RUSTUP_TOOLCHAIN=stable" ${CARGO_TO_USE} build --release --manifest-path ${FCB_FFI_DIR}/Cargo.toml --target-dir ${RUST_TARGET_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Building Rust FCB FFI library"
+    BYPRODUCTS ${FCB_FFI_LIB}
+  )
+  
+  # Find and copy the generated header and source to known locations
+  # cxx generates headers in target/cxxbridge/<crate>/src/lib.rs.h (standard location, symlink)
+  # The actual file is in target/release/build/<crate>-<hash>/out/cxxbridge/include/<crate>/src/lib.rs.h
+  set(FCB_FFI_HEADER_OUTPUT "${CMAKE_BINARY_DIR}/include/roofer-fcb-ffi/src/lib.rs.h")
+  set(FCB_FFI_CC_OUTPUT "${CMAKE_BINARY_DIR}/roofer-fcb-ffi/src/lib.rs.cc")
+  # Use the symlink location which is more predictable
+  # NOTE: cargo is invoked with --target-dir ${RUST_TARGET_DIR}, so cxxbridge outputs
+  # are emitted under that directory (not under ${FCB_FFI_DIR}/target).
+  set(FCB_FFI_HEADER_SOURCE "${RUST_TARGET_DIR}/cxxbridge/roofer-fcb-ffi/src/lib.rs.h")
+  set(FCB_FFI_CC_SOURCE "${RUST_TARGET_DIR}/cxxbridge/roofer-fcb-ffi/src/lib.rs.cc")
+  add_custom_command(TARGET roofer_fcb_ffi_build POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/include/roofer-fcb-ffi/src"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/roofer-fcb-ffi/src"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FCB_FFI_HEADER_SOURCE}" "${FCB_FFI_HEADER_OUTPUT}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FCB_FFI_CC_SOURCE}" "${FCB_FFI_CC_OUTPUT}"
+    COMMENT "Copying cxx-generated header and source to known location"
+  )
+  
+  # Store paths for use in src/extra/io/CMakeLists.txt
+  set(FCB_FFI_CC_FILE "${FCB_FFI_CC_OUTPUT}" CACHE INTERNAL "Path to cxx-generated C++ source")
+
+  add_library(roofer_fcb_ffi SHARED IMPORTED)
+  get_filename_component(FCB_FFI_LIB_DIR ${FCB_FFI_LIB} DIRECTORY)
+  set_target_properties(roofer_fcb_ffi PROPERTIES
+    IMPORTED_LOCATION ${FCB_FFI_LIB}
+    IMPORTED_NO_SONAME ON
+    IMPORTED_IMPLIB ${FCB_FFI_LIB}
+  )
+  
+  # Make the imported library depend on the build target
+  add_dependencies(roofer_fcb_ffi roofer_fcb_ffi_build)
+  
+  # Add the library directory to the linker search path for all targets
+  link_directories(${FCB_FFI_LIB_DIR})
+  
+  # Add include directory for the copied header
+  include_directories(${CMAKE_BINARY_DIR}/include)
+else()
+  message(WARNING "Cargo not found. FCB output support will not be available.")
+  add_library(roofer_fcb_ffi INTERFACE)
+endif()
+
 if(MSVC)
   # windows.h breaks std::min/std::max, fix by define
   add_definitions(-DNOMINMAX)

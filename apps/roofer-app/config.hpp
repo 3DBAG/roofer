@@ -141,6 +141,7 @@ struct RooferConfig {
   std::string index_file_spec = "{path}/index.gpkg";
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
+  std::string output_format = "jsonl";  // "jsonl" or "fcb"
 
   // reconstruct
   roofer::enums::TerrainStrategy h_terrain_strategy =
@@ -527,6 +528,8 @@ struct RooferConfigHandler {
         output.add("tiling", "Enable or disable output tiling.", _tiling);
     output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
                cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
+    output.add("output-format", "Output format: 'jsonl' or 'fcb'",
+               cfg_.output_format);
     output.add("split-cjseq",
                "Output CityJSONSequence file for each building instead of one "
                "file per tile.",
