@@ -24,6 +24,11 @@ set(LIBRARY_INCLUDES
     "${ROOFER_INCLUDE_DIR}")
 
 find_package(GEOS CONFIG REQUIRED)
+# Workaround: Conan's geos recipe sets an empty generator expression for
+# INTERFACE_INCLUDE_DIRECTORIES on geos_c. Append the real path via find_path,
+# which searches CMAKE_INCLUDE_PATH that Conan correctly populates.
+find_path(GEOS_C_INCLUDE_DIR geos_c.h REQUIRED)
+set_property(TARGET GEOS::geos_c APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GEOS_C_INCLUDE_DIR}")
 
 add_library("misc" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
@@ -31,6 +36,7 @@ target_include_directories("misc" PUBLIC ${LIBRARY_INCLUDES})
 set(MISC_LINK_LIBS
     CGAL::CGAL
     GEOS::geos_c
+    fmt::fmt
 )
 if(RF_USE_VAL3DITY)
   if(RF_USE_CPM)

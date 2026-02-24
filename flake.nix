@@ -143,6 +143,18 @@
           apple_sdk = pkgs.apple-sdk_15;
           py = pkgs.python313;
         in {
+          conan = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              cmake
+              ninja
+              conan
+            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
+
+            shellHook = ''
+              echo "Conan dev shell ready. Run 'conan profile detect' if you haven't set up a profile yet."
+            '';
+          };
+
           default = pkgs.mkShell.override {
             # Use stdenvNoCC to avoid compiler contamination
             # stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
