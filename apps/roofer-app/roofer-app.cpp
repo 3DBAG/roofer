@@ -1008,7 +1008,7 @@ int main(int argc, const char* argv[]) {
 #endif
               }
               // lift lod 0 footprint to h_ground
-              if (!building.h_ground.has_value()) {
+              if (building.h_ground.has_value()) {
                 building.footprint.set_z(*building.h_ground);
               }
               CityJsonWriter->write_feature(ofs, building.footprint, ms12, ms13,
