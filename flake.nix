@@ -148,10 +148,25 @@
               cmake
               ninja
               conan
-            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
+            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
+              ++ lib.optionals stdenv.isLinux [ patchelf ];
 
             shellHook = ''
               echo "Conan dev shell ready. Run 'conan profile detect' if you haven't set up a profile yet."
+              echo ""
+              echo "Conan build steps (replace Release with Debug for debug build):"
+              echo "  conan install . --build=missing --output-folder=build-conan -s build_type=Release"
+              echo "  cd build-conan"
+              echo "  cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release"
+              echo "  cmake --build ."
+              echo ""
+              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+                roofer-patch() {
+                  patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$1"
+                  echo "Patched interpreter on $1"
+                }
+                echo "Tip: run 'roofer-patch <binary>' to fix the ELF interpreter for deployment on regular linux systems"
+              ''}
             '';
           };
 
