@@ -280,15 +280,23 @@ bool crop_tile(const roofer::TBox<double>& tile,
       jsonl_paths.insert({"", roofer::vec1s{}});
     }
 
-    roofer::misc::PointCloudSelectResult sresult =
-        roofer::misc::selectPointCloud(candidates, select_pc_cfg);
-    const roofer::misc::CandidatePointCloud* selected =
-        sresult.selected_pointcloud;
+    roofer::misc::PointCloudSelectResult sresult;
+    const roofer::misc::CandidatePointCloud* selected = nullptr;
+    if (candidates.empty()) {
+      if (!candidates_just_for_data.empty()) {
+        selected = getLatestPointCloud(candidates_just_for_data);
+        sresult.selected_pointcloud = selected;
+        sresult.explanation =
+            roofer::misc::PointCloudSelectExplanation::_LATEST;
+      }
+    } else {
+      sresult = roofer::misc::selectPointCloud(candidates, select_pc_cfg);
+      selected = sresult.selected_pointcloud;
+    }
 
     // this is a sanity check and should never happen
     if (!selected) {
       logger.error("Unable to select pointcloud");
-      exit(1);
       exit(1);
     }
 
@@ -297,13 +305,17 @@ bool crop_tile(const roofer::TBox<double>& tile,
     int yoc = yoc_vec ? (*yoc_vec)[i].value_or(-1) : -1;
     if (yoc != -1 && yoc > selected->date) {
       // force selection of latest pointcloud
-      selected = getLatestPointCloud(candidates);
+      if (!candidates.empty()) {
+        selected = getLatestPointCloud(candidates);
+      }
       sresult.explanation = roofer::misc::PointCloudSelectExplanation::_LATEST;
       // overrule if there was a more recent pointcloud with
       // select_only_for_date = true
       if (candidates_just_for_data.size()) {
-        if (candidates_just_for_data[0].date > selected->date) {
-          selected = &candidates_just_for_data[0];
+        const roofer::misc::CandidatePointCloud* latest_just_for_data =
+            getLatestPointCloud(candidates_just_for_data);
+        if (latest_just_for_data->date > selected->date) {
+          selected = latest_just_for_data;
           // sresult.explanation = roofer::PointCloudSelectExplanation::_LATEST;
         }
       }
