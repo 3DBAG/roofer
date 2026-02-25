@@ -507,6 +507,7 @@ int main(int argc, const char* argv[]) {
   std::deque<BuildingObjectRef> reconstructed_buildings;
   std::mutex reconstructed_buildings_mutex;
   std::deque<BuildingTile> reconstructed_tiles;
+  std::mutex reconstructed_tiles_mutex;
   std::condition_variable reconstructed_pending;
 
   std::atomic sorting_running{true};
@@ -604,7 +605,7 @@ int main(int argc, const char* argv[]) {
   if (!handler._crop_only) {
     BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
     reconstructor_thread = std::thread([&]() {
-      while (crop_running.load() || !cropped_tiles.empty()) {
+      while (true) {
         logger.debug("[reconstructor] before lock cropped_tiles_mutex");
         std::unique_lock lock{cropped_tiles_mutex};
         logger.debug("[reconstructor] before wait(lock)");
@@ -615,6 +616,10 @@ int main(int argc, const char* argv[]) {
         cropped_pending.wait(lock, [&cropped_tiles, &crop_running] {
           return !cropped_tiles.empty() || !crop_running.load();
         });
+        if (!crop_running.load() && cropped_tiles.empty()) {
+          logger.debug("[reconstructor] No cropped tiles remaining, stopping");
+          break;
+        }
         // Move the cropped buildings out of the tiles into their own queue, so
         // that the parallel workers do not stop at the tile boundary, until all
         // buildings are finished in the current tile.
@@ -636,7 +641,11 @@ int main(int argc, const char* argv[]) {
           // Here the building_tile.buildings is empty, because we moved off all
           // BuildingObject-s, so we might as well clear it.
           building_tile.buildings.clear();
-          reconstructed_tiles.push_back(std::move(building_tile));
+          {
+            std::scoped_lock lock_reconstructed_tiles{
+                reconstructed_tiles_mutex};
+            reconstructed_tiles.push_back(std::move(building_tile));
+          }
           cropped_tiles.pop_front();
           // This wakes up the serializer thread as soon as we submitted one
           // tile for reconstruction, but that doesn't mean that any building of
@@ -644,8 +653,6 @@ int main(int argc, const char* argv[]) {
           // thread is suspended until this point.
           reconstructed_pending.notify_one();
         }
-        cropped_tiles.clear();
-        cropped_tiles.shrink_to_fit();
         lock.unlock();
         logger.debug("[reconstructor] after lock.unlock()");
 
@@ -659,7 +666,8 @@ int main(int argc, const char* argv[]) {
                                           cfg = &handler.cfg_,
                                           &reconstructed_buildings,
                                           &reconstructed_buildings_cnt,
-                                          &reconstructed_buildings_mutex] {
+                                          &reconstructed_buildings_mutex,
+                                          &reconstructed_pending] {
             // TODO: It seems that I need to assign the moved 'building_ref' to
             // a
             //  new variable with an explicit type here, because 'bref' contains
@@ -712,6 +720,7 @@ int main(int argc, const char* argv[]) {
               ++reconstructed_buildings_cnt;
               reconstructed_buildings.push_back(std::move(building_object_ref));
             }
+            reconstructed_pending.notify_one();
           });
         }
       }
@@ -735,8 +744,7 @@ int main(int argc, const char* argv[]) {
     });
 
     sorter_thread = std::thread([&] {
-      while (reconstruction_running.load() ||
-             !reconstructed_buildings.empty()) {
+      while (true) {
         logger.debug("[sorter] before lock reconstructed_buildings_mutex");
         std::unique_lock lock{reconstructed_buildings_mutex};
         reconstructed_pending.wait(
@@ -744,55 +752,70 @@ int main(int argc, const char* argv[]) {
               return !reconstructed_buildings.empty() ||
                      !reconstruction_running.load();
             });
+        if (!reconstruction_running.load() && reconstructed_buildings.empty()) {
+          logger.debug(
+              "[sorter] No reconstructed buildings remaining, stopping");
+          break;
+        }
         auto pending_sorted{std::move(reconstructed_buildings)};
         reconstructed_buildings.clear();
-        reconstructed_buildings.shrink_to_fit();
         lock.unlock();
         logger.debug("[sorter] after lock.unlock()");
 
         while (!pending_sorted.empty()) {
           auto& bref = pending_sorted.front();
-          std::pair<bool, std::size_t> finished_idx{false, 0};
+          std::optional<std::size_t> finished_idx;
+          std::optional<BuildingTile> finished_tile;
           // TODO: Maybe we could use a different data structure, one that has
           //  O(1) lookup for the tile ID, instead of looping the
           //  reconstructed_tiles. However, I expect that the size of
           //  reconstructed_tiles remains relatively low. But we need to do the
           //  loop on each building...
-          for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
-            auto& building_tile = reconstructed_tiles[i];
-            // The reconstructor moved off all items from the
-            // building_tile.buildings container, which can mess up its size. We
-            // need to make sure that the container is the right size, so that
-            // we can insert the reconstructed building at the index.
-            if (building_tile.buildings.size() != building_tile.buildings_cnt) {
-              building_tile.buildings.resize(building_tile.buildings_cnt);
-            }
-            if (building_tile.id == bref.tile_id) {
-              building_tile.buildings.at(bref.building_idx) =
-                  std::move(bref.building);
-              building_tile.buildings_progresses.at(bref.building_idx) =
-                  bref.progress;
-            }
-
-            auto tile_finished = std::all_of(
-                building_tile.buildings_progresses.begin(),
-                building_tile.buildings_progresses.end(),
-                [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
-            if (tile_finished) {
-              finished_idx.first = true;
-              finished_idx.second = i;
-              logger.debug("[sorter] tile_finished=true: {}", building_tile);
-              {
-                std::scoped_lock lock_sorted{sorted_tiles_mutex};
-                sorted_tiles.push_back(std::move(building_tile));
+          {
+            std::scoped_lock lock_reconstructed_tiles{
+                reconstructed_tiles_mutex};
+            for (size_t i = 0; i < reconstructed_tiles.size(); i++) {
+              auto& building_tile = reconstructed_tiles[i];
+              // The reconstructor moved off all items from the
+              // building_tile.buildings container, which can mess up its size.
+              // We need to make sure that the container is the right size, so
+              // that we can insert the reconstructed building at the index.
+              if (building_tile.buildings.size() !=
+                  building_tile.buildings_cnt) {
+                building_tile.buildings.resize(building_tile.buildings_cnt);
               }
-              sorted_pending.notify_one();
+              if (building_tile.id == bref.tile_id) {
+                building_tile.buildings.at(bref.building_idx) =
+                    std::move(bref.building);
+                building_tile.buildings_progresses.at(bref.building_idx) =
+                    bref.progress;
+
+                auto tile_finished = std::all_of(
+                    building_tile.buildings_progresses.begin(),
+                    building_tile.buildings_progresses.end(),
+                    [](Progress p) { return p > RECONSTRUCTION_IN_PROGRESS; });
+                if (tile_finished) {
+                  finished_idx = i;
+                  logger.debug("[sorter] tile_finished=true: {}",
+                               building_tile);
+                }
+                break;
+              }
+            }
+            if (finished_idx.has_value()) {
+              finished_tile = std::move(reconstructed_tiles.at(*finished_idx));
+              reconstructed_tiles.erase(
+                  reconstructed_tiles.begin() +
+                  static_cast<std::ptrdiff_t>(*finished_idx));
             }
           }
 
-          if (finished_idx.first) {
-            reconstructed_tiles.erase(reconstructed_tiles.begin() +
-                                      finished_idx.second);
+          if (finished_tile.has_value()) {
+            {
+              std::scoped_lock lock_sorted{sorted_tiles_mutex};
+              sorted_tiles.push_back(std::move(*finished_tile));
+            }
+            sorted_pending.notify_one();
           }
           ++sorted_buildings_cnt;
           pending_sorted.pop_front();
@@ -806,15 +829,18 @@ int main(int argc, const char* argv[]) {
     serializer_thread = std::thread([&]() {
       logger.info("[serializer] Writing output to {}",
                   handler.cfg_.output_path);
-      while (sorting_running.load() || !sorted_tiles.empty()) {
+      while (true) {
         logger.debug("[serializer] before lock sorted_tiles_mutex");
         std::unique_lock lock{sorted_tiles_mutex};
         sorted_pending.wait(lock, [&sorted_tiles, &sorting_running] {
           return !sorted_tiles.empty() || !sorting_running.load();
         });
+        if (!sorting_running.load() && sorted_tiles.empty()) {
+          logger.debug("[serializer] No sorted tiles remaining, stopping");
+          break;
+        }
         auto pending_serialized{std::move(sorted_tiles)};
         sorted_tiles.clear();
-        sorted_tiles.shrink_to_fit();
         lock.unlock();
         logger.debug("[serializer] after lock.unlock()");
 
