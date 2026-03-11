@@ -3,15 +3,6 @@ if(RF_BUILD_APPS)
 
   set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt)
 
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(mimalloc CONFIG REQUIRED)
-    # if(TARGET mimalloc-static)
-    #   list(APPEND ROOFER_LINK_LIBRARIES mimalloc-static)
-    # else()
-      list(APPEND ROOFER_LINK_LIBRARIES mimalloc)
-    # endif()
-  endif()
-
   add_executable("roofer" ${APP_SOURCES})
 
   if(RF_USE_RERUN)
