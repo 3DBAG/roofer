@@ -1,0 +1,89 @@
+name: Build and Install (Conan)
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-15]
+        build_type: [Release]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install and setup Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          cache_packages: true
+          use_venv: true
+
+      - name: Detect Conan profile
+        run: conan profile detect --force
+
+      - name: Install dependencies
+        run: >
+          conan install .
+          --output-folder=build
+          --build=missing
+          --settings=build_type=${{ matrix.build_type }}
+          --options="&:build_apps=True"
+          --options="&:use_spdlog=True"
+          --options="&:use_val3dity=False"
+          --options="&:build_bindings=False"
+          --options="&:build_testing=False"
+
+      - name: Configure CMake
+        run: >
+          cmake -B build
+          -S ${{ github.workspace }}
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake"
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --verbose
+
+      - name: Install
+        run: cmake --install build --config ${{ matrix.build_type }} --verbose
+
+      - if: runner.os == 'Windows'
+        name: Show install tree
+        run: |
+          cd install
+          tree /F
+
+      - if: runner.os != 'Windows'
+        name: Show install tree
+        run: |
+          cd install
+          ls -R
+
+      - if: runner.os == 'macOS'
+        name: Bundle macOS runtime libraries
+        run: |
+          cd install/bin
+          bash "${{ github.workspace }}/distribution/macOS/bundle_libcxx.sh"
+
+      - name: Set lowercase runner variables
+        shell: bash
+        run: |
+          echo "RUNNER_OS_LC=$(echo '${{ runner.os }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "RUNNER_ARCH_LC=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: roofer-conan-${{ env.RUNNER_OS_LC }}-${{ env.RUNNER_ARCH_LC }}-${{ github.sha }}
+          path: |
+            install
+          retention-days: 7

@@ -47,13 +47,28 @@ class RooferRecipe(ConanFile):
             self.requires("catch2/3.7.1")
 
     def configure(self):
-        # Disable everything, then enable only what roofer needs
+        # Keep GDAL close to the minimum feature set Roofer uses:
+        # GeoPackage, PostgreSQL/PostGIS, and GeoTIFF.
         self.options["gdal"].with_arrow = False
+        self.options["gdal"].with_curl = False
+        self.options["gdal"].with_expat = False
+        self.options["gdal"].with_geos = True
+        self.options["gdal"].with_gif = False
         self.options["gdal"].with_hdf4 = False
         self.options["gdal"].with_hdf5 = False
+        self.options["gdal"].with_jpeg = False
+        self.options["gdal"].with_lerc = False
+        self.options["gdal"].with_libdeflate = False
+        self.options["gdal"].with_opencl = False
         self.options["gdal"].with_pg = True      # postgresql
+        self.options["gdal"].with_png = False
+        self.options["gdal"].with_qhull = False
         self.options["gdal"].with_sqlite3 = True
-        self.options["gdal"].with_geos = True
+        self.options["libtiff"].jpeg = False
+        self.options["gdal"].gdal_optional_drivers = False
+        # Keep OGR optional drivers enabled: the PG driver depends on PGDump,
+        # and ConanCenter does not expose per-driver toggles here.
+        self.options["gdal"].ogr_optional_drivers = True
 
 
     def generate(self):
