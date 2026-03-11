@@ -36,6 +36,7 @@ jobs:
           --output-folder=build
           --build=missing
           --settings=build_type=${{ matrix.build_type }}
+          --settings=compiler.cppstd=20
           --options="&:build_apps=True"
           --options="&:use_spdlog=True"
           --options="&:use_val3dity=False"
