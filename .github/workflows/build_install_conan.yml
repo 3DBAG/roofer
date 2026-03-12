@@ -19,7 +19,7 @@ jobs:
         build_type: [Release]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install and setup Conan
         uses: conan-io/setup-conan@v1
@@ -76,7 +76,7 @@ jobs:
           echo "RUNNER_ARCH_LC=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: roofer-conan-${{ env.RUNNER_OS_LC }}-${{ env.RUNNER_ARCH_LC }}-${{ github.sha }}
           path: |

@@ -3,7 +3,7 @@ name: Documentation
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     # pull_request:
     #   branches: ["develop"]
 
@@ -21,7 +21,7 @@ jobs:
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/3DBAG/index.json,readwrite"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/github-script@v7
         with:
           script: |
@@ -35,7 +35,7 @@ jobs:
         name: "install nix"
 
       - name: Restore uv cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.uv-cache
           key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}

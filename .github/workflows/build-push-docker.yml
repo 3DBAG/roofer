@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Set docker image tag to 'develop'
         run: echo "DOCKER_TAG=develop" >> $GITHUB_ENV
       - name: Set docker image tag to git tag
