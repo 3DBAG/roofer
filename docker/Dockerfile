@@ -1,95 +1,77 @@
-FROM ubuntu:24.04 AS vcpkg-build
-
-# Set the location for the vcpkg download cache
-RUN mkdir -p /var/cache/vcpkg
-ENV VCPKG_ROOT=/opt/vcpkg
-ENV VCPKG_DOWNLOADS=/var/cache/vcpkg
-ENV VCPKG_DEFAULT_TRIPLET=x64-linux
-ENV VCPKG_BUILD_TYPE=release
-
-# Install dependencies for building vcpkg and packages
-RUN apt-get update \
-    && apt-get install -y g++ gcc cmake git curl zip unzip tar openssl ca-certificates \
-      pkg-config autoconf-archive autoconf libtool autotools-dev automake
-
-# Clone vcpkg
-WORKDIR /opt
-RUN git clone https://github.com/microsoft/vcpkg.git
-
-# Bootstrap vcpkg
-WORKDIR /opt/vcpkg
-RUN ./bootstrap-vcpkg.sh
-
-
 FROM ubuntu:24.04 AS builder
+
 ARG JOBS=2
+ARG VERSION=unknown
 
 ARG ROOFER_ROOT=/opt/roofer
 ARG ROOFER_INSTALL=$ROOFER_ROOT/install
 ARG ROOFER_BUILD=$ROOFER_ROOT/build
-# Set the VCPKG_ROOT environment variable so your build system can find it
-ENV VCPKG_ROOT=/opt/vcpkg
-# Cache the downloads from vcpkg in the builder stage as well
-ENV VCPKG_DOWNLOADS=/var/cache/vcpkg
-ENV VCPKG_DEFAULT_TRIPLET=x64-linux
-ENV VCPKG_BUILD_TYPE=release
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/opt/conan-venv/bin:$PATH
 
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean \
     && apt-get update \
-    && apt-get -y install g++ gcc cmake git curl zip unzip tar openssl ca-certificates \
-      pkg-config ninja-build autoconf-archive autoconf libtool bison flex autotools-dev automake linux-libc-dev \
-      python3 bison flex \
+    && apt-get -y install \
+      ca-certificates \
+      cmake \
+      curl \
+      g++ \
+      gcc \
+      git \
+      ninja-build \
+      python3 \
+      python3-venv \
     && apt-get clean  \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy vcpkg artifacts from the previous stage
-COPY --from=vcpkg-build /opt/vcpkg /opt/vcpkg
-COPY --from=vcpkg-build /var/cache/vcpkg /var/cache/vcpkg
+RUN python3 -m venv /opt/conan-venv \
+    && /opt/conan-venv/bin/pip install --upgrade pip \
+    && /opt/conan-venv/bin/pip install "conan>=2,<3"
 
-RUN mkdir -p $ROOFER_ROOT/install $ROOFER_ROOT/build/vcpkg_installed
+RUN mkdir -p $ROOFER_ROOT/install $ROOFER_ROOT/build
 WORKDIR $ROOFER_ROOT
-# We only need .git because of the cmake-git-version-tracking
-COPY --link ./.git $ROOFER_ROOT/.git
+
 COPY --link ./apps $ROOFER_ROOT/apps
 COPY --link ./cmake $ROOFER_ROOT/cmake
 COPY --link ./include $ROOFER_ROOT/include
-COPY --link ./rooferpy $ROOFER_ROOT/rooferpy
 COPY --link ./src $ROOFER_ROOT/src
 COPY --link ./CMakeLists.txt $ROOFER_ROOT/CMakeLists.txt
-COPY --link ./CMakePresets.json $ROOFER_ROOT/CMakePresets.json
 COPY --link ./LICENSE $ROOFER_ROOT/LICENSE
 COPY --link ./README.md $ROOFER_ROOT/README.md
-# COPY --link ./requirements.txt $ROOFER_ROOT/requirements.txt
-COPY --link ./vcpkg.json $ROOFER_ROOT/vcpkg.json
+COPY --link ./conanfile.py $ROOFER_ROOT/conanfile.py
 
-WORKDIR $ROOFER_ROOT
-RUN $VCPKG_ROOT/vcpkg x-update-baseline
-
-RUN --mount=target=$ROOFER_BUILD/vcpkg_installed,type=cache cmake \
-    --preset vcpkg-minimal \
-    -DRF_USE_LOGGER_SPDLOG=ON \
-    -DRF_BUILD_APPS=ON \
-    -DRF_USE_VAL3DITY=ON \
-    -DCMAKE_INSTALL_PREFIX=$ROOFER_INSTALL \
-    -S $ROOFER_ROOT \
-    -B $ROOFER_BUILD \
-    -G Ninja \
-    && cmake --build $ROOFER_BUILD -j $JOBS --target install --config Release \
-    && cp -r $ROOFER_BUILD/vcpkg_installed/x64-linux/share/gdal $ROOFER_INSTALL/gdal \
-    && cp -r $ROOFER_BUILD/vcpkg_installed/x64-linux/share/proj $ROOFER_INSTALL/proj
+RUN --mount=type=cache,target=/root/.conan2 \
+    conan profile detect --force \
+    && conan install . \
+      --output-folder=$ROOFER_BUILD \
+      --build=missing \
+      --settings=build_type=Release \
+      --settings=compiler.cppstd=20 \
+      --options="&:build_apps=True" \
+      --options="&:use_spdlog=True" \
+      --options="&:use_val3dity=False" \
+      --options="&:build_bindings=False" \
+      --options="&:build_testing=False" \
+    && cmake -B $ROOFER_BUILD \
+      -S $ROOFER_ROOT \
+      -DCMAKE_TOOLCHAIN_FILE=$ROOFER_BUILD/conan_toolchain.cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$ROOFER_INSTALL \
+      -DRF_GIT_HASH=$VERSION \
+    && cmake --build $ROOFER_BUILD -j $JOBS --target install --config Release
 
 
 FROM ubuntu:24.04 AS production
-ARG ROOFER_ROOT=/opt/roofer
-ARG ROOFER_INSTALL=$ROOFER_ROOT/install
-ARG ROOFER_BUILD=$ROOFER_ROOT/build
 
-COPY --link --from=builder $ROOFER_INSTALL/bin /opt/roofer/bin
-COPY --link --from=builder $ROOFER_INSTALL/gdal /opt/roofer/share/gdal
-COPY --link --from=builder $ROOFER_INSTALL/proj /opt/roofer/share/proj
+ARG ROOFER_ROOT=/opt/roofer
+
+COPY --link --from=builder $ROOFER_ROOT/install/ /opt/roofer/
 
 ENV GDAL_DATA=/opt/roofer/share/gdal
 ENV PROJ_DATA=/opt/roofer/share/proj
 ENV PATH=/opt/roofer/bin:$PATH
+
+ENTRYPOINT ["roofer"]
