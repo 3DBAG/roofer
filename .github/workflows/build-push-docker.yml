@@ -9,9 +9,9 @@ on:
       - "**.rst"
     branches:
       - develop
-  # pull_request:
-  #   branches:
-  #     - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   build:
