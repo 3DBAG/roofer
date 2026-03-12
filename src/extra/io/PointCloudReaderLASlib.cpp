@@ -23,9 +23,23 @@
 
 #include <array>
 #include <iomanip>
-#include <lasreader.hpp>
-#include <laswriter.hpp>
 #include <roofer/io/PointCloudReader.hpp>
+
+#if __has_include(<LASlib/lasreader.hpp>)
+#include <LASlib/lasreader.hpp>
+#elif __has_include(<lasreader.hpp>)
+#include <lasreader.hpp>
+#else
+#error "LASlib header lasreader.hpp not found"
+#endif
+
+#if __has_include(<LASlib/laswriter.hpp>)
+#include <LASlib/laswriter.hpp>
+#elif __has_include(<laswriter.hpp>)
+#include <laswriter.hpp>
+#else
+#error "LASlib header laswriter.hpp not found"
+#endif
 
 namespace roofer::io {
 

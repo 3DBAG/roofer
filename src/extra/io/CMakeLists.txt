@@ -24,6 +24,14 @@ find_package(nlohmann_json CONFIG REQUIRED)
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
 
+if(TARGET laslib::laslib)
+  set(LASLIB_TARGET laslib::laslib)
+elseif(TARGET LASlib)
+  set(LASLIB_TARGET LASlib)
+else()
+  message(FATAL_ERROR "Could not find a usable LASlib target")
+endif()
+
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("io" PUBLIC GDAL::GDAL LASlib nlohmann_json::nlohmann_json fmt::fmt)
+target_link_libraries("io" PUBLIC GDAL::GDAL ${LASLIB_TARGET} nlohmann_json::nlohmann_json fmt::fmt)

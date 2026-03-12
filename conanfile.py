@@ -35,7 +35,7 @@ class RooferRecipe(ConanFile):
             self.requires("geos/3.13.0", override=True)
             self.requires("gdal/3.12.1")
             self.requires("nlohmann_json/3.11.3")
-            self.requires("mimalloc/2.1.7")
+            self.requires("laslib/2.0.2")
             # bshoshany-thread-pool is header-only, not yet in ConanCenter;
             # leave as CPM fallback for now (RF_USE_CPM=ON)
 
