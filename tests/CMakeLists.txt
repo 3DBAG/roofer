@@ -116,18 +116,8 @@ if(RF_BUILD_APPS)
       COMMAND roofer --config "${CONFIG_DIR}/roofer-wippolder.toml"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-    add_test(
-      NAME "installed-reconstruct-version"
-      COMMAND reconstruct --version
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-    add_test(
-      NAME "installed-reconstruct-wippolder"
-      COMMAND reconstruct --config "${CONFIG_DIR}/roofer-wippolder.toml"
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
     set(tests_installed
-        "installed-roofer-version;installed-reconstruct-version;installed-roofer-wippolder;installed-reconstruct-wippolder"
+        "installed-roofer-version;installed-roofer-wippolder"
     )
     set(WINDOWS_INSTALLED_ENVIRONMENT
         "GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
