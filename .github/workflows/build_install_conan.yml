@@ -41,7 +41,7 @@ jobs:
           --options="&:use_spdlog=True"
           --options="&:use_val3dity=False"
           --options="&:build_bindings=False"
-          --options="&:build_testing=False"
+          --options="&:build_testing=True"
 
       - name: Configure CMake
         run: >
@@ -56,6 +56,12 @@ jobs:
 
       - name: Install
         run: cmake --install build --config ${{ matrix.build_type }} --verbose
+
+      - name: Test
+        env:
+          GDAL_DATA: ${{ github.workspace }}/install/share/gdal
+          PROJ_DATA: ${{ github.workspace }}/install/share/proj
+        run: ctest --test-dir build --build-config ${{ matrix.build_type }} --output-on-failure
 
       - if: runner.os == 'Windows'
         name: Show install tree
