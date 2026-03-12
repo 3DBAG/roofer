@@ -69,6 +69,7 @@ class RooferRecipe(ConanFile):
         # Keep OGR optional drivers enabled: the PG driver depends on PGDump,
         # and ConanCenter does not expose per-driver toggles here.
         self.options["gdal"].ogr_optional_drivers = True
+        self.options["gdal"].tools = False
 
 
     def generate(self):

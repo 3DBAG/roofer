@@ -210,11 +210,6 @@
             scm_version = "unknown";
 
             shellHook = ''
-              ${pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
-                # distribution script for macOS
-                chmod +x distribution/macOS/bundle_libcxx.sh
-                export PATH="$(pwd)/distribution/macOS:$PATH"
-              ''}
               echo "Updating and activating python environment..."
               uv sync
               source .venv/bin/activate

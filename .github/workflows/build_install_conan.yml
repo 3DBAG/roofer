@@ -69,12 +69,6 @@ jobs:
           cd install
           ls -R
 
-      - if: runner.os == 'macOS'
-        name: Bundle macOS runtime libraries
-        run: |
-          cd install/bin
-          bash "${{ github.workspace }}/distribution/macOS/bundle_libcxx.sh"
-
       - name: Set lowercase runner variables
         shell: bash
         run: |
