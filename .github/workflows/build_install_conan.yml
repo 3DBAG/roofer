@@ -50,6 +50,12 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake"
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DRF_BUILD_APPS=ON
+          -DRF_USE_LOGGER_SPDLOG=ON
+          -DRF_USE_VAL3DITY=OFF
+          -DRF_BUILD_BINDINGS=OFF
+          -DRF_BUILD_TESTING=ON
+          -DRF_USE_CPM=OFF
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --verbose
