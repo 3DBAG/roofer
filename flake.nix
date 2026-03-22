@@ -80,6 +80,8 @@
                   LAStools
                   geos
                   gdal
+                  proj
+                  sqlite
                 ]
                 ++ lib.optionals withRerun [
                   rerun

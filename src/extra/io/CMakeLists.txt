@@ -21,7 +21,7 @@ set(LIBRARY_INCLUDES
 
 find_package(laslib CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(proj CONFIG REQUIRED)
+find_package(PROJ CONFIG REQUIRED)
 # GDAL
 find_package(GDAL CONFIG REQUIRED)
 
