@@ -154,6 +154,9 @@
               ++ lib.optionals stdenv.isLinux [ patchelf ];
 
             shellHook = ''
+              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+                export CMAKE_LIBRARY_PATH="${pkgs.glibc.out}/lib''${CMAKE_LIBRARY_PATH:+:$CMAKE_LIBRARY_PATH}"
+              ''}
               echo "Conan dev shell ready. Run 'conan profile detect' if you haven't set up a profile yet."
               echo ""
               echo "Conan build steps (replace Release with Debug for debug build):"

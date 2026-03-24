@@ -64,6 +64,7 @@ class RooferRecipe(ConanFile):
         self.options["gdal"].with_png = False
         self.options["gdal"].with_qhull = False
         self.options["gdal"].with_sqlite3 = True
+        self.options["libtiff"].cxx = False
         self.options["libtiff"].jpeg = False
         self.options["gdal"].gdal_optional_drivers = False
         # Keep OGR optional drivers enabled: the PG driver depends on PGDump,
