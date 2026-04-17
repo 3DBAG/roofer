@@ -39,3 +39,133 @@ jobs:
       build_doc_helper: false
       run_tests: true
       artifact_suffix: build
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-24.04
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download platform build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: roofer-conan-*-build
+          path: release-artifacts
+
+      - name: Package release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p release-assets
+          version="${GITHUB_REF_NAME#v}"
+          shopt -s nullglob
+          artifacts=(release-artifacts/roofer-conan-*-build)
+
+          if [[ "${#artifacts[@]}" -ne 3 ]]; then
+            echo "Expected 3 platform artifacts, found ${#artifacts[@]}:"
+            printf '  %s\n' "${artifacts[@]}"
+            exit 1
+          fi
+
+          for artifact_dir in "${artifacts[@]}"; do
+            artifact_name="$(basename "$artifact_dir")"
+            platform="${artifact_name#roofer-conan-}"
+            platform="${platform%-build}"
+            case "$platform" in
+              Linux-X64)
+                platform="linux-x86_64"
+                archive_type="tar.gz"
+                ;;
+              Windows-X64)
+                platform="windows-x86_64"
+                archive_type="zip"
+                ;;
+              macOS-ARM64)
+                platform="macOS-arm64"
+                archive_type="tar.gz"
+                ;;
+              macOS-X64)
+                platform="macOS-x86_64"
+                archive_type="tar.gz"
+                ;;
+              *)
+                echo "Unsupported platform artifact: $artifact_name"
+                exit 1
+                ;;
+            esac
+            asset="release-assets/roofer-${platform}-v${version}.${archive_type}"
+            package_paths=()
+
+            if [[ -d "$artifact_dir/install/bin" ]]; then
+              package_paths+=(bin)
+            fi
+            if [[ -d "$artifact_dir/install/share" ]]; then
+              package_paths+=(share)
+            fi
+            if [[ "${#package_paths[@]}" -eq 0 ]]; then
+              echo "No bin/ or share/ directories found in $artifact_dir/install"
+              exit 1
+            fi
+
+            if [[ "$archive_type" == "zip" ]]; then
+              (cd "$artifact_dir/install" && python3 -m zipfile -c "${GITHUB_WORKSPACE}/${asset}" "${package_paths[@]}")
+            else
+              (cd "$artifact_dir/install" && tar -czf "${GITHUB_WORKSPACE}/${asset}" "${package_paths[@]}")
+            fi
+          done
+
+          ls -lh release-assets
+
+      - name: Extract changelog entry
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+          awk -v version="$version" '
+            index($0, "## [" version "] - ") == 1 {
+              in_section = 1
+              next
+            }
+            in_section && /^## \[/ {
+              exit
+            }
+            in_section {
+              print
+            }
+          ' CHANGELOG.md | sed '/./,$!d' > release-notes.md
+
+          if [[ ! -s release-notes.md ]]; then
+            echo "No changelog entry found for $version in CHANGELOG.md"
+            exit 1
+          fi
+
+      - name: Create or update release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          release_flags=(--title "$GITHUB_REF_NAME" --notes-file release-notes.md)
+          if [[ "$GITHUB_REF_NAME" =~ -(alpha|beta|rc)\. ]]; then
+            release_flags+=(--prerelease)
+          fi
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
+            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md
+            if [[ "$GITHUB_REF_NAME" =~ -(alpha|beta|rc)\. ]]; then
+              gh release edit "$GITHUB_REF_NAME" --prerelease
+            fi
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/* \
+              "${release_flags[@]}"
+          fi
