@@ -2,16 +2,45 @@
 
 ## Installation
 
-The easiest way to get roofer is to download the latest binary as available via [GitHub](https://github.com/3DBAG/roofer/releases/latest). Alternatively you can use the [Docker image](https://hub.docker.com/r/3dgi/roofer/tags) or you can [built roofer from source](#developers).
+The easiest way to get roofer is to download the latest binary from [GitHub Releases](https://github.com/3DBAG/roofer/releases/latest). Alternatively, you can use the [Docker image](https://hub.docker.com/r/3dgi/roofer/tags) or [build roofer from source](#developers).
 
-If you are on Linux or macOS, you can try to use the install script:
+### Linux and macOS
+
+On Linux and macOS, you can use the install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/distribution/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | sh
 ```
 
-> [!TIP]
->  Currently only binaries for Windows and macOS (arm64) are available.
+The script downloads the matching release archive, installs the `roofer` executable to `~/.local/bin/roofer`, and installs optional shared runtime data to `~/.local/share/roofer`.
+
+If `~/.local/bin` is not yet on your `PATH`, add it to your shell profile:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+To install a specific version, set `ROOFER_VERSION`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | ROOFER_VERSION=1.0.0-beta.6 sh
+```
+
+### Windows
+
+On Windows, download the `roofer-windows-x86_64-v<version>.zip` asset from [GitHub Releases](https://github.com/3DBAG/roofer/releases/latest), extract it, and add the extracted `bin` directory to your user `PATH`.
+
+For example, after extracting the archive to `C:\Users\<you>\AppData\Local\Programs\roofer`, add this directory to your user `PATH`:
+
+```powershell
+C:\Users\<you>\AppData\Local\Programs\roofer\bin
+```
+
+Then open a new terminal and check the installation:
+
+```powershell
+roofer --version
+```
 
 ## Running roofer
 To test if roofer is correctly installed you can try to run it with our small [test dataset](https://data.3dbag.nl/testdata/roofer/wippolder.zip). To download this data you can do:
