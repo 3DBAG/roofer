@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference C++" href="api_cpp.html" /><link rel="prev" title="Roofer CLI App" href="cli_application.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>Building from source - roofer 1.0.0-beta.5 documentation</title>
+        <title>Building from source - roofer 1.0.0-beta.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">roofer 1.0.0-beta.5 documentation</div></a>
+      <a href="index.html"><div class="brand">roofer 1.0.0-beta.6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -193,7 +193,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">roofer 1.0.0-beta.5 documentation</span>
+  <span class="sidebar-brand-text">roofer 1.0.0-beta.6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -274,17 +274,12 @@ conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:use_val3dity=False&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:build_bindings=False&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:build_testing=False&quot;</span>
+<span class="c1"># Conan forwards the package options above to the matching RF_* CMake options.</span>
 cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-G<span class="w"> </span>Ninja<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-DCMAKE_TOOLCHAIN_FILE<span class="o">=</span>build/conan_toolchain.cmake<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_APPS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_LOGGER_SPDLOG<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_VAL3DITY<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_BINDINGS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_TESTING<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_CPM<span class="o">=</span>OFF
+<span class="w">  </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install
 cmake<span class="w"> </span>--build<span class="w"> </span>build
 <span class="c1"># Optionally, install roofer</span>
 cmake<span class="w"> </span>--install<span class="w"> </span>build
@@ -334,18 +329,13 @@ conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:use_val3dity=False&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:build_bindings=True&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--options<span class="o">=</span><span class="s2">&quot;&amp;:build_testing=False&quot;</span>
+<span class="c1"># Conan forwards the package options above to the matching RF_* CMake options.</span>
 cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-G<span class="w"> </span>Ninja<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-DCMAKE_TOOLCHAIN_FILE<span class="o">=</span>build/conan_toolchain.cmake<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_APPS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_LOGGER_SPDLOG<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_VAL3DITY<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_BINDINGS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_TESTING<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_BUILD_DOC_HELPER<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-DRF_USE_CPM<span class="o">=</span>OFF
+<span class="w">  </span>-DRF_BUILD_DOC_HELPER<span class="o">=</span>ON
 cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--target<span class="w"> </span>rooferpy<span class="w"> </span>doc-helper
 cmake<span class="w"> </span>--install<span class="w"> </span>build
 <span class="nb">cd</span><span class="w"> </span>docs
@@ -456,7 +446,7 @@ make<span class="w"> </span>html
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=f0dcd5a7"></script>
+</div><script src="_static/documentation_options.js?v=c7245fcd"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
