@@ -4,15 +4,16 @@ on:
   push:
     branches:
       - "main"
-    # pull_request:
-    #   branches: ["develop"]
+    pull_request:
+      branches: ["develop"]
 
 jobs:
   build:
     uses: ./.github/workflows/conan-build.yml
     with:
-      runs_on: ubuntu-latest
+      runs_on: ubuntu-22.04
       build_type: Release
+      build_preset: gh-Linux
       build_apps: false
       use_spdlog: false
       use_val3dity: false

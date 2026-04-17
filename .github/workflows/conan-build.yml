@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: Release
+      build_preset:
+        description: CMake build preset name for the parallel build step.
+        required: true
+        type: string
       build_apps:
         description: Build the roofer CLI applications.
         required: false
@@ -106,7 +110,7 @@ jobs:
           -DRF_USE_CPM=OFF
 
       - name: Build
-        run: cmake --build build --config ${{ inputs.build_type }} --verbose
+        run: cmake --build --preset ${{ inputs.build_preset }} --verbose
 
       - name: Install
         run: cmake --install build --config ${{ inputs.build_type }} --verbose

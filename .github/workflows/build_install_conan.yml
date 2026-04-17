@@ -13,12 +13,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2022, macos-15]
-        build_type: [Release]
+        include:
+          - os: ubuntu-22.04
+            build_type: Release
+            build_preset: gh-Linux
+          - os: windows-2022
+            build_type: Release
+            build_preset: gh-Windows
+          - os: macos-15
+            build_type: Release
+            build_preset: gh-macOS
     uses: ./.github/workflows/conan-build.yml
     with:
       runs_on: ${{ matrix.os }}
       build_type: ${{ matrix.build_type }}
+      build_preset: ${{ matrix.build_preset }}
       build_apps: true
       use_spdlog: true
       use_val3dity: false
