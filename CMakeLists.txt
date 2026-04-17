@@ -14,26 +14,6 @@ option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 option(RF_ENABLE_HEAP_TRACING "Enable heap allocation overloads" OFF)
 option(RF_USE_CPM "Use CPM to fetch dependencies" ON)
 
-# Enable the vcpkg features that are required by the options
-if(RF_USE_LOGGER_SPDLOG)
-  list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
-endif()
-if(RF_BUILD_TESTING)
-  list(APPEND VCPKG_MANIFEST_FEATURES "test")
-endif()
-if(RF_BUILD_APPS)
-  list(APPEND VCPKG_MANIFEST_FEATURES "apps")
-endif()
-if(RF_USE_VAL3DITY)
-  list(APPEND VCPKG_MANIFEST_FEATURES "val3dity")
-endif()
-if(RF_USE_RERUN)
-  list(APPEND VCPKG_MANIFEST_FEATURES "app-rerun")
-endif()
-# if(RF_BUILD_BINDINGS)
-#   list(APPEND VCPKG_MANIFEST_FEATURES "python")
-# endif()
-
 # TODO: add version number
 project(roofer VERSION 1.0.0 LANGUAGES C CXX)
 

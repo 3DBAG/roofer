@@ -41,20 +41,6 @@ if(RF_BUILD_APPS)
   if(RF_GIT_HASH)
     target_compile_definitions(roofer PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
   endif()
-  if(DEFINED VCPKG_TARGET_TRIPLET)
-    if(EXISTS "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj")
-      install(
-        DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj
-        DESTINATION "share"
-        FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
-    endif()
-    if(EXISTS "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal")
-      install(
-        DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal
-        DESTINATION "share"
-        FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
-    endif()
-  endif()
 endif()
 
 if(RF_BUILD_DOC_HELPER)
