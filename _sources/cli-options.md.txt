@@ -9,7 +9,7 @@ List output attributes
 ```{option} -v, --version  (default: false)
 Show version
 ```
-```{option} -j, --jobs <int> (default: 0)
+```{option} -j, --jobs <int> (default: 4)
 Number of threads to use
 ```
 ```{option} -c, --config <string> (default: <no value>)
