@@ -26,25 +26,32 @@
         "RF_BUILD_APPS": "ON",
         "RF_BUILD_BINDINGS": "ON"
       }
+    },
+    {
+      "name": "gh-conan-release",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "gh-Linux",
       "description": "Preset for github actions CI Linux build",
-      "configurePreset": "conan-release",
+      "configurePreset": "gh-conan-release",
       "jobs": 4
     },
     {
       "name": "gh-macOS",
       "description": "Preset for github actions CI macOS build",
-      "configurePreset": "conan-release",
+      "configurePreset": "gh-conan-release",
       "jobs": 3
     },
     {
       "name": "gh-Windows",
       "description": "Preset for github actions CI Windows build",
-      "configurePreset": "conan-release",
+      "configurePreset": "gh-conan-release",
       "jobs": 4,
       "configuration": "Release"
     }
@@ -53,7 +60,7 @@
     {
       "name": "test-built",
       "description": "Test the compiled targets in their build directory",
-      "configurePreset": "conan-release",
+      "configurePreset": "gh-conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
@@ -67,7 +74,7 @@
     {
       "name": "test-installed",
       "description": "Test the installed artifacts",
-      "configurePreset": "conan-release",
+      "configurePreset": "gh-conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
