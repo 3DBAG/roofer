@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "1.0.0-beta.7"
+current_version = "1.0.0-beta.6"
 parse = """(?x)
     (?P<major>0|[1-9]\\d*)\\.
     (?P<minor>0|[1-9]\\d*)\\.
@@ -41,6 +41,11 @@ optional_value = "final"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "flake.nix"
 search = "version = \"{current_version}\""
 replace = "version = \"{new_version}\""
 

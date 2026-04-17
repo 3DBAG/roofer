@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.6] - 2026-04-17
+
 ### Fixed
 - Prevent building terrain elevation getting assigned a garbage value in case of multiple input pointclouds when one of them has no points
 - Floating point exception when the first and last point are the same in LinearRing holes
