@@ -147,7 +147,7 @@
         in {
           conan = pkgs.mkShell {
             buildInputs = with pkgs; [
-              cmake
+              cmakeCurses
               ninja
               conan
             ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
