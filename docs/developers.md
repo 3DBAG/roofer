@@ -20,7 +20,7 @@ conan install . \
   --options="&:use_val3dity=False" \
   --options="&:build_bindings=False" \
   --options="&:build_testing=False"
-# The Conan options above are forwarded to CMake by the generated toolchain.
+# Conan forwards the package options above to the matching RF_* CMake options.
 cmake -S . -B build \
   -G Ninja \
   -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
@@ -80,7 +80,7 @@ conan install . \
   --options="&:use_val3dity=False" \
   --options="&:build_bindings=True" \
   --options="&:build_testing=False"
-# The Conan options above are forwarded to CMake by the generated toolchain.
+# Conan forwards the package options above to the matching RF_* CMake options.
 cmake -S . -B build \
   -G Ninja \
   -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \

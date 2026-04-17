@@ -97,6 +97,7 @@ jobs:
           --options="&:build_testing=${{ inputs.build_testing && 'True' || 'False' }}"
 
       - name: Configure CMake
+        # Conan forwards package options to the matching RF_* CMake options.
         run: >
           cmake -B build
           -S ${{ github.workspace }}

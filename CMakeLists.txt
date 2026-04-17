@@ -2,6 +2,10 @@
 # FetchContent-related changes
 cmake_minimum_required(VERSION 3.25)
 
+# Load the toolchain before declaring project options, so Conan-provided
+# variables can override option defaults via CMP0077.
+project(roofer VERSION 1.0.0 LANGUAGES C CXX)
+
 # Options
 option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
@@ -13,9 +17,6 @@ option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 option(RF_ENABLE_HEAP_TRACING "Enable heap allocation overloads" OFF)
 option(RF_USE_CPM "Use CPM to fetch dependencies" ON)
-
-# TODO: add version number
-project(roofer VERSION 1.0.0 LANGUAGES C CXX)
 
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang

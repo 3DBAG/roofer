@@ -80,10 +80,10 @@ class RooferRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
-        tc.variables["RF_USE_CPM"] = "OFF"
-        tc.variables["RF_BUILD_APPS"] = "ON" if self.options.build_apps else "OFF"
-        tc.variables["RF_USE_LOGGER_SPDLOG"] = "ON" if self.options.use_spdlog else "OFF"
-        tc.variables["RF_USE_VAL3DITY"] = "ON" if self.options.use_val3dity else "OFF"
-        tc.variables["RF_BUILD_BINDINGS"] = "ON" if self.options.build_bindings else "OFF"
-        tc.variables["RF_BUILD_TESTING"] = "ON" if self.options.build_testing else "OFF"
+        tc.variables["RF_USE_CPM"] = False
+        tc.variables["RF_BUILD_APPS"] = bool(self.options.build_apps)
+        tc.variables["RF_USE_LOGGER_SPDLOG"] = bool(self.options.use_spdlog)
+        tc.variables["RF_USE_VAL3DITY"] = bool(self.options.use_val3dity)
+        tc.variables["RF_BUILD_BINDINGS"] = bool(self.options.build_bindings)
+        tc.variables["RF_BUILD_TESTING"] = bool(self.options.build_testing)
         tc.generate()
