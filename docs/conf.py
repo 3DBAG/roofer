@@ -26,8 +26,10 @@ myst_enable_extensions = [
 ]
 
 # make rooferpy module findable for autodoc
-import sys, os
-sys.path.insert(0, os.path.abspath('rooferpy'))
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'rooferpy'))
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

@@ -5,6 +5,7 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
+PYTHON        ?= python
 SOURCEDIR     = .
 BUILDDIR      = _build
 
@@ -18,7 +19,9 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	mkdir -p rooferpy
-	cp ../build/rooferpy/*.so rooferpy/
+	test -n "$$(find ../build/rooferpy -maxdepth 1 -type f -name 'roofer*.so' -print -quit)"
+	cp ../build/rooferpy/roofer*.so rooferpy/
+	$(PYTHON) -c "import sys; sys.path.insert(0, 'rooferpy'); import roofer"
 	../build/apps/roofer-app/doc-helper config > example_full.toml
 	../build/apps/roofer-app/doc-helper params > cli-options.md
 	../build/apps/roofer-app/doc-helper attr > output-attributes.md
