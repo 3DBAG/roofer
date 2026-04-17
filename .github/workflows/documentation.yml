@@ -11,7 +11,7 @@ jobs:
   build:
     uses: ./.github/workflows/conan-build.yml
     with:
-      runs_on: ubuntu-22.04
+      runs_on: ubuntu-24.04
       build_type: Release
       build_preset: gh-Linux
       build_apps: false
