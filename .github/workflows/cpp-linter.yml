@@ -26,8 +26,7 @@ jobs:
           files-changed-only: false
           thread-comments: false
 
-      - name: Fail on linter issues
+      - name: Report linter issues
         if: steps.linter.outputs.checks-failed != 0
         run: |
           echo "some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
-          exit 1

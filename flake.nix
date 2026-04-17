@@ -181,6 +181,7 @@
           } {
             buildInputs = with pkgs; [
               cmakeCurses
+              ninja
 
               # roofer core deps
               cgal
@@ -198,6 +199,8 @@
               spdlog
               mimalloc
               gdal
+              proj
+              sqlite
               nlohmann_json
               LAStools
               geos
@@ -205,6 +208,10 @@
               # python tools
               py
               uv
+
+              # linting
+              llvmPackages_18.clang
+              llvmPackages_18.clang-tools
 
               # docs
               doxygen
