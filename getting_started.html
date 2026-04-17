@@ -259,15 +259,35 @@
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
-<p>The easiest way to get roofer is to download the latest binary as available via <a class="reference external" href="https://github.com/3DBAG/roofer/releases/latest">GitHub</a>. Alternatively you can use the <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a> or you can <a class="reference internal" href="developers.html"><span class="doc std std-doc">built roofer from source</span></a>.</p>
-<p>If you are on Linux or macOS, you can try to use the install script:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/develop/distribution/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<p>The easiest way to get roofer is to download the latest binary from <a class="reference external" href="https://github.com/3DBAG/roofer/releases/latest">GitHub Releases</a>. Alternatively, you can use the <a class="reference external" href="https://hub.docker.com/r/3dgi/roofer/tags">Docker image</a> or <a class="reference internal" href="developers.html"><span class="doc std std-doc">build roofer from source</span></a>.</p>
+<section id="linux-and-macos">
+<h3>Linux and macOS<a class="headerlink" href="#linux-and-macos" title="Link to this heading">¶</a></h3>
+<p>On Linux and macOS, you can use the install script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </pre></div>
 </div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>Currently only binaries for Windows and macOS (arm64) are available.</p>
+<p>The script downloads the matching release archive, installs the <code class="docutils literal notranslate"><span class="pre">roofer</span></code> executable to <code class="docutils literal notranslate"><span class="pre">~/.local/bin/roofer</span></code>, and installs optional shared runtime data to <code class="docutils literal notranslate"><span class="pre">~/.local/share/roofer</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> is not yet on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, add it to your shell profile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.local/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+</pre></div>
 </div>
+<p>To install a specific version, set <code class="docutils literal notranslate"><span class="pre">ROOFER_VERSION</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">ROOFER_VERSION</span><span class="o">=</span><span class="m">1</span>.0.0-beta.6<span class="w"> </span>sh
+</pre></div>
+</div>
+</section>
+<section id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Link to this heading">¶</a></h3>
+<p>On Windows, download the <code class="docutils literal notranslate"><span class="pre">roofer-windows-x86_64-v&lt;version&gt;.zip</span></code> asset from <a class="reference external" href="https://github.com/3DBAG/roofer/releases/latest">GitHub Releases</a>, extract it, and add the extracted <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory to your user <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p>For example, after extracting the archive to <code class="docutils literal notranslate"><span class="pre">C:\Users\&lt;you&gt;\AppData\Local\Programs\roofer</span></code>, add this directory to your user <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:\</span><span class="n">Users</span><span class="p">\&lt;</span><span class="n">you</span><span class="p">&gt;\</span><span class="n">AppData</span><span class="p">\</span><span class="n">Local</span><span class="p">\</span><span class="n">Programs</span><span class="p">\</span><span class="n">roofer</span><span class="p">\</span><span class="n">bin</span>
+</pre></div>
+</div>
+<p>Then open a new terminal and check the installation:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">roofer</span> <span class="p">-</span><span class="n">-version</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="running-roofer">
 <h2>Running roofer<a class="headerlink" href="#running-roofer" title="Link to this heading">¶</a></h2>
@@ -362,7 +382,11 @@ unzip<span class="w"> </span>wippolder.zip
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Getting started</a><ul>
-<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#linux-and-macos">Linux and macOS</a></li>
+<li><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#running-roofer">Running roofer</a></li>
 </ul>
 </li>
