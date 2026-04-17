@@ -1,51 +1,123 @@
 # Building from source
 
+## Compilation with Conan
+
+Conan is the recommended way to build roofer from source.
+
+Install Conan 2 and then configure and build the project like this:
+
+```sh
+git clone https://github.com/3DBAG/roofer.git
+cd roofer
+conan profile detect --force
+conan install . \
+  --output-folder=build \
+  --build=missing \
+  --settings=build_type=Release \
+  --settings=compiler.cppstd=20 \
+  --options="&:build_apps=True" \
+  --options="&:use_spdlog=True" \
+  --options="&:use_val3dity=False" \
+  --options="&:build_bindings=False" \
+  --options="&:build_testing=False"
+cmake -S . -B build \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$PWD/install \
+  -DRF_BUILD_APPS=ON \
+  -DRF_USE_LOGGER_SPDLOG=ON \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=OFF \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_USE_CPM=OFF
+cmake --build build
+# Optionally, install roofer
+cmake --install build
+```
+
 ## Compilation with Nix
 
-The easiest way to get all the required dependencies to build roofer is to use [Nix](https://nixos.org). To install nix you can use the [install script from Determinate Systems](https://zero-to-nix.com/start/install/#run). At this moment Nix only works on Linux and macOS.
+If you prefer Nix, you can use the provided development shell. At this moment Nix only works on Linux and macOS.
 
-Once Nix is installed you can setup the development environment and build roofer like this:
+Once Nix is installed you can set up the development environment and build roofer like this:
 
 ```sh
 git clone https://github.com/3DBAG/roofer.git
 cd roofer
 nix develop
-mkdir build
-cmake --preset vcpkg-minimal -S . -B build
+cmake -S . -B build \
+  -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DRF_BUILD_APPS=ON \
+  -DRF_USE_LOGGER_SPDLOG=ON \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=OFF \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_USE_CPM=OFF
 cmake --build build
 # Optionally, install roofer
 cmake --install build
 ```
 
-## Compilation without Nix
+If you just want the packaged build outputs, `nix build` also works:
 
-It is recommended to use [vcpkg](https://vcpkg.io) to build **roofer**.
-
-Follow the [vcpkg instructions](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd) to set it up.
-
-After *vcpkg* is set up, set the ``VCPKG_ROOT`` environment variable to point to the directory where vcpkg is installed.
-
-On *macOS* you need to install additional build tools:
-
-```{code-block} shell
-brew install autoconf autoconf-archive automake libtool
-export PATH="/opt/homebrew/opt/m4/bin:$PATH"
+```sh
+nix build .#default
+nix build .#rooferpy
 ```
 
-On *Ubuntu* you need to install additional build tools:
+## Documentation
 
-```{code-block} shell
-apt install autoconf bison flex libtool
-```
+To build the documentation locally, first build the documentation helper and Python bindings.
 
-Clone the roofer repository and use one of the CMake presets to build the roofer.
+### With Conan
 
-```{code-block} shell
-git clone https://github.com/3DBAG/roofer.git
-cd roofer
-mkdir build
-cmake --preset vcpkg-minimal -S . -B build
-cmake --build build
-# Optionally, install roofer
+```sh
+conan profile detect --force
+conan install . \
+  --output-folder=build \
+  --build=missing \
+  --settings=build_type=Release \
+  --settings=compiler.cppstd=20 \
+  --options="&:build_apps=False" \
+  --options="&:use_spdlog=False" \
+  --options="&:use_val3dity=False" \
+  --options="&:build_bindings=True" \
+  --options="&:build_testing=False"
+cmake -S . -B build \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$PWD/install \
+  -DRF_BUILD_APPS=OFF \
+  -DRF_USE_LOGGER_SPDLOG=OFF \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=ON \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_BUILD_DOC_HELPER=ON \
+  -DRF_USE_CPM=OFF
+cmake --build build --target rooferpy doc-helper
 cmake --install build
+cd docs
+make html
+```
+
+### With Nix
+
+```sh
+nix develop
+cmake -S . -B build \
+  -G Ninja \
+  -DRF_BUILD_APPS=OFF \
+  -DRF_USE_LOGGER_SPDLOG=OFF \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=ON \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_BUILD_DOC_HELPER=ON \
+  -DRF_USE_CPM=OFF
+cmake --build build --target rooferpy doc-helper
+cmake --install build
+cd docs
+make html
 ```

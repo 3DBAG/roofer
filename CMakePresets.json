@@ -27,21 +27,6 @@
         "RF_BUILD_BINDINGS": "ON"
       }
     },
-    {
-      "name": "vcpkg-docs",
-      "description": "Build python bindings needed for documentation generation",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "RF_USE_VAL3DITY": "OFF",
-        "RF_USE_RERUN": "OFF",
-        "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_BUILD_TESTING": "OFF",
-        "RF_BUILD_APPS": "OFF",
-        "RF_BUILD_DOC_HELPER": "ON",
-        "RF_BUILD_BINDINGS": "ON"
-      }
-    }
   ],
   "buildPresets": [
     {
@@ -68,7 +53,7 @@
     {
       "name": "test-built",
       "description": "Test the compiled targets in their build directory",
-      "configurePreset": "vcpkg-minimal-test",
+      "configurePreset": "conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
@@ -82,7 +67,7 @@
     {
       "name": "test-installed",
       "description": "Test the installed artifacts",
-      "configurePreset": "vcpkg-minimal-test",
+      "configurePreset": "conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"

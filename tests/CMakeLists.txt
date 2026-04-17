@@ -6,11 +6,9 @@ include(FetchContent)
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
-if(DEFINED VCPKG_TOOLCHAIN)
-  set(TEST_ENVIRONMENT
-      "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
-  )
-endif()
+set(TEST_ENVIRONMENT
+    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal"
+)
 
 FetchContent_Declare(
   wippolder
@@ -102,9 +100,7 @@ if(RF_BUILD_APPS)
 
   # Integration tests that are run on the installed artifacts must be prefixed
   # with "installed-". Note that these tests must be invoked *after* the
-  # artifacts were installed. We don't set the TEST_ENVIRONMENT for the
-  # installed apps, because the required paths are supposed to be set by the
-  # install process.
+  # artifacts were installed.
   if(RF_TEST_INSTALL)
     add_test(
       NAME "installed-roofer-version"
@@ -119,14 +115,8 @@ if(RF_BUILD_APPS)
     set(tests_installed
         "installed-roofer-version;installed-roofer-wippolder"
     )
-    set(WINDOWS_INSTALLED_ENVIRONMENT
-        "GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
-    )
-    if(WIN32)
-      set_tests_properties(
-        ${tests_installed} PROPERTIES ENVIRONMENT
-                                      "${WINDOWS_INSTALLED_ENVIRONMENT}")
-    endif()
+    set_tests_properties(
+      ${tests_installed} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
   endif()
 endif()
 
