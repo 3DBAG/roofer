@@ -25,10 +25,18 @@
 #include <ctime>
 #include <filesystem>
 #include <iostream>
-#include <lasreader.hpp>
+
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/GridPIPTester.hpp>
 #include <roofer/io/StreamCropper.hpp>
+
+#if __has_include(<LASlib/laswriter.hpp>)
+#include <LASlib/lasreader.hpp>
+#elif __has_include(<lasreader.hpp>)
+#include <lasreader.hpp>
+#else
+#error "LASlib header lasreader.hpp not found"
+#endif
 
 namespace roofer::io {
 

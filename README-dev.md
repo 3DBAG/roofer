@@ -108,11 +108,58 @@ add_test(
 
 ## Documentation
 
-To build the documentation locally:
+To build the documentation locally, first build the `rooferpy` module and `doc-helper` executable.
+The recommended path is Conan:
 
 ```shell
+conan profile detect --force
+conan install . \
+  --output-folder=build \
+  --build=missing \
+  --settings=build_type=Release \
+  --settings=compiler.cppstd=20 \
+  --options="&:build_apps=False" \
+  --options="&:use_spdlog=False" \
+  --options="&:use_val3dity=False" \
+  --options="&:build_bindings=True" \
+  --options="&:build_testing=False"
+# Conan forwards the package options above to the matching RF_* CMake options.
+cmake -S . -B build \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$PWD/install \
+  -DRF_BUILD_DOC_HELPER=ON
+cmake --build build --target rooferpy doc-helper
+cmake --install build
 cd docs
 make html
+```
+
+If you prefer Nix, you can do the same with the `nix develop` shell:
+
+```shell
+nix develop
+cmake -S . -B build \
+  -G Ninja \
+  -DRF_BUILD_APPS=OFF \
+  -DRF_USE_LOGGER_SPDLOG=OFF \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=ON \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_BUILD_DOC_HELPER=ON \
+  -DRF_USE_CPM=OFF
+cmake --build build --target rooferpy doc-helper
+cmake --install build
+cd docs
+make html
+```
+
+If you want the packaged Nix outputs instead of a local build tree, use:
+
+```shell
+nix build .#default
+nix build .#rooferpy
 ```
 
 The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.

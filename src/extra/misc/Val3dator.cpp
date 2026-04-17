@@ -22,7 +22,7 @@
 // val3dity
 #include <roofer/misc/Val3dator.hpp>
 
-#include "val3dity.h"
+#include <val3dity/val3dity.h>
 
 namespace roofer::misc {
 

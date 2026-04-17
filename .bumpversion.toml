@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "1.0.0-beta.5"
+current_version = "1.0.0-beta.7"
 parse = """(?x)
     (?P<major>0|[1-9]\\d*)\\.
     (?P<minor>0|[1-9]\\d*)\\.
@@ -64,3 +64,8 @@ filename = "CMakeLists.txt"
 serialize = ["{major}.{minor}.{patch}"]
 search = "project(roofer VERSION {current_version}"
 replace = "project(roofer VERSION {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "apps/roofer-app/version.hpp"
+search = "RF_VERSION \"{current_version}\""
+replace = "RF_VERSION \"{new_version}\""

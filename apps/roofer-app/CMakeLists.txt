@@ -1,12 +1,7 @@
 if(RF_BUILD_APPS)
   set(APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/roofer-app.cpp")
 
-  set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt cmake_git_version_tracking)
-
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(mimalloc CONFIG REQUIRED)
-    list(APPEND ROOFER_LINK_LIBRARIES $<IF:$<TARGET_EXISTS:mimalloc-static>,mimalloc-static,mimalloc>)
-  endif()
+  set(ROOFER_LINK_LIBRARIES roofer-extra fmt::fmt)
 
   add_executable("roofer" ${APP_SOURCES})
 
@@ -43,23 +38,48 @@ if(RF_BUILD_APPS)
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
-  if(DEFINED CMAKE_TOOLCHAIN_FILE)
-    install (DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj
-            DESTINATION "share"
-            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal
-            DESTINATION "share"
-            FILES_MATCHING PATTERN "*" PATTERN "*.cmake" EXCLUDE)
+  if(RF_GIT_HASH)
+    target_compile_definitions(roofer PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
   endif()
 endif()
 
-if(RF_BUILD_DOC_HELPER OR RF_BUILD_APPS)
+if(RF_BUILD_DOC_HELPER)
   add_executable("doc-helper" "doc-helper.cpp")
   set_target_properties("doc-helper" PROPERTIES CXX_STANDARD 20)
-  target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt cmake_git_version_tracking)
-  # install(
-  #   TARGETS "doc-helper"
-  #   ARCHIVE DESTINATION lib
-  #   LIBRARY DESTINATION lib
-  #   RUNTIME DESTINATION bin)
+  target_link_libraries("doc-helper" PRIVATE roofer-core fmt::fmt)
+  install(
+     TARGETS "doc-helper"
+     ARCHIVE DESTINATION lib
+     LIBRARY DESTINATION lib
+     RUNTIME DESTINATION bin)
+  if(RF_GIT_HASH)
+    target_compile_definitions(doc-helper PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
+  endif()
+endif()
+
+# get the --version flag working. Try to use RF_GIT_HASH if defined (eg by nix build), otherwise fallback to cmake helper function
+if(RF_BUILD_DOC_HELPER OR RF_BUILD_APPS)
+  if(NOT RF_GIT_HASH)
+    set(GIT_HASH_HEADER ${CMAKE_BINARY_DIR}/git_hash.h)
+
+    add_custom_command(
+        OUTPUT ${GIT_HASH_HEADER}
+        COMMAND ${CMAKE_COMMAND} -DOUT=${GIT_HASH_HEADER} -P ${CMAKE_SOURCE_DIR}/cmake/gen_git_hash_header.cmake
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating git_hash.h"
+        VERBATIM
+    )
+
+    add_custom_target(update_git_hash ALL DEPENDS ${GIT_HASH_HEADER})
+
+    if (RF_BUILD_APPS)
+      target_include_directories(roofer PRIVATE ${CMAKE_BINARY_DIR})
+      add_dependencies(roofer update_git_hash)
+    endif()
+
+    if (RF_BUILD_DOC_HELPER)
+      target_include_directories("doc-helper" PRIVATE ${CMAKE_BINARY_DIR})
+      add_dependencies("doc-helper" update_git_hash)
+    endif()
+  endif()
 endif()

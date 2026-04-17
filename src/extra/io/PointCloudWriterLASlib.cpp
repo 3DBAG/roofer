@@ -23,8 +23,15 @@
 #include <roofer/logger/logger.h>
 
 #include <filesystem>
-#include <laswriter.hpp>
 #include <roofer/io/PointCloudWriter.hpp>
+
+#if __has_include(<LASlib/laswriter.hpp>)
+#include <LASlib/laswriter.hpp>
+#elif __has_include(<laswriter.hpp>)
+#include <laswriter.hpp>
+#else
+#error "LASlib header laswriter.hpp not found"
+#endif
 
 namespace roofer::io {
 

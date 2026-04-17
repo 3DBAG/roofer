@@ -1,0 +1,41 @@
+name: Build and Install (Conan)
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            build_type: Release
+            build_jobs: 4
+          - os: windows-2022
+            build_type: Release
+            build_jobs: 4
+          - os: macos-15
+            build_type: Release
+            build_jobs: 3
+    uses: ./.github/workflows/conan-build.yml
+    with:
+      runs_on: ${{ matrix.os }}
+      build_type: ${{ matrix.build_type }}
+      build_jobs: ${{ matrix.build_jobs }}
+      build_apps: true
+      use_spdlog: true
+      use_val3dity: false
+      build_bindings: false
+      build_testing: true
+      build_doc_helper: false
+      run_tests: true
+      artifact_suffix: build

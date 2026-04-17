@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Floating point exception when the first and last point are the same in LinearRing holes
 - potential segfault with roofer --help
 
+### Changed
+- Revamp recommended build system to use conan instead of vcpkg. Easier to set up and maintain, smaller build artifacts, faster builds.
+- Add support for Nix builds
+
 ## [1.0.0-beta.5] - 2025-08-27
 
 ### Fixed

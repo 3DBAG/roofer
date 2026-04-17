@@ -3,39 +3,42 @@ name: Documentation
 on:
   push:
     branches:
-      - 'main'
-    # pull_request:
-    #   branches: ["develop"]
+      - "main"
+  pull_request:
+    branches: ["develop"]
 
 jobs:
-  deploy:
-    name: Build and publish documentation
-    runs-on: ubuntu-latest
+  build:
+    uses: ./.github/workflows/conan-build.yml
+    with:
+      runs_on: ubuntu-24.04
+      build_type: Release
+      build_jobs: 4
+      build_apps: false
+      use_spdlog: false
+      use_val3dity: false
+      build_bindings: true
+      build_testing: false
+      build_doc_helper: true
+      run_tests: false
+      artifact_suffix: docs
 
-    permissions:
-      contents: write
+  generate:
+    name: Generate documentation
+    runs-on: ubuntu-latest
+    needs: build
 
     env:
-      USERNAME: 3DBAG
-      FEED_URL: https://nuget.pkg.github.com/3DBAG/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/3DBAG/index.json,readwrite"
+      UV_CACHE_DIR: /tmp/.uv-cache
+
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - uses: nixbuild/nix-quick-install-action@v30
-        # uses: cachix/install-nix-action@v31
-        # with:
-        #   nix_path: nixpkgs=channel:nixos-unstable
-        name: "install nix"
+      - uses: actions/checkout@v5
 
       - name: Restore uv cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.uv-cache
           key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
@@ -43,52 +46,64 @@ jobs:
             uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
             uv-${{ runner.os }}
 
-      - uses: nicknovitski/nix-develop@v1
-        env:
-          # Configure a constant location for the uv cache
-          UV_CACHE_DIR: /tmp/.uv-cache
+      - name: Download Conan build artifact
+        uses: actions/download-artifact@v4
         with:
-          arguments: "--ignore-environment --keep ACTIONS_CACHE_URL --keep ACTIONS_RUNTIME_TOKEN --keep VCPKG_BINARY_SOURCES --keep UV_CACHE_DIR --impure"
-        name: "nix develop"
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: ${{ github.workspace }}
 
-      - name: Add NuGet sources
+      - name: Restore doc-helper execute bit
+        shell: bash
+        run: chmod +x build/apps/roofer-app/doc-helper
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install docs tooling
         shell: bash
         run: |
-          mono `vcpkg fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
-          mono `vcpkg fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+          python -m pip install --upgrade pip uv
 
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: >
-          cmake -B build
-          --preset vcpkg-docs
-          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
-          -S ${{ github.workspace }}
-
-      - name: Build bindings
-        # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: |
-          cmake --build build --config Release --verbose --preset gh-${{ runner.os }}
-          cmake --install build --config Release --verbose
+      - name: Sync Python dependencies
+        shell: bash
+        run: uv sync --frozen
 
       - name: Generate Docs
+        shell: bash
         run: |
-          cd docs
-          make html
+          uv run -- make -C docs html
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: docs-html
+          path: ${{ github.workspace }}/docs/_build/html
+          retention-days: 7
+
+  deploy:
+    name: Publish documentation
+    runs-on: ubuntu-latest
+    needs: generate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: ${{ github.workspace }}/docs-html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/docs/_build/html
+          publish_dir: ${{ github.workspace }}/docs-html
           # destination_dir: dev
           publish_branch: gh-pages
