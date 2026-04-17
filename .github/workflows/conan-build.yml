@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: Release
+      python_version:
+        description: Python version to put on PATH before configuring CMake.
+        required: false
+        type: string
+        default: ""
       build_jobs:
         description: Number of parallel build jobs.
         required: true
@@ -73,6 +78,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up Python
+        if: inputs.python_version != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Select CMake Python
+        if: inputs.python_version != ''
+        shell: bash
+        run: |
+          python --version
+          echo "RF_CMAKE_PYTHON_EXECUTABLE=$(python -c 'import sys; print(sys.executable)')" >> "$GITHUB_ENV"
+
       - name: Install and setup Conan
         uses: conan-io/setup-conan@v1
         with:
@@ -97,6 +115,7 @@ jobs:
           --options="&:build_testing=${{ inputs.build_testing && 'True' || 'False' }}"
 
       - name: Configure CMake
+        if: inputs.python_version == ''
         # Conan forwards package options to the matching RF_* CMake options.
         run: >
           cmake -B build
@@ -107,11 +126,32 @@ jobs:
           -DRF_BUILD_DOC_HELPER=${{ inputs.build_doc_helper && 'ON' || 'OFF' }}
           -DRF_TEST_INSTALL=${{ inputs.run_tests && 'ON' || 'OFF' }}
 
+      - name: Configure CMake with Python
+        if: inputs.python_version != ''
+        # Conan forwards package options to the matching RF_* CMake options.
+        shell: bash
+        run: |
+          cmake -B build \
+            -S "${{ github.workspace }}" \
+            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake" \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DRF_BUILD_DOC_HELPER=${{ inputs.build_doc_helper && 'ON' || 'OFF' }} \
+            -DRF_TEST_INSTALL=${{ inputs.run_tests && 'ON' || 'OFF' }} \
+            -DPython_EXECUTABLE="${RF_CMAKE_PYTHON_EXECUTABLE}" \
+            -DPython3_EXECUTABLE="${RF_CMAKE_PYTHON_EXECUTABLE}"
+
       - name: Build
         run: cmake --build build --config ${{ inputs.build_type }} --parallel ${{ inputs.build_jobs }} --verbose
 
       - name: Install
         run: cmake --install build --config ${{ inputs.build_type }} --verbose
+
+      - name: Show Python binding artifact
+        if: inputs.build_bindings
+        shell: bash
+        run: |
+          find build/rooferpy install/lib -type f -name 'roofer*.so' -print
 
       - name: Test
         if: ${{ inputs.run_tests }}

@@ -181,6 +181,7 @@
           } {
             buildInputs = with pkgs; [
               cmakeCurses
+              gnumake
               ninja
 
               # roofer core deps
@@ -226,6 +227,9 @@
               uv sync
               source .venv/bin/activate
               export pybind11_DIR="$(python -m pybind11 --cmakedir)"
+              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+                export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+              ''}
               echo "Roofer dev shell with Nix is ready"
             '';
           };
