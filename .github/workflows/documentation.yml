@@ -52,6 +52,10 @@ jobs:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ github.workspace }}
 
+      - name: Restore doc-helper execute bit
+        shell: bash
+        run: chmod +x build/apps/roofer-app/doc-helper
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
