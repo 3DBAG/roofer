@@ -10,88 +10,20 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-2022, macos-15]
         build_type: [Release]
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install and setup Conan
-        uses: conan-io/setup-conan@v1
-        with:
-          cache_packages: true
-          use_venv: true
-
-      - name: Detect Conan profile
-        run: conan profile detect --force
-
-      - name: Install dependencies
-        run: >
-          conan install .
-          --output-folder=build
-          --build=missing
-          --settings=build_type=${{ matrix.build_type }}
-          --settings=compiler.cppstd=20
-          --options="&:build_apps=True"
-          --options="&:use_spdlog=True"
-          --options="&:use_val3dity=False"
-          --options="&:build_bindings=False"
-          --options="&:build_testing=True"
-
-      - name: Configure CMake
-        run: >
-          cmake -B build
-          -S ${{ github.workspace }}
-          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake"
-          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DRF_BUILD_APPS=ON
-          -DRF_USE_LOGGER_SPDLOG=ON
-          -DRF_USE_VAL3DITY=OFF
-          -DRF_BUILD_BINDINGS=OFF
-          -DRF_BUILD_TESTING=ON
-          -DRF_TEST_INSTALL=ON
-          -DRF_USE_CPM=OFF
-
-      - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }} --verbose
-
-      - name: Install
-        run: cmake --install build --config ${{ matrix.build_type }} --verbose
-
-      - name: Test
-        env:
-          GDAL_DATA: ${{ github.workspace }}/install/share/gdal
-          PROJ_DATA: ${{ github.workspace }}/install/share/proj
-        run: ctest --test-dir build --build-config ${{ matrix.build_type }} --output-on-failure
-
-      - if: runner.os == 'Windows'
-        name: Show install tree
-        run: |
-          cd install
-          tree /F
-
-      - if: runner.os != 'Windows'
-        name: Show install tree
-        run: |
-          cd install
-          ls -R
-
-      - name: Set lowercase runner variables
-        shell: bash
-        run: |
-          echo "RUNNER_OS_LC=$(echo '${{ runner.os }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-          echo "RUNNER_ARCH_LC=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v6
-        with:
-          name: roofer-conan-${{ env.RUNNER_OS_LC }}-${{ env.RUNNER_ARCH_LC }}-${{ github.sha }}
-          path: |
-            install
-          retention-days: 7
+    uses: ./.github/workflows/conan-build.yml
+    with:
+      runs_on: ${{ matrix.os }}
+      build_type: ${{ matrix.build_type }}
+      build_apps: true
+      use_spdlog: true
+      use_val3dity: false
+      build_bindings: false
+      build_testing: true
+      build_doc_helper: false
+      run_tests: true
+      artifact_suffix: build

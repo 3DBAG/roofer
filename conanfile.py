@@ -39,6 +39,9 @@ class RooferRecipe(ConanFile):
             # bshoshany-thread-pool is header-only, not yet in ConanCenter;
             # leave as CPM fallback for now (RF_USE_CPM=ON)
 
+        if self.options.build_bindings:
+            self.requires("pybind11/3.0.1")
+
         if self.options.use_val3dity:
             self.requires("pugixml/1.15")
             self.requires("tclap/1.2.5")
