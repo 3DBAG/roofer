@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
+      pull-requests: read
 
     steps:
       - uses: actions/checkout@v5
@@ -25,9 +26,8 @@ jobs:
           files-changed-only: false
           thread-comments: false
 
-      - name: Fail fast?!
+      - name: Fail on linter issues
         if: steps.linter.outputs.checks-failed != 0
         run: |
           echo "some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
-        # for actual deployment
-        # run: exit 1
+          exit 1

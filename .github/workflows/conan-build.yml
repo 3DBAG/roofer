@@ -12,10 +12,10 @@ on:
         required: false
         type: string
         default: Release
-      build_preset:
-        description: CMake build preset name for the parallel build step.
+      build_jobs:
+        description: Number of parallel build jobs.
         required: true
-        type: string
+        type: number
       build_apps:
         description: Build the roofer CLI applications.
         required: false
@@ -64,6 +64,9 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+
     outputs:
       artifact_name: ${{ steps.meta.outputs.artifact_name }}
 
@@ -100,17 +103,11 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake"
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
           -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
-          -DRF_BUILD_APPS=${{ inputs.build_apps && 'ON' || 'OFF' }}
-          -DRF_USE_LOGGER_SPDLOG=${{ inputs.use_spdlog && 'ON' || 'OFF' }}
-          -DRF_USE_VAL3DITY=${{ inputs.use_val3dity && 'ON' || 'OFF' }}
-          -DRF_BUILD_BINDINGS=${{ inputs.build_bindings && 'ON' || 'OFF' }}
-          -DRF_BUILD_TESTING=${{ inputs.build_testing && 'ON' || 'OFF' }}
           -DRF_BUILD_DOC_HELPER=${{ inputs.build_doc_helper && 'ON' || 'OFF' }}
           -DRF_TEST_INSTALL=${{ inputs.run_tests && 'ON' || 'OFF' }}
-          -DRF_USE_CPM=OFF
 
       - name: Build
-        run: cmake --build --preset ${{ inputs.build_preset }} --verbose
+        run: cmake --build build --config ${{ inputs.build_type }} --parallel ${{ inputs.build_jobs }} --verbose
 
       - name: Install
         run: cmake --install build --config ${{ inputs.build_type }} --verbose

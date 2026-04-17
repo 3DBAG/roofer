@@ -8,6 +8,9 @@ on:
     branches: ["develop"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
@@ -16,18 +19,18 @@ jobs:
         include:
           - os: ubuntu-24.04
             build_type: Release
-            build_preset: gh-Linux
+            build_jobs: 4
           - os: windows-2022
             build_type: Release
-            build_preset: gh-Windows
+            build_jobs: 4
           - os: macos-15
             build_type: Release
-            build_preset: gh-macOS
+            build_jobs: 3
     uses: ./.github/workflows/conan-build.yml
     with:
       runs_on: ${{ matrix.os }}
       build_type: ${{ matrix.build_type }}
-      build_preset: ${{ matrix.build_preset }}
+      build_jobs: ${{ matrix.build_jobs }}
       build_apps: true
       use_spdlog: true
       use_val3dity: false

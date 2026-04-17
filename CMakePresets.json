@@ -35,27 +35,6 @@
       }
     }
   ],
-  "buildPresets": [
-    {
-      "name": "gh-Linux",
-      "description": "Preset for github actions CI Linux build",
-      "configurePreset": "gh-conan-release",
-      "jobs": 4
-    },
-    {
-      "name": "gh-macOS",
-      "description": "Preset for github actions CI macOS build",
-      "configurePreset": "gh-conan-release",
-      "jobs": 3
-    },
-    {
-      "name": "gh-Windows",
-      "description": "Preset for github actions CI Windows build",
-      "configurePreset": "gh-conan-release",
-      "jobs": 4,
-      "configuration": "Release"
-    }
-  ],
   "testPresets": [
     {
       "name": "test-built",

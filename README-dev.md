@@ -123,18 +123,13 @@ conan install . \
   --options="&:use_val3dity=False" \
   --options="&:build_bindings=True" \
   --options="&:build_testing=False"
+# The Conan options above are forwarded to CMake by the generated toolchain.
 cmake -S . -B build \
   -G Ninja \
   -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=$PWD/install \
-  -DRF_BUILD_APPS=OFF \
-  -DRF_USE_LOGGER_SPDLOG=OFF \
-  -DRF_USE_VAL3DITY=OFF \
-  -DRF_BUILD_BINDINGS=ON \
-  -DRF_BUILD_TESTING=OFF \
-  -DRF_BUILD_DOC_HELPER=ON \
-  -DRF_USE_CPM=OFF
+  -DRF_BUILD_DOC_HELPER=ON
 cmake --build build --target rooferpy doc-helper
 cmake --install build
 cd docs

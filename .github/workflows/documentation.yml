@@ -13,7 +13,7 @@ jobs:
     with:
       runs_on: ubuntu-24.04
       build_type: Release
-      build_preset: gh-Linux
+      build_jobs: 4
       build_apps: false
       use_spdlog: false
       use_val3dity: false
@@ -23,8 +23,8 @@ jobs:
       run_tests: false
       artifact_suffix: docs
 
-  deploy:
-    name: Build and publish documentation
+  generate:
+    name: Generate documentation
     runs-on: ubuntu-latest
     needs: build
 
@@ -32,7 +32,7 @@ jobs:
       UV_CACHE_DIR: /tmp/.uv-cache
 
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v5
@@ -77,10 +77,33 @@ jobs:
         run: |
           uv run -- make -C docs html
 
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: docs-html
+          path: ${{ github.workspace }}/docs/_build/html
+          retention-days: 7
+
+  deploy:
+    name: Publish documentation
+    runs-on: ubuntu-latest
+    needs: generate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: ${{ github.workspace }}/docs-html
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/docs/_build/html
+          publish_dir: ${{ github.workspace }}/docs-html
           # destination_dir: dev
           publish_branch: gh-pages
