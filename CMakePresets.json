@@ -26,7 +26,7 @@
         "RF_BUILD_APPS": "ON",
         "RF_BUILD_BINDINGS": "ON"
       }
-    },
+    }
   ],
   "buildPresets": [
     {
