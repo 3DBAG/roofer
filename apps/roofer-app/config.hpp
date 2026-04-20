@@ -513,7 +513,7 @@ struct RooferConfigHandler {
              "Strategy to determine terrain elevation "
              "that is used to set the height of building floors. "
              "`buffer_tile`: use the 5th percentile lowest elevation point in "
-             "a 3 meter buffer around the roofprint. If no points are found, "
+             "a 4 meter buffer around the roofprint. If no points are found, "
              "we fall back to the lowest elevation point in the current tile. "
              "This may give undesired results for hilly areas. "
              "`buffer_user`: same as `buffer_tile`, but with now with a "
