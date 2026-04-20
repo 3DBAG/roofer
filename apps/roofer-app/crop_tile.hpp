@@ -38,6 +38,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
   vector_reader->layer_name = cfg.layer_name;
   vector_reader->layer_id = cfg.layer_id;
   vector_reader->attribute_filter = cfg.attribute_filter;
+  vector_reader->skip_invalid_polygons = true;
   vector_reader->open(cfg.source_footprints);
   vector_reader->region_of_interest = tile;
   std::vector<roofer::LinearRing> footprints;

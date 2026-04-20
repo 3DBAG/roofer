@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 - CLI: `--jobs`/`-j` now assigns roughly `jobs - 1` threads to reconstruction instead of reserving five internal threads first.
+- Invalid footprint features are skipped, instead of failing the whole tile
 
 ## [1.0.0-beta.6] - 2026-04-17
 

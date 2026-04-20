@@ -111,6 +111,33 @@ namespace roofer::io {
       }
     }
 
+    std::string to_wkt(OGRGeometry* geometry) {
+      char* wkt = nullptr;
+      geometry->exportToWkt(&wkt);
+      std::string result = wkt == nullptr ? "" : wkt;
+      CPLFree(wkt);
+      return result;
+    }
+
+    bool should_skip_polygon(
+        OGRPolygon* poPolygon, const OGRFeature& poFeature,
+        std::optional<size_t> multipolygon_index = std::nullopt) {
+      if (!skip_invalid_polygons || poPolygon->IsValid()) return false;
+
+      auto& logger = logger::Logger::get_logger();
+      if (multipolygon_index.has_value()) {
+        logger.warning(
+            "[VectorReaderOGR] Skipping invalid polygon. FID: {}, "
+            "multipolygon index: {}, WKT: {}",
+            poFeature.GetFID(), *multipolygon_index, to_wkt(poPolygon));
+      } else {
+        logger.warning(
+            "[VectorReaderOGR] Skipping invalid polygon. FID: {}, WKT: {}",
+            poFeature.GetFID(), to_wkt(poPolygon));
+      }
+      return true;
+    }
+
    public:
     using VectorReaderInterface::VectorReaderInterface;
 
@@ -347,6 +374,9 @@ namespace roofer::io {
 
         if (wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon) {
           OGRPolygon* poPolygon = poGeometry->toPolygon();
+          if (should_skip_polygon(poPolygon, *poFeature)) {
+            continue;
+          }
 
           read_polygon(poPolygon, polygons);
 
@@ -358,8 +388,13 @@ namespace roofer::io {
         } else if (wkbFlatten(poGeometry->getGeometryType()) ==
                    wkbMultiPolygon) {
           OGRMultiPolygon* poMultiPolygon = poGeometry->toMultiPolygon();
+          size_t multipolygon_index = 0;
           for (auto poly_it = poMultiPolygon->begin();
-               poly_it != poMultiPolygon->end(); ++poly_it) {
+               poly_it != poMultiPolygon->end();
+               ++poly_it, ++multipolygon_index) {
+            if (should_skip_polygon(*poly_it, *poFeature, multipolygon_index)) {
+              continue;
+            }
             read_polygon(*poly_it, polygons);
 
             // area.push_back(float((*poly_it)->get_Area()));

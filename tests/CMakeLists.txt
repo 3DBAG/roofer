@@ -52,6 +52,11 @@ add_executable("test_logger" "${CMAKE_CURRENT_SOURCE_DIR}/test_logger.cpp")
 target_link_libraries("test_logger" PUBLIC logger)
 target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
 
+add_executable("test_vector_reader"
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
+target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
+target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
+
 # --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
@@ -64,6 +69,13 @@ add_test(
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 set(tests_api "reconstruct-api-wippolder")
 set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
+
+add_test(
+  NAME "vector-reader-skip-invalid-polygons"
+  COMMAND $<TARGET_FILE:test_vector_reader>
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set_tests_properties("vector-reader-skip-invalid-polygons"
+                     PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
 # --- Integration tests that are run on the built executables, before
 # installation.
