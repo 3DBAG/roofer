@@ -13,6 +13,7 @@ jobs:
     with:
       runs_on: ubuntu-24.04
       build_type: Release
+      python_version: "3.13"
       build_jobs: 4
       build_apps: false
       use_spdlog: false
@@ -54,7 +55,9 @@ jobs:
 
       - name: Restore doc-helper execute bit
         shell: bash
-        run: chmod +x build/apps/roofer-app/doc-helper
+        run: |
+          chmod +x install/bin/doc-helper
+          chmod +x build/apps/roofer-app/doc-helper
 
       - name: Set up Python
         uses: actions/setup-python@v5
