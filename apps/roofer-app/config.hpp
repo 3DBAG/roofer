@@ -306,6 +306,7 @@ struct RooferConfigHandler {
 
   // flags
   bool _print_help = false;
+  bool _print_help_all = false;
   bool _print_attributes = false;
   bool _print_version = false;
   bool _crop_only = false;
@@ -322,6 +323,7 @@ struct RooferConfigHandler {
     ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
+    general.add("help-all", 'H', "Show full help message", _print_help_all);
     general.add("attributes", 'a', "List output attributes", _print_attributes);
     general.add("version", 'v', "Show version", _print_version);
     general.add("jobs", 'j', "Number of threads to use", _jobs);
@@ -752,7 +754,7 @@ struct RooferConfigHandler {
     }
   }
 
-  void print_help(std::string program_name) {
+  void print_help_header(const std::string& program_name, bool compact) {
     // see http://docopt.org/
     std::cout << "Automatic LoD 2.2 building reconstruction from "
                  "airborne lidar pointclouds\n\n";
@@ -762,26 +764,82 @@ struct RooferConfigHandler {
                  "<output-directory>"
               << "\n";
     std::cout << "  " << program_name;
-    std::cout
-        << " [options] (-c | --config) <config-file> [(<pointcloud-path>... "
-           "<polygon-source>)] <output-directory>"
-        << "\n";
+    if (compact) {
+      std::cout
+          << " -c <config-file> [<pointcloud-path>... <polygon-source>]\n";
+      std::cout << "         <output-directory>\n";
+    } else {
+      std::cout
+          << " [options] (-c | --config) <config-file> [(<pointcloud-path>... "
+             "<polygon-source>)] <output-directory>"
+          << "\n";
+    }
     std::cout << "  " << program_name;
     std::cout << " -h | --help" << "\n";
+    std::cout << "  " << program_name;
+    std::cout << " -H | --help-all" << "\n";
     std::cout << "  " << program_name;
     std::cout << " -a | --attributes" << "\n";
     std::cout << "  " << program_name;
     std::cout << " -v | --version" << "\n";
     std::cout << "\n";
+  }
+
+  void print_positional_arguments(bool compact) {
     std::cout << "\033[1mPositional arguments:\033[0m" << "\n";
-    std::cout << "  <pointcloud-path>            Path to pointcloud file "
-                 "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
-    std::cout << "  <polygon-source>             Path to roofprint polygons "
-                 "source. "
-                 "Can be "
-                 "an OGR supported file (eg. GPKG) or database connection "
-                 "string.\n";
+    if (compact) {
+      std::cout
+          << "  <pointcloud-path>            LAS/LAZ file or directory.\n";
+      std::cout << "  <polygon-source>             Roofprint polygons, for "
+                   "example GPKG\n";
+      std::cout << "                               or OGR connection string.\n";
+    } else {
+      std::cout << "  <pointcloud-path>            Path to pointcloud file "
+                   "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
+      std::cout << "  <polygon-source>             Path to roofprint polygons "
+                   "source. "
+                   "Can be "
+                   "an OGR supported file (eg. GPKG) or database connection "
+                   "string.\n";
+    }
     std::cout << "  <output-directory>           Output directory.\n";
+  }
+
+  void print_help(std::string program_name) {
+    print_help_header(program_name, true);
+
+    std::cout << "\033[1mExamples:\033[0m" << "\n";
+    std::cout << "  " << program_name;
+    std::cout << " pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " -c config.toml output-dir\n";
+    std::cout << "\n";
+    print_positional_arguments(true);
+    std::cout << "\n";
+    std::cout << "\033[1mCommon options:\033[0m" << "\n";
+    std::cout << "  -c, --config <file>          Read options from a TOML "
+                 "configuration file.\n";
+    std::cout << "  -j, --jobs <int>             Number of threads to use.\n";
+    std::cout
+        << "  --lod12                      Generate LoD 1.2 geometries.\n";
+    std::cout
+        << "  --lod13                      Generate LoD 1.3 geometries.\n";
+    std::cout
+        << "  --lod22                      Generate LoD 2.2 geometries.\n";
+    std::cout << "  -a, --attributes             List output attributes.\n";
+    std::cout << "  -v, --version                Show version.\n";
+    std::cout
+        << "  -H, --help-all               Show all options and defaults.\n";
+    std::cout << "\n";
+    std::cout << "Use '" << program_name
+              << " --help-all' to show all options and defaults.\n";
+  }
+
+  void print_help_all(std::string program_name) {
+    print_help_header(program_name, false);
+    print_positional_arguments(false);
 
     print_params(app_param_groups_);
     print_params(param_groups_);

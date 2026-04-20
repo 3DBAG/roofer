@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+- CLI: new short help message via `--help`/`-h`, previous long help message is now printed with `--help-all`/`-H`
+-
+
 ## [1.0.0-beta.6] - 2026-04-17
 
 ### Fixed

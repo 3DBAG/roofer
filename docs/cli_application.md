@@ -18,6 +18,7 @@ Usage:
   roofer [options] <pointcloud-path>... <polygon-source> <output-directory>
   roofer [options] (-c | --config) <config-file> [(<pointcloud-path>... <polygon-source>)] <output-directory>
   roofer -h | --help
+  roofer -H | --help-all
   roofer -a | --attributes
   roofer -v | --version
 ```
