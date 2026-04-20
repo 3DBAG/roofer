@@ -78,6 +78,7 @@ struct InputPointcloud {
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
   roofer::veco1f ground_elevations;
+  roofer::veco1f terrain_grid_elevations;
   roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
@@ -105,6 +106,8 @@ struct RooferConfig {
   // crop parameters
   float ceil_point_density = 20;
   float cellsize = 0.5;
+  float terrain_grid_cellsize = 10.0;
+  int terrain_grid_search_radius = 5;
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
@@ -424,6 +427,13 @@ struct RooferConfigHandler {
              "Cellsize used for quick pointcloud analysis (eg. point density"
              " and nodata regions).",
              cfg_.cellsize, {check::HigherThan<float>(0)});
+    crop.add("terrain-grid-cellsize",
+             "Cellsize used for the crop phase terrain fallback grid.",
+             cfg_.terrain_grid_cellsize, {check::HigherThan<float>(0)});
+    crop.add("terrain-grid-search-radius",
+             "Number of terrain grid cells to search around a building when "
+             "its local fallback cells do not contain terrain points.",
+             cfg_.terrain_grid_search_radius, {check::HigherOrEqualTo<int>(0)});
     crop.add(
         "lod11-fallback-area",
         "LoD 1.1 fallback threshold area in square meters. If the area of the "
@@ -514,12 +524,15 @@ struct RooferConfigHandler {
              "that is used to set the height of building floors. "
              "`buffer_tile`: use the 5th percentile lowest elevation point in "
              "a 4 meter buffer around the roofprint. If no points are found, "
-             "we fall back to the lowest elevation point in the current tile. "
+             "we fall back to the local terrain grid minimum. If no local "
+             "terrain grid cells are found, we fall back to the lowest "
+             "elevation point in the current tile. "
              "This may give undesired results for hilly areas. "
-             "`buffer_user`: same as `buffer_tile`, but with now with a "
-             "fallback to the elevation provided via `--h-terrain-attribute`. "
-             "`user`: always use the elevation provided via "
-             "`--h-terrain-attribute`.",
+             "`buffer_user`: use the same buffered pointcloud value, then "
+             "fall back to `--h-terrain-attribute`, then the local terrain "
+             "grid minimum, then the tile minimum. `user`: use "
+             "`--h-terrain-attribute`, then the local terrain grid minimum, "
+             "then the tile minimum.",
              cfg_.h_terrain_strategy)
         .example_ = "\"buffer_tile\"";
     reconstruction.add(

@@ -21,10 +21,12 @@
 
 #include <roofer/logger/logger.h>
 
+#include <algorithm>
 #include <bitset>
 #include <ctime>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/GridPIPTester.hpp>
@@ -44,14 +46,17 @@ namespace roofer::io {
 
   class PointsInPolygonsCollector {
     std::vector<LinearRing>& polygons;
+    std::vector<LinearRing>& buf_polygons;
     std::vector<PointCollection>& point_clouds;
     veco1f& ground_elevations;
+    veco1f& terrain_grid_elevations;
     vec1i& acquisition_years;
     vec1b& pointcloud_insufficient;
 
     // ground elevations
     std::vector<std::vector<arr3f>> ground_buffer_points;
     RasterTools::Raster pindex;
+    RasterTools::Raster terrain_grid;
     std::vector<std::vector<size_t>> pindex_vals;
     std::vector<std::unique_ptr<GridPIPTester>> poly_grids, buf_poly_grids;
     std::vector<vec1f> z_ground;
@@ -61,6 +66,7 @@ namespace roofer::io {
 
     int ground_class, building_class;
     bool handle_overlap_points;
+    int terrain_grid_search_radius;
 
    public:
     float min_ground_elevation = std::numeric_limits<float>::max();
@@ -69,21 +75,26 @@ namespace roofer::io {
                               std::vector<LinearRing>& buf_polygons,
                               std::vector<PointCollection>& point_clouds,
                               veco1f& ground_elevations,
+                              veco1f& terrain_grid_elevations,
                               vec1i& acquisition_years,
                               vec1b& pointcloud_insufficient,
                               const Box& completearea_bb, float& cellsize,
-                              float& buffer, int ground_class = 2,
-                              int building_class = 6,
+                              float& buffer, float& terrain_grid_cellsize,
+                              int& terrain_grid_search_radius,
+                              int ground_class = 2, int building_class = 6,
                               bool handle_overlap_points = false  // ·
                               )
         : polygons(polygons),
+          buf_polygons(buf_polygons),
           point_clouds(point_clouds),
           ground_elevations(ground_elevations),
-          ground_class(ground_class),
-          building_class(building_class),
+          terrain_grid_elevations(terrain_grid_elevations),
           acquisition_years(acquisition_years),
           pointcloud_insufficient(pointcloud_insufficient),
-          handle_overlap_points(handle_overlap_points) {
+          ground_class(ground_class),
+          building_class(building_class),
+          handle_overlap_points(handle_overlap_points),
+          terrain_grid_search_radius(terrain_grid_search_radius) {
       // point_clouds_ground.resize(polygons.size());
       point_clouds.resize(polygons.size());
       z_ground.resize(polygons.size());
@@ -115,6 +126,9 @@ namespace roofer::io {
       float maxy = completearea_bb.max()[1] + buffer;
       pindex = RasterTools::Raster(cellsize, minx, maxx, miny, maxy);
       pindex_vals.resize(pindex.dimx_ * pindex.dimy_);
+      terrain_grid =
+          RasterTools::Raster(terrain_grid_cellsize, minx, maxx, miny, maxy);
+      terrain_grid.prefill_arrays(RasterTools::MIN);
 
       // populate pindex_vals
       for (size_t i = 0; i < buf_polygons.size(); ++i) {
@@ -148,6 +162,10 @@ namespace roofer::io {
         // std::cout << "Point (" << point[0] << ", " <<point[1] << ", "  <<
         // point[2] << ") is not in the polygon bbox.\n";
         return;
+      }
+      if (point_class == ground_class &&
+          terrain_grid.check_point(point[0], point[1])) {
+        terrain_grid.add_point(point[0], point[1], point[2], RasterTools::MIN);
       }
       // For the ground points we only test if the point is within the grid
       // index cell, but we do not do a pip for the footprint itself.
@@ -337,6 +355,10 @@ namespace roofer::io {
           ground_elevations.push_back(std::nullopt);
         }
       }
+      for (size_t i = 0; i < buf_polygons.size(); ++i) {
+        terrain_grid_elevations.push_back(
+            terrain_grid_min_for_polygon(buf_polygons[i]));
+      }
 
       // clear footprints with very low coverage (ie. underground footprints)
       // TODO: improve method for computing mean_density
@@ -366,6 +388,67 @@ namespace roofer::io {
         poly_pt_counts_grd.push_back(int(info.pt_count_grd));
         poly_densities.push_back(float(info.pt_count_bld / info.area));
       }
+    }
+
+    std::optional<float> terrain_grid_min_for_polygon(LinearRing& polygon) {
+      const auto box = polygon.box();
+      const auto min_col = grid_col_floor(box.min()[0]);
+      const auto max_col = grid_col_floor(box.max()[0]);
+      const auto min_row = grid_row_floor(box.min()[1]);
+      const auto max_row = grid_row_floor(box.max()[1]);
+
+      if (max_col < 0 || max_row < 0 ||
+          min_col >= static_cast<int>(terrain_grid.dimx_) ||
+          min_row >= static_cast<int>(terrain_grid.dimy_)) {
+        return std::nullopt;
+      }
+
+      const int c0 = std::clamp(min_col, 0, int(terrain_grid.dimx_) - 1);
+      const int c1 = std::clamp(max_col, 0, int(terrain_grid.dimx_) - 1);
+      const int r0 = std::clamp(min_row, 0, int(terrain_grid.dimy_) - 1);
+      const int r1 = std::clamp(max_row, 0, int(terrain_grid.dimy_) - 1);
+
+      for (int radius = 0; radius <= terrain_grid_search_radius; ++radius) {
+        auto value = min_in_grid_window(c0 - radius, c1 + radius, r0 - radius,
+                                        r1 + radius);
+        if (value.has_value()) return value;
+      }
+      return std::nullopt;
+    }
+
+    int grid_col_floor(float x) const {
+      return int(std::floor((x - terrain_grid.minx_) / terrain_grid.cellSize_));
+    }
+
+    int grid_row_floor(float y) const {
+      return int(std::floor((y - terrain_grid.miny_) / terrain_grid.cellSize_));
+    }
+
+    std::optional<float> min_in_grid_window(int min_col, int max_col,
+                                            int min_row, int max_row) {
+      if (max_col < 0 || max_row < 0 ||
+          min_col >= static_cast<int>(terrain_grid.dimx_) ||
+          min_row >= static_cast<int>(terrain_grid.dimy_)) {
+        return std::nullopt;
+      }
+
+      const int c0 = std::clamp(min_col, 0, int(terrain_grid.dimx_) - 1);
+      const int c1 = std::clamp(max_col, 0, int(terrain_grid.dimx_) - 1);
+      const int r0 = std::clamp(min_row, 0, int(terrain_grid.dimy_) - 1);
+      const int r1 = std::clamp(max_row, 0, int(terrain_grid.dimy_) - 1);
+
+      std::optional<float> min_z;
+      for (int row = r0; row <= r1; ++row) {
+        for (int col = c0; col <= c1; ++col) {
+          if (terrain_grid.isNoData(size_t(col), size_t(row))) continue;
+          const auto value =
+              float(terrain_grid.get_val(size_t(col), size_t(row)));
+          if (!min_z.has_value() || value < min_z.value()) {
+            min_z = value;
+          }
+        }
+      }
+      return min_z;
     }
   };
 
@@ -450,8 +533,9 @@ namespace roofer::io {
                  std::vector<LinearRing>& polygons,
                  std::vector<LinearRing>& buf_polygons,
                  std::vector<PointCollection>& point_clouds,
-                 veco1f& ground_elevations, vec1i& acquisition_years,
-                 vec1b& pointcloud_insufficient, const Box& polygon_extent,
+                 veco1f& ground_elevations, veco1f& terrain_grid_elevations,
+                 vec1i& acquisition_years, vec1b& pointcloud_insufficient,
+                 const Box& polygon_extent,
                  PointCloudCropperConfig cfg) override {
       // vec1f ground_elevations;
       vec1f poly_areas;
@@ -461,11 +545,21 @@ namespace roofer::io {
 
       auto& logger = logger::Logger::get_logger();
 
-      PointsInPolygonsCollector pip_collector{
-          polygons,          buf_polygons,       point_clouds,
-          ground_elevations, acquisition_years,  pointcloud_insufficient,
-          polygon_extent,    cfg.cellsize,       cfg.buffer,
-          cfg.ground_class,  cfg.building_class, cfg.handle_overlap_points};
+      PointsInPolygonsCollector pip_collector{polygons,
+                                              buf_polygons,
+                                              point_clouds,
+                                              ground_elevations,
+                                              terrain_grid_elevations,
+                                              acquisition_years,
+                                              pointcloud_insufficient,
+                                              polygon_extent,
+                                              cfg.cellsize,
+                                              cfg.buffer,
+                                              cfg.terrain_grid_cellsize,
+                                              cfg.terrain_grid_search_radius,
+                                              cfg.ground_class,
+                                              cfg.building_class,
+                                              cfg.handle_overlap_points};
 
       for (auto lasfile : lasfiles) {
         LASreadOpener lasreadopener;

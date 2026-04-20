@@ -36,6 +36,8 @@ namespace roofer::io {
     std::string wkt_ = "";
     bool handle_overlap_points = false;
     bool use_acquisition_year = true;
+    float terrain_grid_cellsize = 10.0;
+    int terrain_grid_search_radius = 3;
   };
   struct PointCloudCropperInterface {
     roofer::misc::projHelperInterface& pjHelper;
@@ -49,8 +51,8 @@ namespace roofer::io {
         std::vector<LinearRing>& polygons,
         std::vector<LinearRing>& buf_polygons,
         std::vector<PointCollection>& point_clouds, veco1f& ground_elevations,
-        vec1i& acquisition_years, vec1b& pointcloud_insufficient,
-        const Box& polygon_extent,
+        veco1f& terrain_grid_elevations, vec1i& acquisition_years,
+        vec1b& pointcloud_insufficient, const Box& polygon_extent,
         PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
 
     virtual std::optional<float> get_min_terrain_elevation() const = 0;
