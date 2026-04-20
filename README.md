@@ -18,9 +18,6 @@
 Documentation is provided at [https://3dbag.github.io/roofer/](https://3dbag.github.io/roofer/)
 The source code is available at [https://github.com/3DBAG/roofer](https://github.com/3DBAG/roofer)
 
-> [!CAUTION]
-> Roofer is currently still under active development and subject to breaking changes.
-
 ## Origin
 
 The building reconstruction algorithms underpinning roofer were originally developed within the [3D geoinformation research group](https://3d.bk.tudelft.nl/) at the Technical University of Delft.
