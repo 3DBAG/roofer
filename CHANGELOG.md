@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 - CLI: new short help message via `--help`/`-h`, previous long help message is now printed with `--help-all`/`-H`
--
+
+## Changed
+- CLI: `--jobs`/`-j` now assigns roughly `jobs - 1` threads to reconstruction instead of reserving five internal threads first.
 
 ## [1.0.0-beta.6] - 2026-04-17
 

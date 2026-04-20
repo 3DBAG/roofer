@@ -472,31 +472,18 @@ int main(int argc, const char* argv[]) {
   }
   logger.debug("Created {} batch tile regions", initial_tiles.size());
 
-  // Multithreading setup
-  // -5, because we need one thread for crop, reconstruct, sort, serialize,
-  // plus logger. We don't count with the main thread and tracer thread, because
-  // all the work is offloaded to the worker threads and the main is not doing
-  // much work, tracer either.
-  size_t nthreads_reserved = 5;
-  size_t nthreads = nthreads_reserved + 1;
-  if (nthreads < std::thread::hardware_concurrency()) {
-    nthreads = std::thread::hardware_concurrency();
-  }
-
-  // Limit the parallelism
-  if (handler._jobs < nthreads_reserved + 1) {
-    // Only one thread will be available for the reconstructor pool
-    nthreads = nthreads_reserved + 1;
-  } else {
-    nthreads = handler._jobs;
-  }
-
-  size_t nthreads_reconstructor_pool = nthreads - nthreads_reserved;
+  // Multithreading setup. The -j/--jobs value is the user-facing worker budget.
+  // The cropper, sorter, serializer, logger, and optional tracer use additional
+  // mostly-blocking pipeline threads, so keep one job aside for that overhead
+  // and give the rest to the CPU-heavy reconstruction pool.
+  const size_t requested_jobs = static_cast<size_t>(handler._jobs);
+  const size_t nthreads_reconstructor_pool =
+      requested_jobs > 1 ? requested_jobs - 1 : 1;
+  const auto system_threads = std::thread::hardware_concurrency();
   logger.info(
-      "Using {} threads for the reconstructor pool, {} threads in total "
-      "(system offers {})",
-      nthreads_reconstructor_pool, nthreads,
-      std::thread::hardware_concurrency());
+      "Using {} threads for the reconstructor pool (-j/--jobs {}, system "
+      "offers {})",
+      nthreads_reconstructor_pool, requested_jobs, system_threads);
 
   std::atomic crop_running{true};
   std::deque<BuildingTile> cropped_tiles;

@@ -304,6 +304,11 @@ struct RooferConfigHandler {
   std::unordered_map<std::string, ConfigParameter*> param_index_;
   std::unordered_map<std::string, ConfigParameter*> app_param_index_;
 
+  static int default_jobs() {
+    auto system_threads = std::thread::hardware_concurrency();
+    return system_threads == 0 ? 1 : static_cast<int>(system_threads);
+  }
+
   // flags
   bool _print_help = false;
   bool _print_help_all = false;
@@ -315,7 +320,7 @@ struct RooferConfigHandler {
   roofer::logger::LogLevel _loglevel = roofer::logger::LogLevel::info;
   int _trace_interval = 10;
   std::string _config_path;
-  int _jobs = std::thread::hardware_concurrency();
+  int _jobs = default_jobs();
 
   // methods
   RooferConfigHandler() {
@@ -326,7 +331,10 @@ struct RooferConfigHandler {
     general.add("help-all", 'H', "Show full help message", _print_help_all);
     general.add("attributes", 'a', "List output attributes", _print_attributes);
     general.add("version", 'v', "Show version", _print_version);
-    general.add("jobs", 'j', "Number of threads to use", _jobs);
+    general.add("jobs", 'j',
+                "Number of worker jobs to use. Reconstruction uses roughly "
+                "jobs - 1 threads.",
+                _jobs, {check::HigherThan<int>(0)});
     general.add("config", 'c', "Configuration file", _config_path,
                 {check::PathExists, check::DirIsWritable});
     general.add("trace-interval", "Interval for tracing in seconds",
@@ -710,6 +718,12 @@ struct RooferConfigHandler {
   };
 
   void validate() {
+    if (_jobs < 1) {
+      throw std::runtime_error(
+          "Validation error for jobs parameter. Value must be higher "
+          "than 0.");
+    }
+
     for (auto& [group_name, group] : param_groups_) {
       for (auto& param : group) {
         if (auto error_msg = param->validate()) {
@@ -821,7 +835,8 @@ struct RooferConfigHandler {
     std::cout << "\033[1mCommon options:\033[0m" << "\n";
     std::cout << "  -c, --config <file>          Read options from a TOML "
                  "configuration file.\n";
-    std::cout << "  -j, --jobs <int>             Number of threads to use.\n";
+    std::cout
+        << "  -j, --jobs <int>             Number of worker jobs to use.\n";
     std::cout
         << "  --lod12                      Generate LoD 1.2 geometries.\n";
     std::cout
