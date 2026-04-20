@@ -12,7 +12,7 @@ On Linux and macOS, you can use the install script:
 curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | sh
 ```
 
-The script downloads the matching release archive, installs the `roofer` executable to `~/.local/bin/roofer`, and installs optional shared runtime data to `~/.local/share/roofer`.
+The script downloads the matching release archive, installs the bundle to `~/.local/share/roofer`, and installs a `roofer` launcher to `~/.local/bin/roofer`.
 
 If `~/.local/bin` is not yet on your `PATH`, add it to your shell profile:
 
@@ -23,7 +23,7 @@ export PATH="$HOME/.local/bin:$PATH"
 To install a specific version, set `ROOFER_VERSION`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | ROOFER_VERSION=1.0.0-beta.6 sh
+curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | ROOFER_VERSION=1.0.0 sh
 ```
 
 ### Windows

@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "1.0.0-beta.6"
+current_version = "1.0.0"
 parse = """(?x)
     (?P<major>0|[1-9]\\d*)\\.
     (?P<minor>0|[1-9]\\d*)\\.
@@ -51,13 +51,18 @@ replace = "version = \"{new_version}\""
 
 [[tool.bumpversion.files]]
 filename = "distribution/install.sh"
-search = "VERSION=\"{current_version}\""
-replace = "VERSION=\"{new_version}\""
+search = "VERSION=\"${{ROOFER_VERSION:-{current_version}}}\""
+replace = "VERSION=\"${{ROOFER_VERSION:-{new_version}}}\""
 
 [[tool.bumpversion.files]]
 filename = "docs/conf.py"
 search = "release = '{current_version}'"
 replace = "release = '{new_version}'"
+
+[[tool.bumpversion.files]]
+filename = "docs/getting_started.md"
+search = "ROOFER_VERSION={current_version}"
+replace = "ROOFER_VERSION={new_version}"
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"

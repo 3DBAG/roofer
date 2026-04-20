@@ -54,7 +54,7 @@
           rooferDerivation = { withBindings ? false, withApps ? true, withRerun ? false }:
             pkgs.stdenv.mkDerivation ({
               pname = "roofer" + pkgs.lib.optionalString withBindings "py";
-              version = "1.0.0-beta.6";
+              version = "1.0.0";
 
               src = ./.;
 
