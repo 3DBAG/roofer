@@ -23,6 +23,15 @@ Usage:
   roofer -v | --version
 ```
 
+### Examples
+
+```{code-block} shell
+roofer pointcloud.laz footprints.gpkg output-dir
+roofer --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir
+roofer --filter 'identificatie=1980100000265200' pointcloud.laz footprints.gpkg output-dir
+roofer -c config.toml output-dir
+```
+
 ### Positional arguments
 
 ```{option} <pointcloud-path>

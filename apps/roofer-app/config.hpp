@@ -375,7 +375,8 @@ struct RooferConfigHandler {
               cfg_.layer_name);
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
-              "`<polygon-source>`.",
+              "`<polygon-source>`. See "
+              "https://gdal.org/en/stable/user/ogr_sql_dialect.html#where",
               cfg_.attribute_filter);
     input
         .add(
@@ -827,6 +828,9 @@ struct RooferConfigHandler {
     std::cout << " pointcloud.laz footprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
     std::cout << " --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " --filter 'identificatie=1980100000265200'\n";
+    std::cout << "         pointcloud.laz footprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
     std::cout << " -c config.toml output-dir\n";
     std::cout << "\n";
