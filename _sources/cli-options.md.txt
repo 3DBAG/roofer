@@ -3,6 +3,9 @@
 ```{option} -h, --help  (default: false)
 Show help message
 ```
+```{option} -H, --help-all  (default: false)
+Show full help message
+```
 ```{option} -a, --attributes  (default: false)
 List output attributes
 ```
@@ -10,7 +13,7 @@ List output attributes
 Show version
 ```
 ```{option} -j, --jobs <int> (default: 4)
-Number of threads to use
+Number of worker jobs to use. Reconstruction uses roughly jobs - 1 threads.
 ```
 ```{option} -c, --config <string> (default: <no value>)
 Configuration file
@@ -42,7 +45,7 @@ Input attribute (float) containing fallback roof height for buildings in case no
 Select this layer name from `<polygon-source>`. By default the first layer is used.
 ```
 ```{option} --filter <string> (default: <no value>)
-Specify WHERE clause in OGR SQL to select specfic features from `<polygon-source>`.
+Specify WHERE clause in OGR SQL to select specfic features from `<polygon-source>`. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where
 ```
 ```{option} --box (xmin ymin xmax ymax) (default: <no value>)
 Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.
@@ -69,6 +72,12 @@ Enforce this point density ceiling on each building pointcloud.
 ```
 ```{option} --cellsize <float> (default: 0.5)
 Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).
+```
+```{option} --terrain-grid-cellsize <float> (default: 10)
+Cellsize used for the crop phase terrain fallback grid.
+```
+```{option} --terrain-grid-search-radius <int> (default: 3)
+Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.
 ```
 ```{option} --lod11-fallback-area <int> (default: 69000)
 LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.
@@ -124,7 +133,7 @@ Minimum number of points required for detecting a plane in the pointcloud.
 Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.
 ```
 ```{option} --h-terrain-strategy (buffer_tile|buffer_user|user) (default: buffer_tile)
-Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: same as `buffer_tile`, but with now with a fallback to the elevation provided via `--h-terrain-attribute`. `user`: always use the elevation provided via `--h-terrain-attribute`.
+Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: use the same buffered pointcloud value, then fall back to `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum. `user`: use `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum.
 ```
 ```{option} --lod11-fallback-planes <int> (default: 900)
 Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.

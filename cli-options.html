@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>General options - roofer 1.0.0-beta.6 documentation</title>
+        <title>General options - roofer 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">roofer 1.0.0-beta.6 documentation</div></a>
+      <a href="index.html"><div class="brand">roofer 1.0.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -193,7 +193,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">roofer 1.0.0-beta.6 documentation</span>
+  <span class="sidebar-brand-text">roofer 1.0.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -264,6 +264,12 @@
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-H">
+<span id="cmdoption-help-all"></span><span class="sig-name descname"><span class="pre">-H</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help-all</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-H" title="Link to this definition">¶</a></dt>
+<dd><p>Show full help message</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-a">
 <span id="cmdoption-attributes"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--attributes</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-a" title="Link to this definition">¶</a></dt>
 <dd><p>List output attributes</p>
@@ -278,7 +284,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-j">
 <span id="cmdoption-jobs"></span><span class="sig-name descname"><span class="pre">-j</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--jobs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">4)</span></span><a class="headerlink" href="#cmdoption-j" title="Link to this definition">¶</a></dt>
-<dd><p>Number of threads to use</p>
+<dd><p>Number of worker jobs to use. Reconstruction uses roughly jobs - 1 threads.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -341,7 +347,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-filter">
 <span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
-<dd><p>Specify WHERE clause in OGR SQL to select specfic features from <code class="docutils literal notranslate"><span class="pre">&lt;polygon-source&gt;</span></code>.</p>
+<dd><p>Specify WHERE clause in OGR SQL to select specfic features from <code class="docutils literal notranslate"><span class="pre">&lt;polygon-source&gt;</span></code>. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where</p>
 </dd></dl>
 
 <dl class="std option">
@@ -393,6 +399,18 @@
 <dt class="sig sig-object std" id="cmdoption-cellsize">
 <span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
 <dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-terrain-grid-cellsize">
+<span class="sig-name descname"><span class="pre">--terrain-grid-cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">10)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-cellsize" title="Link to this definition">¶</a></dt>
+<dd><p>Cellsize used for the crop phase terrain fallback grid.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-terrain-grid-search-radius">
+<span class="sig-name descname"><span class="pre">--terrain-grid-search-radius</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">3)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-search-radius" title="Link to this definition">¶</a></dt>
+<dd><p>Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -503,7 +521,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
 <span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
-<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: same as <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>, but with now with a fallback to the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>. <code class="docutils literal notranslate"><span class="pre">user</span></code>: always use the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>.</p>
+<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: use the same buffered pointcloud value, then fall back to <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum. <code class="docutils literal notranslate"><span class="pre">user</span></code>: use <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -603,7 +621,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=c7245fcd"></script>
+</div><script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>

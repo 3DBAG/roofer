@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Building from source" href="developers.html" /><link rel="prev" title="Input data requirements" href="data_requirements.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>Roofer CLI App - roofer 1.0.0-beta.6 documentation</title>
+        <title>Roofer CLI App - roofer 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">roofer 1.0.0-beta.6 documentation</div></a>
+      <a href="index.html"><div class="brand">roofer 1.0.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -193,7 +193,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">roofer 1.0.0-beta.6 documentation</span>
+  <span class="sidebar-brand-text">roofer 1.0.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -273,10 +273,20 @@ Usage:
   roofer [options] &lt;pointcloud-path&gt;... &lt;polygon-source&gt; &lt;output-directory&gt;
   roofer [options] (-c | --config) &lt;config-file&gt; [(&lt;pointcloud-path&gt;... &lt;polygon-source&gt;)] &lt;output-directory&gt;
   roofer -h | --help
+  roofer -H | --help-all
   roofer -a | --attributes
   roofer -v | --version
 </pre></div>
 </div>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>roofer<span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>output-dir
+roofer<span class="w"> </span>--lod12<span class="w"> </span>--lod22<span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>output-dir
+roofer<span class="w"> </span>--filter<span class="w"> </span><span class="s1">&#39;identificatie=1980100000265200&#39;</span><span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>output-dir
+roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="w"> </span>output-dir
+</pre></div>
+</div>
+</section>
 <section id="positional-arguments">
 <h3>Positional arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="std option">
@@ -307,6 +317,12 @@ Usage:
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-H">
+<span id="cmdoption-help-all"></span><span class="sig-name descname"><span class="pre">-H</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help-all</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-H" title="Link to this definition">¶</a></dt>
+<dd><p>Show full help message</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-a">
 <span id="cmdoption-attributes"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--attributes</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-a" title="Link to this definition">¶</a></dt>
 <dd><p>List output attributes</p>
@@ -321,7 +337,7 @@ Usage:
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-j">
 <span id="cmdoption-jobs"></span><span class="sig-name descname"><span class="pre">-j</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--jobs</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">4)</span></span><a class="headerlink" href="#cmdoption-j" title="Link to this definition">¶</a></dt>
-<dd><p>Number of threads to use</p>
+<dd><p>Number of worker jobs to use. Reconstruction uses roughly jobs - 1 threads.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -384,7 +400,7 @@ Usage:
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-filter">
 <span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
-<dd><p>Specify WHERE clause in OGR SQL to select specfic features from <code class="docutils literal notranslate"><span class="pre">&lt;polygon-source&gt;</span></code>.</p>
+<dd><p>Specify WHERE clause in OGR SQL to select specfic features from <code class="docutils literal notranslate"><span class="pre">&lt;polygon-source&gt;</span></code>. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where</p>
 </dd></dl>
 
 <dl class="std option">
@@ -436,6 +452,18 @@ Usage:
 <dt class="sig sig-object std" id="cmdoption-cellsize">
 <span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
 <dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-terrain-grid-cellsize">
+<span class="sig-name descname"><span class="pre">--terrain-grid-cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">10)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-cellsize" title="Link to this definition">¶</a></dt>
+<dd><p>Cellsize used for the crop phase terrain fallback grid.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-terrain-grid-search-radius">
+<span class="sig-name descname"><span class="pre">--terrain-grid-search-radius</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">3)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-search-radius" title="Link to this definition">¶</a></dt>
+<dd><p>Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -546,7 +574,7 @@ Usage:
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
 <span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
-<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: same as <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>, but with now with a fallback to the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>. <code class="docutils literal notranslate"><span class="pre">user</span></code>: always use the elevation provided via <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>.</p>
+<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: use the same buffered pointcloud value, then fall back to <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum. <code class="docutils literal notranslate"><span class="pre">user</span></code>: use <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -844,7 +872,7 @@ Usage:
 <span class="c1"># h-roof-attribute = </span>
 <span class="c1">## Select this layer name from `&lt;polygon-source&gt;`. By default the first layer is used.</span>
 <span class="c1"># polygon-source-layer = </span>
-<span class="c1">## Specify WHERE clause in OGR SQL to select specfic features from `&lt;polygon-source&gt;`.</span>
+<span class="c1">## Specify WHERE clause in OGR SQL to select specfic features from `&lt;polygon-source&gt;`. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where</span>
 <span class="c1"># filter = </span>
 <span class="c1">## Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.</span>
 <span class="c1"># box = [100, 100, 200, 200]</span>
@@ -864,6 +892,10 @@ Usage:
 <span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
 <span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</span>
 <span class="n">cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="c1">## Cellsize used for the crop phase terrain fallback grid.</span>
+<span class="n">terrain-grid-cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<span class="c1">## Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</span>
+<span class="n">terrain-grid-search-radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
 <span class="c1">## LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</span>
 <span class="n">lod11-fallback-area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">69000</span>
 <span class="c1">## Do not attempt to reconstruct buildings with insufficient pointcloud data. If `--h-roof-attribute` is set, an LoD 1.1 extrusion will be performed, otherwise no 3D model will be generated.</span>
@@ -900,7 +932,7 @@ Usage:
 <span class="n">plane-detect-min-points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
 <span class="c1">## Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.</span>
 <span class="n">plane-detect-epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span>
-<span class="c1">## Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 3 meter buffer around the roofprint. If no points are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: same as `buffer_tile`, but with now with a fallback to the elevation provided via `--h-terrain-attribute`. `user`: always use the elevation provided via `--h-terrain-attribute`.</span>
+<span class="c1">## Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: use the same buffered pointcloud value, then fall back to `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum. `user`: use `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum.</span>
 <span class="c1"># h-terrain-strategy = &quot;buffer_tile&quot;</span>
 <span class="c1">## Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.</span>
 <span class="n">lod11-fallback-planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">900</span>
@@ -1078,6 +1110,7 @@ Usage:
             <ul>
 <li><a class="reference internal" href="#">Roofer CLI App</a><ul>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#positional-arguments">Positional arguments</a></li>
 <li><a class="reference internal" href="#general-options">General options</a></li>
 <li><a class="reference internal" href="#input-options">Input options</a></li>
@@ -1102,7 +1135,7 @@ Usage:
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=c7245fcd"></script>
+</div><script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>

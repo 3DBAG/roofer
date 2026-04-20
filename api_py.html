@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Related software" href="related_software.html" /><link rel="prev" title="API Reference C++" href="api_cpp.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>API Reference Python - roofer 1.0.0-beta.6 documentation</title>
+        <title>API Reference Python - roofer 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">roofer 1.0.0-beta.6 documentation</div></a>
+      <a href="index.html"><div class="brand">roofer 1.0.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -193,7 +193,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">roofer 1.0.0-beta.6 documentation</span>
+  <span class="sidebar-brand-text">roofer 1.0.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -263,7 +263,59 @@
 <p>Because roofer internally uses floats to represent coordinates, it is advised to translate your data to the origin prior to calling <code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code> to prevent loss of precision.</p>
 </div>
 <p>See <a class="reference external" href="https://github.com/3DBAG/roofer/blob/develop/rooferpy/example_rooferpy.py">this script</a> for a simple example of how to use the Python bindings.</p>
-<dl class="py class" id="module-roofer">
+<p>The API uses plain Python sequences for geometry:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Point</span></code>: three numbers, <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PointCloud</span></code>: a sequence of <code class="docutils literal notranslate"><span class="pre">Point</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ring</span></code>: a sequence of <code class="docutils literal notranslate"><span class="pre">Point</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Footprint</span></code>: a sequence of rings, where the first ring is the exterior ring and subsequent rings are holes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Mesh</span></code>: a sequence of polygons, where each polygon is a sequence of rings</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="roofer.reconstruct">
+<span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points_roof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_ground</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footprint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ReconstructionConfig()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roofer.reconstruct" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points_roof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footprint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ReconstructionConfig()</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Reconstruct a single building.</p>
+<p>The first overload uses both roof and ground points. The second overload
+reconstructs without ground points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_roof</strong> – Building or roof points as a <code class="docutils literal notranslate"><span class="pre">PointCloud</span></code>.</p></li>
+<li><p><strong>points_ground</strong> – Ground points as a <code class="docutils literal notranslate"><span class="pre">PointCloud</span></code>.</p></li>
+<li><p><strong>footprint</strong> – Building footprint as a <code class="docutils literal notranslate"><span class="pre">Footprint</span></code>.</p></li>
+<li><p><strong>cfg</strong> (<a class="reference internal" href="#roofer.ReconstructionConfig" title="roofer.ReconstructionConfig"><em>ReconstructionConfig</em></a>) – Reconstruction parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reconstructed meshes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Mesh]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="roofer.triangulate_mesh">
+<span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">triangulate_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roofer.triangulate_mesh" title="Link to this definition">¶</a></dt>
+<dd><p>Triangulate a mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mesh</strong> (<em>Mesh</em>) – Mesh to triangulate.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple <code class="docutils literal notranslate"><span class="pre">(vertices,</span> <span class="pre">faces)</span></code>, where <code class="docutils literal notranslate"><span class="pre">vertices</span></code> is a list of
+points and <code class="docutils literal notranslate"><span class="pre">faces</span></code> is a list of three vertex indices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[list[Point], list[list[int]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="roofer.ReconstructionConfig">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">ReconstructionConfig</span></span><a class="headerlink" href="#roofer.ReconstructionConfig" title="Link to this definition">¶</a></dt>
 <dd><dl class="py property">
@@ -343,26 +395,6 @@
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="roofer.reconstruct">
-<span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roofer.reconstruct" title="Link to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>reconstruct(points_roof: collections.abc.Sequence[typing.Annotated[collections.abc.Sequence[typing.SupportsFloat], “FixedSize(3)”]], points_ground: collections.abc.Sequence[typing.Annotated[collections.abc.Sequence[typing.SupportsFloat], “FixedSize(3)”]], footprint: collections.abc.Sequence[collections.abc.Sequence[typing.Annotated[collections.abc.Sequence[typing.SupportsFloat], “FixedSize(3)”]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f9d2bb3fbf0&gt;) -&gt; list[list[list[list[typing.Annotated[list[float], “FixedSize(3)”]]]]]</p></li>
-</ol>
-<p>Reconstruct a single instance of a building from a point cloud with ground points</p>
-<ol class="arabic simple" start="2">
-<li><p>reconstruct(points_roof: collections.abc.Sequence[typing.Annotated[collections.abc.Sequence[typing.SupportsFloat], “FixedSize(3)”]], footprint: collections.abc.Sequence[collections.abc.Sequence[typing.Annotated[collections.abc.Sequence[typing.SupportsFloat], “FixedSize(3)”]]], cfg: roofer.ReconstructionConfig = &lt;roofer.ReconstructionConfig object at 0x7f9d2bb483b0&gt;) -&gt; list[list[list[list[typing.Annotated[list[float], “FixedSize(3)”]]]]]</p></li>
-</ol>
-<p>Reconstruct a single instance of a building from a point cloud without ground points</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roofer.triangulate_mesh">
-<span class="sig-prename descclassname"><span class="pre">roofer.</span></span><span class="sig-name descname"><span class="pre">triangulate_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">SupportsFloat</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'FixedSize(3)'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'FixedSize(3)'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'FixedSize(3)'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#roofer.triangulate_mesh" title="Link to this definition">¶</a></dt>
-<dd><p>Triangulate a mesh</p>
-</dd></dl>
-
 </section>
 
         </article>
@@ -428,6 +460,8 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">API Reference Python</a><ul>
+<li><a class="reference internal" href="#roofer.reconstruct"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
+<li><a class="reference internal" href="#roofer.triangulate_mesh"><code class="docutils literal notranslate"><span class="pre">triangulate_mesh()</span></code></a></li>
 <li><a class="reference internal" href="#roofer.ReconstructionConfig"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig</span></code></a><ul>
 <li><a class="reference internal" href="#roofer.ReconstructionConfig.clip_ground"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig.clip_ground</span></code></a></li>
 <li><a class="reference internal" href="#roofer.ReconstructionConfig.complexity_factor"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig.complexity_factor</span></code></a></li>
@@ -446,8 +480,6 @@
 <li><a class="reference internal" href="#roofer.ReconstructionConfig.thres_reg_line_ext"><code class="docutils literal notranslate"><span class="pre">ReconstructionConfig.thres_reg_line_ext</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#roofer.reconstruct"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
-<li><a class="reference internal" href="#roofer.triangulate_mesh"><code class="docutils literal notranslate"><span class="pre">triangulate_mesh()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -459,7 +491,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=c7245fcd"></script>
+</div><script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
