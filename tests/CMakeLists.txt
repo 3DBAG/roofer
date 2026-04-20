@@ -54,8 +54,8 @@ target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
 
 add_executable("test_vector_reader"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
-target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
 target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
+target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
 
 # --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
