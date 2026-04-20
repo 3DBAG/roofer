@@ -208,7 +208,7 @@ namespace roofer::misc {
 
       for (auto& lr : polygons) {
         if (lr.size() < 3) {
-          logger.info("feature skipped with less than 3 points");
+          logger.debug("Skipping polygon with less than 3 points");
           // if (output_failures) polygons_out.push_back(lr);
           continue;
         }
@@ -263,7 +263,7 @@ namespace roofer::misc {
             GEOSGeom_getCoordSeq_r(gc, g_ring);
         GEOSCoordSeq_getSize_r(gc, g_coord_seq, &size);
         if (size == 0) {
-          logger.info("feature size 0 after simplify");
+          logger.debug("Skipping simplified polygon with 0 points");
           // if (output_failures) polygons_out.push_back(lr);
         } else {
           lr = from_geos_polygon(simplified_geom);
@@ -290,7 +290,7 @@ namespace roofer::misc {
         orient_polygon(buffered_geom, CCW);
 
         if (GEOSisValid_r(gc, buffered_geom) != 1) {
-          logger.info("feature not simplified");
+          logger.debug("Buffered polygon is invalid; keeping original polygon");
         } else {
           lr = from_geos_polygon(buffered_geom);
         }

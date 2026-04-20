@@ -585,7 +585,7 @@ namespace roofer::io {
                                                    lasreader->get_max_z()));
 
         if (!file_bbox.intersects(polygon_extent)) {
-          logger.info("no intersection footprints with las file: {}", lasfile);
+          logger.debug("No footprint intersection with LAS file: {}", lasfile);
           continue;
         }
 
