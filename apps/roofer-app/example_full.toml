@@ -23,7 +23,7 @@ cellsize = 0.5
 # Cellsize used for the crop phase terrain fallback grid
 terrain-grid-cellsize = 10
 # Number of terrain grid cells to search around a building when local fallback cells are empty
-terrain-grid-search-radius = 5
+terrain-grid-search-radius = 3
 
 ## Reconstruction options
 # Plane detect epsilon

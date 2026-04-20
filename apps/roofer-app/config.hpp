@@ -107,7 +107,7 @@ struct RooferConfig {
   float ceil_point_density = 20;
   float cellsize = 0.5;
   float terrain_grid_cellsize = 10.0;
-  int terrain_grid_search_radius = 5;
+  int terrain_grid_search_radius = 3;
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
