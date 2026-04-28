@@ -1,11 +1,48 @@
 # Python bindings for roofer C++ API
-We use pybind11 for python bindings. To use the bindings, make sure to [install pybind11](https://pybind11.readthedocs.io/en/latest/installing.html#include-with-pypi) and compile the source using the `vcpkg-with-bindings` preset, i.e.
+We use pybind11 for python bindings. To use the bindings, build with either Conan or Nix.
+
+With Conan:
 
 ```
 cd roofer-dev
-mkdir build_python
-cmake --preset vcpkg-with-bindings -S . -B build_python
-cmake --build build_python
+conan profile detect --force
+conan install . \
+  --output-folder=build_python \
+  --build=missing \
+  --settings=build_type=Release \
+  --settings=compiler.cppstd=20 \
+  --options="&:build_apps=False" \
+  --options="&:use_spdlog=False" \
+  --options="&:use_val3dity=False" \
+  --options="&:build_bindings=True" \
+  --options="&:build_testing=False"
+cmake -S . -B build_python \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=build_python/conan_toolchain.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DRF_BUILD_APPS=OFF \
+  -DRF_USE_LOGGER_SPDLOG=OFF \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=ON \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_USE_CPM=OFF
+cmake --build build_python --target rooferpy
 ```
 
-The rooferpy library will be located in `build_python/rooferpy/roofer.cpyton-<version-and-system>.so`. Import the .so file (e.g. place it in the same folder as .py script) to use roofer python API.
+With Nix:
+
+```
+cd roofer-dev
+nix develop
+cmake -S . -B build_python \
+  -G Ninja \
+  -DRF_BUILD_APPS=OFF \
+  -DRF_USE_LOGGER_SPDLOG=OFF \
+  -DRF_USE_VAL3DITY=OFF \
+  -DRF_BUILD_BINDINGS=ON \
+  -DRF_BUILD_TESTING=OFF \
+  -DRF_USE_CPM=OFF
+cmake --build build_python --target rooferpy
+```
+
+The rooferpy library will be located in `build_python/rooferpy/roofer.cpython-<version-and-system>.so`. Import the .so file (e.g. place it in the same folder as .py script) to use roofer python API.

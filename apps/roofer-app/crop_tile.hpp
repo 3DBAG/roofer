@@ -38,6 +38,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
   vector_reader->layer_name = cfg.layer_name;
   vector_reader->layer_id = cfg.layer_id;
   vector_reader->attribute_filter = cfg.attribute_filter;
+  vector_reader->skip_invalid_polygons = true;
   vector_reader->open(cfg.source_footprints);
   vector_reader->region_of_interest = tile;
   std::vector<roofer::LinearRing> footprints;
@@ -95,12 +96,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
     PointCloudCropper->process(
         lasfiles, footprints, buffered_footprints, ipc.building_clouds,
-        ipc.ground_elevations, ipc.acquisition_years,
-        ipc.pointcloud_insufficient, polygon_extent,
-        {.min_density_threshold = cfg.min_point_density_threshold,
-         .ground_class = ipc.grnd_class,
+        ipc.ground_elevations, ipc.terrain_grid_elevations,
+        ipc.acquisition_years, ipc.pointcloud_insufficient, polygon_extent,
+        {.ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
-         .use_acquisition_year = static_cast<bool>(yoc_vec)});
+         .use_acquisition_year = static_cast<bool>(yoc_vec),
+         .terrain_grid_cellsize = cfg.terrain_grid_cellsize,
+         .terrain_grid_search_radius = cfg.terrain_grid_search_radius});
     ipc.min_ground_elevation = PointCloudCropper->get_min_terrain_elevation();
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
@@ -281,15 +283,23 @@ bool crop_tile(const roofer::TBox<double>& tile,
       jsonl_paths.insert({"", roofer::vec1s{}});
     }
 
-    roofer::misc::PointCloudSelectResult sresult =
-        roofer::misc::selectPointCloud(candidates, select_pc_cfg);
-    const roofer::misc::CandidatePointCloud* selected =
-        sresult.selected_pointcloud;
+    roofer::misc::PointCloudSelectResult sresult;
+    const roofer::misc::CandidatePointCloud* selected = nullptr;
+    if (candidates.empty()) {
+      if (!candidates_just_for_data.empty()) {
+        selected = getLatestPointCloud(candidates_just_for_data);
+        sresult.selected_pointcloud = selected;
+        sresult.explanation =
+            roofer::misc::PointCloudSelectExplanation::_LATEST;
+      }
+    } else {
+      sresult = roofer::misc::selectPointCloud(candidates, select_pc_cfg);
+      selected = sresult.selected_pointcloud;
+    }
 
     // this is a sanity check and should never happen
     if (!selected) {
       logger.error("Unable to select pointcloud");
-      exit(1);
       exit(1);
     }
 
@@ -298,13 +308,17 @@ bool crop_tile(const roofer::TBox<double>& tile,
     int yoc = yoc_vec ? (*yoc_vec)[i].value_or(-1) : -1;
     if (yoc != -1 && yoc > selected->date) {
       // force selection of latest pointcloud
-      selected = getLatestPointCloud(candidates);
+      if (!candidates.empty()) {
+        selected = getLatestPointCloud(candidates);
+      }
       sresult.explanation = roofer::misc::PointCloudSelectExplanation::_LATEST;
       // overrule if there was a more recent pointcloud with
       // select_only_for_date = true
       if (candidates_just_for_data.size()) {
-        if (candidates_just_for_data[0].date > selected->date) {
-          selected = &candidates_just_for_data[0];
+        const roofer::misc::CandidatePointCloud* latest_just_for_data =
+            getLatestPointCloud(candidates_just_for_data);
+        if (latest_just_for_data->date > selected->date) {
+          selected = latest_just_for_data;
           // sresult.explanation = roofer::PointCloudSelectExplanation::_LATEST;
         }
       }
@@ -366,9 +380,13 @@ bool crop_tile(const roofer::TBox<double>& tile,
       building.footprint = footprints[i];
       auto h_ground_pc =
           input_pointclouds[selected->index].ground_elevations[i];
+      auto h_ground_terrain_grid =
+          input_pointclouds[selected->index].terrain_grid_elevations[i];
       if (cfg.h_terrain_strategy == TerrainStrategy::BUFFER_TILE) {
         if (h_ground_pc.has_value()) {
           building.h_ground = h_ground_pc.value();
+        } else if (h_ground_terrain_grid.has_value()) {
+          building.h_ground = h_ground_terrain_grid.value();
         } else {
           building.h_ground =
               input_pointclouds[selected->index].min_ground_elevation;
@@ -380,6 +398,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
           if (h_ground_fallback_vec) {
             if ((*h_ground_fallback_vec)[i].has_value()) {
               building.h_ground = (*h_ground_fallback_vec)[i].value();
+            } else if (h_ground_terrain_grid.has_value()) {
+              building.h_ground = h_ground_terrain_grid.value();
             } else {
               // fallback to min terrain elevation if no value is found
               building.h_ground =
@@ -397,6 +417,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
         if (h_ground_fallback_vec) {
           if ((*h_ground_fallback_vec)[i].has_value()) {
             building.h_ground = (*h_ground_fallback_vec)[i].value();
+          } else if (h_ground_terrain_grid.has_value()) {
+            building.h_ground = h_ground_terrain_grid.value();
           } else {
             // fallback to min terrain elevation if no value is found
             building.h_ground =
@@ -533,6 +555,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     ipc.building_clouds.clear();
     ipc.building_rasters.clear();
     ipc.ground_elevations.clear();
+    ipc.terrain_grid_elevations.clear();
     ipc.acquisition_years.clear();
   }
 

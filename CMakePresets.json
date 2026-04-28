@@ -2,23 +2,8 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "vcpkg-full-test",
-      "description": "Build with vcpkg with all dependencies, to test a full build.",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "RF_USE_VAL3DITY": "ON",
-        "RF_USE_RERUN": "OFF",
-        "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON",
-        "RF_BUILD_BINDINGS": "ON"
-      }
-    },
-    {
-      "name": "vcpkg-minimal",
-      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible.",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "name": "nix-minimal",
+      "description": "Build with pure nix just the apps",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "RF_USE_VAL3DITY": "OFF",
@@ -27,16 +12,6 @@
         "RF_BUILD_TESTING": "OFF",
         "RF_BUILD_APPS": "ON",
         "RF_BUILD_BINDINGS": "OFF"
-      }
-    },
-    {
-      "name": "vcpkg-minimal-test",
-      "description": "Build with vcpkg without any optional dependencies, in order to get the quickest build possible for running tests.",
-      "inherits": "vcpkg-minimal",
-      "cacheVariables": {
-        "RF_BUILD_TESTING": "ON",
-        "RF_BUILD_APPS": "ON",
-        "RF_BUILD_BINDINGS": "ON"
       }
     },
     {
@@ -53,73 +28,18 @@
       }
     },
     {
-      "name": "vcpkg-with-bindings",
-      "description": "Build python bindings using vcpkg and pybind as a dependency",
-      "inherits": "vcpkg-minimal",
+      "name": "gh-conan-release",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "RF_BUILD_BINDINGS": "ON"
+        "CMAKE_BUILD_TYPE": "Release"
       }
-    },
-    {
-      "name": "vcpkg-docs",
-      "description": "Build python bindings needed for documentation generation",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "RF_USE_VAL3DITY": "OFF",
-        "RF_USE_RERUN": "OFF",
-        "RF_USE_LOGGER_SPDLOG": "OFF",
-        "RF_BUILD_TESTING": "OFF",
-        "RF_BUILD_APPS": "OFF",
-        "RF_BUILD_DOC_HELPER": "ON",
-        "RF_BUILD_BINDINGS": "ON"
-      }
-    },
-    {
-      "name": "gh-Linux",
-      "description": "Preset for github actions CI Linux configure",
-      "inherits": "vcpkg-full-test"
-    },
-    {
-      "name": "gh-macOS",
-      "description": "Preset for github actions CI macOS configure",
-      "inherits": "vcpkg-full-test"
-    },
-    {
-      "name": "gh-Windows",
-      "description": "Preset for github actions CI Windows configure",
-      "inherits": "vcpkg-full-test",
-      "cacheVariables": {
-        "X_VCPKG_APPLOCAL_DEPS_INSTALL": "ON"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "gh-Linux",
-      "description": "Preset for github actions CI Linux build",
-      "configurePreset": "gh-Linux",
-      "jobs": 4
-    },
-    {
-      "name": "gh-macOS",
-      "description": "Preset for github actions CI macOS build",
-      "configurePreset": "gh-macOS",
-      "jobs": 3
-    },
-    {
-      "name": "gh-Windows",
-      "description": "Preset for github actions CI Windows build",
-      "configurePreset": "gh-Windows",
-      "jobs": 4,
-      "configuration": "Release"
     }
   ],
   "testPresets": [
     {
       "name": "test-built",
       "description": "Test the compiled targets in their build directory",
-      "configurePreset": "vcpkg-minimal-test",
+      "configurePreset": "gh-conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"
@@ -133,7 +53,7 @@
     {
       "name": "test-installed",
       "description": "Test the installed artifacts",
-      "configurePreset": "vcpkg-minimal-test",
+      "configurePreset": "gh-conan-release",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"

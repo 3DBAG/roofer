@@ -2,6 +2,10 @@
 # FetchContent-related changes
 cmake_minimum_required(VERSION 3.25)
 
+# Load the toolchain before declaring project options, so Conan-provided
+# variables can override option defaults via CMP0077.
+project(roofer VERSION 1.0.0 LANGUAGES C CXX)
+
 # Options
 option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)
 option(RF_USE_RERUN "Enable features dependent on Rerun" OFF)
@@ -12,29 +16,7 @@ option(RF_BUILD_BINDINGS "Build python bindings with pybind" OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries (may not work)" OFF)
 option(RF_BUILD_TESTING "Enable tests for roofer" OFF)
 option(RF_ENABLE_HEAP_TRACING "Enable heap allocation overloads" OFF)
-
-# Enable the vcpkg features that are required by the options
-if(RF_USE_LOGGER_SPDLOG)
-  list(APPEND VCPKG_MANIFEST_FEATURES "spdlog")
-endif()
-if(RF_BUILD_TESTING)
-  list(APPEND VCPKG_MANIFEST_FEATURES "test")
-endif()
-if(RF_BUILD_APPS)
-  list(APPEND VCPKG_MANIFEST_FEATURES "apps")
-endif()
-if(RF_USE_VAL3DITY)
-  list(APPEND VCPKG_MANIFEST_FEATURES "val3dity")
-endif()
-if(RF_USE_RERUN)
-  list(APPEND VCPKG_MANIFEST_FEATURES "app-rerun")
-endif()
-# if(RF_BUILD_BINDINGS)
-#   list(APPEND VCPKG_MANIFEST_FEATURES "python")
-# endif()
-
-# TODO: add version number
-project(roofer VERSION 1.0.0 LANGUAGES C CXX)
+option(RF_USE_CPM "Use CPM to fetch dependencies" ON)
 
 # Global CMake variables are set here We use C++20, with the assumption that we
 # only implement features that are supported by GCC, Clang, MSVC, Apple Clang
@@ -79,20 +61,22 @@ else()
   message(STATUS "Logging backend: internal")
 endif()
 
-# We have to use CPM (or FetchContent) even with vcpkg, because of
-# cmake-git-version-tracking, val3dity, rerun
-include(CPM)
-cpmaddpackage(
-  "gh:andrew-hardin/cmake-git-version-tracking#6c0cb87edd029ddfb403a8e24577c144a03605a6"
-)
+# CPM can be used to get val3dity and rerun
+if(RF_USE_CPM OR RF_USE_RERUN)
+  include(CPM)
+endif()
+
 set(GIT_IGNORE_UNTRACKED TRUE)
 
 if(RF_USE_RERUN)
   set(RERUN_DOWNLOAD_AND_BUILD_ARROW OFF)
-  cpmaddpackage(
-    NAME rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
-  )
+  find_package(rerun_sdk QUIET)
+  if(NOT rerun_sdk_FOUND)
+    CPMAddPackage(
+      NAME rerun_sdk
+      URL https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip
+    )
+  endif()
 endif()
 
 if(MSVC)

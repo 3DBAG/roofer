@@ -4,7 +4,5 @@
 
 docs
 experiments
-external/vcpkg
 external/val3dity
 tests
-vcpkg_installed

@@ -1,0 +1,176 @@
+name: Conan Build
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        description: Runner label for the build job.
+        required: true
+        type: string
+      build_type:
+        description: CMake build type.
+        required: false
+        type: string
+        default: Release
+      python_version:
+        description: Python version to put on PATH before configuring CMake.
+        required: false
+        type: string
+        default: ""
+      build_jobs:
+        description: Number of parallel build jobs.
+        required: true
+        type: number
+      build_apps:
+        description: Build the roofer CLI applications.
+        required: false
+        type: boolean
+        default: true
+      use_spdlog:
+        description: Enable the spdlog logging backend.
+        required: false
+        type: boolean
+        default: true
+      use_val3dity:
+        description: Enable val3dity support.
+        required: false
+        type: boolean
+        default: false
+      build_bindings:
+        description: Build the Python bindings.
+        required: false
+        type: boolean
+        default: false
+      build_testing:
+        description: Build and run the test suite.
+        required: false
+        type: boolean
+        default: false
+      build_doc_helper:
+        description: Build the documentation helper executable.
+        required: false
+        type: boolean
+        default: false
+      run_tests:
+        description: Run ctest after building.
+        required: false
+        type: boolean
+        default: false
+      artifact_suffix:
+        description: Suffix used for the uploaded artifact name.
+        required: false
+        type: string
+        default: build
+    outputs:
+      artifact_name:
+        description: Uploaded build artifact name.
+        value: ${{ jobs.build.outputs.artifact_name }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+
+    outputs:
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        if: inputs.python_version != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Select CMake Python
+        if: inputs.python_version != ''
+        shell: bash
+        run: |
+          python --version
+          echo "RF_CMAKE_PYTHON_EXECUTABLE=$(python -c 'import sys; print(sys.executable)')" >> "$GITHUB_ENV"
+
+      - name: Install and setup Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          home: ${{ runner.temp }}/conan
+          cache_packages: true
+          use_venv: true
+
+      - name: Detect Conan profile
+        run: conan profile detect --force
+
+      - name: Install dependencies
+        run: >
+          conan install .
+          --output-folder=build
+          --build=missing
+          --settings=build_type=${{ inputs.build_type }}
+          --settings=compiler.cppstd=20
+          --options="&:build_apps=${{ inputs.build_apps && 'True' || 'False' }}"
+          --options="&:use_spdlog=${{ inputs.use_spdlog && 'True' || 'False' }}"
+          --options="&:use_val3dity=${{ inputs.use_val3dity && 'True' || 'False' }}"
+          --options="&:build_bindings=${{ inputs.build_bindings && 'True' || 'False' }}"
+          --options="&:build_testing=${{ inputs.build_testing && 'True' || 'False' }}"
+
+      - name: Configure CMake
+        if: inputs.python_version == ''
+        # Conan forwards package options to the matching RF_* CMake options.
+        run: >
+          cmake -B build
+          -S ${{ github.workspace }}
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake"
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
+          -DRF_BUILD_DOC_HELPER=${{ inputs.build_doc_helper && 'ON' || 'OFF' }}
+          -DRF_TEST_INSTALL=${{ inputs.run_tests && 'ON' || 'OFF' }}
+
+      - name: Configure CMake with Python
+        if: inputs.python_version != ''
+        # Conan forwards package options to the matching RF_* CMake options.
+        shell: bash
+        run: |
+          cmake -B build \
+            -S "${{ github.workspace }}" \
+            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/build/conan_toolchain.cmake" \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DRF_BUILD_DOC_HELPER=${{ inputs.build_doc_helper && 'ON' || 'OFF' }} \
+            -DRF_TEST_INSTALL=${{ inputs.run_tests && 'ON' || 'OFF' }} \
+            -DPython_EXECUTABLE="${RF_CMAKE_PYTHON_EXECUTABLE}" \
+            -DPython3_EXECUTABLE="${RF_CMAKE_PYTHON_EXECUTABLE}"
+
+      - name: Build
+        run: cmake --build build --config ${{ inputs.build_type }} --parallel ${{ inputs.build_jobs }} --verbose
+
+      - name: Install
+        run: cmake --install build --config ${{ inputs.build_type }} --verbose
+
+      - name: Show Python binding artifact
+        if: inputs.build_bindings
+        shell: bash
+        run: |
+          find build/rooferpy install/lib -type f -name 'roofer*.so' -print
+
+      - name: Test
+        if: ${{ inputs.run_tests }}
+        env:
+          GDAL_DATA: ${{ github.workspace }}/install/share/gdal
+          PROJ_DATA: ${{ github.workspace }}/install/share/proj
+        run: ctest --test-dir build --build-config ${{ inputs.build_type }} --output-on-failure
+
+      - name: Set artifact name
+        id: meta
+        shell: bash
+        run: |
+          echo "artifact_name=roofer-conan-${{ runner.os }}-${{ runner.arch }}-${{ inputs.artifact_suffix }}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.meta.outputs.artifact_name }}
+          path: |
+            build
+            install
+          retention-days: 7

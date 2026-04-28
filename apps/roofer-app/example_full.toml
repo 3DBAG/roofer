@@ -20,6 +20,10 @@ ceil-point-density = 20
 tilesize = [1000, 1000]
 # Cellsize used for quick pointcloud analysis
 cellsize = 0.5
+# Cellsize used for the crop phase terrain fallback grid
+terrain-grid-cellsize = 10
+# Number of terrain grid cells to search around a building when local fallback cells are empty
+terrain-grid-search-radius = 3
 
 ## Reconstruction options
 # Plane detect epsilon
@@ -34,6 +38,11 @@ lod13-step-height = 3
 complexity-factor = 0.7
 # Which LoDs to generate, possible values: 12, 13, 22 [if omitted: all LoDs are generated]
 lod = 22
+# Strategy to determine terrain elevation for building floors.
+# buffer_tile: buffered pointcloud value, then local terrain grid minimum, then tile minimum.
+# buffer_user: buffered pointcloud value, then h-terrain-attribute, then local terrain grid minimum, then tile minimum.
+# user: h-terrain-attribute, then local terrain grid minimum, then tile minimum.
+h-terrain-strategy = "buffer_tile"
 
 ## Output options
 # Output CityJSONSequence file for each building [default: one file per output tile]

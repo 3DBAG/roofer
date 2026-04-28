@@ -29,7 +29,6 @@
 
 #include "argh.h"
 #include "fmt/format.h"
-#include "git.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Point_3<K> Point_3;
@@ -44,13 +43,7 @@ void print_help(std::string program_name) {
   std::cout << "   -v, --verbose                Be more verbose" << "\n";
 }
 // ... get the input pointcloud and footprint polygon for your building
-void print_version() {
-  std::cout << fmt::format(
-      "roofer {} ({}{}{})\n", git_Describe(),
-      std::strcmp(git_Branch(), "main") ? ""
-                                        : fmt::format("{}, ", git_Branch()),
-      git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
-}
+void print_version() { std::cout << "roofer test_reconstruct_api\n"; }
 
 int main(int argc, const char* argv[]) {
   auto cmdl = argh::parser();

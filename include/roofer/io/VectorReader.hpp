@@ -35,6 +35,7 @@ namespace roofer::io {
     int layer_id = 0;
     std::string layer_name = "";
     std::string attribute_filter = "";
+    bool skip_invalid_polygons = false;
 
     VectorReaderInterface(roofer::misc::projHelperInterface& pjh)
         : pjHelper(pjh){};

@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "name": "issue-134-mixed",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "valid-building"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0.0, 0.0],
+            [10.0, 0.0],
+            [10.0, 10.0],
+            [0.0, 10.0],
+            [0.0, 0.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "invalid-building"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [20.0, 0.0],
+            [40.0, 20.0],
+            [20.0, 20.0],
+            [40.0, 0.0],
+            [20.0, 0.0]
+          ]
+        ]
+      }
+    }
+  ]
+}

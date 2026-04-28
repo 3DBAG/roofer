@@ -38,7 +38,7 @@
 #include <list>
 #include <filesystem>
 #include <utility>
-#include "git.h"
+#include "version.hpp"
 
 namespace roofer::enums {
   enum TerrainStrategy {
@@ -78,6 +78,7 @@ struct InputPointcloud {
   std::vector<roofer::PointCollection> building_clouds;
   std::vector<roofer::ImageMap> building_rasters;
   roofer::veco1f ground_elevations;
+  roofer::veco1f terrain_grid_elevations;
   roofer::vec1f roof_elevations;
   roofer::vec1i acquisition_years;
 
@@ -105,7 +106,8 @@ struct RooferConfig {
   // crop parameters
   float ceil_point_density = 20;
   float cellsize = 0.5;
-  float min_point_density_thres = 2.0;
+  float terrain_grid_cellsize = 10.0;
+  int terrain_grid_search_radius = 3;
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
@@ -305,8 +307,14 @@ struct RooferConfigHandler {
   std::unordered_map<std::string, ConfigParameter*> param_index_;
   std::unordered_map<std::string, ConfigParameter*> app_param_index_;
 
+  static int default_jobs() {
+    auto system_threads = std::thread::hardware_concurrency();
+    return system_threads == 0 ? 1 : static_cast<int>(system_threads);
+  }
+
   // flags
   bool _print_help = false;
+  bool _print_help_all = false;
   bool _print_attributes = false;
   bool _print_version = false;
   bool _crop_only = false;
@@ -315,7 +323,7 @@ struct RooferConfigHandler {
   roofer::logger::LogLevel _loglevel = roofer::logger::LogLevel::info;
   int _trace_interval = 10;
   std::string _config_path;
-  int _jobs = std::thread::hardware_concurrency();
+  int _jobs = default_jobs();
 
   // methods
   RooferConfigHandler() {
@@ -323,9 +331,13 @@ struct RooferConfigHandler {
     ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
+    general.add("help-all", 'H', "Show full help message", _print_help_all);
     general.add("attributes", 'a', "List output attributes", _print_attributes);
     general.add("version", 'v', "Show version", _print_version);
-    general.add("jobs", 'j', "Number of threads to use", _jobs);
+    general.add("jobs", 'j',
+                "Number of worker jobs to use. Reconstruction uses roughly "
+                "jobs - 1 threads.",
+                _jobs, {check::HigherThan<int>(0)});
     general.add("config", 'c', "Configuration file", _config_path,
                 {check::PathExists, check::DirIsWritable});
     general.add("trace-interval", "Interval for tracing in seconds",
@@ -366,7 +378,8 @@ struct RooferConfigHandler {
               cfg_.layer_name);
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
-              "`<polygon-source>`.",
+              "`<polygon-source>`. See "
+              "https://gdal.org/en/stable/user/ogr_sql_dialect.html#where",
               cfg_.attribute_filter);
     input
         .add(
@@ -420,6 +433,13 @@ struct RooferConfigHandler {
              "Cellsize used for quick pointcloud analysis (eg. point density"
              " and nodata regions).",
              cfg_.cellsize, {check::HigherThan<float>(0)});
+    crop.add("terrain-grid-cellsize",
+             "Cellsize used for the crop phase terrain fallback grid.",
+             cfg_.terrain_grid_cellsize, {check::HigherThan<float>(0)});
+    crop.add("terrain-grid-search-radius",
+             "Number of terrain grid cells to search around a building when "
+             "its local fallback cells do not contain terrain points.",
+             cfg_.terrain_grid_search_radius, {check::HigherOrEqualTo<int>(0)});
     crop.add(
         "lod11-fallback-area",
         "LoD 1.1 fallback threshold area in square meters. If the area of the "
@@ -509,13 +529,16 @@ struct RooferConfigHandler {
              "Strategy to determine terrain elevation "
              "that is used to set the height of building floors. "
              "`buffer_tile`: use the 5th percentile lowest elevation point in "
-             "a 3 meter buffer around the roofprint. If no points are found, "
-             "we fall back to the lowest elevation point in the current tile. "
+             "a 4 meter buffer around the roofprint. If no points are found, "
+             "we fall back to the local terrain grid minimum. If no local "
+             "terrain grid cells are found, we fall back to the lowest "
+             "elevation point in the current tile. "
              "This may give undesired results for hilly areas. "
-             "`buffer_user`: same as `buffer_tile`, but with now with a "
-             "fallback to the elevation provided via `--h-terrain-attribute`. "
-             "`user`: always use the elevation provided via "
-             "`--h-terrain-attribute`.",
+             "`buffer_user`: use the same buffered pointcloud value, then "
+             "fall back to `--h-terrain-attribute`, then the local terrain "
+             "grid minimum, then the tile minimum. `user`: use "
+             "`--h-terrain-attribute`, then the local terrain grid minimum, "
+             "then the tile minimum.",
              cfg_.h_terrain_strategy)
         .example_ = "\"buffer_tile\"";
     reconstruction.add(
@@ -715,6 +738,12 @@ struct RooferConfigHandler {
   };
 
   void validate() {
+    if (_jobs < 1) {
+      throw std::runtime_error(
+          "Validation error for jobs parameter. Value must be higher "
+          "than 0.");
+    }
+
     for (auto& [group_name, group] : param_groups_) {
       for (auto& param : group) {
         if (auto error_msg = param->validate()) {
@@ -759,7 +788,7 @@ struct RooferConfigHandler {
     }
   }
 
-  void print_help(std::string program_name) {
+  void print_help_header(const std::string& program_name, bool compact) {
     // see http://docopt.org/
     std::cout << "Automatic LoD 2.2 building reconstruction from "
                  "airborne lidar pointclouds\n\n";
@@ -769,26 +798,86 @@ struct RooferConfigHandler {
                  "<output-directory>"
               << "\n";
     std::cout << "  " << program_name;
-    std::cout
-        << " [options] (-c | --config) <config-file> [(<pointcloud-path>... "
-           "<polygon-source>)] <output-directory>"
-        << "\n";
+    if (compact) {
+      std::cout
+          << " -c <config-file> [<pointcloud-path>... <polygon-source>]\n";
+      std::cout << "         <output-directory>\n";
+    } else {
+      std::cout
+          << " [options] (-c | --config) <config-file> [(<pointcloud-path>... "
+             "<polygon-source>)] <output-directory>"
+          << "\n";
+    }
     std::cout << "  " << program_name;
     std::cout << " -h | --help" << "\n";
+    std::cout << "  " << program_name;
+    std::cout << " -H | --help-all" << "\n";
     std::cout << "  " << program_name;
     std::cout << " -a | --attributes" << "\n";
     std::cout << "  " << program_name;
     std::cout << " -v | --version" << "\n";
     std::cout << "\n";
+  }
+
+  void print_positional_arguments(bool compact) {
     std::cout << "\033[1mPositional arguments:\033[0m" << "\n";
-    std::cout << "  <pointcloud-path>            Path to pointcloud file "
-                 "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
-    std::cout << "  <polygon-source>             Path to roofprint polygons "
-                 "source. "
-                 "Can be "
-                 "an OGR supported file (eg. GPKG) or database connection "
-                 "string.\n";
+    if (compact) {
+      std::cout
+          << "  <pointcloud-path>            LAS/LAZ file or directory.\n";
+      std::cout << "  <polygon-source>             Roofprint polygons, for "
+                   "example GPKG\n";
+      std::cout << "                               or OGR connection string.\n";
+    } else {
+      std::cout << "  <pointcloud-path>            Path to pointcloud file "
+                   "(.LAS or .LAZ) or folder that contains pointcloud files.\n";
+      std::cout << "  <polygon-source>             Path to roofprint polygons "
+                   "source. "
+                   "Can be "
+                   "an OGR supported file (eg. GPKG) or database connection "
+                   "string.\n";
+    }
     std::cout << "  <output-directory>           Output directory.\n";
+  }
+
+  void print_help(std::string program_name) {
+    print_help_header(program_name, true);
+
+    std::cout << "\033[1mExamples:\033[0m" << "\n";
+    std::cout << "  " << program_name;
+    std::cout << " pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " --filter 'identificatie=1980100000265200'\n";
+    std::cout << "         pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "  " << program_name;
+    std::cout << " -c config.toml output-dir\n";
+    std::cout << "\n";
+    print_positional_arguments(true);
+    std::cout << "\n";
+    std::cout << "\033[1mCommon options:\033[0m" << "\n";
+    std::cout << "  -c, --config <file>          Read options from a TOML "
+                 "configuration file.\n";
+    std::cout
+        << "  -j, --jobs <int>             Number of worker jobs to use.\n";
+    std::cout
+        << "  --lod12                      Generate LoD 1.2 geometries.\n";
+    std::cout
+        << "  --lod13                      Generate LoD 1.3 geometries.\n";
+    std::cout
+        << "  --lod22                      Generate LoD 2.2 geometries.\n";
+    std::cout << "  -a, --attributes             List output attributes.\n";
+    std::cout << "  -v, --version                Show version.\n";
+    std::cout
+        << "  -H, --help-all               Show all options and defaults.\n";
+    std::cout << "\n";
+    std::cout << "Use '" << program_name
+              << " --help-all' to show all options and defaults.\n";
+  }
+
+  void print_help_all(std::string program_name) {
+    print_help_header(program_name, false);
+    print_positional_arguments(false);
 
     print_params(app_param_groups_);
     print_params(param_groups_);
@@ -919,11 +1008,7 @@ struct RooferConfigHandler {
   }
 
   void print_version() {
-    std::cout << std::format(
-        "roofer {} ({}{}{})\n", git_Describe(),
-        std::strcmp(git_Branch(), "main") ? ""
-                                          : std::format("{}, ", git_Branch()),
-        git_AnyUncommittedChanges() ? "dirty, " : "", git_CommitDate());
+    std::cout << std::format("roofer {} ({})\n", RF_VERSION, RF_GIT_HASH);
   }
 
   void parse_cli_first_pass(CLIArgs& c) {

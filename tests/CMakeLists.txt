@@ -6,11 +6,9 @@ include(FetchContent)
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
-if(DEFINED VCPKG_TOOLCHAIN)
-  set(TEST_ENVIRONMENT
-      "PROJ_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/proj;GDAL_DATA=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/gdal"
-  )
-endif()
+set(TEST_ENVIRONMENT
+    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal"
+)
 
 FetchContent_Declare(
   wippolder
@@ -54,19 +52,30 @@ add_executable("test_logger" "${CMAKE_CURRENT_SOURCE_DIR}/test_logger.cpp")
 target_link_libraries("test_logger" PUBLIC logger)
 target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
 
+add_executable("test_vector_reader"
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
+target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
+target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
+
 # --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_reconstruct_api.cpp")
 set_target_properties("reconstruct_api" PROPERTIES CXX_STANDARD 20)
-target_link_libraries("reconstruct_api" PRIVATE roofer-extra
-                                                cmake_git_version_tracking)
+target_link_libraries("reconstruct_api" PRIVATE roofer-extra)
 add_test(
   NAME "reconstruct-api-wippolder"
   COMMAND $<TARGET_FILE:reconstruct_api>
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 set(tests_api "reconstruct-api-wippolder")
 set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
+
+add_test(
+  NAME "vector-reader-skip-invalid-polygons"
+  COMMAND $<TARGET_FILE:test_vector_reader>
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set_tests_properties("vector-reader-skip-invalid-polygons"
+                     PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
 # --- Integration tests that are run on the built executables, before
 # installation.
@@ -103,9 +112,7 @@ if(RF_BUILD_APPS)
 
   # Integration tests that are run on the installed artifacts must be prefixed
   # with "installed-". Note that these tests must be invoked *after* the
-  # artifacts were installed. We don't set the TEST_ENVIRONMENT for the
-  # installed apps, because the required paths are supposed to be set by the
-  # install process.
+  # artifacts were installed.
   if(RF_TEST_INSTALL)
     add_test(
       NAME "installed-roofer-version"
@@ -117,27 +124,11 @@ if(RF_BUILD_APPS)
       COMMAND roofer --config "${CONFIG_DIR}/roofer-wippolder.toml"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-    add_test(
-      NAME "installed-reconstruct-version"
-      COMMAND reconstruct --version
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-    add_test(
-      NAME "installed-reconstruct-wippolder"
-      COMMAND reconstruct --config "${CONFIG_DIR}/roofer-wippolder.toml"
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
     set(tests_installed
-        "installed-roofer-version;installed-reconstruct-version;installed-roofer-wippolder;installed-reconstruct-wippolder"
+        "installed-roofer-version;installed-roofer-wippolder"
     )
-    set(WINDOWS_INSTALLED_ENVIRONMENT
-        "GDAL_DATA=${CMAKE_INSTALL_PREFIX}\\share\\gdal;PATH=C:\\Program Files (x86)\\roofer\\bin\;$ENV{PATH}"
-    )
-    if(WIN32)
-      set_tests_properties(
-        ${tests_installed} PROPERTIES ENVIRONMENT
-                                      "${WINDOWS_INSTALLED_ENVIRONMENT}")
-    endif()
+    set_tests_properties(
+      ${tests_installed} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
   endif()
 endif()
 

@@ -59,7 +59,8 @@
  */
 void GridSetup(pPipoint pgon[], int	numverts, int	resolution, pGridSet p_gs)
 {
-double	*vtx0, *vtx1, *vtxa, *vtxb, *p_gl ;
+pPipoint vtx0, vtx1, vtxa, vtxb ;
+double	*p_gl ;
 int	i, j, gc_clear_flags ;
 double	vx0, vx1, vy0, vy1, gxdiff, gydiff, eps ;
 pGridCell	p_gc, p_ngc ;
@@ -142,7 +143,7 @@ int	y_flag, io_state ;
     for ( i = 0 ; i < numverts ; i++ ) {
 	vtx1 = pgon[i] ;
 
-	if ( vtx0[Y] < vtx1[Y] ) {
+	if ( vtx0->y < vtx1->y ) {
 	    vtxa = vtx0 ;
 	    vtxb = vtx1 ;
 	} else {
@@ -151,8 +152,8 @@ int	y_flag, io_state ;
 	}
 
 	/* Set x variable for the direction of the ray */
-	xdiff = vtxb[X] - vtxa[X] ;
-	ydiff = vtxb[Y] - vtxa[Y] ;
+	xdiff = vtxb->x - vtxa->x ;
+	ydiff = vtxb->y - vtxa->y ;
 	tmax = sqrt( xdiff * xdiff + ydiff * ydiff ) ;
 
 	/* if edge is of 0 length, ignore it (useless edge) */
@@ -161,17 +162,17 @@ int	y_flag, io_state ;
 	xdir = xdiff / tmax ;
 	ydir = ydiff / tmax ;
 
-	gcx = (int)(( vtxa[X] - p_gs->minx ) * p_gs->inv_xdelta) ;
-	gcy = (int)(( vtxa[Y] - p_gs->miny ) * p_gs->inv_ydelta) ;
+	gcx = (int)(( vtxa->x - p_gs->minx ) * p_gs->inv_xdelta) ;
+	gcy = (int)(( vtxa->y - p_gs->miny ) * p_gs->inv_ydelta) ;
 
 	/* get information about slopes of edge, etc */
-	if ( vtxa[X] == vtxb[X] ) {
+	if ( vtxa->x == vtxb->x ) {
 	    sign_x = 0 ;
 	    tx = HUGE ;
 	} else {
 	    inv_x = tmax / xdiff ;
-	    tx = p_gs->xdelta * (double)gcx + p_gs->minx - vtxa[X] ;
-	    if ( vtxa[X] < vtxb[X] ) {
+	    tx = p_gs->xdelta * (double)gcx + p_gs->minx - vtxa->x ;
+	    if ( vtxa->x < vtxb->x ) {
 		sign_x = 1 ;
 		tx += p_gs->xdelta ;
 		tgcx = p_gs->xdelta * inv_x ;
@@ -182,19 +183,19 @@ int	y_flag, io_state ;
 	    tx *= inv_x ;
 	}
 
-	if ( vtxa[Y] == vtxb[Y] ) {
+	if ( vtxa->y == vtxb->y ) {
 	    ty = HUGE ;
 	} else {
 	    inv_y = tmax / ydiff ;
-	    ty = (p_gs->ydelta * (double)(gcy+1) + p_gs->miny - vtxa[Y])
+	    ty = (p_gs->ydelta * (double)(gcy+1) + p_gs->miny - vtxa->y)
 		* inv_y ;
 	    tgcy = p_gs->ydelta * inv_y ;
 	}
 
 	p_gc = &p_gs->gc[gcy*p_gs->xres+gcx] ;
 
-	vx0 = vtxa[X] ;
-	vy0 = vtxa[Y] ;
+	vx0 = vtxa->x ;
+	vy0 = vtxa->y ;
 
 	t_near = 0.0 ;
 
@@ -218,11 +219,11 @@ int	y_flag, io_state ;
 		    }
 
 		    /* get new location */
-		    vy1 = t_near * ydir + vtxa[Y] ;
+		    vy1 = t_near * ydir + vtxa->y ;
 		} else {
 		    /* end of edge, so get exact value */
-		    vx1 = vtxb[X] ;
-		    vy1 = vtxb[Y] ;
+		    vx1 = vtxb->x ;
+		    vy1 = vtxb->y ;
 		}
 
 		y_flag = FALSE ;
@@ -242,12 +243,12 @@ int	y_flag, io_state ;
 		    p_gc->gc_flags ^= GC_T_EDGE_PARITY ;
 
 		    /* get new location */
-		    vx1 = t_near * xdir + vtxa[X] ;
+		    vx1 = t_near * xdir + vtxa->x ;
 		    vy1 = p_gs->gly[gcy] ;
 		} else {
 		    /* end of edge, so get exact value */
-		    vx1 = vtxb[X] ;
-		    vy1 = vtxb[Y] ;
+		    vx1 = vtxb->x ;
+		    vy1 = vtxb->y ;
 		}
 
 		y_flag = TRUE ;

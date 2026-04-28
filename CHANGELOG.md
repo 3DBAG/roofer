@@ -7,9 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+- CLI: new short help message via `--help`/`-h`, previous long help message is now printed with `--help-all`/`-H`
+- Improved documentation for `--filter` option
+
+## Changed
+- CLI: `--jobs`/`-j` now assigns roughly `jobs - 1` threads to reconstruction instead of reserving five internal threads first.
+- Invalid footprint features are skipped, instead of failing the whole tile
+- Terrain height fallback now uses a local terrain grid before falling back to the tile minimum.
+- Improved default log messages
+- Improved install script
+- Fixed compile warnings for ptinpoly.c
+
+## [1.0.0-beta.6] - 2026-04-17
+
 ### Fixed
 - Prevent building terrain elevation getting assigned a garbage value in case of multiple input pointclouds when one of them has no points
 - Floating point exception when the first and last point are the same in LinearRing holes
+- potential segfault with roofer --help
+
+### Changed
+- Revamp recommended build system to use conan instead of vcpkg. Easier to set up and maintain, smaller build artifacts, faster builds.
+- Add support for Nix builds
 
 ## [1.0.0-beta.5] - 2025-08-27
 
