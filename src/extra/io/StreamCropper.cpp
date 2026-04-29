@@ -497,7 +497,17 @@ namespace roofer::io {
                  2112)  // OGC COORDINATE SYSTEM WKT
       {
         logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-        wkt = (char*)(lasheader->vlrs[i].data);
+        if (lasheader->vlrs[i].data != nullptr &&
+            lasheader->vlrs[i].record_length_after_header > 0) {
+          wkt = std::string(
+              reinterpret_cast<char*>(lasheader->vlrs[i].data),
+              lasheader->vlrs[i].record_length_after_header);
+          // strip any trailing NULs the writer may have included
+          wkt.erase(wkt.find_last_not_of('\0') + 1);
+        } else {
+          logger.warning(
+              "LASF_Projection VLR record_id 2112 has no payload; ignoring");
+        }
       } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
       {
         logger.debug("Found and ignored: GeoKeyDirectoryTag");
@@ -515,7 +525,18 @@ namespace roofer::io {
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
           logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-          wkt = (char*)(lasheader->evlrs[i].data);
+          if (lasheader->evlrs[i].data != nullptr &&
+              lasheader->evlrs[i].record_length_after_header > 0) {
+            wkt = std::string(
+                reinterpret_cast<char*>(lasheader->evlrs[i].data),
+                static_cast<size_t>(
+                    lasheader->evlrs[i].record_length_after_header));
+            wkt.erase(wkt.find_last_not_of('\0') + 1);
+          } else {
+            logger.warning(
+                "LASF_Projection EVLR record_id 2112 has no payload; "
+                "ignoring");
+          }
         }
       }
     }
@@ -564,14 +585,14 @@ namespace roofer::io {
         lasreadopener.set_file_name(lasfile.c_str());
         LASreader* lasreader = lasreadopener.open();
 
-        std::string wkt = cfg.wkt_;
-        if (wkt.size() == 0) {
-          getOgcWkt(&lasreader->header, wkt);
-        }
-
         if (!lasreader) {
           logger.warning("cannot read las file: {}", lasfile);
           continue;
+        }
+
+        std::string wkt = cfg.wkt_;
+        if (wkt.size() == 0) {
+          getOgcWkt(&lasreader->header, wkt);
         }
 
         Box file_bbox;
