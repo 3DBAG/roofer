@@ -68,23 +68,27 @@ void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
     std::cout << "\n";
   }
   // print pointcloud block
+  InputPointcloud pc_defaults{};
   std::cout << "[[pointclouds]]\n";
   std::cout << "## Name of the pointcloud\n";
   std::cout << "name = \"\"\n";
   std::cout << "## Path to the pointcloud\n";
   std::cout << "source = \"\"\n";
-  std::cout << "## Ground class\n";
-  std::cout << "ground_class = 0\n";
-  std::cout << "## building class\n";
-  std::cout << "building_class = 0\n";
+  std::cout << "## LAS classification code that contains the ground points.\n";
+  std::cout << "ground_class = " << pc_defaults.grnd_class << "\n";
+  std::cout
+      << "## LAS classification code that contains the building points.\n";
+  std::cout << "building_class = " << pc_defaults.bld_class << "\n";
   std::cout << "## Quality\n";
-  std::cout << "quality = 0\n";
+  std::cout << "quality = " << pc_defaults.quality << "\n";
   std::cout << "## Date\n";
-  std::cout << "date = 0\n";
+  std::cout << "date = " << pc_defaults.date << "\n";
   std::cout << "## Force LoD11\n";
-  std::cout << "force_lod11 = false\n";
+  std::cout << "force_lod11 = " << (pc_defaults.force_lod11 ? "true" : "false")
+            << "\n";
   std::cout << "## Select only for date\n";
-  std::cout << "select_only_for_date = false\n";
+  std::cout << "select_only_for_date = "
+            << (pc_defaults.select_only_for_date ? "true" : "false") << "\n";
 }
 
 void print_attributes(DocAttribMap& attributes) {

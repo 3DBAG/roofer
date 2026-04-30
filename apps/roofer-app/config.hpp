@@ -60,7 +60,7 @@ using fileExtent = std::pair<std::string, roofer::TBox<double>>;
 struct InputPointcloud {
   std::vector<std::string> paths;
   std::string name;
-  int quality;
+  int quality = 0;
   int date = 0;
   int bld_class = 6;
   int grnd_class = 2;

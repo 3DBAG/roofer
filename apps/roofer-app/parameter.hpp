@@ -415,6 +415,25 @@ struct ConfigParameterByReference : public ConfigParameter {
     } else {
       if (auto value = table[name].value<T>(); value.has_value()) {
         value_ = *value;
+      } else {
+        std::string expected;
+        if constexpr (std::is_same_v<T, bool>) {
+          expected = "boolean";
+        } else if constexpr (std::is_same_v<T, int> ||
+                             std::is_same_v<T, std::optional<int>>) {
+          expected = "integer";
+        } else if constexpr (std::is_same_v<T, float> ||
+                             std::is_same_v<T, double> ||
+                             std::is_same_v<T, std::optional<float>> ||
+                             std::is_same_v<T, std::optional<double>>) {
+          expected = "number";
+        } else if constexpr (std::is_same_v<T, std::string> ||
+                             std::is_same_v<T, std::optional<std::string>>) {
+          expected = "string";
+        } else {
+          expected = type_description();
+        }
+        throw std::runtime_error("Type mismatch, expected " + expected + ".");
       }
     }
   }
