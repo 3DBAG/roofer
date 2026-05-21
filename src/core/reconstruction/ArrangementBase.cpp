@@ -148,7 +148,7 @@ namespace roofer::reconstruction {
 
       FacePair(){};
       FacePair(Arrangement_2::Face_handle f1, Arrangement_2::Face_handle f2) {
-        if (HandleHash(f1) < HandleHash(f1)) {
+        if (HandleHash(f1) < HandleHash(f2)) {
           f_lo = f1;
           f_hi = f2;
         } else {
