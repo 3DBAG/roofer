@@ -76,12 +76,12 @@ namespace roofer::reconstruction {
       T& ring, Halfedge_handle hedge,
       std::unordered_map<Vertex_handle, std::vector<hf_pair>>& vertex_columns,
       std::unordered_map<Halfedge_handle, EPECK::Point_3>& extra_wall_points,
-      float& snap_tolerance) {
+      const float snap_tolerance, const float snap_tolerance_sq) {
     auto first = hedge;
     do {
       auto v = hedge->source();
       if (CGAL::squared_distance(v->point(), hedge->target()->point()) >
-          snap_tolerance) {
+          snap_tolerance_sq) {
         for (auto& [h, f_h] : vertex_columns[v]) {
           if (f_h == hedge->face()) {
             ring.push_back(v2p(v, h));
@@ -107,6 +107,7 @@ namespace roofer::reconstruction {
                  ArrangementExtruderConfig cfg) override {
       typedef Arrangement_2::Traits_2 AT;
       float snap_tolerance = std::pow(10, -cfg.snap_tolerance_exp);
+      float snap_tolerance_sq = snap_tolerance * snap_tolerance;
 
       // assume we have only one unbounded faces that just has the building
       // footprint as a hole
@@ -131,7 +132,7 @@ namespace roofer::reconstruction {
           do {
             if (CGAL::squared_distance(he->source()->point(),
                                        he->target()->point()) >
-                snap_tolerance) {
+                snap_tolerance_sq) {
               float pt_elevation =
                   elevation_provider.get(he->source()->point());
               floor.push_back(v2p(he->source(), pt_elevation));
@@ -157,7 +158,7 @@ namespace roofer::reconstruction {
             do {
               if (CGAL::squared_distance(he->source()->point(),
                                          he->target()->point()) >
-                  snap_tolerance) {
+                  snap_tolerance_sq) {
                 float pt_elevation =
                     elevation_provider.get(he->source()->point());
                 hole.push_back(v2p(he->source(), pt_elevation));
@@ -254,10 +255,10 @@ namespace roofer::reconstruction {
           auto& pl_b = f_b->data().plane;
 
           // edge has no length
-          if (CGAL::squared_distance(p1, p2) < snap_tolerance) continue;
+          if (CGAL::squared_distance(p1, p2) < snap_tolerance_sq) continue;
 
           // edge is not in footprint nor on its boundary
-          if (!fp_a & !fp_b) {
+          if (!fp_a && !fp_b) {
             continue;
           }
 
@@ -465,14 +466,14 @@ namespace roofer::reconstruction {
             auto he = face->outer_ccb();
 
             push_ccb(roofpart, he, vertex_columns, extra_wall_points,
-                     snap_tolerance);
+                     snap_tolerance, snap_tolerance_sq);
 
             for (Arrangement_2::Hole_iterator hole = face->holes_begin();
                  hole != face->holes_end(); ++hole) {
               vec3f roofpart_hole;
               auto he = *hole;
               push_ccb(roofpart_hole, he, vertex_columns, extra_wall_points,
-                       snap_tolerance);
+                       snap_tolerance, snap_tolerance_sq);
               if (roofpart_hole.size() > 2) {
                 roofpart.interior_rings().push_back(roofpart_hole);
               }
