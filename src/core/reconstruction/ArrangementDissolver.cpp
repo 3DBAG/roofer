@@ -24,14 +24,154 @@
 
 namespace roofer::reconstruction {
 
+  namespace {
+    using Polygon_2 = CGAL::Polygon_2<EPECK>;
+    using Polygon_with_holes_2 = CGAL::Polygon_with_holes_2<EPECK>;
+
+    class Face_data_split_observer : public CGAL::Arr_observer<Arrangement_2> {
+     public:
+      explicit Face_data_split_observer(Arrangement_2& arrangement)
+          : CGAL::Arr_observer<Arrangement_2>(arrangement) {}
+
+      void after_split_face(Face_handle old_face, Face_handle new_face,
+                            bool) override {
+        new_face->set_data(old_face->data());
+      }
+    };
+
+    Polygon_with_holes_2 face_polygon(Face_handle face) {
+      Polygon_2 outer;
+      auto edge = face->outer_ccb();
+      auto first = edge;
+      do {
+        outer.push_back(edge->source()->point());
+        edge = edge->next();
+      } while (edge != first);
+
+      std::vector<Polygon_2> holes;
+      for (auto ccb = face->inner_ccbs_begin(); ccb != face->inner_ccbs_end();
+           ++ccb) {
+        Polygon_2 hole;
+        edge = *ccb;
+        first = edge;
+        do {
+          hole.push_back(edge->source()->point());
+          edge = edge->next();
+        } while (edge != first);
+        holes.push_back(std::move(hole));
+      }
+      return Polygon_with_holes_2(outer, holes.begin(), holes.end());
+    }
+
+    std::optional<Point_2> face_interior_point(Face_handle face) {
+      LinearRing polygon;
+      if (!arrangementface_to_polygon(face, polygon)) return std::nullopt;
+      auto triangulation = tri_util::create_from_polygon(polygon);
+      for (auto triangle = triangulation.finite_faces_begin();
+           triangle != triangulation.finite_faces_end(); ++triangle) {
+        if (!triangle->info().in_domain()) continue;
+        auto centroid = CGAL::centroid(triangulation.triangle(triangle));
+        return Point_2(centroid.x(), centroid.y());
+      }
+      return std::nullopt;
+    }
+
+    bool touches_footprint_boundary(Face_handle face) {
+      auto touches_boundary = [](Ccb_halfedge_circulator edge) {
+        auto first = edge;
+        do {
+          if (!edge->twin()->face()->data().in_footprint) return true;
+          edge = edge->next();
+        } while (edge != first);
+        return false;
+      };
+
+      if (touches_boundary(face->outer_ccb())) return true;
+      for (auto ccb = face->inner_ccbs_begin(); ccb != face->inner_ccbs_end();
+           ++ccb) {
+        if (touches_boundary(*ccb)) return true;
+      }
+      return false;
+    }
+
+    bool touches_unbounded_face(Face_handle face) {
+      auto touches_unbounded = [](Ccb_halfedge_circulator edge) {
+        auto first = edge;
+        do {
+          if (edge->twin()->face()->is_unbounded()) return true;
+          edge = edge->next();
+        } while (edge != first);
+        return false;
+      };
+
+      if (touches_unbounded(face->outer_ccb())) return true;
+      for (auto ccb = face->inner_ccbs_begin(); ccb != face->inner_ccbs_end();
+           ++ccb) {
+        if (touches_unbounded(*ccb)) return true;
+      }
+      return false;
+    }
+
+    double roof_height(const Plane& plane, const Point_2& point) {
+      return -(plane.a() * CGAL::to_double(point.x()) +
+               plane.b() * CGAL::to_double(point.y()) + plane.d()) /
+             plane.c();
+    }
+
+    void clip_roof_faces_to_terrain(
+        Arrangement_2& arrangement,
+        const ElevationProvider& elevation_provider) {
+      std::vector<Segment_2> intersections;
+      for (auto face : arrangement.face_handles()) {
+        if (face->is_unbounded() || !face->data().in_footprint ||
+            face->data().segid == 0) {
+          continue;
+        }
+        auto face_intersections = elevation_provider.get_intersections(
+            face->data().plane, face_polygon(face));
+        intersections.insert(intersections.end(), face_intersections.begin(),
+                             face_intersections.end());
+      }
+
+      Face_data_split_observer observer(arrangement);
+      for (const auto& intersection : intersections) {
+          CGAL::insert(arrangement, intersection);
+        }
+      }
+
+      constexpr double elevation_tolerance = 1e-6;
+      std::vector<std::pair<Face_handle, bool>> ground_faces;
+      for (auto face : arrangement.face_handles()) {
+        if (face->is_unbounded() || !face->data().in_footprint ||
+            face->data().segid == 0) {
+          continue;
+        }
+        auto sample = face_interior_point(face);
+        if (!sample) continue;
+        if (roof_height(face->data().plane, *sample) <
+            elevation_provider.get(*sample) - elevation_tolerance) {
+          ground_faces.emplace_back(face, touches_footprint_boundary(face));
+        }
+      }
+      for (auto [face, touches_boundary] : ground_faces) {
+        face->data().in_footprint = false;
+        face->data().is_ground = true;
+        face->data().is_footprint_hole = !touches_boundary;
+      }
+    }
+  }  // namespace
+
   class ArrangementDissolver : public ArrangementDissolverInterface {
    public:
     void compute(Arrangement_2& arr, const RasterTools::Raster& heightfield,
+                 const ElevationProvider& elevation_provider,
                  ArrangementDissolverConfig cfg) override {
       if (cfg.dissolve_seg_edges) {
         Face_merge_observer obs(arr);
         arr_dissolve_seg_edges(arr);
       }
+
+      clip_roof_faces_to_terrain(arr, elevation_provider);
 
       if (cfg.dissolve_all_interior) {
         arr_dissolve_fp(arr, true, false);
@@ -113,7 +253,9 @@ namespace roofer::reconstruction {
       for (auto fh : arr.face_handles()) {
         if (fh != f_unb)
           if (!fh->data().in_footprint && !fh->data().is_footprint_hole) {
-            fh->data().is_footprint_hole = true;
+            if (!fh->data().is_ground || !touches_unbounded_face(fh)) {
+              fh->data().is_footprint_hole = true;
+            }
           }
       }
 
@@ -200,6 +342,13 @@ namespace roofer::reconstruction {
       //   output("global_elevation_max").set(all_elevations[last_id]);
       // }
       // output("arrangement").set(arr);
+    }
+
+    void compute(Arrangement_2& arr, const RasterTools::Raster& heightfield,
+                 float base_elevation,
+                 ArrangementDissolverConfig cfg) override {
+      auto elevation_provider = createElevationProvider(base_elevation);
+      compute(arr, heightfield, *elevation_provider, cfg);
     }
   };
 

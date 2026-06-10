@@ -23,6 +23,7 @@
 #include <memory>
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
 namespace roofer::reconstruction {
@@ -51,6 +52,12 @@ namespace roofer::reconstruction {
     virtual ~ArrangementDissolverInterface() = default;
     virtual void compute(
         Arrangement_2& arrangement, const RasterTools::Raster& heightfield,
+        const ElevationProvider& elevation_provider,
+        ArrangementDissolverConfig config = ArrangementDissolverConfig()) = 0;
+
+    virtual void compute(
+        Arrangement_2& arrangement, const RasterTools::Raster& heightfield,
+        float base_elevation,
         ArrangementDissolverConfig config = ArrangementDissolverConfig()) = 0;
   };
 

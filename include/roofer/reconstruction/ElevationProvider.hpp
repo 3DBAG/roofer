@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <CGAL/Polygon_with_holes_2.h>
+
 #include <roofer/reconstruction/cdt_util.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
@@ -32,6 +34,10 @@ namespace roofer::reconstruction {
     virtual float get(const Point_2 pt) const = 0;
 
     virtual float get_percentile(float percentile) const = 0;
+
+    virtual std::vector<Segment_2> get_intersections(
+        const Plane& roof_plane,
+        const CGAL::Polygon_with_holes_2<EPECK>& bounds) const = 0;
   };
 
   std::unique_ptr<ElevationProvider> createElevationProvider(

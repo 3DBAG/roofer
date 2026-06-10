@@ -276,7 +276,7 @@ namespace roofer {
       auto ArrangementDissolver =
           roofer::reconstruction::createArrangementDissolver();
       ArrangementDissolver->compute(
-          arrangement, SegmentRasteriser->heightfield,
+          arrangement, SegmentRasteriser->heightfield, *elevation_provider,
           {.dissolve_step_edges = cfg.lod == 13,
            .dissolve_all_interior = cfg.lod == 12,
            .step_height_threshold = cfg.lod13_step_height});
