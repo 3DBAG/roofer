@@ -191,6 +191,7 @@
               pkgsStatic.boost # need static for val3dity
               eigen
               fmt
+              catch2_3
 
               # val3dity
               pugixml
