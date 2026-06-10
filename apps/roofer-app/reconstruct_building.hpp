@@ -201,10 +201,13 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
 
   auto& logger = roofer::logger::Logger::get_logger();
 
+  auto elevation_provider =
+      roofer::reconstruction::createElevationProvider(*building.h_ground);
+
   auto ArrangementDissolver =
       roofer::reconstruction::createArrangementDissolver();
   ArrangementDissolver->compute(
-      arrangement, SegmentRasteriser->heightfield,
+      arrangement, SegmentRasteriser->heightfield, *elevation_provider,
       {.dissolve_step_edges = dissolve_step_edges,
        .dissolve_all_interior = dissolve_all_interior,
        .step_height_threshold = cfg->lod13_step_height});
@@ -227,7 +230,7 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
 
   auto ArrangementExtruder =
       roofer::reconstruction::createArrangementExtruder();
-  ArrangementExtruder->compute(arrangement, *building.h_ground,
+  ArrangementExtruder->compute(arrangement, *elevation_provider,
                                {.LoD2 = extrude_LoD2});
   // logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
