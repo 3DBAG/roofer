@@ -540,7 +540,6 @@ namespace roofer::reconstruction {
               arrFace->data() = best_face->first->data();
             } else {
               std::cout << "Unable to locate overlapping triangle\n";
-              arrFace->data().is_finite = true;
               arrFace->data().is_ground = true;
               arrFace->data().in_footprint = false;
               arrFace->data().is_footprint_hole = false;
