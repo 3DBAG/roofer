@@ -54,8 +54,6 @@ namespace roofer::reconstruction {
     FaceInfo operator()(const FaceInfo a, const FaceInfo b) const {
       auto r = FaceInfo();
       r.segid = 0;
-      // if (a.is_finite && b.is_finite)
-      r.is_finite = true;
 
       if (a.segid != 0 && b.segid == 0) {
         r = a;
@@ -105,18 +103,12 @@ namespace roofer::reconstruction {
           elevation(elevation),
           plane(plane) {
       CGAL_precondition(arr.is_empty());
-      for (auto uf = arr.unbounded_faces_begin();
-           uf != arr.unbounded_faces_end(); ++uf) {
-        uf->data().is_finite = false;
-      }
-      // arr.unbounded_face()->data().is_finite = false;
       n_faces++;
     };
     virtual void after_split_face(Face_handle old_face, Face_handle new_face,
                                   bool) {
       // Assign index to the new face.
       new_face->data().in_footprint = in_footprint;
-      new_face->data().is_finite = true;
       new_face->data().segid = plane_id;
       new_face->data().elevation_70p = elevation;
       new_face->data().plane = plane;

@@ -20,7 +20,6 @@ namespace {
 
     for (auto face : arrangement.face_handles()) {
       if (face->is_unbounded()) continue;
-      face->data().is_finite = true;
       face->data().in_footprint = true;
       face->data().segid = 1;
     }
