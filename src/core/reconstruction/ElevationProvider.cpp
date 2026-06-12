@@ -134,7 +134,7 @@ namespace roofer::reconstruction {
     const float floor_elevation_;
 
     ConstantElevationProvider(const float floor_elevation)
-        : floor_elevation_(floor_elevation) {};
+        : floor_elevation_(floor_elevation){};
 
     virtual float get(const Point_2 /* pt */) const override {
       return floor_elevation_;
@@ -164,7 +164,7 @@ namespace roofer::reconstruction {
     std::shared_ptr<const proj_tri_util::DT> base_cdt_ptr_;
 
     InterpolatedElevationProvider(const proj_tri_util::DT& base_cdt)
-        : base_cdt_ptr_(std::make_shared<const proj_tri_util::DT>(base_cdt)) {};
+        : base_cdt_ptr_(std::make_shared<const proj_tri_util::DT>(base_cdt)){};
 
     virtual float get(const Point_2 pt) const override {
       return proj_tri_util::interpolate_from_cdt(pt, *base_cdt_ptr_);
@@ -190,8 +190,8 @@ namespace roofer::reconstruction {
       std::vector<Segment_2> result;
       for (auto face = base_cdt_ptr_->finite_faces_begin();
            face != base_cdt_ptr_->finite_faces_end(); ++face) {
-        auto intersection = triangle_intersection(
-            roof_plane, base_cdt_ptr_->triangle(face));
+        auto intersection =
+            triangle_intersection(roof_plane, base_cdt_ptr_->triangle(face));
         if (!intersection) continue;
         auto clipped = clip_segment(*intersection, bounds);
         result.insert(result.end(), clipped.begin(), clipped.end());
