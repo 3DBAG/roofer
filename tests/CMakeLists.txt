@@ -58,6 +58,12 @@ target_link_libraries("test_arrangement_dissolver"
                       PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests("test_arrangement_dissolver")
 
+add_executable("test_arrangement_snapper"
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_arrangement_snapper.cpp")
+target_link_libraries("test_arrangement_snapper"
+                      PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests("test_arrangement_snapper")
+
 add_executable("test_vector_reader"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
 target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
