@@ -30,6 +30,12 @@
 #include <CGAL/Triangulation_face_base_with_info_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
+#include <cmath>
+#include <limits>
+#include <optional>
+#include <queue>
+#include <unordered_set>
+
 namespace roofer::reconstruction {
 
   namespace arragementsnapper {
@@ -59,6 +65,296 @@ namespace roofer::reconstruction {
     typedef std::pair<Face_handle, int> Edge;
 
     typedef std::unordered_map<Vertex_handle, FaceInfo*> ConstraintMap;
+
+    struct ForcedRegionLabel {
+      T::Point_2 seed;
+      FaceInfo* face_info;
+    };
+
+    using SourceFaceIds = std::unordered_map<FaceInfo*, std::size_t>;
+
+    struct IncidentSector {
+      Vertex_handle neighbour;
+      FaceInfo* face_info;
+      double angle;
+      double height;
+    };
+
+    double plane_height(const FaceInfo& face_info, const T::Point_2& point) {
+      const auto& plane = face_info.plane;
+      if (plane.c() == 0) return 0;
+      return -(plane.a() * point.x() + plane.b() * point.y() + plane.d()) /
+             plane.c();
+    }
+
+    FaceInfo* source_face_at(
+        const T::Point_2& point,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        Arrangement_2& source_arrangement) {
+      auto object =
+          walk_pl.locate(Arrangement_2::Point_2(point.x(), point.y()));
+      if (auto face = std::get_if<Face_const_handle>(&object)) {
+        return &source_arrangement.non_const_handle(*face)->data();
+      }
+      return nullptr;
+    }
+
+    std::vector<std::vector<Face_handle>> constrained_regions(T& tri) {
+      std::vector<std::vector<Face_handle>> regions;
+      std::unordered_set<Face_handle> visited;
+
+      for (auto face : tri.finite_face_handles()) {
+        if (visited.contains(face)) continue;
+
+        std::vector<Face_handle> region;
+        std::queue<Face_handle> queue;
+        queue.push(face);
+        visited.insert(face);
+        while (!queue.empty()) {
+          auto current = queue.front();
+          queue.pop();
+          region.push_back(current);
+
+          for (int i = 0; i < 3; ++i) {
+            Edge edge(current, i);
+            auto neighbour = current->neighbor(i);
+            if (!tri.is_constrained(edge) && !tri.is_infinite(neighbour) &&
+                visited.insert(neighbour).second) {
+              queue.push(neighbour);
+            }
+          }
+        }
+        regions.push_back(std::move(region));
+      }
+      return regions;
+    }
+
+    void label_final_regions(
+        T& tri,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        Arrangement_2& source_arrangement, const SourceFaceIds& source_ids,
+        const std::vector<ForcedRegionLabel>& forced_labels) {
+      for (auto& region : constrained_regions(tri)) {
+        std::unordered_map<FaceInfo*, double> overlap_area;
+        for (auto face : region) {
+          auto centroid = CGAL::centroid(tri.triangle(face));
+          if (auto* source =
+                  source_face_at(centroid, walk_pl, source_arrangement)) {
+            overlap_area[source] += std::abs(tri.triangle(face).area());
+          }
+        }
+
+        FaceInfo* selected = nullptr;
+        double selected_area = -1;
+        std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+        for (const auto& [source, area] : overlap_area) {
+          auto id = source_ids.at(source);
+          if (area > selected_area ||
+              (area == selected_area && id < selected_id)) {
+            selected = source;
+            selected_area = area;
+            selected_id = id;
+          }
+        }
+
+        for (const auto& forced : forced_labels) {
+          auto located = tri.locate(forced.seed);
+          if (!tri.is_infinite(located) &&
+              std::find(region.begin(), region.end(), located) !=
+                  region.end()) {
+            selected = forced.face_info;
+            break;
+          }
+        }
+
+        for (auto face : region) face->info() = selected;
+      }
+    }
+
+    std::optional<double> vertex_clearance(T& tri, Vertex_handle vertex) {
+      double clearance_sq = std::numeric_limits<double>::max();
+      Face_circulator face = tri.incident_faces(vertex), done(face);
+      if (face == nullptr) return std::nullopt;
+      do {
+        if (tri.is_infinite(face)) return std::nullopt;
+        auto opposite_edge = Edge(face, face->index(vertex));
+        clearance_sq = std::min(
+            clearance_sq, CGAL::to_double(CGAL::squared_distance(
+                              vertex->point(), tri.segment(opposite_edge))));
+      } while (++face != done);
+      if (!(clearance_sq > 0)) return std::nullopt;
+      return std::sqrt(clearance_sq);
+    }
+
+    std::vector<IncidentSector> incident_sectors(T& tri, Vertex_handle vertex) {
+      std::vector<IncidentSector> sectors;
+      Edge_circulator edge = tri.incident_edges(vertex), done(edge);
+      if (edge == nullptr) return sectors;
+      do {
+        if (!tri.is_constrained(*edge)) continue;
+        auto first = edge->first->vertex(tri.cw(edge->second));
+        auto second = edge->first->vertex(tri.ccw(edge->second));
+        auto neighbour = first == vertex ? second : first;
+        const double dx = neighbour->point().x() - vertex->point().x();
+        const double dy = neighbour->point().y() - vertex->point().y();
+        sectors.push_back({neighbour, nullptr, std::atan2(dy, dx), 0});
+      } while (++edge != done);
+
+      std::sort(sectors.begin(), sectors.end(),
+                [](const auto& lhs, const auto& rhs) {
+                  return lhs.angle < rhs.angle;
+                });
+      if (sectors.size() < 2) return sectors;
+
+      auto clearance = vertex_clearance(tri, vertex);
+      if (!clearance) return {};
+      const double sample_radius = *clearance * 0.25;
+      constexpr double two_pi = 2 * CGAL_PI;
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        double next_angle = sectors[(i + 1) % sectors.size()].angle;
+        if (next_angle <= sectors[i].angle) next_angle += two_pi;
+        const double sample_angle = (sectors[i].angle + next_angle) * 0.5;
+        T::Point_2 sample(
+            vertex->point().x() + sample_radius * std::cos(sample_angle),
+            vertex->point().y() + sample_radius * std::sin(sample_angle));
+        auto face = tri.locate(sample);
+        if (tri.is_infinite(face) || face->info() == nullptr) return {};
+        sectors[i].face_info = face->info();
+        sectors[i].height = plane_height(*face->info(), vertex->point());
+      }
+      return sectors;
+    }
+
+    bool has_non_manifold_height_order(
+        const std::vector<IncidentSector>& sectors, double tolerance) {
+      std::vector<double> heights;
+      heights.reserve(sectors.size());
+      for (const auto& sector : sectors) heights.push_back(sector.height);
+      std::sort(heights.begin(), heights.end());
+
+      std::vector<double> distinct_heights;
+      for (double height : heights) {
+        if (distinct_heights.empty() ||
+            height - distinct_heights.back() >= tolerance) {
+          distinct_heights.push_back(height);
+        }
+      }
+
+      for (std::size_t level = 1; level < distinct_heights.size(); ++level) {
+        const double sample_height =
+            (distinct_heights[level - 1] + distinct_heights[level]) * 0.5;
+        std::size_t crossings = 0;
+        for (std::size_t i = 0; i < sectors.size(); ++i) {
+          const double lhs =
+              sectors[(i + sectors.size() - 1) % sectors.size()].height;
+          const double rhs = sectors[i].height;
+          if ((lhs < sample_height && rhs > sample_height) ||
+              (rhs < sample_height && lhs > sample_height)) {
+            ++crossings;
+          }
+        }
+        if (crossings > 2) return true;
+      }
+      return false;
+    }
+
+    std::optional<Vertex_handle> find_problematic_vertex(
+        T& tri, double height_tolerance) {
+      for (auto vertex = tri.finite_vertices_begin();
+           vertex != tri.finite_vertices_end(); ++vertex) {
+        if (vertex->info()) continue;
+        auto sectors = incident_sectors(tri, vertex);
+        if (sectors.size() < 4) continue;
+        if (std::any_of(sectors.begin(), sectors.end(), [](const auto& sector) {
+              return !sector.face_info->in_footprint ||
+                     sector.face_info->segid == 0;
+            })) {
+          continue;
+        }
+        if (has_non_manifold_height_order(sectors, height_tolerance)) {
+          return vertex;
+        }
+      }
+      return std::nullopt;
+    }
+
+    ForcedRegionLabel repair_vertex(T& tri, Vertex_handle vertex,
+                                    const SourceFaceIds& source_ids,
+                                    double maximum_radius,
+                                    double height_tolerance) {
+      auto sectors = incident_sectors(tri, vertex);
+      auto clearance = vertex_clearance(tri, vertex);
+      if (sectors.size() < 4 || !clearance) {
+        throw roofer::rooferException(
+            "Unable to compute a safe non-manifold junction repair");
+      }
+
+      auto selected = std::min_element(
+          sectors.begin(), sectors.end(),
+          [&](const auto& lhs, const auto& rhs) {
+            if (std::abs(lhs.height - rhs.height) >= height_tolerance)
+              return lhs.height < rhs.height;
+            return source_ids.at(lhs.face_info) < source_ids.at(rhs.face_info);
+          });
+      FaceInfo* selected_face = selected->face_info;
+
+      double shortest_edge = std::numeric_limits<double>::max();
+      for (const auto& sector : sectors) {
+        shortest_edge = std::min(
+            shortest_edge, std::sqrt(CGAL::to_double(CGAL::squared_distance(
+                               vertex->point(), sector.neighbour->point()))));
+      }
+      const double radius =
+          std::min({maximum_radius, *clearance * 0.8, shortest_edge * 0.45});
+      if (!(radius > std::numeric_limits<double>::epsilon())) {
+        throw roofer::rooferException(
+            "Non-manifold junction repair radius is degenerate");
+      }
+
+      const auto original_point = vertex->point();
+      std::vector<Vertex_handle> split_vertices;
+      split_vertices.reserve(sectors.size());
+      for (const auto& sector : sectors) {
+        const double dx = sector.neighbour->point().x() - original_point.x();
+        const double dy = sector.neighbour->point().y() - original_point.y();
+        const double length = std::sqrt(dx * dx + dy * dy);
+        T::Point_2 split_point(original_point.x() + radius * dx / length,
+                               original_point.y() + radius * dy / length);
+        auto split_vertex = tri.insert(split_point);
+        split_vertex->info() = false;
+        split_vertices.push_back(split_vertex);
+      }
+
+      tri.remove_incident_constraints(vertex);
+      tri.remove(vertex);
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        tri.insert_constraint(split_vertices[i], sectors[i].neighbour);
+      }
+
+      std::optional<T::Point_2> forced_seed;
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        auto next = (i + 1) % sectors.size();
+        if (sectors[i].face_info == selected_face) {
+          if (!forced_seed) {
+            forced_seed = T::Point_2(
+                (2 * original_point.x() + split_vertices[i]->point().x() +
+                 split_vertices[next]->point().x()) /
+                    4,
+                (2 * original_point.y() + split_vertices[i]->point().y() +
+                 split_vertices[next]->point().y()) /
+                    4);
+          }
+          continue;
+        }
+        tri.insert_constraint(split_vertices[i], split_vertices[next]);
+      }
+
+      if (!forced_seed) {
+        throw roofer::rooferException(
+            "Non-manifold junction repair has no merge sector");
+      }
+      return {*forced_seed, selected_face};
+    }
 
     // tri_util::CDT triangulate_polygon(LinearRing& poly, float
     // dupe_threshold_exp=3) {
@@ -162,6 +458,12 @@ namespace roofer::reconstruction {
 
         T tri;
         float sq_dist_thres = cfg.dist_thres * cfg.dist_thres;
+
+        SourceFaceIds source_face_ids;
+        std::size_t next_source_face_id = 0;
+        for (auto face : arr.face_handles()) {
+          source_face_ids[&face->data()] = next_source_face_id++;
+        }
 
         // map from arr vertices to tri vertices
         std::unordered_map<Arrangement_2::Vertex_handle, T::Vertex_handle>
@@ -443,6 +745,20 @@ namespace roofer::reconstruction {
         }
         // } while (found_short_edge);
 
+        std::vector<ForcedRegionLabel> forced_region_labels;
+        label_final_regions(tri, walk_pl, arr, source_face_ids,
+                            forced_region_labels);
+        if (cfg.repair_non_manifold_vertices) {
+          while (auto vertex = find_problematic_vertex(
+                     tri, cfg.manifold_height_tolerance)) {
+            forced_region_labels.push_back(repair_vertex(
+                tri, *vertex, source_face_ids, cfg.manifold_repair_radius,
+                cfg.manifold_height_tolerance));
+            label_final_regions(tri, walk_pl, arr, source_face_ids,
+                                forced_region_labels);
+          }
+        }
+
         // TriangleCollection triangles_snapped;
         // vec1i segment_ids_snapped;
         // for (auto fh = tri.finite_faces_begin(); fh !=
@@ -496,55 +812,41 @@ namespace roofer::reconstruction {
           // }
         }
 
-        for (auto& arrFace : arr_snap.face_handles()) {
-          LinearRing poly;
-          if (arrFace->is_fictitious()) continue;
-
-          if (arrangementface_to_polygon(arrFace, poly)) {
-            // std::cout << "poly size: " << poly.size() << std::endl;
-            tri_util::CDT cdt = tri_util::create_from_polygon(poly);
-
-            std::unordered_map<Arrangement_2::Face_handle, float>
-                canidate_faces;
-            for (tri_util::CDT::Finite_faces_iterator fit =
-                     cdt.finite_faces_begin();
-                 fit != cdt.finite_faces_end(); ++fit) {
-              if (!fit->info().in_domain()) continue;
-              auto p = CGAL::centroid(cdt.triangle(fit));
-
-              // !! this turns out to be messy
-              // auto snap_triangle = tri.locate(p);
-              // arrFace->data() = *snap_triangle->info();
-
-              auto obj =
-                  walk_pl.locate(Walk_pl::Arrangement_2::Point_2(p.x(), p.y()));
-
-              if (auto f = std::get_if<Face_const_handle>(
-                      &obj)) {  // located inside a face
-                // arrFace->data() = (*f)->data();
-                canidate_faces[arr.non_const_handle(*f)] +=
-                    cdt.triangle(fit).area();
-              }
-              // break;
-            }
-
-            // pick the candidate with the largest overlapping area
-            // std::cerr << "Size=" << canidate_faces.size() << std::endl;
-            if (canidate_faces.size()) {
-              auto best_face = std::max_element(
-                  canidate_faces.begin(), canidate_faces.end(),
-                  [](const std::pair<Arrangement_2::Face_handle, float>& p1,
-                     const std::pair<Arrangement_2::Face_handle, float>& p2) {
-                    return p1.second < p2.second;
-                  });
-              arrFace->data() = best_face->first->data();
-            } else {
-              std::cout << "Unable to locate overlapping triangle\n";
-              arrFace->data().is_ground = true;
-              arrFace->data().in_footprint = false;
-              arrFace->data().is_footprint_hole = false;
-            }
+        typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2>
+            Snap_walk_pl;
+        Snap_walk_pl snap_walk_pl(arr_snap);
+        std::unordered_map<Arrangement_2::Face_handle,
+                           std::unordered_map<FaceInfo*, double>>
+            output_face_labels;
+        for (auto face : tri.finite_face_handles()) {
+          if (face->info() == nullptr) continue;
+          auto centroid = CGAL::centroid(tri.triangle(face));
+          auto object = snap_walk_pl.locate(
+              Arrangement_2::Point_2(centroid.x(), centroid.y()));
+          if (auto output_face = std::get_if<Face_const_handle>(&object)) {
+            output_face_labels[arr_snap.non_const_handle(*output_face)]
+                              [face->info()] +=
+                std::abs(tri.triangle(face).area());
           }
+        }
+
+        arr_snap.unbounded_face()->data() = arr.unbounded_face()->data();
+        for (auto output_face : arr_snap.face_handles()) {
+          if (output_face->is_unbounded()) continue;
+          const auto labels = output_face_labels.find(output_face);
+          if (labels == output_face_labels.end() || labels->second.empty()) {
+            throw roofer::rooferException(
+                "Unable to transfer snapped arrangement face label");
+          }
+          auto best =
+              std::max_element(labels->second.begin(), labels->second.end(),
+                               [&](const auto& lhs, const auto& rhs) {
+                                 if (lhs.second != rhs.second)
+                                   return lhs.second < rhs.second;
+                                 return source_face_ids.at(lhs.first) >
+                                        source_face_ids.at(rhs.first);
+                               });
+          output_face->data() = *best->first;
         }
 
         // remove dangling edges if any, eg holes that collapse to a single edge

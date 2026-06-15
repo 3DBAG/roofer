@@ -28,6 +28,9 @@ namespace roofer::reconstruction {
 
   struct ArrangementSnapperConfig {
     float dist_thres = 0.05;
+    bool repair_non_manifold_vertices = true;
+    float manifold_repair_radius = 0.05;
+    float manifold_height_tolerance = 1e-4;
   };
 
   struct ArrangementSnapperInterface {
