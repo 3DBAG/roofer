@@ -289,6 +289,27 @@ namespace roofer::reconstruction {
       return false;
     }
 
+    std::size_t cyclic_face_run_count(
+        const std::vector<IncidentSector>& sectors, const FaceInfo* face_info) {
+      if (sectors.empty()) return 0;
+      if (std::all_of(sectors.begin(), sectors.end(),
+                      [face_info](const auto& sector) {
+                        return sector.face_info == face_info;
+                      })) {
+        return 1;
+      }
+
+      std::size_t runs = 0;
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        const auto previous = (i + sectors.size() - 1) % sectors.size();
+        if (sectors[i].face_info == face_info &&
+            sectors[previous].face_info != face_info) {
+          ++runs;
+        }
+      }
+      return runs;
+    }
+
     FaceInfo* repeated_incident_face(const std::vector<IncidentSector>& sectors,
                                      const SourceFaceIds& source_ids) {
       std::unordered_map<FaceInfo*, std::size_t> counts;
@@ -301,6 +322,7 @@ namespace roofer::reconstruction {
       std::size_t selected_id = std::numeric_limits<std::size_t>::max();
       for (const auto& [face_info, count] : counts) {
         if (count < 2) continue;
+        if (cyclic_face_run_count(sectors, face_info) < 2) continue;
         auto id = source_ids.at(face_info);
         if (count > selected_count ||
             (count == selected_count && id < selected_id)) {
@@ -321,6 +343,7 @@ namespace roofer::reconstruction {
         if (constrained_incident_edge_count(tri, vertex) < 4) continue;
         auto clearance = vertex_clearance(tri, vertex);
         if (!clearance) continue;
+        if (*clearance <= 1e-6) continue;
         auto sectors = incident_sectors(tri, vertex, *clearance,
                                         source_arrangement, walk_pl);
         if (sectors.size() < 4) continue;
