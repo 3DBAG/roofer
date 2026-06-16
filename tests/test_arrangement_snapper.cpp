@@ -64,6 +64,50 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 boundary_junction_arrangement() {
+    Arrangement_2 arrangement;
+    const std::array<Point_2, 4> corners = {Point_2(0, 0), Point_2(10, 0),
+                                            Point_2(10, 10), Point_2(0, 10)};
+    for (std::size_t i = 0; i < corners.size(); ++i) {
+      CGAL::insert(arrangement,
+                   Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+    }
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 0), Point_2(2, 10)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 0), Point_2(8, 10)));
+
+    auto left = face_at(arrangement, Point_2(1, 5));
+    left->data().in_footprint = true;
+    left->data().segid = 1;
+    left->data().plane = roofer::Plane(0, 0, 1, -15);
+
+    auto middle = face_at(arrangement, Point_2(5, 5));
+    middle->data().in_footprint = true;
+    middle->data().segid = 2;
+    middle->data().plane = roofer::Plane(0, 0, 1, -5);
+
+    auto right = face_at(arrangement, Point_2(9, 5));
+    right->data().in_footprint = true;
+    right->data().segid = 3;
+    right->data().plane = roofer::Plane(0, 0, 1, -15);
+
+    arrangement.unbounded_face()->data().in_footprint = false;
+    arrangement.unbounded_face()->data().segid = 0;
+    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 10);
+
+    return arrangement;
+  }
+
+  Arrangement_2 finite_exterior_junction_arrangement() {
+    auto arrangement = cross_arrangement({15, 5, 15, 0});
+
+    auto hole = face_at(arrangement, Point_2(7.5, 2.5));
+    hole->data().in_footprint = false;
+    hole->data().is_footprint_hole = true;
+    hole->data().segid = 0;
+    hole->data().plane = roofer::Plane(0, 0, 1, 10);
+    return arrangement;
+  }
+
   Arrangement_2::Vertex_handle vertex_at(Arrangement_2& arrangement,
                                          const Point_2& point) {
     for (auto vertex : arrangement.vertex_handles()) {
@@ -150,4 +194,32 @@ TEST_CASE("snapper repairs a repeated-face junction") {
   CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
         Arrangement_2::Vertex_handle());
   CHECK(face_at(arrangement, Point_2(5, 5))->data().segid == repeated_segid);
+}
+
+TEST_CASE("snapper keeps a boundary repair cell inside the footprint") {
+  auto arrangement = boundary_junction_arrangement();
+
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 0)) ==
+        Arrangement_2::Vertex_handle());
+  CHECK(face_at(arrangement, Point_2(5, 0.05))->data().in_footprint);
+}
+
+TEST_CASE("snapper keeps a finite exterior repair cell inside the footprint") {
+  auto arrangement = finite_exterior_junction_arrangement();
+
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
+        Arrangement_2::Vertex_handle());
+  CHECK(face_at(arrangement, Point_2(5, 5))->data().segid == 2);
 }

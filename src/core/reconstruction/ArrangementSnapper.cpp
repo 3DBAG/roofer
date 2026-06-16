@@ -94,6 +94,11 @@ namespace roofer::reconstruction {
              plane.c();
     }
 
+    bool is_roof_face(const FaceInfo* face_info) {
+      return face_info != nullptr && face_info->in_footprint &&
+             face_info->segid != 0;
+    }
+
     FaceInfo* source_face_at(
         const T::Point_2& point,
         CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
@@ -189,13 +194,15 @@ namespace roofer::reconstruction {
       Face_circulator face = tri.incident_faces(vertex), done(face);
       if (face == nullptr) return std::nullopt;
       do {
-        if (tri.is_infinite(face)) return std::nullopt;
+        if (tri.is_infinite(face)) continue;
         auto opposite_edge = Edge(face, face->index(vertex));
         clearance_sq = std::min(
             clearance_sq, CGAL::to_double(CGAL::squared_distance(
                               vertex->point(), tri.segment(opposite_edge))));
       } while (++face != done);
-      if (!(clearance_sq > 0)) return std::nullopt;
+      if (!(clearance_sq > 0) ||
+          clearance_sq == std::numeric_limits<double>::max())
+        return std::nullopt;
       return std::sqrt(clearance_sq);
     }
 
@@ -209,8 +216,10 @@ namespace roofer::reconstruction {
       return count;
     }
 
-    std::vector<IncidentSector> incident_sectors(T& tri, Vertex_handle vertex,
-                                                 double clearance) {
+    std::vector<IncidentSector> incident_sectors(
+        T& tri, Vertex_handle vertex, double clearance,
+        Arrangement_2& source_arrangement,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl) {
       std::vector<IncidentSector> sectors;
       Edge_circulator edge = tri.incident_edges(vertex), done(edge);
       if (edge == nullptr) return sectors;
@@ -239,10 +248,10 @@ namespace roofer::reconstruction {
         T::Point_2 sample(
             vertex->point().x() + sample_radius * std::cos(sample_angle),
             vertex->point().y() + sample_radius * std::sin(sample_angle));
-        auto face = tri.locate(sample);
-        if (tri.is_infinite(face) || face->info() == nullptr) return {};
-        sectors[i].face_info = face->info();
-        sectors[i].height = plane_height(*face->info(), vertex->point());
+        auto face_info = source_face_at(sample, walk_pl, source_arrangement);
+        if (face_info == nullptr) return {};
+        sectors[i].face_info = face_info;
+        sectors[i].height = plane_height(*face_info, vertex->point());
       }
       return sectors;
     }
@@ -283,7 +292,9 @@ namespace roofer::reconstruction {
     FaceInfo* repeated_incident_face(const std::vector<IncidentSector>& sectors,
                                      const SourceFaceIds& source_ids) {
       std::unordered_map<FaceInfo*, std::size_t> counts;
-      for (const auto& sector : sectors) ++counts[sector.face_info];
+      for (const auto& sector : sectors) {
+        if (is_roof_face(sector.face_info)) ++counts[sector.face_info];
+      }
 
       FaceInfo* selected = nullptr;
       std::size_t selected_count = 0;
@@ -302,19 +313,21 @@ namespace roofer::reconstruction {
     }
 
     std::optional<RepairCandidate> find_problematic_vertex(
-        T& tri, const SourceFaceIds& source_ids, double height_tolerance) {
+        T& tri, Arrangement_2& source_arrangement,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        const SourceFaceIds& source_ids, double height_tolerance) {
       for (auto vertex = tri.finite_vertices_begin();
            vertex != tri.finite_vertices_end(); ++vertex) {
-        if (vertex->info()) continue;
         if (constrained_incident_edge_count(tri, vertex) < 4) continue;
         auto clearance = vertex_clearance(tri, vertex);
         if (!clearance) continue;
-        auto sectors = incident_sectors(tri, vertex, *clearance);
+        auto sectors = incident_sectors(tri, vertex, *clearance,
+                                        source_arrangement, walk_pl);
         if (sectors.size() < 4) continue;
-        if (std::any_of(sectors.begin(), sectors.end(), [](const auto& sector) {
-              return !sector.face_info->in_footprint ||
-                     sector.face_info->segid == 0;
-            })) {
+        if (std::none_of(sectors.begin(), sectors.end(),
+                         [](const auto& sector) {
+                           return is_roof_face(sector.face_info);
+                         })) {
           continue;
         }
         auto repeated_face = repeated_incident_face(sectors, source_ids);
@@ -340,15 +353,23 @@ namespace roofer::reconstruction {
 
       FaceInfo* selected_face = candidate.preferred_merge_face;
       if (selected_face == nullptr) {
-        const double min_height =
-            std::min_element(sectors.begin(), sectors.end(),
-                             [](const auto& lhs, const auto& rhs) {
-                               return lhs.height < rhs.height;
-                             })
-                ->height;
+        auto min_sector = std::min_element(
+            sectors.begin(), sectors.end(),
+            [](const auto& lhs, const auto& rhs) {
+              if (is_roof_face(lhs.face_info) != is_roof_face(rhs.face_info))
+                return is_roof_face(lhs.face_info);
+              return lhs.height < rhs.height;
+            });
+        if (min_sector == sectors.end() ||
+            !is_roof_face(min_sector->face_info)) {
+          throw roofer::rooferException(
+              "Non-manifold junction repair has no roof face to merge into");
+        }
+        const double min_height = min_sector->height;
         std::size_t selected_id = std::numeric_limits<std::size_t>::max();
         for (const auto& sector : sectors) {
-          if (sector.height <= min_height + height_tolerance) {
+          if (is_roof_face(sector.face_info) &&
+              sector.height <= min_height + height_tolerance) {
             auto id = source_ids.at(sector.face_info);
             if (id < selected_id) {
               selected_face = sector.face_info;
@@ -744,8 +765,9 @@ namespace roofer::reconstruction {
         label_final_regions(tri, walk_pl, arr, source_face_ids,
                             forced_region_labels);
         if (cfg.repair_non_manifold_vertices) {
-          while (auto candidate = find_problematic_vertex(
-                     tri, source_face_ids, cfg.manifold_height_tolerance)) {
+          while (auto candidate =
+                     find_problematic_vertex(tri, arr, walk_pl, source_face_ids,
+                                             cfg.manifold_height_tolerance)) {
             forced_region_labels.push_back(repair_vertex(
                 tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
                 cfg.manifold_height_tolerance));
