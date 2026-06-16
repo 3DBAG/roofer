@@ -55,6 +55,15 @@ namespace {
     return arrangement.non_const_handle(*face);
   }
 
+  Arrangement_2 repeated_face_arrangement() {
+    auto arrangement = cross_arrangement({1, 2, 1, 3});
+    auto repeated_face = face_at(arrangement, Point_2(7.5, 7.5));
+    auto other_face = face_at(arrangement, Point_2(2.5, 2.5));
+    other_face->data().segid = repeated_face->data().segid;
+    other_face->data().plane = repeated_face->data().plane;
+    return arrangement;
+  }
+
   Arrangement_2::Vertex_handle vertex_at(Arrangement_2& arrangement,
                                          const Point_2& point) {
     for (auto vertex : arrangement.vertex_handles()) {
@@ -126,4 +135,19 @@ TEST_CASE("snapper preserves a manifold four-way roof junction") {
   auto center = vertex_at(arrangement, Point_2(5, 5));
   REQUIRE(center != Arrangement_2::Vertex_handle());
   CHECK(center->degree() == 4);
+}
+
+TEST_CASE("snapper repairs a repeated-face junction") {
+  auto arrangement = repeated_face_arrangement();
+  auto repeated_segid = face_at(arrangement, Point_2(7.5, 7.5))->data().segid;
+
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
+        Arrangement_2::Vertex_handle());
+  CHECK(face_at(arrangement, Point_2(5, 5))->data().segid == repeated_segid);
 }
