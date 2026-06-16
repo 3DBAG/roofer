@@ -64,7 +64,7 @@ namespace roofer::reconstruction {
     typedef T::Face_handle Face_handle;
     typedef std::pair<Face_handle, int> Edge;
 
-    typedef std::unordered_map<Vertex_handle, FaceInfo*> ConstraintMap;
+    typedef std::unordered_set<Vertex_handle> ConstraintSet;
 
     struct ForcedRegionLabel {
       T::Point_2 seed;
@@ -78,6 +78,12 @@ namespace roofer::reconstruction {
       FaceInfo* face_info;
       double angle;
       double height;
+    };
+
+    struct RepairCandidate {
+      Vertex_handle vertex;
+      std::vector<IncidentSector> sectors;
+      double clearance;
     };
 
     double plane_height(const FaceInfo& face_info, const T::Point_2& point) {
@@ -134,6 +140,14 @@ namespace roofer::reconstruction {
         CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
         Arrangement_2& source_arrangement, const SourceFaceIds& source_ids,
         const std::vector<ForcedRegionLabel>& forced_labels) {
+      std::vector<std::pair<Face_handle, FaceInfo*>> forced_face_labels;
+      for (const auto& forced : forced_labels) {
+        auto located = tri.locate(forced.seed);
+        if (!tri.is_infinite(located)) {
+          forced_face_labels.emplace_back(located, forced.face_info);
+        }
+      }
+
       for (auto& region : constrained_regions(tri)) {
         std::unordered_map<FaceInfo*, double> overlap_area;
         for (auto face : region) {
@@ -157,12 +171,10 @@ namespace roofer::reconstruction {
           }
         }
 
-        for (const auto& forced : forced_labels) {
-          auto located = tri.locate(forced.seed);
-          if (!tri.is_infinite(located) &&
-              std::find(region.begin(), region.end(), located) !=
-                  region.end()) {
-            selected = forced.face_info;
+        for (const auto& [forced_face, forced_label] : forced_face_labels) {
+          if (std::find(region.begin(), region.end(), forced_face) !=
+              region.end()) {
+            selected = forced_label;
             break;
           }
         }
@@ -186,7 +198,18 @@ namespace roofer::reconstruction {
       return std::sqrt(clearance_sq);
     }
 
-    std::vector<IncidentSector> incident_sectors(T& tri, Vertex_handle vertex) {
+    std::size_t constrained_incident_edge_count(T& tri, Vertex_handle vertex) {
+      std::size_t count = 0;
+      Edge_circulator edge = tri.incident_edges(vertex), done(edge);
+      if (edge == nullptr) return count;
+      do {
+        if (tri.is_constrained(*edge)) ++count;
+      } while (++edge != done);
+      return count;
+    }
+
+    std::vector<IncidentSector> incident_sectors(T& tri, Vertex_handle vertex,
+                                                 double clearance) {
       std::vector<IncidentSector> sectors;
       Edge_circulator edge = tri.incident_edges(vertex), done(edge);
       if (edge == nullptr) return sectors;
@@ -206,9 +229,7 @@ namespace roofer::reconstruction {
                 });
       if (sectors.size() < 2) return sectors;
 
-      auto clearance = vertex_clearance(tri, vertex);
-      if (!clearance) return {};
-      const double sample_radius = *clearance * 0.25;
+      const double sample_radius = clearance * 0.25;
       constexpr double two_pi = 2 * CGAL_PI;
       for (std::size_t i = 0; i < sectors.size(); ++i) {
         double next_angle = sectors[(i + 1) % sectors.size()].angle;
@@ -258,12 +279,15 @@ namespace roofer::reconstruction {
       return false;
     }
 
-    std::optional<Vertex_handle> find_problematic_vertex(
+    std::optional<RepairCandidate> find_problematic_vertex(
         T& tri, double height_tolerance) {
       for (auto vertex = tri.finite_vertices_begin();
            vertex != tri.finite_vertices_end(); ++vertex) {
         if (vertex->info()) continue;
-        auto sectors = incident_sectors(tri, vertex);
+        if (constrained_incident_edge_count(tri, vertex) < 4) continue;
+        auto clearance = vertex_clearance(tri, vertex);
+        if (!clearance) continue;
+        auto sectors = incident_sectors(tri, vertex, *clearance);
         if (sectors.size() < 4) continue;
         if (std::any_of(sectors.begin(), sectors.end(), [](const auto& sector) {
               return !sector.face_info->in_footprint ||
@@ -272,31 +296,40 @@ namespace roofer::reconstruction {
           continue;
         }
         if (has_non_manifold_height_order(sectors, height_tolerance)) {
-          return vertex;
+          return RepairCandidate{vertex, std::move(sectors), *clearance};
         }
       }
       return std::nullopt;
     }
 
-    ForcedRegionLabel repair_vertex(T& tri, Vertex_handle vertex,
+    ForcedRegionLabel repair_vertex(T& tri, const RepairCandidate& candidate,
                                     const SourceFaceIds& source_ids,
                                     double maximum_radius,
                                     double height_tolerance) {
-      auto sectors = incident_sectors(tri, vertex);
-      auto clearance = vertex_clearance(tri, vertex);
-      if (sectors.size() < 4 || !clearance) {
+      const auto& sectors = candidate.sectors;
+      auto vertex = candidate.vertex;
+      if (sectors.size() < 4) {
         throw roofer::rooferException(
             "Unable to compute a safe non-manifold junction repair");
       }
 
-      auto selected = std::min_element(
-          sectors.begin(), sectors.end(),
-          [&](const auto& lhs, const auto& rhs) {
-            if (std::abs(lhs.height - rhs.height) >= height_tolerance)
-              return lhs.height < rhs.height;
-            return source_ids.at(lhs.face_info) < source_ids.at(rhs.face_info);
-          });
-      FaceInfo* selected_face = selected->face_info;
+      const double min_height =
+          std::min_element(sectors.begin(), sectors.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.height < rhs.height;
+                           })
+              ->height;
+      FaceInfo* selected_face = nullptr;
+      std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+      for (const auto& sector : sectors) {
+        if (sector.height <= min_height + height_tolerance) {
+          auto id = source_ids.at(sector.face_info);
+          if (id < selected_id) {
+            selected_face = sector.face_info;
+            selected_id = id;
+          }
+        }
+      }
 
       double shortest_edge = std::numeric_limits<double>::max();
       for (const auto& sector : sectors) {
@@ -304,8 +337,8 @@ namespace roofer::reconstruction {
             shortest_edge, std::sqrt(CGAL::to_double(CGAL::squared_distance(
                                vertex->point(), sector.neighbour->point()))));
       }
-      const double radius =
-          std::min({maximum_radius, *clearance * 0.8, shortest_edge * 0.45});
+      const double radius = std::min(
+          {maximum_radius, candidate.clearance * 0.8, shortest_edge * 0.45});
       if (!(radius > std::numeric_limits<double>::epsilon())) {
         throw roofer::rooferException(
             "Non-manifold junction repair radius is degenerate");
@@ -378,77 +411,40 @@ namespace roofer::reconstruction {
     void get_incident_constraints(T& tri, Vertex_handle& vthis,
                                   Vertex_handle& vexcept1,
                                   Vertex_handle vexcept2,
-                                  ConstraintMap& constraints_to_restore) {
+                                  ConstraintSet& constraints_to_restore) {
       // std::cout << "vthis degree=" << tri.degree(vthis) << std::endl;
       Edge_circulator ec = tri.incident_edges(vthis), done(ec);
       if (ec != nullptr) {
         do {
           if (tri.is_constrained(*ec)) {
-            // figure out which is the other vertex on this edge
-            // and what is the face counter clockwise to the edge vthis ->
-            // vother
             auto va = ec->first->vertex(tri.cw(ec->second));
             auto vb = ec->first->vertex(tri.ccw(ec->second));
             Vertex_handle vother;
-            Face_handle face_ccw;
             if (va == vthis) {
               vother = vb;
-              face_ccw = ec->first->neighbor(ec->second);
             } else {
               vother = va;
-              face_ccw = ec->first;
             };
 
-            // check if face_ccw will be collapsed. If so we should not restore
-            // it. vmirror is the vertex opposing ec in face_ccw face_ccw will
-            // be collapsed if vmirror is one of the vexcept vertices auto i =
-            // face_ccw->index(vthis); auto vmirror =  face_ccw->vertex(
-            // tri.cw(i) ); if (
-            //   vmirror == vexcept1 ||
-            //   vmirror == vexcept2
-            // ) {
-            //   continue;
-            // }
-
-            // check if edge is not one that we will collapse
             if (vother != vexcept1 && vother != vexcept2) {
-              constraints_to_restore[vother] = face_ccw->info();
+              constraints_to_restore.insert(vother);
             }
-            // to_remove.push_back(*ec);
           }
         } while (++ec != done);
       }
     }
 
     void restore_constraints(T& tri, T::Point_2& pnew,
-                             ConstraintMap& constraints_to_restore) {
+                             ConstraintSet& constraints_to_restore) {
       auto vnew = tri.insert(pnew);
 
       // restore constraints
       // std::cout << "restoring " << constraints_to_restore.size() << "
       // constraints\n";
-      for (auto& [vh, finfo] : constraints_to_restore) {
+      for (auto& vh : constraints_to_restore) {
         // std::cout << "reinsert constrained " << *vnew << " - " << *vh <<
         // std::endl;
         tri.insert_constraint(vnew, vh);
-
-        // find the ccw face to the edge vnew->vh
-        // Face_circulator fc = tri.incident_faces(vnew),
-        //   done(fc);
-        // if (fc != nullptr) {
-        //   do {
-        //     if (fc->has_vertex(vh)) {
-        //       // check if fc is ccw to edge vnew->vh
-        //       if (vh == fc->vertex( tri.ccw( fc->index(vnew) ) ) ) {
-        //         fc->info() = finfo;
-        //       } else {
-        //         // fc is cw to edge, so find the neighbor on the other side
-        //         of edge fc->neighbor( tri.cw( fc->index(vh) ) )->info() =
-        //         finfo;
-        //       }
-        //     }
-        //   } while (++fc != done);
-        // }
       }
     }
 
@@ -517,34 +513,6 @@ namespace roofer::reconstruction {
         //   }
         // }
 
-        // copy semantics
-        for (auto fit : tri.finite_face_handles()) {
-          auto p = CGAL::centroid(tri.triangle(fit));
-          auto obj =
-              walk_pl.locate(Walk_pl::Arrangement_2::Point_2(p.x(), p.y()));
-
-          // std::cout << "The point (" << p << ") is located ";
-          if (auto f = std::get_if<Face_const_handle>(
-                  &obj)) {  // located inside a face
-            // std::cout << "inside "
-            //           << (((*f)->is_unbounded()) ? "the unbounded" : "a
-            //           bounded")
-            //           << " face." << std::endl;
-            fit->info() = &(arr.non_const_handle(*f))->data();
-          } else {
-            // std::cout << "Failed point location in arrangement.\n";
-          }
-          // else if (auto e = boost::get<Halfedge_const_handle>(&obj)) //
-          // located on an edge
-          //   std::cout << "on an edge: " << (*e)->curve() << std::endl;
-          // else if (auto v = boost::get<Vertex_const_handle>(&obj)) // located
-          // on a vertex
-          //   std::cout << "on " << (((*v)->is_isolated()) ? "an isolated" :
-          //   "a")
-          //             << " vertex: " << (*v)->point() << std::endl;
-          // else CGAL_error_msg("Invalid object.");
-        }
-
         // TriangleCollection triangles_og;
         // vec1i segment_ids_og;
         // for (auto fh = tri.finite_faces_begin(); fh !=
@@ -595,7 +563,7 @@ namespace roofer::reconstruction {
             ) {
               // std::cout << "small triangle between " << p0 << " and " << p1
               // << "  and  " << p2 << std::endl;
-              ConstraintMap constraints_to_restore;
+              ConstraintSet constraints_to_restore;
 
               // collect incident constraint edges
               // std::vector<Edge> to_remove;
@@ -660,7 +628,7 @@ namespace roofer::reconstruction {
                 // << std::endl;
 
                 // auto vi = ceit->second;
-                ConstraintMap constraints_to_restore;
+                ConstraintSet constraints_to_restore;
                 get_incident_constraints(tri, v1, v1, v2,
                                          constraints_to_restore);
                 get_incident_constraints(tri, v2, v1, v2,
@@ -749,10 +717,10 @@ namespace roofer::reconstruction {
         label_final_regions(tri, walk_pl, arr, source_face_ids,
                             forced_region_labels);
         if (cfg.repair_non_manifold_vertices) {
-          while (auto vertex = find_problematic_vertex(
+          while (auto candidate = find_problematic_vertex(
                      tri, cfg.manifold_height_tolerance)) {
             forced_region_labels.push_back(repair_vertex(
-                tri, *vertex, source_face_ids, cfg.manifold_repair_radius,
+                tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
                 cfg.manifold_height_tolerance));
             label_final_regions(tri, walk_pl, arr, source_face_ids,
                                 forced_region_labels);
@@ -818,15 +786,21 @@ namespace roofer::reconstruction {
         std::unordered_map<Arrangement_2::Face_handle,
                            std::unordered_map<FaceInfo*, double>>
             output_face_labels;
-        for (auto face : tri.finite_face_handles()) {
-          if (face->info() == nullptr) continue;
-          auto centroid = CGAL::centroid(tri.triangle(face));
+        for (const auto& region : constrained_regions(tri)) {
+          FaceInfo* region_label = nullptr;
+          double region_area = 0;
+          for (auto face : region) {
+            if (region_label == nullptr) region_label = face->info();
+            region_area += std::abs(tri.triangle(face).area());
+          }
+          if (region_label == nullptr || region_area == 0) continue;
+
+          auto centroid = CGAL::centroid(tri.triangle(region.front()));
           auto object = snap_walk_pl.locate(
               Arrangement_2::Point_2(centroid.x(), centroid.y()));
           if (auto output_face = std::get_if<Face_const_handle>(&object)) {
             output_face_labels[arr_snap.non_const_handle(*output_face)]
-                              [face->info()] +=
-                std::abs(tri.triangle(face).area());
+                              [region_label] += region_area;
           }
         }
 
