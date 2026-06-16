@@ -84,6 +84,7 @@ namespace roofer::reconstruction {
       Vertex_handle vertex;
       std::vector<IncidentSector> sectors;
       double clearance;
+      FaceInfo* preferred_merge_face = nullptr;
     };
 
     double plane_height(const FaceInfo& face_info, const T::Point_2& point) {
@@ -279,8 +280,29 @@ namespace roofer::reconstruction {
       return false;
     }
 
+    FaceInfo* repeated_incident_face(const std::vector<IncidentSector>& sectors,
+                                     const SourceFaceIds& source_ids) {
+      std::unordered_map<FaceInfo*, std::size_t> counts;
+      for (const auto& sector : sectors) ++counts[sector.face_info];
+
+      FaceInfo* selected = nullptr;
+      std::size_t selected_count = 0;
+      std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+      for (const auto& [face_info, count] : counts) {
+        if (count < 2) continue;
+        auto id = source_ids.at(face_info);
+        if (count > selected_count ||
+            (count == selected_count && id < selected_id)) {
+          selected = face_info;
+          selected_count = count;
+          selected_id = id;
+        }
+      }
+      return selected;
+    }
+
     std::optional<RepairCandidate> find_problematic_vertex(
-        T& tri, double height_tolerance) {
+        T& tri, const SourceFaceIds& source_ids, double height_tolerance) {
       for (auto vertex = tri.finite_vertices_begin();
            vertex != tri.finite_vertices_end(); ++vertex) {
         if (vertex->info()) continue;
@@ -295,8 +317,11 @@ namespace roofer::reconstruction {
             })) {
           continue;
         }
-        if (has_non_manifold_height_order(sectors, height_tolerance)) {
-          return RepairCandidate{vertex, std::move(sectors), *clearance};
+        auto repeated_face = repeated_incident_face(sectors, source_ids);
+        if (repeated_face ||
+            has_non_manifold_height_order(sectors, height_tolerance)) {
+          return RepairCandidate{vertex, std::move(sectors), *clearance,
+                                 repeated_face};
         }
       }
       return std::nullopt;
@@ -313,20 +338,22 @@ namespace roofer::reconstruction {
             "Unable to compute a safe non-manifold junction repair");
       }
 
-      const double min_height =
-          std::min_element(sectors.begin(), sectors.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.height < rhs.height;
-                           })
-              ->height;
-      FaceInfo* selected_face = nullptr;
-      std::size_t selected_id = std::numeric_limits<std::size_t>::max();
-      for (const auto& sector : sectors) {
-        if (sector.height <= min_height + height_tolerance) {
-          auto id = source_ids.at(sector.face_info);
-          if (id < selected_id) {
-            selected_face = sector.face_info;
-            selected_id = id;
+      FaceInfo* selected_face = candidate.preferred_merge_face;
+      if (selected_face == nullptr) {
+        const double min_height =
+            std::min_element(sectors.begin(), sectors.end(),
+                             [](const auto& lhs, const auto& rhs) {
+                               return lhs.height < rhs.height;
+                             })
+                ->height;
+        std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+        for (const auto& sector : sectors) {
+          if (sector.height <= min_height + height_tolerance) {
+            auto id = source_ids.at(sector.face_info);
+            if (id < selected_id) {
+              selected_face = sector.face_info;
+              selected_id = id;
+            }
           }
         }
       }
@@ -718,7 +745,7 @@ namespace roofer::reconstruction {
                             forced_region_labels);
         if (cfg.repair_non_manifold_vertices) {
           while (auto candidate = find_problematic_vertex(
-                     tri, cfg.manifold_height_tolerance)) {
+                     tri, source_face_ids, cfg.manifold_height_tolerance)) {
             forced_region_labels.push_back(repair_vertex(
                 tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
                 cfg.manifold_height_tolerance));
