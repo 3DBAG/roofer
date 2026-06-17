@@ -479,8 +479,8 @@ namespace roofer::reconstruction {
     //   return triangulation;
     // }
 
-    void get_incident_constraints(T& tri, Vertex_handle& vthis,
-                                  Vertex_handle& vexcept1,
+    void get_incident_constraints(T& tri, Vertex_handle vthis,
+                                  Vertex_handle vexcept1,
                                   Vertex_handle vexcept2,
                                   ConstraintSet& constraints_to_restore) {
       // std::cout << "vthis degree=" << tri.degree(vthis) << std::endl;
@@ -637,7 +637,6 @@ namespace roofer::reconstruction {
               ConstraintSet constraints_to_restore;
 
               // collect incident constraint edges
-              // std::vector<Edge> to_remove;
               for (size_t i = 0; i < 3; ++i) {
                 auto vthis = fit->vertex(i);
                 auto vexcept1 = fit->vertex(tri.cw(i));
@@ -645,16 +644,6 @@ namespace roofer::reconstruction {
                 get_incident_constraints(tri, vthis, vexcept1, vexcept2,
                                          constraints_to_restore);
               }
-
-              // if (constraints_to_restore.size() > 50) continue;
-
-              // collapse the triangle to centroid
-              tri.remove_incident_constraints(v0);
-              tri.remove(v0);
-              tri.remove_incident_constraints(v1);
-              tri.remove(v1);
-              tri.remove_incident_constraints(v2);
-              tri.remove(v2);
 
               // but first check points for being on the footprint boundary
               T::Point_2 pnew;
@@ -667,6 +656,14 @@ namespace roofer::reconstruction {
               } else {
                 pnew = CGAL::centroid(p0, p1, p2);
               }
+              // collapse the triangle to centroid
+              tri.remove_incident_constraints(v0);
+              tri.remove(v0);
+              tri.remove_incident_constraints(v1);
+              tri.remove(v1);
+              tri.remove_incident_constraints(v2);
+              tri.remove(v2);
+
               restore_constraints(tri, pnew, constraints_to_restore);
 
               found_small_face = true;
@@ -705,12 +702,6 @@ namespace roofer::reconstruction {
                 get_incident_constraints(tri, v2, v1, v2,
                                          constraints_to_restore);
 
-                // remove edge
-                tri.remove_incident_constraints(v1);
-                tri.remove(v1);
-                tri.remove_incident_constraints(v2);
-                tri.remove(v2);
-
                 // insert midpoint and restore constraints
                 // first check points for being on the footprint boundary
                 T::Point_2 pnew;
@@ -721,6 +712,13 @@ namespace roofer::reconstruction {
                 } else {
                   pnew = CGAL::midpoint(p1, p2);
                 }
+
+                // remove edge
+                tri.remove_incident_constraints(v1);
+                tri.remove(v1);
+                tri.remove_incident_constraints(v2);
+                tri.remove(v2);
+
                 restore_constraints(tri, pnew, constraints_to_restore);
 
                 found_short_edge = true;
