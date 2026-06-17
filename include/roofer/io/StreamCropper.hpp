@@ -30,7 +30,12 @@ namespace roofer::io {
     float buffer = 1.0;
     float ground_percentile = 0.05;
     float max_density_delta = 0.05;
-    float coverage_threshold = 2.0;
+    // Absolute minimum building-class point density (points/m²) below which a
+    // footprint's point cloud is considered insufficient. This is a fixed
+    // floor evaluated per building, so the decision is deterministic and
+    // independent of the other footprints in the tile (the former
+    // mean-minus-N-std-dev test was tile-relative and non-reproducible).
+    float min_building_density = 1.0;
     int ground_class = 2;
     int building_class = 6;
     std::string wkt_ = "";

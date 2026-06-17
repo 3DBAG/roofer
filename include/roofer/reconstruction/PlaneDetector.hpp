@@ -51,8 +51,8 @@ namespace roofer::reconstruction {
 
     // limits
     bool with_limits = false;
+    // Deterministic complexity backstop: abort region growing (and fall back to LoD 1.1) once this many planes are detected.
     int limit_n_regions = 100;
-    int limit_n_milliseconds = 10000;
   };
 
   struct PlaneDetectorInterface {

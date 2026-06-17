@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+- The pointcloud-insufficient test is now an absolute per-building density floor (`min-building-density`, points/m²) instead of a tile-relative `mean - 2·std` outlier test. The old test depended on the other footprints sharing a tile, so the same building with the same point cloud could be flagged differently between runs/tilings — skipping point-rich buildings (observed median 15.5 points/m²) and leaving them without geometry. The decision is now deterministic and depends only on the building's own data.
+- Region growing no longer uses a wall-clock time limit, which could make a building reconstruct on one run and fall back to LoD 1.1 on the next given identical input. The deterministic plane-count limit (`lod11-fallback-planes`) is now the sole reconstruction-complexity cutoff. The `lod11-fallback-time` parameter is deprecated and removed.
+- A skipped (insufficient) building now still produces a LoD 1.1 block model from the raster-derived roof elevation when a ground elevation is available, instead of being emitted with no geometry and a null roof elevation.
+- Any failure during plane detection / region growing (not only the plane-count limit) now degrades gracefully to a LoD 1.1 block model instead of failing the building outright.
+
 ## [1.0.0] - 2026-04-20
 
 ## Added
