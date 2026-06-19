@@ -111,6 +111,7 @@ namespace roofer::reconstruction {
       return nullptr;
     }
 
+    // region grows constrained regions of triangles
     std::vector<std::vector<Face_handle>> constrained_regions(T& tri) {
       std::vector<std::vector<Face_handle>> regions;
       std::unordered_set<Face_handle> visited;
@@ -141,6 +142,7 @@ namespace roofer::reconstruction {
       return regions;
     }
 
+    // labels the triangulation with region IDs based on the arrangement
     void label_final_regions(
         T& tri,
         CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
@@ -155,6 +157,8 @@ namespace roofer::reconstruction {
       }
 
       for (auto& region : constrained_regions(tri)) {
+        // for this triangle region collect total overlap area for each
+        // arrangement face
         std::unordered_map<FaceInfo*, double> overlap_area;
         for (auto face : region) {
           auto centroid = CGAL::centroid(tri.triangle(face));
@@ -164,6 +168,7 @@ namespace roofer::reconstruction {
           }
         }
 
+        // select the arrangement face with the largest overlap area
         FaceInfo* selected = nullptr;
         double selected_area = -1;
         std::size_t selected_id = std::numeric_limits<std::size_t>::max();
@@ -177,6 +182,7 @@ namespace roofer::reconstruction {
           }
         }
 
+        // apply the forced regions (these are determined upstream)
         for (const auto& [forced_face, forced_label] : forced_face_labels) {
           if (std::find(region.begin(), region.end(), forced_face) !=
               region.end()) {
@@ -189,6 +195,9 @@ namespace roofer::reconstruction {
       }
     }
 
+    // Heuristically compute clearance: the minimum distance to and opposing
+    // edge from current vertex This is a conservative estimate, and a lower
+    // bound on the actual clearance
     std::optional<double> vertex_clearance(T& tri, Vertex_handle vertex) {
       double clearance_sq = std::numeric_limits<double>::max();
       Face_circulator face = tri.incident_faces(vertex), done(face);
@@ -216,6 +225,8 @@ namespace roofer::reconstruction {
       return count;
     }
 
+    // calculate azimuth for each incident triangulation edge, and sample
+    // corresponding face from arrangement
     std::vector<IncidentSector> incident_sectors(
         T& tri, Vertex_handle vertex, double clearance,
         Arrangement_2& source_arrangement,
@@ -353,6 +364,7 @@ namespace roofer::reconstruction {
                          })) {
           continue;
         }
+        // we check repeated incident faces for self intersection at the vertex
         auto repeated_face = repeated_incident_face(sectors, source_ids);
         if (repeated_face ||
             has_non_manifold_height_order(sectors, height_tolerance)) {
@@ -734,9 +746,6 @@ namespace roofer::reconstruction {
         // TODO: move the vertex opposed to long edge to be on the long edge ??
         // TODO: detect if an edge of the triangle is on the footprint boundary
 
-        // bool found_small_face;
-        // do {
-        //   found_small_face = false;
         for (Finite_faces_iterator fit = tri.finite_faces_begin();
              fit != tri.finite_faces_end(); ++fit) {
           auto v0 = fit->vertex(0);
@@ -780,7 +789,6 @@ namespace roofer::reconstruction {
             }
           }
         }
-        // } while (found_short_edge);
 
         std::vector<ForcedRegionLabel> forced_region_labels;
         label_final_regions(tri, walk_pl, arr, source_face_ids,
@@ -797,27 +805,8 @@ namespace roofer::reconstruction {
           }
         }
 
-        // TriangleCollection triangles_snapped;
-        // vec1i segment_ids_snapped;
-        // for (auto fh = tri.finite_faces_begin(); fh !=
-        // tri.finite_faces_end(); ++fh) {
-        //   // only export triangles in the interior of a shape (thus excluding
-        //   holes and exterior)
-
-        //     arr3f p0 = {float (fh->vertex(0)->point().x()), float
-        //     (fh->vertex(0)->point().y()), 0}; arr3f p1 = {float
-        //     (fh->vertex(1)->point().x()), float (fh->vertex(1)->point().y()),
-        //     0}; arr3f p2 = {float (fh->vertex(2)->point().x()), float
-        //     (fh->vertex(2)->point().y()), 0}; triangles_snapped.push_back({
-        //     p0,p1,p2 });
-        //     // segment_ids_snapped.push_back(fh->info()->segid);
-        //     // segment_ids_snapped.push_back(fh->info()->segid);
-        //     // segment_ids_snapped.push_back(fh->info()->segid);
-        // }
-        // output("triangles_snapped").set(triangles_snapped);
-        // output("segment_ids_snapped").set(segment_ids_snapped);
-
         // convert back from triangulation to arrangement
+        // 1 recreate vertices and faces
         Arrangement_2 arr_snap;
         std::unordered_map<T::Vertex_handle, Arrangement_2::Vertex_handle>
             vertex2arr_map;
@@ -850,6 +839,7 @@ namespace roofer::reconstruction {
           // }
         }
 
+        // 2 transfer labels from triangulation to new arrangement
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2>
             Snap_walk_pl;
         Snap_walk_pl snap_walk_pl(arr_snap);
