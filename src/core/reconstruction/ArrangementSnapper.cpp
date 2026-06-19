@@ -788,8 +788,6 @@ namespace roofer::reconstruction {
         }
 
         std::vector<ForcedRegionLabel> forced_region_labels;
-        label_final_regions(tri, walk_pl, arr, source_face_ids,
-                            forced_region_labels);
         if (cfg.repair_non_manifold_vertices) {
           while (auto candidate =
                      find_problematic_vertex(tri, arr, walk_pl, source_face_ids,
@@ -797,10 +795,10 @@ namespace roofer::reconstruction {
             forced_region_labels.push_back(repair_vertex(
                 tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
                 cfg.manifold_height_tolerance));
-            label_final_regions(tri, walk_pl, arr, source_face_ids,
-                                forced_region_labels);
           }
         }
+        label_final_regions(tri, walk_pl, arr, source_face_ids,
+                            forced_region_labels);
 
         // convert back from triangulation to arrangement
         // 1 recreate vertices and faces
