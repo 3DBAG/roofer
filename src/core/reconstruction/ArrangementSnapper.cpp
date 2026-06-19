@@ -27,7 +27,6 @@
 // #include <CGAL/Constrained_triangulation_2.h>
 #include <CGAL/Arr_walk_along_line_point_location.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
-#include <CGAL/Triangulation_face_base_with_info_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 #include <cmath>
@@ -48,10 +47,7 @@ namespace roofer::reconstruction {
     typedef CGAL::Triangulation_vertex_base_with_info_2<bool, K, VertexBase>
         VertexBaseWithInfo;
     typedef CGAL::Constrained_triangulation_face_base_2<K> FaceBase;
-    typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo*, K, FaceBase>
-        FaceBaseWithInfo;
-    typedef CGAL::Triangulation_data_structure_2<VertexBaseWithInfo,
-                                                 FaceBaseWithInfo>
+    typedef CGAL::Triangulation_data_structure_2<VertexBaseWithInfo, FaceBase>
         TriangulationDataStructure;
     typedef CGAL::Constrained_Delaunay_triangulation_2<
         K, TriangulationDataStructure, Tag>
@@ -142,57 +138,59 @@ namespace roofer::reconstruction {
       return regions;
     }
 
-    // labels the triangulation with region IDs based on the arrangement
-    void label_final_regions(
-        T& tri,
-        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
-        Arrangement_2& source_arrangement, const SourceFaceIds& source_ids,
-        const std::vector<ForcedRegionLabel>& forced_labels) {
-      std::vector<std::pair<Face_handle, FaceInfo*>> forced_face_labels;
+    using ForcedFaceLabels = std::vector<std::pair<Face_handle, FaceInfo*>>;
+
+    ForcedFaceLabels locate_forced_labels(
+        T& tri, const std::vector<ForcedRegionLabel>& forced_labels) {
+      ForcedFaceLabels forced_face_labels;
       for (const auto& forced : forced_labels) {
         auto located = tri.locate(forced.seed);
         if (!tri.is_infinite(located)) {
           forced_face_labels.emplace_back(located, forced.face_info);
         }
       }
+      return forced_face_labels;
+    }
 
-      for (auto& region : constrained_regions(tri)) {
-        // for this triangle region collect total overlap area for each
-        // arrangement face
-        std::unordered_map<FaceInfo*, double> overlap_area;
-        for (auto face : region) {
-          auto centroid = CGAL::centroid(tri.triangle(face));
-          if (auto* source =
-                  source_face_at(centroid, walk_pl, source_arrangement)) {
-            overlap_area[source] += std::abs(tri.triangle(face).area());
-          }
+    FaceInfo* select_region_label(
+        T& tri, const std::vector<Face_handle>& region,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        Arrangement_2& source_arrangement, const SourceFaceIds& source_ids,
+        const ForcedFaceLabels& forced_face_labels) {
+      // For this triangle region collect total overlap area for each source
+      // arrangement face.
+      std::unordered_map<FaceInfo*, double> overlap_area;
+      for (auto face : region) {
+        auto centroid = CGAL::centroid(tri.triangle(face));
+        if (auto* source =
+                source_face_at(centroid, walk_pl, source_arrangement)) {
+          overlap_area[source] += std::abs(tri.triangle(face).area());
         }
-
-        // select the arrangement face with the largest overlap area
-        FaceInfo* selected = nullptr;
-        double selected_area = -1;
-        std::size_t selected_id = std::numeric_limits<std::size_t>::max();
-        for (const auto& [source, area] : overlap_area) {
-          auto id = source_ids.at(source);
-          if (area > selected_area ||
-              (area == selected_area && id < selected_id)) {
-            selected = source;
-            selected_area = area;
-            selected_id = id;
-          }
-        }
-
-        // apply the forced regions (these are determined upstream)
-        for (const auto& [forced_face, forced_label] : forced_face_labels) {
-          if (std::find(region.begin(), region.end(), forced_face) !=
-              region.end()) {
-            selected = forced_label;
-            break;
-          }
-        }
-
-        for (auto face : region) face->info() = selected;
       }
+
+      // Select the arrangement face with the largest overlap area.
+      FaceInfo* selected = nullptr;
+      double selected_area = -1;
+      std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+      for (const auto& [source, area] : overlap_area) {
+        auto id = source_ids.at(source);
+        if (area > selected_area ||
+            (area == selected_area && id < selected_id)) {
+          selected = source;
+          selected_area = area;
+          selected_id = id;
+        }
+      }
+
+      // Apply the forced regions determined by non-manifold repairs.
+      for (const auto& [forced_face, forced_label] : forced_face_labels) {
+        if (std::find(region.begin(), region.end(), forced_face) !=
+            region.end()) {
+          selected = forced_label;
+          break;
+        }
+      }
+      return selected;
     }
 
     // Heuristically compute clearance: the minimum distance to and opposing
@@ -797,8 +795,6 @@ namespace roofer::reconstruction {
                 cfg.manifold_height_tolerance));
           }
         }
-        label_final_regions(tri, walk_pl, arr, source_face_ids,
-                            forced_region_labels);
 
         // convert back from triangulation to arrangement
         // 1 recreate vertices and faces
@@ -838,44 +834,36 @@ namespace roofer::reconstruction {
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2>
             Snap_walk_pl;
         Snap_walk_pl snap_walk_pl(arr_snap);
-        std::unordered_map<Arrangement_2::Face_handle,
-                           std::unordered_map<FaceInfo*, double>>
-            output_face_labels;
+        std::unordered_set<Arrangement_2::Face_handle> labelled_output_faces;
+        auto forced_face_labels =
+            locate_forced_labels(tri, forced_region_labels);
         for (const auto& region : constrained_regions(tri)) {
-          FaceInfo* region_label = nullptr;
-          double region_area = 0;
-          for (auto face : region) {
-            if (region_label == nullptr) region_label = face->info();
-            region_area += std::abs(tri.triangle(face).area());
-          }
-          if (region_label == nullptr || region_area == 0) continue;
+          FaceInfo* region_label = select_region_label(
+              tri, region, walk_pl, arr, source_face_ids, forced_face_labels);
+          if (region_label == nullptr) continue;
 
           auto centroid = CGAL::centroid(tri.triangle(region.front()));
           auto object = snap_walk_pl.locate(
               Arrangement_2::Point_2(centroid.x(), centroid.y()));
-          if (auto output_face = std::get_if<Face_const_handle>(&object)) {
-            output_face_labels[arr_snap.non_const_handle(*output_face)]
-                              [region_label] += region_area;
+          if (auto located_face = std::get_if<Face_const_handle>(&object)) {
+            auto output_face = arr_snap.non_const_handle(*located_face);
+            if (output_face->is_unbounded()) continue;
+            if (!labelled_output_faces.insert(output_face).second) {
+              // throw roofer::rooferException(
+              //     "Multiple snapped triangulation regions map to one "
+              //     "arrangement face");
+            }
+            output_face->data() = *region_label;
           }
         }
 
         arr_snap.unbounded_face()->data() = arr.unbounded_face()->data();
         for (auto output_face : arr_snap.face_handles()) {
           if (output_face->is_unbounded()) continue;
-          const auto labels = output_face_labels.find(output_face);
-          if (labels == output_face_labels.end() || labels->second.empty()) {
+          if (!labelled_output_faces.contains(output_face)) {
             throw roofer::rooferException(
                 "Unable to transfer snapped arrangement face label");
           }
-          auto best =
-              std::max_element(labels->second.begin(), labels->second.end(),
-                               [&](const auto& lhs, const auto& rhs) {
-                                 if (lhs.second != rhs.second)
-                                   return lhs.second < rhs.second;
-                                 return source_face_ids.at(lhs.first) >
-                                        source_face_ids.at(rhs.first);
-                               });
-          output_face->data() = *best->first;
         }
 
         // remove dangling edges if any, eg holes that collapse to a single edge
