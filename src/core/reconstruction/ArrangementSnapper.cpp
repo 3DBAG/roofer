@@ -388,29 +388,23 @@ namespace roofer::reconstruction {
 
       FaceInfo* selected_face = candidate.preferred_merge_face;
       if (selected_face == nullptr) {
-        auto min_sector = std::min_element(
-            sectors.begin(), sectors.end(),
-            [](const auto& lhs, const auto& rhs) {
-              if (is_roof_face(lhs.face_info) != is_roof_face(rhs.face_info))
-                return is_roof_face(lhs.face_info);
-              return lhs.height < rhs.height;
-            });
-        if (min_sector == sectors.end() ||
-            !is_roof_face(min_sector->face_info)) {
+        double selected_height = std::numeric_limits<double>::infinity();
+        std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+
+        for (const auto& sector : sectors) {
+          if (!is_roof_face(sector.face_info)) continue;
+
+          auto id = source_ids.at(sector.face_info);
+          if (sector.height < selected_height ||
+              (sector.height == selected_height && id < selected_id)) {
+            selected_face = sector.face_info;
+            selected_height = sector.height;
+            selected_id = id;
+          }
+        }
+        if (selected_face == nullptr) {
           throw roofer::rooferException(
               "Non-manifold junction repair has no roof face to merge into");
-        }
-        const double min_height = min_sector->height;
-        std::size_t selected_id = std::numeric_limits<std::size_t>::max();
-        for (const auto& sector : sectors) {
-          if (is_roof_face(sector.face_info) &&
-              sector.height <= min_height + height_tolerance) {
-            auto id = source_ids.at(sector.face_info);
-            if (id < selected_id) {
-              selected_face = sector.face_info;
-              selected_id = id;
-            }
-          }
         }
       }
 
@@ -427,6 +421,7 @@ namespace roofer::reconstruction {
             "Non-manifold junction repair radius is degenerate");
       }
 
+      // insert split vertices along each incident edge
       const auto original_point = vertex->point();
       std::vector<Vertex_handle> split_vertices;
       split_vertices.reserve(sectors.size());
@@ -441,12 +436,14 @@ namespace roofer::reconstruction {
         split_vertices.push_back(split_vertex);
       }
 
+      // remove incident constraints and out main vertex
       tri.remove_incident_constraints(vertex);
       tri.remove(vertex);
       for (std::size_t i = 0; i < sectors.size(); ++i) {
         tri.insert_constraint(split_vertices[i], sectors[i].neighbour);
       }
 
+      //
       std::optional<T::Point_2> forced_seed;
       for (std::size_t i = 0; i < sectors.size(); ++i) {
         auto next = (i + 1) % sectors.size();
