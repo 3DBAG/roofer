@@ -143,6 +143,11 @@ struct BuildingObject {
   // bool was_skipped;  // b3_reconstructie_onvolledig;
 };
 
+struct TerrainData {
+  std::vector<std::vector<roofer::LinearRing>> components;
+  roofer::AttributeMapRow attributes;
+};
+
 /**
  * @brief Indicates the progress of the object through the whole roofer process.
  */
@@ -204,6 +209,7 @@ struct BuildingTile {
   std::unique_ptr<roofer::misc::projHelperInterface> proj_helper;
   // extent
   roofer::TBox<double> extent;
+  std::optional<TerrainData> terrain;
 
   std::vector<std::pair<Progress, size_t>> count_progresses() const;
 };
@@ -934,6 +940,29 @@ int main(int argc, const char* argv[]) {
                   ofs, project_srs.get(), building_tile.extent,
                   {.identifier = std::to_string(building_tile.id)});
               ofs.close();
+            }
+          }
+
+          if (building_tile.terrain.has_value()) {
+            const auto terrain_id = fmt::format("terrain-{}", building_tile.id);
+            if (handler.cfg_.split_cjseq) {
+              const int minx = building_tile.extent.min()[0];
+              const int miny = building_tile.extent.min()[1];
+              const auto terrain_path =
+                  fs::path(handler.cfg_.output_path) /
+                  fmt::format("{:06d}_{:06d}.terrain.city.jsonl", minx, miny);
+              fs::create_directories(terrain_path.parent_path());
+              std::ofstream terrain_ofs(terrain_path);
+              CityJsonWriter->write_metadata(terrain_ofs, project_srs.get(),
+                                             building_tile.extent,
+                                             {.identifier = terrain_id});
+              CityJsonWriter->write_tin_relief_feature(
+                  terrain_ofs, terrain_id, building_tile.terrain->components,
+                  building_tile.terrain->attributes);
+            } else {
+              CityJsonWriter->write_tin_relief_feature(
+                  ofs, terrain_id, building_tile.terrain->components,
+                  building_tile.terrain->attributes);
             }
           }
 

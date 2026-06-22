@@ -78,6 +78,10 @@ namespace roofer::io {
         const std::unordered_map<int, Mesh>* geometry_lod13,
         const std::unordered_map<int, Mesh>* geometry_lod22,
         const AttributeMapRow attributes) = 0;
+    virtual void write_tin_relief_feature(
+        std::ostream& output_stream, const std::string& id,
+        const std::vector<std::vector<LinearRing>>& components,
+        const AttributeMapRow& attributes) = 0;
 
     // virtual void write(const std::string& source, const LinearRing&
     // footprints,

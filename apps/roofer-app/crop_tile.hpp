@@ -19,6 +19,7 @@
 // Author(s):
 // Ravi Peters
 #pragma once
+
 bool crop_tile(const roofer::TBox<double>& tile,
                std::vector<InputPointcloud>& input_pointclouds,
                BuildingTile& output_building_tile, const RooferConfig& cfg,
@@ -32,6 +33,14 @@ bool crop_tile(const roofer::TBox<double>& tile,
   auto RasterWriter = roofer::io::createRasterWriterGDAL(*pj);
   auto vector_ops = roofer::misc::createVector2DOpsGEOS(*pj);
   auto LASWriter = roofer::io::createLASWriter(*pj);
+
+  const auto terrain_pointcloud =
+      cfg.output_terrain ? select_terrain_pointcloud(input_pointclouds)
+                         : std::nullopt;
+  if (cfg.output_terrain && !terrain_pointcloud.has_value()) {
+    logger.warning(
+        "Terrain output requested, but no eligible pointcloud source exists");
+  }
 
   // logger.info("region_of_interest.has_value()? {}",
   // region_of_interest.has_value()); if(region_of_interest.has_value())
@@ -83,7 +92,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
       polygon_extent.pmax[0], polygon_extent.pmax[1], polygon_extent.pmax[2]));
 
   // Crop all pointclouds
-  for (auto& ipc : input_pointclouds) {
+  for (size_t ipc_index = 0; ipc_index < input_pointclouds.size();
+       ++ipc_index) {
+    auto& ipc = input_pointclouds[ipc_index];
     logger.info("Cropping pointcloud {}...", ipc.name);
 
     auto intersecting_files = ipc.rtree->query(polygon_extent_untransformed);
@@ -103,8 +114,45 @@ bool crop_tile(const roofer::TBox<double>& tile,
          .building_class = ipc.bld_class,
          .use_acquisition_year = static_cast<bool>(yoc_vec),
          .terrain_grid_cellsize = cfg.terrain_grid_cellsize,
-         .terrain_grid_search_radius = cfg.terrain_grid_search_radius});
+         .terrain_grid_search_radius = cfg.terrain_grid_search_radius,
+         .retain_terrain_grid = terrain_pointcloud == ipc_index});
     ipc.min_ground_elevation = PointCloudCropper->get_min_terrain_elevation();
+    if (terrain_pointcloud == ipc_index) {
+      const auto* terrain_grid = PointCloudCropper->get_terrain_grid();
+      if (terrain_grid != nullptr) {
+        auto nodata_mode = roofer::io::TerrainNoDataMode::COMPLETE_QUADS;
+        if (cfg.terrain_nodata_mode == "local_triangles") {
+          nodata_mode = roofer::io::TerrainNoDataMode::LOCAL_TRIANGLES;
+        } else if (cfg.terrain_nodata_mode == "fill_small_gaps") {
+          nodata_mode = roofer::io::TerrainNoDataMode::FILL_SMALL_GAPS;
+        }
+        auto triangles =
+            roofer::io::triangulateTerrainGrid(*terrain_grid, nodata_mode);
+        if (triangles.empty()) {
+          logger.warning(
+              "No complete terrain grid quads found for tile {} using "
+              "pointcloud {}",
+              output_building_tile.id, ipc.name);
+        } else {
+          TerrainData terrain;
+          terrain.components =
+              roofer::io::splitTerrainConnectedComponents(triangles);
+          terrain.attributes.insert("rf_pc_source", ipc.name);
+          terrain.attributes.insert("rf_pc_quality", ipc.quality);
+          terrain.attributes.insert("rf_pc_date", ipc.date);
+          terrain.attributes.insert("rf_ground_class", ipc.grnd_class);
+          terrain.attributes.insert("rf_terrain_grid_cellsize",
+                                    cfg.terrain_grid_cellsize);
+          terrain.attributes.insert("rf_terrain_aggregation",
+                                    std::string("cell_minimum"));
+          terrain.attributes.insert("rf_terrain_interpolation",
+                                    std::string("cell_center_linear"));
+          terrain.attributes.insert("rf_terrain_nodata_mode",
+                                    cfg.terrain_nodata_mode);
+          output_building_tile.terrain = std::move(terrain);
+        }
+      }
+    }
     if (ipc.date != 0) {
       logger.info("Overriding acquisition year from config file");
       std::fill(ipc.acquisition_years.begin(), ipc.acquisition_years.end(),
