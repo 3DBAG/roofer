@@ -108,12 +108,31 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 clearance_regression_arrangement() {
+    auto arrangement = cross_arrangement({15, 5, 15, 6});
+    CGAL::insert(arrangement, Segment_2(Point_2(5.05, 5.55), Point_2(5.05, 9)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5.55, 5.05), Point_2(9, 5.05)));
+    return arrangement;
+  }
+
   Arrangement_2::Vertex_handle vertex_at(Arrangement_2& arrangement,
                                          const Point_2& point) {
     for (auto vertex : arrangement.vertex_handles()) {
       if (vertex->point() == point) return vertex;
     }
     return {};
+  }
+
+  bool has_vertex_near(Arrangement_2& arrangement, const Point_2& point,
+                       double tolerance) {
+    const double tolerance_sq = tolerance * tolerance;
+    for (auto vertex : arrangement.vertex_handles()) {
+      if (CGAL::to_double(CGAL::squared_distance(vertex->point(), point)) <=
+          tolerance_sq) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void check_two_manifold_edges(const roofer::Mesh& mesh) {
@@ -166,6 +185,20 @@ TEST_CASE("snapper repairs an alternating four-way roof junction") {
   extruder->compute(arrangement, 0.0F);
   REQUIRE(extruder->meshes.size() == 1);
   check_two_manifold_edges(extruder->meshes.front());
+}
+
+TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
+  auto arrangement = clearance_regression_arrangement();
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
+        Arrangement_2::Vertex_handle());
+  CHECK(has_vertex_near(arrangement, Point_2(5.5, 5), 1e-9));
+  CHECK(has_vertex_near(arrangement, Point_2(5, 5.5), 1e-9));
 }
 
 TEST_CASE("snapper preserves a manifold four-way roof junction") {

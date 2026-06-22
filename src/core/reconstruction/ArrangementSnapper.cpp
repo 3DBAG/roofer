@@ -193,23 +193,99 @@ namespace roofer::reconstruction {
       return selected;
     }
 
-    // Heuristically compute clearance: the minimum distance to and opposing
-    // edge from current vertex This is a conservative estimate, and a lower
-    // bound on the actual clearance
-    std::optional<double> vertex_clearance(T& tri, Vertex_handle vertex) {
-      double clearance_sq = std::numeric_limits<double>::max();
+    double squared_distance_to_face(T& tri, Face_handle face,
+                                    const T::Point_2& point) {
+      auto triangle = tri.triangle(face);
+      if (triangle.has_on_boundary(point) ||
+          triangle.has_on_bounded_side(point)) {
+        return 0;
+      }
+
+      double distance_sq = std::numeric_limits<double>::max();
+      for (int i = 0; i < 3; ++i) {
+        distance_sq =
+            std::min(distance_sq, CGAL::to_double(CGAL::squared_distance(
+                                      point, tri.segment({face, i}))));
+      }
+      return distance_sq;
+    }
+
+    std::vector<Face_handle> get_repair_region(T& tri, Vertex_handle vertex,
+                                               double radius) {
+      std::vector<Face_handle> region;
+      if (!(radius > 0)) return region;
+
+      const double radius_sq = radius * radius;
+      const double tolerance = std::max(1.0, radius_sq) * 1e-12;
+      std::unordered_set<Face_handle> visited;
+      std::queue<Face_handle> queue;
+
+      auto push_face = [&](Face_handle face) {
+        if (tri.is_infinite(face)) return;
+        if (visited.contains(face)) return;
+        if (squared_distance_to_face(tri, face, vertex->point()) >
+            radius_sq + tolerance) {
+          return;
+        }
+        visited.insert(face);
+        queue.push(face);
+      };
+
       Face_circulator face = tri.incident_faces(vertex), done(face);
-      if (face == nullptr) return std::nullopt;
+      if (face == nullptr) return region;
       do {
-        if (tri.is_infinite(face)) continue;
-        auto opposite_edge = Edge(face, face->index(vertex));
-        clearance_sq = std::min(
-            clearance_sq, CGAL::to_double(CGAL::squared_distance(
-                              vertex->point(), tri.segment(opposite_edge))));
+        push_face(face);
       } while (++face != done);
-      if (!(clearance_sq > 0) ||
-          clearance_sq == std::numeric_limits<double>::max())
-        return std::nullopt;
+
+      while (!queue.empty()) {
+        auto current = queue.front();
+        queue.pop();
+        region.push_back(current);
+
+        for (int i = 0; i < 3; ++i) {
+          push_face(current->neighbor(i));
+        }
+      }
+      return region;
+    }
+
+    bool edge_is_incident_to_vertex(T& tri, const Edge& edge,
+                                    Vertex_handle vertex) {
+      return edge.first->vertex(tri.cw(edge.second)) == vertex ||
+             edge.first->vertex(tri.ccw(edge.second)) == vertex;
+    }
+
+    // Compute the real local clearance up to the configured repair radius:
+    // grow over all triangulation faces touched by that radius, then measure
+    // only constrained edges from the grown patch.
+    std::optional<double> calculate_vertex_clearance(T& tri,
+                                                     Vertex_handle vertex,
+                                                     double repair_radius) {
+      if (!(repair_radius > 0)) return std::nullopt;
+
+      const double repair_radius_sq = repair_radius * repair_radius;
+      const double tolerance = std::max(1.0, repair_radius_sq) * 1e-12;
+      double clearance_sq = std::numeric_limits<double>::max();
+      for (auto face : get_repair_region(tri, vertex, repair_radius)) {
+        for (int i = 0; i < 3; ++i) {
+          Edge edge(face, i);
+          if (!tri.is_constrained(edge)) continue;
+          if (edge_is_incident_to_vertex(tri, edge, vertex)) continue;
+
+          const double distance_sq = CGAL::to_double(
+              CGAL::squared_distance(vertex->point(), tri.segment(edge)));
+          if (distance_sq <= repair_radius_sq + tolerance) {
+            clearance_sq = std::min(clearance_sq, distance_sq);
+          }
+        }
+      }
+
+      if (clearance_sq == std::numeric_limits<double>::max()) {
+        // No constrained edge was found inside the search disk, so clearance
+        // should not reduce the configured maximum repair radius.
+        return std::numeric_limits<double>::infinity();
+      }
+      if (!(clearance_sq > 0)) return std::nullopt;
       return std::sqrt(clearance_sq);
     }
 
@@ -346,14 +422,17 @@ namespace roofer::reconstruction {
     std::optional<RepairCandidate> find_problematic_vertex(
         T& tri, Arrangement_2& source_arrangement,
         CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
-        const SourceFaceIds& source_ids, double height_tolerance) {
+        const SourceFaceIds& source_ids, double repair_radius,
+        double height_tolerance) {
       for (auto vertex = tri.finite_vertices_begin();
            vertex != tri.finite_vertices_end(); ++vertex) {
         if (constrained_incident_edge_count(tri, vertex) < 4) continue;
-        auto clearance = vertex_clearance(tri, vertex);
+        auto clearance = calculate_vertex_clearance(tri, vertex, repair_radius);
         if (!clearance) continue;
-        if (*clearance <= 1e-6) continue;
-        auto sectors = incident_sectors(tri, vertex, *clearance,
+        if (*clearance < repair_radius / 2) continue;
+        const double sector_clearance =
+            std::isfinite(*clearance) ? *clearance : repair_radius;
+        auto sectors = incident_sectors(tri, vertex, sector_clearance,
                                         source_arrangement, walk_pl);
         if (sectors.size() < 4) continue;
         if (std::none_of(sectors.begin(), sectors.end(),
@@ -789,6 +868,7 @@ namespace roofer::reconstruction {
         if (cfg.repair_non_manifold_vertices) {
           while (auto candidate =
                      find_problematic_vertex(tri, arr, walk_pl, source_face_ids,
+                                             cfg.manifold_repair_radius,
                                              cfg.manifold_height_tolerance)) {
             forced_region_labels.push_back(repair_vertex(
                 tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
