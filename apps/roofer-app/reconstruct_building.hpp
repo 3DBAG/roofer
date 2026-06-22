@@ -324,6 +324,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     // any points exist in the footprint. Without a ground elevation no geometry
     // can be built, so the building is left empty.
     if (building.h_ground.has_value()) {
+      building.extrusion_mode = LOD11_FALLBACK;
       extrude_lod11(building,
                     building.roof_h_fallback.value_or(building.h_pc_roof_70p),
                     cfg);
