@@ -314,23 +314,17 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
   // pointcloud_insufficient is set by StreamCropper when a footprint's
   // building-class point density is below the absolute min_building_density
   // floor.
-  if ((building.pointcloud_insufficient && cfg->clear_if_insufficient) ||
-      !building.h_ground.has_value()) {
+  if ((building.pointcloud_insufficient && cfg->clear_if_insufficient)) {
     building.extrusion_mode = SKIP;
   }
 
   if (building.extrusion_mode == SKIP) {
-    // Still emit a LoD 1.1 block model (so the building has geometry and a roof
-    // elevation) rather than nothing. This needs a ground elevation for the
-    // floor; for the roof height prefer an explicit fallback, otherwise use the
-    // raster-derived 70th-percentile roof elevation, which is valid whenever
-    // any points exist in the footprint. Without a ground elevation no geometry
+    // If possible still emit a LoD 1.1 block model rather than
+    // nothing. This needs a ground elevation for the
+    // floor and an explicit height fallback. Without both no geometry
     // can be built, so the building is left empty.
-    if (building.h_ground.has_value()) {
-      building.extrusion_mode = LOD11_FALLBACK;
-      extrude_lod11(building,
-                    building.roof_h_fallback.value_or(building.h_pc_roof_70p),
-                    cfg);
+    if (building.h_ground.has_value() && building.roof_h_fallback.has_value()) {
+      extrude_lod11(building, *building.roof_h_fallback, cfg);
     }
     return;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
