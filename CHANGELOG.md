@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Repair of non-manifold and self-intersecting roof junctions during arrangement snapping. This prevents certain geometric errors like non-watertight meshes, and highly non-planar faces that could prevriously happen in complex roof arrangements. See #168.
+
+### Fixed
+- Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion.
+- Correct squared-distance tolerance comparisons during extrusion.
+
 ## [1.0.0] - 2026-04-20
 
 ## Added
