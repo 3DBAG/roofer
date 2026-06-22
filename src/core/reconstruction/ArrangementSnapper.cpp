@@ -597,25 +597,6 @@ namespace roofer::reconstruction {
       return {*forced_seed, selected_face};
     }
 
-    // tri_util::CDT triangulate_polygon(LinearRing& poly, float
-    // dupe_threshold_exp=3) {
-    //   tri_util::CDT triangulation;
-
-    //   float dupe_threshold = (float) std::pow(10,-dupe_threshold_exp);
-
-    //   tri_util::insert_ring(poly, triangulation);
-    //   for (auto& ring : poly.interior_rings()) {
-    //     tri_util::insert_ring(ring, triangulation);
-    //   }
-
-    //   if (triangulation.number_of_faces()==0)
-    //     return triangulation;
-
-    //   mark_domains(triangulation);
-
-    //   return triangulation;
-    // }
-
     void get_incident_constraints(T& tri, Vertex_handle vthis,
                                   Vertex_handle vexcept1,
                                   Vertex_handle vexcept2,
@@ -704,41 +685,6 @@ namespace roofer::reconstruction {
                                   vertex_map[arrEdge->target()]);
           }
         }
-
-        // remove isolated vertices (sometimes these result from input
-        // arrangements with edge between 2 vertices with the same coordinates)
-        // {
-        //   std::vector<T::Vertex_handle> to_remove;
-        //   for (auto vh = tri.finite_vertices_begin(); vh !=
-        //   tri.finite_vertices_end(); ++vh) {
-        //     if (!tri.are_there_incident_constraints(vh)) {
-        //       to_remove.push_back(vh);
-        //     }
-        //   }
-        //   for (auto& v: to_remove) {
-        //     std:: cout << "removing vertex without incident constraints...\n"
-        //     tri.remove(v);
-        //   }
-        // }
-
-        // TriangleCollection triangles_og;
-        // vec1i segment_ids_og;
-        // for (auto fh = tri.finite_faces_begin(); fh !=
-        // tri.finite_faces_end(); ++fh) {
-        //   // only export triangles in the interior of a shape (thus excluding
-        //   holes and exterior)
-
-        //     arr3f p0 = {float (fh->vertex(0)->point().x()), float
-        //     (fh->vertex(0)->point().y()), 0}; arr3f p1 = {float
-        //     (fh->vertex(1)->point().x()), float (fh->vertex(1)->point().y()),
-        //     0}; arr3f p2 = {float (fh->vertex(2)->point().x()), float
-        //     (fh->vertex(2)->point().y()), 0}; triangles_og.push_back({
-        //     p0,p1,p2 }); segment_ids_og.push_back(fh->info()->segid);
-        //     segment_ids_og.push_back(fh->info()->segid);
-        //     segment_ids_og.push_back(fh->info()->segid);
-        // }
-        // output("triangles_og").set(triangles_og);
-        // output("segment_ids_og").set(segment_ids_og);
 
         // Detect triangles with 3 short edges => collapse triangle to point
         // (remove 2 vertices)
