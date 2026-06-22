@@ -439,7 +439,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-simplify">
 <span class="sig-name descname"><span class="pre">--[no-]simplify</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-simplify" title="Link to this definition">¶</a></dt>
-<dd><p>Simplify input footprints to remove (nearly) duplicated vertices.</p>
+<dd><p>Simplify input rootprints to remove (nearly) duplicated vertices.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -452,6 +452,12 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dt class="sig sig-object std" id="cmdoption-cellsize">
 <span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
 <dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-min-building-density">
+<span class="sig-name descname"><span class="pre">--min-building-density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">1)</span></span><a class="headerlink" href="#cmdoption-min-building-density" title="Link to this definition">¶</a></dt>
+<dd><p>Minimum building-class point density (points/m²) below which a rootprint’s pointcloud is flagged insufficient.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -580,13 +586,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod11-fallback-planes">
 <span class="sig-name descname"><span class="pre">--lod11-fallback-planes</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">900)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-planes" title="Link to this definition">¶</a></dt>
-<dd><p>Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.</p>
-</dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-lod11-fallback-time">
-<span class="sig-name descname"><span class="pre">--lod11-fallback-time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">1800000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-time" title="Link to this definition">¶</a></dt>
-<dd><p>Time for LOD 1.1 fallback in milliseconds. When more than this time is spent on expensive parts of the reconstruction algorithm, abort and fallback to LoD 1.1 extrusion.</p>
+<dd><p>Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.</p>
 </dd></dl>
 
 </section>
@@ -886,12 +886,14 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">skip-pc-check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
 <span class="c1">### Crop options</span>
-<span class="c1">## Simplify input footprints to remove (nearly) duplicated vertices.</span>
+<span class="c1">## Simplify input rootprints to remove (nearly) duplicated vertices.</span>
 <span class="n">simplify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="c1">## Enforce this point density ceiling on each building pointcloud.</span>
 <span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
 <span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</span>
 <span class="n">cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="c1">## Minimum building-class point density (points/m²) below which a rootprint&#39;s pointcloud is flagged insufficient.</span>
+<span class="n">min-building-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
 <span class="c1">## Cellsize used for the crop phase terrain fallback grid.</span>
 <span class="n">terrain-grid-cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
 <span class="c1">## Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</span>
@@ -934,10 +936,8 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">plane-detect-epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span>
 <span class="c1">## Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: use the same buffered pointcloud value, then fall back to `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum. `user`: use `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum.</span>
 <span class="c1"># h-terrain-strategy = &quot;buffer_tile&quot;</span>
-<span class="c1">## Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.</span>
+<span class="c1">## Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.</span>
 <span class="n">lod11-fallback-planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">900</span>
-<span class="c1">## Time for LOD 1.1 fallback in milliseconds. When more than this time is spent on expensive parts of the reconstruction algorithm, abort and fallback to LoD 1.1 extrusion.</span>
-<span class="n">lod11-fallback-time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1800000</span>
 
 <span class="c1">### Output options</span>
 <span class="c1">## Enable or disable output tiling.</span>

@@ -65,13 +65,16 @@ Disable/enable check if all supplied pointcloud files exist.
 ### Crop options
 
 ```{option} --[no-]simplify  (default: true)
-Simplify input footprints to remove (nearly) duplicated vertices.
+Simplify input rootprints to remove (nearly) duplicated vertices.
 ```
 ```{option} --ceil-point-density <float> (default: 20)
 Enforce this point density ceiling on each building pointcloud.
 ```
 ```{option} --cellsize <float> (default: 0.5)
 Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).
+```
+```{option} --min-building-density <float> (default: 1)
+Minimum building-class point density (points/m²) below which a rootprint's pointcloud is flagged insufficient.
 ```
 ```{option} --terrain-grid-cellsize <float> (default: 10)
 Cellsize used for the crop phase terrain fallback grid.
@@ -136,10 +139,7 @@ Maximum distance (in meters) from inliers to plane during plane fitting procedur
 Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: use the same buffered pointcloud value, then fall back to `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum. `user`: use `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum.
 ```
 ```{option} --lod11-fallback-planes <int> (default: 900)
-Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. Primarily used to limit the reconstruction time per building.
-```
-```{option} --lod11-fallback-time <int> (default: 1800000)
-Time for LOD 1.1 fallback in milliseconds. When more than this time is spent on expensive parts of the reconstruction algorithm, abort and fallback to LoD 1.1 extrusion.
+Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.
 ```
 ### Output options
 
