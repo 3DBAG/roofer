@@ -452,6 +452,54 @@ namespace roofer::io {
 
       write_to_stream(outputJSON, output_stream, prettyPrint_);
     }
+
+    void write_tin_relief_feature(
+        std::ostream& output_stream, const std::string& id,
+        const std::vector<std::vector<LinearRing>>& components,
+        const AttributeMapRow& attributes) override {
+      nlohmann::json outputJSON;
+      outputJSON["type"] = "CityJSONFeature";
+      outputJSON["id"] = id;
+      outputJSON["CityObjects"] = nlohmann::json::object();
+
+      std::map<arr3d, size_t> vertex_map;
+      std::set<arr3d> vertex_set;
+      std::vector<arr3d> vertex_vec;
+      TBox<double> terrain_bbox;
+      auto geometries = nlohmann::json::array();
+      for (const auto& component : components) {
+        std::vector<std::vector<std::vector<size_t>>> boundaries;
+        boundaries.reserve(component.size());
+        for (const auto& triangle : component) {
+          terrain_bbox.add(add_vertices_polygon(vertex_map, vertex_vec,
+                                                vertex_set, triangle));
+          boundaries.push_back(LinearRing2jboundary(vertex_map, triangle));
+        }
+
+        auto geometry = nlohmann::json::object();
+        geometry["type"] = "CompositeSurface";
+        geometry["lod"] = "1";
+        geometry["boundaries"] = boundaries;
+        geometries.push_back(std::move(geometry));
+      }
+
+      auto terrain = nlohmann::json::object();
+      terrain["type"] = "TINRelief";
+      terrain["attributes"] = attributes2json(attributes);
+      terrain["geographicalExtent"] = compute_geographical_extent(terrain_bbox);
+      terrain["geometry"] = std::move(geometries);
+      outputJSON["CityObjects"][id] = terrain;
+
+      std::vector<std::array<int, 3>> vertices_int;
+      vertices_int.reserve(vertex_vec.size());
+      for (const auto& vertex : vertex_vec) {
+        vertices_int.push_back({int((vertex[0] - translate_x_) / scale_x_),
+                                int((vertex[1] - translate_y_) / scale_y_),
+                                int((vertex[2] - translate_z_) / scale_z_)});
+      }
+      outputJSON["vertices"] = vertices_int;
+      write_to_stream(outputJSON, output_stream, prettyPrint_);
+    }
   };
 
   std::unique_ptr<CityJsonWriterInterface> createCityJsonWriter(

@@ -86,6 +86,27 @@ struct InputPointcloud {
   std::vector<fileExtent> file_extents;
 };
 
+inline std::optional<size_t> select_terrain_pointcloud(
+    const std::vector<InputPointcloud>& input_pointclouds) {
+  std::optional<size_t> selected;
+  for (size_t i = 0; i < input_pointclouds.size(); ++i) {
+    const auto& candidate = input_pointclouds[i];
+    if (candidate.select_only_for_date) continue;
+    if (!selected.has_value()) {
+      selected = i;
+      continue;
+    }
+
+    const auto& current = input_pointclouds[*selected];
+    if (candidate.quality < current.quality ||
+        (candidate.quality == current.quality &&
+         candidate.date > current.date)) {
+      selected = i;
+    }
+  }
+  return selected;
+}
+
 struct RooferConfigHandler;
 
 struct RooferConfig {
@@ -111,6 +132,7 @@ struct RooferConfig {
   float min_building_density = 1.0;
   float terrain_grid_cellsize = 10.0;
   int terrain_grid_search_radius = 3;
+  std::string terrain_nodata_mode = "fill_small_gaps";
   int lod11_fallback_area = 69000;
   float lod11_fallback_density = 5;
   roofer::arr2f tilesize = {1000, 1000};
@@ -133,6 +155,7 @@ struct RooferConfig {
   // crop output
   bool split_cjseq = false;
   bool omit_metadata = false;
+  bool output_terrain = false;
   roofer::arr3d cj_scale = {0.001, 0.001, 0.001};
   std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
@@ -440,6 +463,13 @@ struct RooferConfigHandler {
              "Number of terrain grid cells to search around a building when "
              "its local fallback cells do not contain terrain points.",
              cfg_.terrain_grid_search_radius, {check::HigherOrEqualTo<int>(0)});
+    crop.add("terrain-nodata-mode",
+             "How missing terrain grid samples are handled during output "
+             "triangulation: `complete_quads`, `local_triangles`, or "
+             "`fill_small_gaps`.",
+             cfg_.terrain_nodata_mode,
+             {check::OneOf<std::string>(
+                 {"complete_quads", "local_triangles", "fill_small_gaps"})});
     crop.add(
         "lod11-fallback-area",
         "LoD 1.1 fallback threshold area in square meters. If the area of the "
@@ -559,6 +589,10 @@ struct RooferConfigHandler {
     output.add("omit-metadata",
                "Omit metadata line in CityJSONSequence output.",
                cfg_.omit_metadata);
+    output.add("terrain",
+               "Write one triangulated TINRelief feature per tile from the "
+               "highest-quality pointcloud source.",
+               cfg_.output_terrain);
     output.add("cj-scale", "Scaling applied to CityJSON output vertices",
                cfg_.cj_scale);
     output

@@ -21,10 +21,17 @@
 
 #pragma once
 #include <memory>
+#include <roofer/common/Raster.hpp>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
+  enum class TerrainNoDataMode {
+    COMPLETE_QUADS,
+    LOCAL_TRIANGLES,
+    FILL_SMALL_GAPS,
+  };
+
   struct PointCloudCropperConfig {
     float cellsize = 50.0;
     float buffer = 1.0;
@@ -43,6 +50,7 @@ namespace roofer::io {
     bool use_acquisition_year = true;
     float terrain_grid_cellsize = 10.0;
     int terrain_grid_search_radius = 3;
+    bool retain_terrain_grid = false;
   };
   struct PointCloudCropperInterface {
     roofer::misc::projHelperInterface& pjHelper;
@@ -61,6 +69,7 @@ namespace roofer::io {
         PointCloudCropperConfig cfg = PointCloudCropperConfig{}) = 0;
 
     virtual std::optional<float> get_min_terrain_elevation() const = 0;
+    virtual const RasterTools::Raster* get_terrain_grid() const = 0;
     // virtual void process(
     //     std::string filepaths, std::vector<LinearRing>& polygons,
     //     std::vector<LinearRing>& buf_polygons,
@@ -71,4 +80,10 @@ namespace roofer::io {
 
   std::unique_ptr<PointCloudCropperInterface> createPointCloudCropper(
       roofer::misc::projHelperInterface& pjh);
+
+  std::vector<LinearRing> triangulateTerrainGrid(
+      const RasterTools::Raster& terrain_grid,
+      TerrainNoDataMode nodata_mode = TerrainNoDataMode::COMPLETE_QUADS);
+  std::vector<std::vector<LinearRing>> splitTerrainConnectedComponents(
+      const std::vector<LinearRing>& triangles);
 }  // namespace roofer::io

@@ -69,6 +69,15 @@ add_executable("test_vector_reader"
 target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
 target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
 
+add_executable("test_terrain" "${CMAKE_CURRENT_SOURCE_DIR}/test_terrain.cpp")
+target_link_libraries("test_terrain" PRIVATE Catch2::Catch2WithMain
+                                             roofer-extra)
+target_include_directories("test_terrain" PRIVATE ${CMAKE_BINARY_DIR})
+if(TARGET update_git_hash)
+  add_dependencies("test_terrain" update_git_hash)
+endif()
+catch_discover_tests("test_terrain")
+
 # --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"

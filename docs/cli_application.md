@@ -50,7 +50,9 @@ Output directory. The building models will be written to a CityJSONSequence file
 ```
 
 ## Output format
-The output of the {program}`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are a JSON Lines files that contain a sequence of CityJSON features, each feature represents all the information for one building.
+The output of the {program}`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are JSON Lines files that contain a sequence of CityJSON features. Each feature represents one building, with an optional per-tile `TINRelief` terrain feature when `--terrain` is enabled.
+
+For terrain output, `--terrain-nodata-mode` controls whether only complete grid quads are triangulated, three-sample local triangles are retained, or isolated missing samples are interpolated before local triangulation.
 
 > [!TIP]
 >  In the near future we expect to introduce a converter program to convert the CityJSONSequence files to other formats like GPKG, OBJ and others.

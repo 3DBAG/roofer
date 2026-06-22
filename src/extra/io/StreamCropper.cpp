@@ -27,6 +27,8 @@
 #include <ctime>
 #include <filesystem>
 #include <iostream>
+#include <map>
+#include <numeric>
 #include <optional>
 
 #include <roofer/common/Raster.hpp>
@@ -44,6 +46,215 @@
 namespace roofer::io {
 
   namespace fs = std::filesystem;
+
+  std::vector<LinearRing> triangulateTerrainGrid(
+      const RasterTools::Raster& terrain_grid, TerrainNoDataMode nodata_mode) {
+    std::vector<LinearRing> triangles;
+    if (terrain_grid.dimx_ < 2 || terrain_grid.dimy_ < 2) return triangles;
+
+    triangles.reserve(2 * (terrain_grid.dimx_ - 1) * (terrain_grid.dimy_ - 1));
+
+    std::vector<std::optional<arr3f>> samples(terrain_grid.dimx_ *
+                                              terrain_grid.dimy_);
+    const auto sample_index = [&terrain_grid](size_t col, size_t row) {
+      return row * terrain_grid.dimx_ + col;
+    };
+    for (size_t row = 0; row < terrain_grid.dimy_; ++row) {
+      for (size_t col = 0; col < terrain_grid.dimx_; ++col) {
+        const auto point = terrain_grid.getPointFromRasterCoords(col, row);
+        if (point[2] != terrain_grid.noDataVal_) {
+          samples[sample_index(col, row)] = point;
+        }
+      }
+    }
+
+    if (nodata_mode == TerrainNoDataMode::FILL_SMALL_GAPS) {
+      auto filled_samples = samples;
+      for (size_t row = 1; row + 1 < terrain_grid.dimy_; ++row) {
+        for (size_t col = 1; col + 1 < terrain_grid.dimx_; ++col) {
+          const auto index = sample_index(col, row);
+          if (samples[index].has_value()) continue;
+
+          const auto& left = samples[sample_index(col - 1, row)];
+          const auto& right = samples[sample_index(col + 1, row)];
+          const auto& below = samples[sample_index(col, row - 1)];
+          const auto& above = samples[sample_index(col, row + 1)];
+          if (!left.has_value() || !right.has_value() || !below.has_value() ||
+              !above.has_value()) {
+            continue;
+          }
+
+          auto point = terrain_grid.getPointFromRasterCoords(col, row);
+          point[2] =
+              ((*left)[2] + (*right)[2] + (*below)[2] + (*above)[2]) / 4.0F;
+          filled_samples[index] = point;
+        }
+      }
+      samples = std::move(filled_samples);
+    }
+
+    const auto squared_distance = [](const arr3f& a, const arr3f& b) {
+      const auto dx = a[0] - b[0];
+      const auto dy = a[1] - b[1];
+      const auto dz = a[2] - b[2];
+      return dx * dx + dy * dy + dz * dz;
+    };
+
+    const auto add_triangle = [&triangles](const arr3f& a, const arr3f& b,
+                                           const arr3f& c) {
+      LinearRing triangle;
+      triangle.push_back(a);
+      triangle.push_back(b);
+      triangle.push_back(c);
+      triangles.push_back(std::move(triangle));
+    };
+
+    for (size_t row = 0; row + 1 < terrain_grid.dimy_; ++row) {
+      for (size_t col = 0; col + 1 < terrain_grid.dimx_; ++col) {
+        const auto& lower_left = samples[sample_index(col, row)];
+        const auto& lower_right = samples[sample_index(col + 1, row)];
+        const auto& upper_right = samples[sample_index(col + 1, row + 1)];
+        const auto& upper_left = samples[sample_index(col, row + 1)];
+        const std::array corners{lower_left, lower_right, upper_right,
+                                 upper_left};
+        const auto valid_count =
+            std::count_if(corners.begin(), corners.end(),
+                          [](const auto& point) { return point.has_value(); });
+
+        if (valid_count < 3 ||
+            (valid_count == 3 &&
+             nodata_mode == TerrainNoDataMode::COMPLETE_QUADS)) {
+          continue;
+        }
+
+        if (valid_count == 3) {
+          std::array<arr3f, 3> triangle;
+          size_t triangle_index = 0;
+          for (const auto& corner : corners) {
+            if (corner.has_value()) triangle[triangle_index++] = *corner;
+          }
+          add_triangle(triangle[0], triangle[1], triangle[2]);
+        } else if (squared_distance(*lower_left, *upper_right) <=
+                   squared_distance(*lower_right, *upper_left)) {
+          add_triangle(*lower_left, *lower_right, *upper_right);
+          add_triangle(*lower_left, *upper_right, *upper_left);
+        } else {
+          add_triangle(*lower_left, *lower_right, *upper_left);
+          add_triangle(*lower_right, *upper_right, *upper_left);
+        }
+      }
+    }
+    return triangles;
+  }
+
+  std::vector<std::vector<LinearRing>> splitTerrainConnectedComponents(
+      const std::vector<LinearRing>& triangles) {
+    std::vector<std::vector<LinearRing>> components;
+    if (triangles.empty()) return components;
+
+    using Edge = std::pair<arr3f, arr3f>;
+    std::map<Edge, std::vector<size_t>> edge_owners;
+    std::map<arr3f, std::vector<size_t>> vertex_incidents;
+    for (size_t triangle_index = 0; triangle_index < triangles.size();
+         ++triangle_index) {
+      const auto& triangle = triangles[triangle_index];
+      if (triangle.size() != 3) continue;
+      for (size_t vertex_index = 0; vertex_index < 3; ++vertex_index) {
+        const auto& vertex = triangle[vertex_index];
+        vertex_incidents[vertex].push_back(triangle_index);
+        auto a = vertex;
+        auto b = triangle[(vertex_index + 1) % 3];
+        if (b < a) std::swap(a, b);
+        edge_owners[Edge{a, b}].push_back(triangle_index);
+      }
+    }
+
+    // At a manifold vertex all incident triangles form one fan through edges
+    // that contain that vertex. Record the fan of every triangle so a later
+    // global merge cannot create a bow-tie vertex through another route.
+    std::vector<std::map<arr3f, size_t>> triangle_fans(triangles.size());
+    for (const auto& [vertex, incidents] : vertex_incidents) {
+      std::vector<size_t> fan_parents(incidents.size());
+      std::iota(fan_parents.begin(), fan_parents.end(), 0);
+      const auto find_fan = [&fan_parents](size_t index) {
+        while (fan_parents[index] != index) index = fan_parents[index];
+        return index;
+      };
+      const auto triangles_share_vertex_edge = [&triangles, &vertex](size_t a,
+                                                                     size_t b) {
+        size_t common_vertices = 0;
+        bool contains_vertex = false;
+        for (const auto& va : triangles[a]) {
+          for (const auto& vb : triangles[b]) {
+            if (va != vb) continue;
+            ++common_vertices;
+            if (va == vertex) contains_vertex = true;
+          }
+        }
+        return contains_vertex && common_vertices >= 2;
+      };
+
+      for (size_t i = 0; i < incidents.size(); ++i) {
+        for (size_t j = i + 1; j < incidents.size(); ++j) {
+          if (!triangles_share_vertex_edge(incidents[i], incidents[j])) {
+            continue;
+          }
+          const auto root_i = find_fan(i);
+          const auto root_j = find_fan(j);
+          if (root_i != root_j) fan_parents[root_j] = root_i;
+        }
+      }
+      for (size_t i = 0; i < incidents.size(); ++i) {
+        triangle_fans[incidents[i]][vertex] = incidents[find_fan(i)];
+      }
+    }
+
+    std::vector<size_t> parents(triangles.size());
+    std::iota(parents.begin(), parents.end(), 0);
+    auto component_fans = triangle_fans;
+    const auto find_root = [&parents](size_t index) {
+      size_t root = index;
+      while (parents[root] != root) root = parents[root];
+      while (parents[index] != index) {
+        const auto next = parents[index];
+        parents[index] = root;
+        index = next;
+      }
+      return root;
+    };
+    const auto unite = [&parents, &find_root, &component_fans](size_t a,
+                                                               size_t b) {
+      const auto root_a = find_root(a);
+      const auto root_b = find_root(b);
+      if (root_a == root_b) return;
+
+      for (const auto& [vertex, fan] : component_fans[root_b]) {
+        const auto existing = component_fans[root_a].find(vertex);
+        if (existing != component_fans[root_a].end() &&
+            existing->second != fan) {
+          return;
+        }
+      }
+      parents[root_b] = root_a;
+      component_fans[root_a].insert(component_fans[root_b].begin(),
+                                    component_fans[root_b].end());
+    };
+
+    for (const auto& [edge, owners] : edge_owners) {
+      if (owners.size() == 2) unite(owners[0], owners[1]);
+    }
+
+    std::map<size_t, size_t> component_indices;
+    for (size_t triangle_index = 0; triangle_index < triangles.size();
+         ++triangle_index) {
+      const auto root = find_root(triangle_index);
+      const auto [component, inserted] =
+          component_indices.emplace(root, components.size());
+      if (inserted) components.emplace_back();
+      components[component->second].push_back(triangles[triangle_index]);
+    }
+    return components;
+  }
 
   class PointsInPolygonsCollector {
     std::vector<LinearRing>& polygons;
@@ -71,6 +282,8 @@ namespace roofer::io {
 
    public:
     float min_ground_elevation = std::numeric_limits<float>::max();
+
+    const RasterTools::Raster& get_terrain_grid() const { return terrain_grid; }
 
     PointsInPolygonsCollector(std::vector<LinearRing>& polygons,
                               std::vector<LinearRing>& buf_polygons,
@@ -526,6 +739,7 @@ namespace roofer::io {
     using PointCloudCropperInterface::PointCloudCropperInterface;
 
     float _min_ground_elevation = std::numeric_limits<float>::max();
+    std::optional<RasterTools::Raster> _terrain_grid;
 
     void process(const std::vector<std::string>& lasfiles,
                  std::vector<LinearRing>& polygons,
@@ -535,6 +749,7 @@ namespace roofer::io {
                  vec1i& acquisition_years, vec1b& pointcloud_insufficient,
                  const Box& polygon_extent,
                  PointCloudCropperConfig cfg) override {
+      _terrain_grid.reset();
       // vec1f ground_elevations;
       vec1f poly_areas;
       vec1i poly_pt_counts_bld;
@@ -631,6 +846,9 @@ namespace roofer::io {
           poly_pt_counts_grd, poly_densities);
 
       _min_ground_elevation = pip_collector.min_ground_elevation;
+      if (cfg.retain_terrain_grid) {
+        _terrain_grid.emplace(pip_collector.get_terrain_grid());
+      }
     }
 
     std::optional<float> get_min_terrain_elevation() const override {
@@ -638,6 +856,11 @@ namespace roofer::io {
         return _min_ground_elevation;
       } else
         return std::nullopt;
+    }
+
+    const RasterTools::Raster* get_terrain_grid() const override {
+      if (_terrain_grid.has_value()) return &*_terrain_grid;
+      return nullptr;
     }
 
     // void process(std::string source, std::vector<LinearRing>& polygons,
