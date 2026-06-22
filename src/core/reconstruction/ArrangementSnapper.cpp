@@ -917,7 +917,9 @@ namespace roofer::reconstruction {
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2>
             Snap_walk_pl;
         Snap_walk_pl snap_walk_pl(arr_snap);
-        std::unordered_set<Arrangement_2::Face_handle> labelled_output_faces;
+        std::unordered_map<Arrangement_2::Face_handle,
+                           std::unordered_map<FaceInfo*, double>>
+            output_face_labels;
         auto forced_face_labels =
             locate_forced_labels(tri, forced_region_labels);
         for (const auto& region : constrained_regions(tri)) {
@@ -925,28 +927,40 @@ namespace roofer::reconstruction {
               tri, region, walk_pl, arr, source_face_ids, forced_face_labels);
           if (region_label == nullptr) continue;
 
+          double region_area = 0;
+          for (auto face : region) {
+            region_area += std::abs(tri.triangle(face).area());
+          }
+          if (!(region_area > 0)) continue;
+
           auto centroid = CGAL::centroid(tri.triangle(region.front()));
           auto object = snap_walk_pl.locate(
               Arrangement_2::Point_2(centroid.x(), centroid.y()));
           if (auto located_face = std::get_if<Face_const_handle>(&object)) {
             auto output_face = arr_snap.non_const_handle(*located_face);
             if (output_face->is_unbounded()) continue;
-            if (!labelled_output_faces.insert(output_face).second) {
-              // throw roofer::rooferException(
-              //     "Multiple snapped triangulation regions map to one "
-              //     "arrangement face");
-            }
-            output_face->data() = *region_label;
+            output_face_labels[output_face][region_label] += region_area;
           }
         }
 
         arr_snap.unbounded_face()->data() = arr.unbounded_face()->data();
         for (auto output_face : arr_snap.face_handles()) {
           if (output_face->is_unbounded()) continue;
-          if (!labelled_output_faces.contains(output_face)) {
+          const auto labels = output_face_labels.find(output_face);
+          if (labels == output_face_labels.end() || labels->second.empty()) {
             throw roofer::rooferException(
                 "Unable to transfer snapped arrangement face label");
           }
+
+          auto best =
+              std::max_element(labels->second.begin(), labels->second.end(),
+                               [&](const auto& lhs, const auto& rhs) {
+                                 if (lhs.second != rhs.second)
+                                   return lhs.second < rhs.second;
+                                 return source_face_ids.at(lhs.first) >
+                                        source_face_ids.at(rhs.first);
+                               });
+          output_face->data() = *best->first;
         }
 
         // This should not be necessary, unless there is the above code still
