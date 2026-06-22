@@ -372,7 +372,6 @@ namespace roofer::io {
       // depend on the other footprints in the tile, so the result is
       // deterministic and reproducible regardless of how buildings are tiled or
       // batched.
-      logger.debug("Minimum building density = {}", min_building_density);
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
         auto& info = poly_info[poly_i];
 
@@ -384,6 +383,9 @@ namespace roofer::io {
         poly_pt_counts_grd.push_back(int(info.pt_count_grd));
         poly_densities.push_back(float(info.pt_count_bld / info.area));
       }
+      logger.debug("Insufficient building pointclouds = {}",
+                   std::count(pointcloud_insufficient.begin(),
+                              pointcloud_insufficient.end(), true));
     }
 
     std::optional<float> terrain_grid_min_for_polygon(LinearRing& polygon) {
@@ -624,8 +626,9 @@ namespace roofer::io {
       }
 
       pip_collector.do_post_process(
-          cfg.ground_percentile, cfg.max_density_delta, cfg.min_building_density,
-          poly_areas, poly_pt_counts_bld, poly_pt_counts_grd, poly_densities);
+          cfg.ground_percentile, cfg.max_density_delta,
+          cfg.min_building_density, poly_areas, poly_pt_counts_bld,
+          poly_pt_counts_grd, poly_densities);
 
       _min_ground_elevation = pip_collector.min_ground_elevation;
     }
