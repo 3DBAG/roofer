@@ -106,6 +106,9 @@ struct RooferConfig {
   // crop parameters
   float ceil_point_density = 20;
   float cellsize = 0.5;
+  // Minimum building point density (points/m²); roofprints below
+  // this are flagged pointcloud-insufficient. Deterministic per-building.
+  float min_building_density = 1.0;
   float terrain_grid_cellsize = 10.0;
   int terrain_grid_search_radius = 3;
   int lod11_fallback_area = 69000;
@@ -150,7 +153,6 @@ struct RooferConfig {
   roofer::enums::TerrainStrategy h_terrain_strategy =
       roofer::enums::TerrainStrategy::BUFFER_TILE;
   int lod11_fallback_planes = 900;
-  int lod11_fallback_time = 1800000;
   float complexity_factor = 0.888;
 
   bool clip_ground = true;
@@ -418,7 +420,7 @@ struct RooferConfigHandler {
 
     crop.add(
         "simplify",
-        "Simplify input footprints to remove (nearly) duplicated vertices.",
+        "Simplify input rootprints to remove (nearly) duplicated vertices.",
         cfg_.simplify);
     crop.add("ceil-point-density",
              "Enforce this point density ceiling on each building pointcloud.",
@@ -427,6 +429,10 @@ struct RooferConfigHandler {
              "Cellsize used for quick pointcloud analysis (eg. point density"
              " and nodata regions).",
              cfg_.cellsize, {check::HigherThan<float>(0)});
+    crop.add("min-building-density",
+             "Minimum building-class point density (points/m²) below "
+             "which a rootprint's pointcloud is flagged insufficient.",
+             cfg_.min_building_density, {check::HigherOrEqualTo<float>(0)});
     crop.add("terrain-grid-cellsize",
              "Cellsize used for the crop phase terrain fallback grid.",
              cfg_.terrain_grid_cellsize, {check::HigherThan<float>(0)});
@@ -539,17 +545,11 @@ struct RooferConfigHandler {
         "lod11-fallback-planes",
         "Number of planes required for LoD 1.1 fallback. When more than this "
         "number of planes is detected, abort the reconstruction process and "
-        "fallback to LoD 1.1 extrusion. Primarily used to limit the "
-        "reconstruction time per building.",
+        "fallback to LoD 1.1 extrusion. This plane count is a deterministic "
+        "complexity cutoff that bounds reconstruction time per building.",
         cfg_.lod11_fallback_planes, {check::HigherThan<int>(0)});
-    reconstruction.add(
-        "lod11-fallback-time",
-        "Time for LOD 1.1 fallback in milliseconds. When more than this time "
-        "is spent on expensive parts of the reconstruction algorithm, abort "
-        "and fallback to LoD 1.1 extrusion.",
-        cfg_.lod11_fallback_time, {check::HigherThan<int>(0)}),
 
-        output.add("tiling", "Enable or disable output tiling.", _tiling);
+    output.add("tiling", "Enable or disable output tiling.", _tiling);
     output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
                cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
     output.add("split-cjseq",
@@ -838,12 +838,12 @@ struct RooferConfigHandler {
 
     std::cout << "\033[1mExamples:\033[0m" << "\n";
     std::cout << "  " << program_name;
-    std::cout << " pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << " pointcloud.laz roofprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
-    std::cout << " --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << " --lod12 --lod22 pointcloud.laz roofprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
     std::cout << " --filter 'identificatie=1980100000265200'\n";
-    std::cout << "         pointcloud.laz footprints.gpkg output-dir\n";
+    std::cout << "         pointcloud.laz roofprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
     std::cout << " -c config.toml output-dir\n";
     std::cout << "\n";

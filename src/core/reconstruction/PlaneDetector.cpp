@@ -270,8 +270,7 @@ namespace roofer {
           R.min_segment_count = cfg.metrics_plane_min_points;
           if (points.size() > cfg.metrics_plane_min_points) {
             if (cfg.with_limits) {
-              R.grow_regions_with_limits(PDS, DNTester, cfg.limit_n_regions,
-                                         cfg.limit_n_milliseconds);
+              R.grow_regions_with_limits(PDS, DNTester, cfg.limit_n_regions);
             } else {
               R.grow_regions(PDS, DNTester);
             }

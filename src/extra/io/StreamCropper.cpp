@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <iostream>
@@ -100,6 +101,9 @@ namespace roofer::io {
       z_ground.resize(polygons.size());
       ground_buffer_points.resize(polygons.size());
       acquisition_years.resize(polygons.size(), 0);
+      // pointcloud_insufficient is a long-lived per-input-pointcloud vector
+      // (reused across tiles) this can leak incorrect states between tiles
+      pointcloud_insufficient.clear();
 
       for (size_t i = 0; i < point_clouds.size(); ++i) {
         point_clouds.at(i).attributes.insert_vec<int>("classification");
@@ -230,10 +234,10 @@ namespace roofer::io {
      *  - compute point counts for ground and building classification
      *  - compute ground elevation value for building
      *  - clear point clouds with very low coverage (ie. underground footprints)
-     *    cov_thres = mean_density - coverage_threshold * std_dev_density
+     *    insufficient when (pt_count_bld / area) < min_building_density
      */
     void do_post_process(float& ground_percentile, float& max_density_delta,
-                         float& coverage_threshold, vec1f& poly_areas,
+                         float& min_building_density, vec1f& poly_areas,
                          vec1i& poly_pt_counts_bld, vec1i& poly_pt_counts_grd,
                          vec1f& poly_densities) {
       // compute poly properties
@@ -260,7 +264,9 @@ namespace roofer::io {
             point_cloud.attributes.get_if<int>("classification");
         PolyInfo info;
 
-        info.area = polygon.signed_area();
+        // Use the absolute area: the per-footprint point density must never go
+        // negative just because a ring comes back clockwise.
+        info.area = std::abs(polygon.signed_area());
         size_t pt_cnt_bld = 0;
         size_t pt_cnt_grd = 0;
         float z_sum = 0;
@@ -360,34 +366,26 @@ namespace roofer::io {
             terrain_grid_min_for_polygon(buf_polygons[i]));
       }
 
-      // clear footprints with very low coverage (ie. underground footprints)
-      // TODO: improve method for computing mean_density
-      float total_cnt = 0, total_area = 0;
-      for (auto& [poly_i, info] : poly_info) {
-        total_cnt += info.pt_count_bld + info.pt_count_grd;
-        total_area += info.area;
-      }
-      float mean_density = total_cnt / total_area;
-      float diff_sum = 0;
-      for (auto& [poly_i, info] : poly_info) {
-        diff_sum += std::pow(mean_density - (info.pt_count_bld / info.area), 2);
-      }
-      float std_dev_density = std::sqrt(diff_sum / poly_info.size());
-      logger.debug("Mean point density = {}", mean_density);
-      logger.debug("Standard deviation = {}", std_dev_density);
-
-      float cov_thres = mean_density - coverage_threshold * std_dev_density;
+      // clear footprints with very low coverage (ie. underground footprints).
+      // A footprint is insufficient when its own building-class point density
+      // is below an absolute floor. This is evaluated per building and does not
+      // depend on the other footprints in the tile, so the result is
+      // deterministic and reproducible regardless of how buildings are tiled or
+      // batched.
       for (size_t poly_i = 0; poly_i < polygons.size(); ++poly_i) {
         auto& info = poly_info[poly_i];
 
         pointcloud_insufficient.push_back((info.pt_count_bld / info.area) <
-                                          cov_thres);
+                                          min_building_density);
         // info.pt_count = point_cloud.size();
         poly_areas.push_back(float(info.area));
         poly_pt_counts_bld.push_back(int(info.pt_count_bld));
         poly_pt_counts_grd.push_back(int(info.pt_count_grd));
         poly_densities.push_back(float(info.pt_count_bld / info.area));
       }
+      logger.debug("Insufficient building pointclouds = {}",
+                   std::count(pointcloud_insufficient.begin(),
+                              pointcloud_insufficient.end(), true));
     }
 
     std::optional<float> terrain_grid_min_for_polygon(LinearRing& polygon) {
@@ -628,8 +626,9 @@ namespace roofer::io {
       }
 
       pip_collector.do_post_process(
-          cfg.ground_percentile, cfg.max_density_delta, cfg.coverage_threshold,
-          poly_areas, poly_pt_counts_bld, poly_pt_counts_grd, poly_densities);
+          cfg.ground_percentile, cfg.max_density_delta,
+          cfg.min_building_density, poly_areas, poly_pt_counts_bld,
+          poly_pt_counts_grd, poly_densities);
 
       _min_ground_elevation = pip_collector.min_ground_elevation;
     }

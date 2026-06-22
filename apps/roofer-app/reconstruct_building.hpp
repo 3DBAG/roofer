@@ -308,17 +308,26 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
 
   std::unordered_map<std::string, std::chrono::duration<double>> timings;
 
-  // pointcloud_insufficient is set by StreamCropper to indicate if the
-  // pointcloud has a pt_density that is lower than 2 std deviations less
-  // than the mean pt_density of the tile
+  // pointcloud_insufficient is set by StreamCropper when a footprint's
+  // building-class point density is below the absolute min_building_density
+  // floor.
   if ((building.pointcloud_insufficient && cfg->clear_if_insufficient) ||
       !building.h_ground.has_value()) {
     building.extrusion_mode = SKIP;
   }
 
   if (building.extrusion_mode == SKIP) {
-    if (building.roof_h_fallback.has_value()) {
-      extrude_lod11(building, *building.roof_h_fallback, cfg);
+    // Still emit a LoD 1.1 block model (so the building has geometry and a roof
+    // elevation) rather than nothing. This needs a ground elevation for the
+    // floor; for the roof height prefer an explicit fallback, otherwise use the
+    // raster-derived 70th-percentile roof elevation, which is valid whenever
+    // any points exist in the footprint. Without a ground elevation no geometry
+    // can be built, so the building is left empty.
+    if (building.h_ground.has_value()) {
+      building.extrusion_mode = LOD11_FALLBACK;
+      extrude_lod11(building,
+                    building.roof_h_fallback.value_or(building.h_pc_roof_70p),
+                    cfg);
     }
     return;
   } else if (building.extrusion_mode == LOD11_FALLBACK) {
@@ -336,7 +345,6 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
           .metrics_plane_normal_threshold = cfg->plane_detect_normal_angle,
           .with_limits = true,
           .limit_n_regions = cfg->lod11_fallback_planes,
-          .limit_n_milliseconds = cfg->lod11_fallback_time,
       };
       PlaneDetector->detect(building.pointcloud_building, plane_detector_cfg);
       timings["PlaneDetector"] = std::chrono::high_resolution_clock::now() - t0;
@@ -367,7 +375,11 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
         }
         return;
       }
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
+      // Any failure during plane detection / region growing (the deterministic
+      // region-count limit, but also CGAL preconditions, allocation failures,
+      // etc.) degrades gracefully to a LoD 1.1 block model rather than failing
+      // the building outright.
       extrude_lod11(building, building.h_pc_roof_70p, cfg);
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
                      building.jsonl_path.string(), e.what());
