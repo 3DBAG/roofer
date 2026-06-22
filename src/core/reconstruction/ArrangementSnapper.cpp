@@ -299,6 +299,57 @@ namespace roofer::reconstruction {
       return count;
     }
 
+    void remove_dangling_constraints_and_vertices(T& tri) {
+      // Build the constraint graph and peel its degree-one vertices. Updating
+      // the graph as edges are peeled also detects constraint chains that only
+      // become dangling after their outermost edge has been removed.
+      std::unordered_map<Vertex_handle, ConstraintSet> adjacency;
+      for (const auto& edge : tri.constrained_edges()) {
+        auto first = edge.first->vertex(tri.cw(edge.second));
+        auto second = edge.first->vertex(tri.ccw(edge.second));
+        adjacency[first].insert(second);
+        adjacency[second].insert(first);
+      }
+
+      std::queue<Vertex_handle> leaves;
+      for (const auto& [vertex, neighbours] : adjacency) {
+        if (neighbours.size() == 1) leaves.push(vertex);
+      }
+
+      while (!leaves.empty()) {
+        auto vertex = leaves.front();
+        leaves.pop();
+
+        auto& neighbours = adjacency[vertex];
+        if (neighbours.size() != 1) continue;
+
+        auto neighbour = *neighbours.begin();
+        neighbours.clear();
+
+        auto& neighbour_adjacency = adjacency[neighbour];
+        neighbour_adjacency.erase(vertex);
+        if (neighbour_adjacency.size() == 1) leaves.push(neighbour);
+
+        // Locate the edge from its stable endpoint handles instead of retaining
+        // a face handle across triangulation updates.
+        Face_handle face;
+        int index;
+        if (tri.is_edge(vertex, neighbour, face, index) &&
+            tri.is_constrained({face, index})) {
+          tri.remove_constrained_edge(face, index);
+        }
+      }
+
+      std::vector<Vertex_handle> vertices_to_remove;
+      for (auto vertex = tri.finite_vertices_begin();
+           vertex != tri.finite_vertices_end(); ++vertex) {
+        if (!tri.are_there_incident_constraints(vertex)) {
+          vertices_to_remove.push_back(vertex);
+        }
+      }
+      for (auto vertex : vertices_to_remove) tri.remove(vertex);
+    }
+
     // calculate azimuth for each incident triangulation edge, and sample
     // corresponding face from arrangement
     std::vector<IncidentSector> incident_sectors(
@@ -864,6 +915,12 @@ namespace roofer::reconstruction {
           }
         }
 
+        // Remove dangling constraint trees and the unconstrained vertices left
+        // behind by snapping.
+        remove_dangling_constraints_and_vertices(tri);
+
+        // Detect and repair non-manifold vertices (ie. leading to a
+        // non-manifold edge during extrusion) and self-intersecting faces
         std::vector<ForcedRegionLabel> forced_region_labels;
         if (cfg.repair_non_manifold_vertices) {
           while (auto candidate =
@@ -946,17 +1003,20 @@ namespace roofer::reconstruction {
           }
         }
 
-        // remove dangling edges if any, eg holes that collapse to a single edge
-        // after snapping
-        {
-          std::vector<Arrangement_2::Halfedge_handle> to_remove;
-          for (auto he : arr_snap.edge_handles()) {
-            if (he->face() == he->twin()->face()) to_remove.push_back(he);
-          }
-          for (auto he : to_remove) {
-            arr_snap.remove_edge(he);
-          }
-        }
+        // This should not be necessary, unless there is the above code still
+        // produces dangling edges (which it shoudldnt)
+        // // remove dangling edges if any, eg holes that collapse to a single
+        // edge
+        // // after snapping
+        // {
+        //   std::vector<Arrangement_2::Halfedge_handle> to_remove;
+        //   for (auto he : arr_snap.edge_handles()) {
+        //     if (he->face() == he->twin()->face()) to_remove.push_back(he);
+        //   }
+        //   for (auto he : to_remove) {
+        //     arr_snap.remove_edge(he);
+        //   }
+        // }
 
         arr = arr_snap;
       }

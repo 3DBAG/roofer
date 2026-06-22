@@ -187,6 +187,35 @@ TEST_CASE("snapper repairs an alternating four-way roof junction") {
   check_two_manifold_edges(extruder->meshes.front());
 }
 
+TEST_CASE("snapper removes dangling constraint chains before repair") {
+  auto expected = cross_arrangement({15, 5, 15, 6});
+  auto arrangement = cross_arrangement({15, 5, 15, 6});
+  CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(6, 5.5)));
+  CGAL::insert(arrangement, Segment_2(Point_2(6, 5.5), Point_2(7, 6)));
+
+  const roofer::reconstruction::ArrangementSnapperConfig config{
+      .dist_thres = 0.001F,
+      .repair_non_manifold_vertices = true,
+      .manifold_repair_radius = 0.5F,
+      .manifold_height_tolerance = 1e-4F};
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(expected, config);
+  snapper->compute(arrangement, config);
+
+  CHECK(arrangement.number_of_vertices() == expected.number_of_vertices());
+  CHECK(arrangement.number_of_edges() == expected.number_of_edges());
+  CHECK(arrangement.number_of_faces() == expected.number_of_faces());
+  for (auto vertex : expected.vertex_handles()) {
+    CHECK(vertex_at(arrangement, vertex->point()) !=
+          Arrangement_2::Vertex_handle());
+  }
+  for (auto vertex : arrangement.vertex_handles()) {
+    CAPTURE(vertex->point());
+    CHECK(vertex_at(expected, vertex->point()) !=
+          Arrangement_2::Vertex_handle());
+  }
+}
+
 TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
   auto arrangement = clearance_regression_arrangement();
   auto snapper = roofer::reconstruction::createArrangementSnapper();
