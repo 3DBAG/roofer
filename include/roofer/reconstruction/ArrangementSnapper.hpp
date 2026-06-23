@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2024 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
+// Copyright (c) 2018-2026 TU Delft 3D geoinformation group, Ravi Peters (3DGI),
 // and Balazs Dukai (3DGI)
 
 // This file is part of roofer (https://github.com/3DBAG/roofer)
@@ -27,7 +27,7 @@
 namespace roofer::reconstruction {
 
   struct ArrangementSnapperConfig {
-    float dist_thres = 0.05;
+    float dist_thres = 0.002;
     bool repair_non_manifold_vertices = true;
     // manifold repairs with this radius, and down to half this radius in case
     // clearance is limited. Below half this radius, repairs are skipped.

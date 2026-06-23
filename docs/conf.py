@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'roofer'
-copyright = '2024 Ravi Peters, Balazs Dukai and TU Delft 3D geoinformation group'
+copyright = '2026 Ravi Peters, Balazs Dukai and TU Delft 3D geoinformation group'
 author = ''
 release = '1.0.0'
 
