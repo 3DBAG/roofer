@@ -139,6 +139,18 @@ namespace roofer::reconstruction {
     }
 
     using ForcedFaceLabels = std::vector<std::pair<Face_handle, FaceInfo*>>;
+    using TriangleFaceLabels = std::unordered_map<Face_handle, FaceInfo*>;
+
+    struct LabelledRegion {
+      T::Point_2 sample;
+      FaceInfo* label;
+      double area;
+    };
+
+    struct RegionLabelling {
+      std::vector<LabelledRegion> regions;
+      TriangleFaceLabels face_labels;
+    };
 
     ForcedFaceLabels locate_forced_labels(
         T& tri, const std::vector<ForcedRegionLabel>& forced_labels) {
@@ -191,6 +203,37 @@ namespace roofer::reconstruction {
         }
       }
       return selected;
+    }
+
+    RegionLabelling compute_region_labelling(
+        T& tri,
+        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        Arrangement_2& source_arrangement, const SourceFaceIds& source_ids,
+        const std::vector<ForcedRegionLabel>& forced_labels) {
+      RegionLabelling labelling;
+      auto forced_face_labels = locate_forced_labels(tri, forced_labels);
+      auto regions = constrained_regions(tri);
+      for (const auto& region : regions) {
+        auto* label =
+            select_region_label(tri, region, walk_pl, source_arrangement,
+                                source_ids, forced_face_labels);
+        if (label == nullptr) continue;
+
+        double area = 0;
+        for (auto face : region) {
+          labelling.face_labels[face] = label;
+          area += std::abs(tri.triangle(face).area());
+        }
+        labelling.regions.push_back(
+            {CGAL::centroid(tri.triangle(region.front())), label, area});
+      }
+      for (auto face : tri.all_face_handles()) {
+        if (tri.is_infinite(face)) {
+          labelling.face_labels[face] =
+              &source_arrangement.unbounded_face()->data();
+        }
+      }
+      return labelling;
     }
 
     double squared_distance_to_face(T& tri, Face_handle face,
@@ -350,12 +393,11 @@ namespace roofer::reconstruction {
       for (auto vertex : vertices_to_remove) tri.remove(vertex);
     }
 
-    // calculate azimuth for each incident triangulation edge, and sample
-    // corresponding face from arrangement
+    // Calculate azimuth for each incident triangulation edge and sample the
+    // corresponding intermediate region label.
     std::vector<IncidentSector> incident_sectors(
         T& tri, Vertex_handle vertex, double clearance,
-        Arrangement_2& source_arrangement,
-        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl) {
+        const TriangleFaceLabels& face_labels) {
       std::vector<IncidentSector> sectors;
       Edge_circulator edge = tri.incident_edges(vertex), done(edge);
       if (edge == nullptr) return sectors;
@@ -384,8 +426,10 @@ namespace roofer::reconstruction {
         T::Point_2 sample(
             vertex->point().x() + sample_radius * std::cos(sample_angle),
             vertex->point().y() + sample_radius * std::sin(sample_angle));
-        auto face_info = source_face_at(sample, walk_pl, source_arrangement);
-        if (face_info == nullptr) return {};
+        auto face = tri.locate(sample);
+        auto label = face_labels.find(face);
+        if (label == face_labels.end() || label->second == nullptr) return {};
+        auto* face_info = label->second;
         sectors[i].face_info = face_info;
         sectors[i].height = plane_height(*face_info, vertex->point());
       }
@@ -471,8 +515,7 @@ namespace roofer::reconstruction {
     }
 
     std::optional<RepairCandidate> find_problematic_vertex(
-        T& tri, Arrangement_2& source_arrangement,
-        CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
+        T& tri, const TriangleFaceLabels& face_labels,
         const SourceFaceIds& source_ids, double repair_radius,
         double height_tolerance) {
       for (auto vertex = tri.finite_vertices_begin();
@@ -483,8 +526,8 @@ namespace roofer::reconstruction {
         if (*clearance < repair_radius / 2) continue;
         const double sector_clearance =
             std::isfinite(*clearance) ? *clearance : repair_radius;
-        auto sectors = incident_sectors(tri, vertex, sector_clearance,
-                                        source_arrangement, walk_pl);
+        auto sectors =
+            incident_sectors(tri, vertex, sector_clearance, face_labels);
         if (sectors.size() < 4) continue;
         if (std::none_of(sectors.begin(), sectors.end(),
                          [](const auto& sector) {
@@ -866,17 +909,23 @@ namespace roofer::reconstruction {
         remove_dangling_constraints_and_vertices(tri);
 
         // Detect and repair non-manifold vertices (ie. leading to a
-        // non-manifold edge during extrusion) and self-intersecting faces
+        // non-manifold edge during extrusion) and self-intersecting faces.
+        // Recompute intermediate labels after every repair so detection uses
+        // the same region labels that will be transferred to the arrangement.
         std::vector<ForcedRegionLabel> forced_region_labels;
-        if (cfg.repair_non_manifold_vertices) {
-          while (auto candidate =
-                     find_problematic_vertex(tri, arr, walk_pl, source_face_ids,
-                                             cfg.manifold_repair_radius,
-                                             cfg.manifold_height_tolerance)) {
-            forced_region_labels.push_back(repair_vertex(
-                tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
-                cfg.manifold_height_tolerance));
-          }
+        RegionLabelling intermediate_labelling;
+        while (true) {
+          intermediate_labelling = compute_region_labelling(
+              tri, walk_pl, arr, source_face_ids, forced_region_labels);
+          if (!cfg.repair_non_manifold_vertices) break;
+
+          auto candidate = find_problematic_vertex(
+              tri, intermediate_labelling.face_labels, source_face_ids,
+              cfg.manifold_repair_radius, cfg.manifold_height_tolerance);
+          if (!candidate) break;
+          forced_region_labels.push_back(repair_vertex(
+              tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
+              cfg.manifold_height_tolerance));
         }
 
         // convert back from triangulation to arrangement
@@ -920,26 +969,15 @@ namespace roofer::reconstruction {
         std::unordered_map<Arrangement_2::Face_handle,
                            std::unordered_map<FaceInfo*, double>>
             output_face_labels;
-        auto forced_face_labels =
-            locate_forced_labels(tri, forced_region_labels);
-        for (const auto& region : constrained_regions(tri)) {
-          FaceInfo* region_label = select_region_label(
-              tri, region, walk_pl, arr, source_face_ids, forced_face_labels);
-          if (region_label == nullptr) continue;
+        for (const auto& region : intermediate_labelling.regions) {
+          if (!(region.area > 0)) continue;
 
-          double region_area = 0;
-          for (auto face : region) {
-            region_area += std::abs(tri.triangle(face).area());
-          }
-          if (!(region_area > 0)) continue;
-
-          auto centroid = CGAL::centroid(tri.triangle(region.front()));
           auto object = snap_walk_pl.locate(
-              Arrangement_2::Point_2(centroid.x(), centroid.y()));
+              Arrangement_2::Point_2(region.sample.x(), region.sample.y()));
           if (auto located_face = std::get_if<Face_const_handle>(&object)) {
             auto output_face = arr_snap.non_const_handle(*located_face);
             if (output_face->is_unbounded()) continue;
-            output_face_labels[output_face][region_label] += region_area;
+            output_face_labels[output_face][region.label] += region.area;
           }
         }
 
