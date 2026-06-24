@@ -1,7 +1,7 @@
 FROM ubuntu:24.04 AS builder
 
 ARG JOBS=2
-ARG VERSION=unknown
+ARG GIT_HASH=unknown
 
 ARG ROOFER_ROOT=/opt/roofer
 ARG ROOFER_INSTALL=$ROOFER_ROOT/install
@@ -60,8 +60,9 @@ RUN --mount=type=cache,target=/root/.conan2 \
       -DCMAKE_TOOLCHAIN_FILE=$ROOFER_BUILD/conan_toolchain.cmake \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=$ROOFER_INSTALL \
-      -DRF_GIT_HASH=$VERSION \
-    && cmake --build $ROOFER_BUILD -j $JOBS --target install --config Release
+      -DRF_GIT_HASH="$GIT_HASH" \
+    && cmake --build $ROOFER_BUILD -j $JOBS --target install --config Release \
+    && $ROOFER_INSTALL/bin/roofer --version | grep -F -- "$GIT_HASH"
 
 
 FROM ubuntu:24.04 AS production

@@ -63,7 +63,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           build-args: |
             JOBS=2
-            VERSION=${{ env.DOCKER_TAG }}
+            GIT_HASH=${{ github.sha }}
           push: false
           tags: 3dgi/roofer:${{ env.DOCKER_TAG }}
           cache-from: type=registry,ref=3dgi/roofer:buildcache
@@ -77,7 +77,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           build-args: |
             JOBS=2
-            VERSION=${{ env.DOCKER_TAG }}
+            GIT_HASH=${{ github.sha }}
           push: true
           tags: ${{ steps.push_tags.outputs.tags }}
           cache-from: type=registry,ref=3dgi/roofer:buildcache
