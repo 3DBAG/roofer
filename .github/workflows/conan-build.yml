@@ -108,6 +108,7 @@ jobs:
           --build=missing
           --settings=build_type=${{ inputs.build_type }}
           --settings=compiler.cppstd=20
+          --conf="user.roofer:git_hash=${{ github.sha }}"
           --options="&:build_apps=${{ inputs.build_apps && 'True' || 'False' }}"
           --options="&:use_spdlog=${{ inputs.use_spdlog && 'True' || 'False' }}"
           --options="&:use_val3dity=${{ inputs.use_val3dity && 'True' || 'False' }}"

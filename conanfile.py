@@ -86,4 +86,7 @@ class RooferRecipe(ConanFile):
         tc.variables["RF_USE_VAL3DITY"] = bool(self.options.use_val3dity)
         tc.variables["RF_BUILD_BINDINGS"] = bool(self.options.build_bindings)
         tc.variables["RF_BUILD_TESTING"] = bool(self.options.build_testing)
+        git_hash = self.conf.get("user.roofer:git_hash", default=None)
+        if git_hash:
+            tc.variables["RF_GIT_HASH"] = str(git_hash)
         tc.generate()

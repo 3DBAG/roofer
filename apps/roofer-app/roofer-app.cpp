@@ -953,9 +953,6 @@ int main(int argc, const char* argv[]) {
                   fmt::format("{:06d}_{:06d}.terrain.city.jsonl", minx, miny);
               fs::create_directories(terrain_path.parent_path());
               std::ofstream terrain_ofs(terrain_path);
-              CityJsonWriter->write_metadata(terrain_ofs, project_srs.get(),
-                                             building_tile.extent,
-                                             {.identifier = terrain_id});
               CityJsonWriter->write_tin_relief_feature(
                   terrain_ofs, terrain_id, building_tile.terrain->components,
                   building_tile.terrain->attributes);
