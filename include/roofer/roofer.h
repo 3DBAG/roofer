@@ -283,7 +283,7 @@ namespace roofer {
 
       auto ArrangementSnapper =
           roofer::reconstruction::createArrangementSnapper();
-      ArrangementSnapper->compute(arrangement);
+      ArrangementSnapper->compute(arrangement, *elevation_provider);
 
       auto ArrangementExtruder =
           roofer::reconstruction::createArrangementExtruder();

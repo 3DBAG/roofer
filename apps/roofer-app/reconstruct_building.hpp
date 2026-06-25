@@ -221,7 +221,7 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
   }
 #endif
   auto ArrangementSnapper = roofer::reconstruction::createArrangementSnapper();
-  ArrangementSnapper->compute(arrangement);
+  ArrangementSnapper->compute(arrangement, *elevation_provider);
   // logger.debug("Completed ArrangementSnapper");
 #ifdef RF_USE_RERUN
 // rec.log(worldname+"ArrangementSnapper", rerun::LineStrips3D(

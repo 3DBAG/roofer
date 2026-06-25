@@ -22,6 +22,7 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 
 namespace roofer::reconstruction {
@@ -44,6 +45,14 @@ namespace roofer::reconstruction {
     virtual ~ArrangementSnapperInterface() = default;
     virtual void compute(
         Arrangement_2& arrangement,
+        ArrangementSnapperConfig config = ArrangementSnapperConfig()) = 0;
+
+    virtual void compute(
+        Arrangement_2& arrangement, const ElevationProvider& elevation_provider,
+        ArrangementSnapperConfig config = ArrangementSnapperConfig()) = 0;
+
+    virtual void compute(
+        Arrangement_2& arrangement, float base_elevation,
         ArrangementSnapperConfig config = ArrangementSnapperConfig()) = 0;
   };
 

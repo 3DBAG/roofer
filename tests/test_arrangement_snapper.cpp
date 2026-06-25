@@ -1,4 +1,5 @@
 #include <array>
+#include <limits>
 #include <map>
 #include <variant>
 
@@ -92,7 +93,9 @@ namespace {
 
     arrangement.unbounded_face()->data().in_footprint = false;
     arrangement.unbounded_face()->data().segid = 0;
-    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 10);
+    // Exterior plane data is not used by extrusion and may retain an
+    // unrelated roof plane. The snapper must use the ground provider instead.
+    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, -100);
 
     return arrangement;
   }
@@ -104,7 +107,7 @@ namespace {
     hole->data().in_footprint = false;
     hole->data().is_footprint_hole = true;
     hole->data().segid = 0;
-    hole->data().plane = roofer::Plane(0, 0, 1, 10);
+    hole->data().plane = roofer::Plane(0, 0, 1, -100);
     return arrangement;
   }
 
@@ -262,10 +265,11 @@ TEST_CASE("snapper keeps a boundary repair cell inside the footprint") {
   auto arrangement = boundary_junction_arrangement();
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
-                                 .repair_non_manifold_vertices = true,
-                                 .manifold_repair_radius = 0.5F,
-                                 .manifold_height_tolerance = 1e-4F});
+  snapper->compute(arrangement, 0.0F,
+                   {.dist_thres = 0.001F,
+                    .repair_non_manifold_vertices = true,
+                    .manifold_repair_radius = 0.5F,
+                    .manifold_height_tolerance = 1e-4F});
 
   CHECK(vertex_at(arrangement, Point_2(5, 0)) ==
         Arrangement_2::Vertex_handle());
@@ -276,12 +280,25 @@ TEST_CASE("snapper keeps a finite exterior repair cell inside the footprint") {
   auto arrangement = finite_exterior_junction_arrangement();
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
-                                 .repair_non_manifold_vertices = true,
-                                 .manifold_repair_radius = 0.5F,
-                                 .manifold_height_tolerance = 1e-4F});
+  snapper->compute(arrangement, 0.0F,
+                   {.dist_thres = 0.001F,
+                    .repair_non_manifold_vertices = true,
+                    .manifold_repair_radius = 0.5F,
+                    .manifold_height_tolerance = 1e-4F});
 
   CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
         Arrangement_2::Vertex_handle());
   CHECK(face_at(arrangement, Point_2(5, 5))->data().segid == 2);
+}
+
+TEST_CASE("snapper rejects a non-finite exterior height") {
+  auto arrangement = boundary_junction_arrangement();
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+
+  CHECK_THROWS(snapper->compute(arrangement,
+                                std::numeric_limits<float>::quiet_NaN(),
+                                {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F}));
 }

@@ -30,6 +30,7 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <queue>
@@ -68,6 +69,7 @@ namespace roofer::reconstruction {
     };
 
     using SourceFaceIds = std::unordered_map<FaceInfo*, std::size_t>;
+    using ExteriorHeightProvider = std::function<double(const T::Point_2&)>;
 
     struct IncidentSector {
       Vertex_handle neighbour;
@@ -397,7 +399,8 @@ namespace roofer::reconstruction {
     // corresponding intermediate region label.
     std::vector<IncidentSector> incident_sectors(
         T& tri, Vertex_handle vertex, double clearance,
-        const TriangleFaceLabels& face_labels) {
+        const TriangleFaceLabels& face_labels,
+        const ExteriorHeightProvider& exterior_height_provider) {
       std::vector<IncidentSector> sectors;
       Edge_circulator edge = tri.incident_edges(vertex), done(edge);
       if (edge == nullptr) return sectors;
@@ -431,7 +434,13 @@ namespace roofer::reconstruction {
         if (label == face_labels.end() || label->second == nullptr) return {};
         auto* face_info = label->second;
         sectors[i].face_info = face_info;
-        sectors[i].height = plane_height(*face_info, vertex->point());
+        sectors[i].height = is_roof_face(face_info)
+                                ? plane_height(*face_info, vertex->point())
+                                : exterior_height_provider(vertex->point());
+        if (!std::isfinite(sectors[i].height)) {
+          throw roofer::rooferException(
+              "Unable to evaluate a finite arrangement sector height");
+        }
       }
       return sectors;
     }
@@ -517,7 +526,8 @@ namespace roofer::reconstruction {
     std::optional<RepairCandidate> find_problematic_vertex(
         T& tri, const TriangleFaceLabels& face_labels,
         const SourceFaceIds& source_ids, double repair_radius,
-        double height_tolerance) {
+        double height_tolerance,
+        const ExteriorHeightProvider& exterior_height_provider) {
       for (auto vertex = tri.finite_vertices_begin();
            vertex != tri.finite_vertices_end(); ++vertex) {
         if (constrained_incident_edge_count(tri, vertex) < 4) continue;
@@ -526,8 +536,8 @@ namespace roofer::reconstruction {
         if (*clearance < repair_radius / 2) continue;
         const double sector_clearance =
             std::isfinite(*clearance) ? *clearance : repair_radius;
-        auto sectors =
-            incident_sectors(tri, vertex, sector_clearance, face_labels);
+        auto sectors = incident_sectors(tri, vertex, sector_clearance,
+                                        face_labels, exterior_height_provider);
         if (sectors.size() < 4) continue;
         if (std::none_of(sectors.begin(), sectors.end(),
                          [](const auto& sector) {
@@ -681,7 +691,9 @@ namespace roofer::reconstruction {
     }
 
     class ArrangementSnapper : public ArrangementSnapperInterface {
-      void compute(Arrangement_2& arr, ArrangementSnapperConfig cfg) override {
+      void compute_with_exterior_height(
+          Arrangement_2& arr, ArrangementSnapperConfig cfg,
+          const ExteriorHeightProvider& exterior_height_provider) {
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2> Walk_pl;
 
         T tri;
@@ -921,7 +933,8 @@ namespace roofer::reconstruction {
 
           auto candidate = find_problematic_vertex(
               tri, intermediate_labelling.face_labels, source_face_ids,
-              cfg.manifold_repair_radius, cfg.manifold_height_tolerance);
+              cfg.manifold_repair_radius, cfg.manifold_height_tolerance,
+              exterior_height_provider);
           if (!candidate) break;
           forced_region_labels.push_back(repair_vertex(
               tri, *candidate, source_face_ids, cfg.manifold_repair_radius,
@@ -1017,6 +1030,26 @@ namespace roofer::reconstruction {
         // }
 
         arr = arr_snap;
+      }
+
+      void compute(Arrangement_2& arr, ArrangementSnapperConfig cfg) override {
+        compute(arr, 0.0F, cfg);
+      }
+
+      void compute(Arrangement_2& arr,
+                   const ElevationProvider& elevation_provider,
+                   ArrangementSnapperConfig cfg) override {
+        compute_with_exterior_height(arr, cfg, [&](const T::Point_2& point) {
+          return elevation_provider.get(
+              Point_2(CGAL::to_double(point.x()), CGAL::to_double(point.y())));
+        });
+      }
+
+      void compute(Arrangement_2& arr, float base_elevation,
+                   ArrangementSnapperConfig cfg) override {
+        compute_with_exterior_height(
+            arr, cfg,
+            [base_elevation](const T::Point_2&) { return base_elevation; });
       }
     };
 
