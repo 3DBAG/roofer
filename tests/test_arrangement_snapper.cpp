@@ -111,6 +111,22 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 non_footprint_bridge_arrangement() {
+    auto arrangement = cross_arrangement({0, 5, 0, 15});
+
+    for (const auto& sample : {Point_2(7.5, 7.5), Point_2(2.5, 2.5)}) {
+      auto hole = face_at(arrangement, sample);
+      hole->data().in_footprint = false;
+      hole->data().is_footprint_hole = true;
+      hole->data().segid = 0;
+      // Exterior plane data is intentionally stale; non-footprint sectors use
+      // the exterior/base elevation provider instead.
+      hole->data().plane = roofer::Plane(0, 0, 1, -100);
+    }
+
+    return arrangement;
+  }
+
   Arrangement_2 clearance_regression_arrangement() {
     auto arrangement = cross_arrangement({15, 5, 15, 6});
     CGAL::insert(arrangement, Segment_2(Point_2(5.05, 5.55), Point_2(5.05, 9)));
@@ -289,6 +305,28 @@ TEST_CASE("snapper keeps a finite exterior repair cell inside the footprint") {
   CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
         Arrangement_2::Vertex_handle());
   CHECK(face_at(arrangement, Point_2(5, 5))->data().segid == 2);
+}
+
+TEST_CASE("snapper assigns a bridge repair cell to non-footprint") {
+  auto arrangement = non_footprint_bridge_arrangement();
+
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, 0.0F,
+                   {.dist_thres = 0.001F,
+                    .repair_non_manifold_vertices = true,
+                    .manifold_repair_radius = 0.5F,
+                    .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
+        Arrangement_2::Vertex_handle());
+  auto repair_face = face_at(arrangement, Point_2(5, 5));
+  CHECK_FALSE(repair_face->data().in_footprint);
+  CHECK(repair_face->data().segid == 0);
+
+  auto extruder = roofer::reconstruction::createArrangementExtruder();
+  extruder->compute(arrangement, 0.0F);
+  REQUIRE(!extruder->meshes.empty());
+  for (const auto& mesh : extruder->meshes) check_two_manifold_edges(mesh);
 }
 
 TEST_CASE("snapper rejects a non-finite exterior height") {

@@ -97,6 +97,10 @@ namespace roofer::reconstruction {
              face_info->segid != 0;
     }
 
+    bool is_non_footprint_face(const FaceInfo* face_info) {
+      return face_info != nullptr && !face_info->in_footprint;
+    }
+
     FaceInfo* source_face_at(
         const T::Point_2& point,
         CGAL::Arr_walk_along_line_point_location<Arrangement_2>& walk_pl,
@@ -499,6 +503,56 @@ namespace roofer::reconstruction {
       return runs;
     }
 
+    template <typename Predicate>
+    std::size_t cyclic_sector_run_count(
+        const std::vector<IncidentSector>& sectors, Predicate predicate) {
+      if (sectors.empty()) return 0;
+      if (std::all_of(sectors.begin(), sectors.end(),
+                      [&](const auto& sector) { return predicate(sector); })) {
+        return 1;
+      }
+
+      std::size_t runs = 0;
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        const auto previous = (i + sectors.size() - 1) % sectors.size();
+        if (predicate(sectors[i]) && !predicate(sectors[previous])) {
+          ++runs;
+        }
+      }
+      return runs;
+    }
+
+    bool has_non_footprint_bridge(const std::vector<IncidentSector>& sectors) {
+      return cyclic_sector_run_count(sectors, [](const auto& sector) {
+               return is_non_footprint_face(sector.face_info);
+             }) >= 2;
+    }
+
+    FaceInfo* select_non_footprint_label(
+        const std::vector<IncidentSector>& sectors,
+        const SourceFaceIds& source_ids) {
+      std::unordered_map<FaceInfo*, std::size_t> counts;
+      for (const auto& sector : sectors) {
+        if (is_non_footprint_face(sector.face_info)) {
+          ++counts[sector.face_info];
+        }
+      }
+
+      FaceInfo* selected = nullptr;
+      std::size_t selected_count = 0;
+      std::size_t selected_id = std::numeric_limits<std::size_t>::max();
+      for (const auto& [face_info, count] : counts) {
+        auto id = source_ids.at(face_info);
+        if (count > selected_count ||
+            (count == selected_count && id < selected_id)) {
+          selected = face_info;
+          selected_count = count;
+          selected_id = id;
+        }
+      }
+      return selected;
+    }
+
     FaceInfo* repeated_incident_face(const std::vector<IncidentSector>& sectors,
                                      const SourceFaceIds& source_ids) {
       std::unordered_map<FaceInfo*, std::size_t> counts;
@@ -547,7 +601,7 @@ namespace roofer::reconstruction {
         }
         // we check repeated incident faces for self intersection at the vertex
         auto repeated_face = repeated_incident_face(sectors, source_ids);
-        if (repeated_face ||
+        if (has_non_footprint_bridge(sectors) || repeated_face ||
             has_non_manifold_height_order(sectors, height_tolerance)) {
           return RepairCandidate{vertex, std::move(sectors), *clearance,
                                  repeated_face};
@@ -567,8 +621,11 @@ namespace roofer::reconstruction {
             "Unable to compute a safe non-manifold junction repair");
       }
 
-      FaceInfo* selected_face = candidate.preferred_merge_face;
-      if (selected_face == nullptr) {
+      const bool merge_non_footprint = has_non_footprint_bridge(sectors);
+      FaceInfo* selected_face =
+          merge_non_footprint ? select_non_footprint_label(sectors, source_ids)
+                              : candidate.preferred_merge_face;
+      if (selected_face == nullptr && !merge_non_footprint) {
         double selected_height = std::numeric_limits<double>::infinity();
         std::size_t selected_id = std::numeric_limits<std::size_t>::max();
 
@@ -587,6 +644,11 @@ namespace roofer::reconstruction {
           throw roofer::rooferException(
               "Non-manifold junction repair has no roof face to merge into");
         }
+      }
+      if (selected_face == nullptr) {
+        throw roofer::rooferException(
+            "Non-manifold junction repair has no non-footprint face to merge "
+            "into");
       }
 
       double shortest_edge = std::numeric_limits<double>::max();
@@ -628,7 +690,9 @@ namespace roofer::reconstruction {
       std::optional<T::Point_2> forced_seed;
       for (std::size_t i = 0; i < sectors.size(); ++i) {
         auto next = (i + 1) % sectors.size();
-        if (sectors[i].face_info == selected_face) {
+        if ((merge_non_footprint &&
+             is_non_footprint_face(sectors[i].face_info)) ||
+            (!merge_non_footprint && sectors[i].face_info == selected_face)) {
           if (!forced_seed) {
             forced_seed = T::Point_2(
                 (2 * original_point.x() + split_vertices[i]->point().x() +

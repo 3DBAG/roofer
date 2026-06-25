@@ -28,11 +28,11 @@
 namespace roofer::reconstruction {
 
   struct ArrangementSnapperConfig {
-    float dist_thres = 0.002;
+    float dist_thres = 0.045;
     bool repair_non_manifold_vertices = true;
     // manifold repairs with this radius, and down to half this radius in case
     // clearance is limited. Below half this radius, repairs are skipped.
-    float manifold_repair_radius = 0.05;
+    float manifold_repair_radius = 0.02;
     float manifold_height_tolerance = 1e-4;
   };
 
