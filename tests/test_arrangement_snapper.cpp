@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 #include <limits>
 #include <map>
 #include <variant>
@@ -127,6 +128,40 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 narrow_angle_junction_arrangement() {
+    Arrangement_2 arrangement;
+    const std::array<Point_2, 4> corners = {Point_2(0, 0), Point_2(10, 0),
+                                            Point_2(10, 10), Point_2(0, 10)};
+    for (std::size_t i = 0; i < corners.size(); ++i) {
+      CGAL::insert(arrangement,
+                   Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+    }
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(10, 5)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(10, 5.1)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(5, 10)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(0, 5)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5, 5), Point_2(5, 0)));
+
+    auto set_roof = [&](const Point_2& sample, int segid, double height) {
+      auto face = face_at(arrangement, sample);
+      face->data().in_footprint = true;
+      face->data().segid = segid;
+      face->data().plane = roofer::Plane(0, 0, 1, -height);
+    };
+
+    set_roof(Point_2(7.5, 2.5), 1, 6);
+    set_roof(Point_2(7.5, 5.025), 2, 15);
+    set_roof(Point_2(7.5, 7.5), 3, 15);
+    set_roof(Point_2(2.5, 7.5), 4, 5);
+    set_roof(Point_2(2.5, 2.5), 5, 15);
+
+    arrangement.unbounded_face()->data().in_footprint = false;
+    arrangement.unbounded_face()->data().segid = 0;
+    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 0);
+
+    return arrangement;
+  }
+
   Arrangement_2 clearance_regression_arrangement() {
     auto arrangement = cross_arrangement({15, 5, 15, 6});
     CGAL::insert(arrangement, Segment_2(Point_2(5.05, 5.55), Point_2(5.05, 9)));
@@ -175,6 +210,19 @@ namespace {
       }
     }
     return false;
+  }
+
+  std::size_t count_vertices_near(Arrangement_2& arrangement,
+                                  const Point_2& point, double tolerance) {
+    std::size_t count = 0;
+    const double tolerance_sq = tolerance * tolerance;
+    for (auto vertex : arrangement.vertex_handles()) {
+      if (CGAL::to_double(CGAL::squared_distance(vertex->point(), point)) <=
+          tolerance_sq) {
+        ++count;
+      }
+    }
+    return count;
   }
 
   void check_two_manifold_edges(const roofer::Mesh& mesh) {
@@ -270,6 +318,50 @@ TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
         Arrangement_2::Vertex_handle());
   CHECK(has_vertex_near(arrangement, Point_2(5.5, 5), 1e-9));
   CHECK(has_vertex_near(arrangement, Point_2(5, 5.5), 1e-9));
+}
+
+TEST_CASE("snapper staggers close repair-cell vertices") {
+  auto arrangement = narrow_angle_junction_arrangement();
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.001F,
+                                 .repair_non_manifold_vertices = true,
+                                 .manifold_repair_radius = 0.5F,
+                                 .manifold_height_tolerance = 1e-4F});
+
+  CHECK(vertex_at(arrangement, Point_2(5, 5)) ==
+        Arrangement_2::Vertex_handle());
+
+  const double near_ray_length = std::sqrt(5.0 * 5.0 + 0.1 * 0.1);
+  const Point_2 east_outer_split(5.5, 5);
+  const Point_2 east_inner_split(5 + 0.5 * 0.45, 5);
+  const Point_2 near_outer_split(5 + 0.5 * 5 / near_ray_length,
+                                 5 + 0.5 * 0.1 / near_ray_length);
+  const Point_2 near_inner_split(5 + 0.5 * 0.45 * 5 / near_ray_length,
+                                 5 + 0.5 * 0.45 * 0.1 / near_ray_length);
+  const bool east_outer_near_inner =
+      has_vertex_near(arrangement, east_outer_split, 1e-9) &&
+      has_vertex_near(arrangement, near_inner_split, 1e-9);
+  const bool east_inner_near_outer =
+      has_vertex_near(arrangement, east_inner_split, 1e-9) &&
+      has_vertex_near(arrangement, near_outer_split, 1e-9);
+
+  CHECK(count_vertices_near(arrangement, Point_2(5, 5), 0.55) == 5);
+  CHECK((east_outer_near_inner || east_inner_near_outer));
+  CHECK_FALSE((has_vertex_near(arrangement, east_outer_split, 1e-9) &&
+               has_vertex_near(arrangement, near_outer_split, 1e-9)));
+  if (east_outer_near_inner) {
+    CHECK(CGAL::to_double(CGAL::squared_distance(
+              east_outer_split, near_inner_split)) >= 0.25 * 0.25);
+  }
+  if (east_inner_near_outer) {
+    CHECK(CGAL::to_double(CGAL::squared_distance(
+              east_inner_split, near_outer_split)) >= 0.25 * 0.25);
+  }
+
+  auto extruder = roofer::reconstruction::createArrangementExtruder();
+  extruder->compute(arrangement, 0.0F);
+  REQUIRE(extruder->meshes.size() == 1);
+  check_two_manifold_edges(extruder->meshes.front());
 }
 
 TEST_CASE("snapper collapses unconstrained short triangulation edges") {

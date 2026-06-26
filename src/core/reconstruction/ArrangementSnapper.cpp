@@ -29,6 +29,7 @@
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
+#include <array>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -577,6 +578,101 @@ namespace roofer::reconstruction {
       return selected;
     }
 
+    struct RepairRay {
+      double dx;
+      double dy;
+    };
+
+    std::vector<double> repair_cell_radii(const std::vector<RepairRay>& rays,
+                                          double outer_radius) {
+      std::vector<double> radii(rays.size(), outer_radius);
+      if (rays.size() < 2 || !(outer_radius > 0)) return radii;
+
+      constexpr int outer_lane = 0;
+      constexpr int inner_lane = 1;
+      constexpr int lane_count = 2;
+      const std::array<double, lane_count> lane_radii = {outer_radius,
+                                                         outer_radius * 0.45};
+      const double minimum_distance = outer_radius * 0.5;
+      const double minimum_distance_sq = minimum_distance * minimum_distance;
+      const double tolerance = std::max(1.0, minimum_distance_sq) * 1e-12;
+
+      auto valid_edge = [&](std::size_t first, int first_lane,
+                            std::size_t second, int second_lane) {
+        const double first_radius = lane_radii[first_lane];
+        const double second_radius = lane_radii[second_lane];
+        const double dx =
+            first_radius * rays[first].dx - second_radius * rays[second].dx;
+        const double dy =
+            first_radius * rays[first].dy - second_radius * rays[second].dy;
+        return dx * dx + dy * dy >= minimum_distance_sq - tolerance;
+      };
+
+      const int infinite_cost = std::numeric_limits<int>::max() / 4;
+      int best_cost = infinite_cost;
+      std::vector<int> best_lanes;
+
+      for (int first_lane = outer_lane; first_lane < lane_count; ++first_lane) {
+        std::vector<std::array<int, lane_count>> costs(
+            rays.size(), {infinite_cost, infinite_cost});
+        std::vector<std::array<int, lane_count>> previous_lanes(rays.size(),
+                                                                {-1, -1});
+        costs.front()[first_lane] = first_lane == inner_lane ? 1 : 0;
+
+        for (std::size_t i = 1; i < rays.size(); ++i) {
+          for (int previous_lane = outer_lane; previous_lane < lane_count;
+               ++previous_lane) {
+            if (costs[i - 1][previous_lane] == infinite_cost) continue;
+
+            for (int lane = outer_lane; lane < lane_count; ++lane) {
+              if (!valid_edge(i - 1, previous_lane, i, lane)) continue;
+
+              const int cost =
+                  costs[i - 1][previous_lane] + (lane == inner_lane ? 1 : 0);
+              if (cost < costs[i][lane]) {
+                costs[i][lane] = cost;
+                previous_lanes[i][lane] = previous_lane;
+              }
+            }
+          }
+        }
+
+        for (int last_lane = outer_lane; last_lane < lane_count; ++last_lane) {
+          if (costs.back()[last_lane] == infinite_cost) continue;
+          if (!valid_edge(rays.size() - 1, last_lane, 0, first_lane)) continue;
+          if (costs.back()[last_lane] >= best_cost) continue;
+
+          best_cost = costs.back()[last_lane];
+          best_lanes.assign(rays.size(), outer_lane);
+          int lane = last_lane;
+          for (std::size_t i = rays.size(); i-- > 0;) {
+            best_lanes[i] = lane;
+            lane = previous_lanes[i][lane];
+          }
+        }
+      }
+
+      if (best_lanes.empty()) return radii;
+
+      for (std::size_t i = 0; i < best_lanes.size(); ++i) {
+        radii[i] = lane_radii[best_lanes[i]];
+      }
+      return radii;
+    }
+
+    void insert_constraint_if_distinct(T& tri, Vertex_handle first,
+                                       Vertex_handle second) {
+      if (first == second) return;
+
+      Face_handle face;
+      int index;
+      if (tri.is_edge(first, second, face, index) &&
+          tri.is_constrained({face, index})) {
+        return;
+      }
+      tri.insert_constraint(first, second);
+    }
+
     std::optional<RepairCandidate> find_problematic_vertex(
         T& tri, const TriangleFaceLabels& face_labels,
         const SourceFaceIds& source_ids, double repair_radius,
@@ -666,14 +762,22 @@ namespace roofer::reconstruction {
 
       // insert split vertices along each incident edge
       const auto original_point = vertex->point();
-      std::vector<Vertex_handle> split_vertices;
-      split_vertices.reserve(sectors.size());
+      std::vector<RepairRay> repair_rays;
+      repair_rays.reserve(sectors.size());
       for (const auto& sector : sectors) {
         const double dx = sector.neighbour->point().x() - original_point.x();
         const double dy = sector.neighbour->point().y() - original_point.y();
         const double length = std::sqrt(dx * dx + dy * dy);
-        T::Point_2 split_point(original_point.x() + radius * dx / length,
-                               original_point.y() + radius * dy / length);
+        repair_rays.push_back({dx / length, dy / length});
+      }
+
+      std::vector<Vertex_handle> split_vertices;
+      split_vertices.reserve(sectors.size());
+      const auto split_radii = repair_cell_radii(repair_rays, radius);
+      for (std::size_t i = 0; i < sectors.size(); ++i) {
+        T::Point_2 split_point(
+            original_point.x() + split_radii[i] * repair_rays[i].dx,
+            original_point.y() + split_radii[i] * repair_rays[i].dy);
         auto split_vertex = tri.insert(split_point);
         split_vertex->info() = false;
         split_vertices.push_back(split_vertex);
@@ -683,7 +787,8 @@ namespace roofer::reconstruction {
       tri.remove_incident_constraints(vertex);
       tri.remove(vertex);
       for (std::size_t i = 0; i < sectors.size(); ++i) {
-        tri.insert_constraint(split_vertices[i], sectors[i].neighbour);
+        insert_constraint_if_distinct(tri, split_vertices[i],
+                                      sectors[i].neighbour);
       }
 
       //
@@ -704,7 +809,8 @@ namespace roofer::reconstruction {
           }
           continue;
         }
-        tri.insert_constraint(split_vertices[i], split_vertices[next]);
+        insert_constraint_if_distinct(tri, split_vertices[i],
+                                      split_vertices[next]);
       }
 
       if (!forced_seed) {
