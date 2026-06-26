@@ -35,7 +35,7 @@ namespace roofer::reconstruction {
     bool lod1_extrude_to_max_ = false;
     // float base_elevation = 0;
     float nodata_elevation = 3;
-    int snap_tolerance_exp = 2;
+    float snap_tolerance_exp = 2.9;
   };
 
   struct ArrangementExtruderInterface {

@@ -884,48 +884,44 @@ namespace roofer::reconstruction {
           found_short_edge = false;
           for (Finite_edges_iterator ceit = tri.finite_edges_begin();
                ceit != tri.finite_edges_end(); ++ceit) {
-            if (tri.is_constrained(*ceit)) {
-              auto v1 = ceit->first->vertex(tri.cw(ceit->second));
-              auto v2 = ceit->first->vertex(tri.ccw(ceit->second));
-              auto& p1 = v1->point();
-              auto& p2 = v2->point();
+            auto v1 = ceit->first->vertex(tri.cw(ceit->second));
+            auto v2 = ceit->first->vertex(tri.ccw(ceit->second));
+            auto& p1 = v1->point();
+            auto& p2 = v2->point();
 
-              // do not collapse if this edge is on the footprint boundary
-              // if (v1->info() && v2->info()) continue;
+            // do not collapse if this edge is on the footprint boundary
+            // if (v1->info() && v2->info()) continue;
 
-              if (CGAL::squared_distance(p1, p2) < sq_dist_thres) {
-                // std::cout << "short edge between " << p1 << "  and  " << p2
-                // << std::endl;
+            if (CGAL::squared_distance(p1, p2) < sq_dist_thres) {
+              // std::cout << "short edge between " << p1 << "  and  " << p2
+              // << std::endl;
 
-                // auto vi = ceit->second;
-                ConstraintSet constraints_to_restore;
-                get_incident_constraints(tri, v1, v1, v2,
-                                         constraints_to_restore);
-                get_incident_constraints(tri, v2, v1, v2,
-                                         constraints_to_restore);
+              // auto vi = ceit->second;
+              ConstraintSet constraints_to_restore;
+              get_incident_constraints(tri, v1, v1, v2, constraints_to_restore);
+              get_incident_constraints(tri, v2, v1, v2, constraints_to_restore);
 
-                // insert midpoint and restore constraints
-                // first check points for being on the footprint boundary
-                T::Point_2 pnew;
-                if (v1->info()) {
-                  pnew = p1;
-                } else if (v2->info()) {
-                  pnew = p2;
-                } else {
-                  pnew = CGAL::midpoint(p1, p2);
-                }
-
-                // remove edge
-                tri.remove_incident_constraints(v1);
-                tri.remove(v1);
-                tri.remove_incident_constraints(v2);
-                tri.remove(v2);
-
-                restore_constraints(tri, pnew, constraints_to_restore);
-
-                found_short_edge = true;
-                break;
+              // insert midpoint and restore constraints
+              // first check points for being on the footprint boundary
+              T::Point_2 pnew;
+              if (v1->info()) {
+                pnew = p1;
+              } else if (v2->info()) {
+                pnew = p2;
+              } else {
+                pnew = CGAL::midpoint(p1, p2);
               }
+
+              // remove edge
+              tri.remove_incident_constraints(v1);
+              tri.remove(v1);
+              tri.remove_incident_constraints(v2);
+              tri.remove(v2);
+
+              restore_constraints(tri, pnew, constraints_to_restore);
+
+              found_short_edge = true;
+              break;
             }
           }
         } while (found_short_edge);

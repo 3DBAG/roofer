@@ -134,6 +134,29 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 gapped_split_arrangement() {
+    Arrangement_2 arrangement;
+    const std::array<Point_2, 4> corners = {Point_2(0, 0), Point_2(10, 0),
+                                            Point_2(10, 10), Point_2(0, 10)};
+    for (std::size_t i = 0; i < corners.size(); ++i) {
+      CGAL::insert(arrangement,
+                   Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+    }
+    CGAL::insert(arrangement, Segment_2(Point_2(0, 5), Point_2(5, 5)));
+    CGAL::insert(arrangement, Segment_2(Point_2(5.01, 5), Point_2(10, 5)));
+
+    auto roof = face_at(arrangement, Point_2(5, 7.5));
+    roof->data().in_footprint = true;
+    roof->data().segid = 1;
+    roof->data().plane = roofer::Plane(0, 0, 1, -1);
+
+    arrangement.unbounded_face()->data().in_footprint = false;
+    arrangement.unbounded_face()->data().segid = 0;
+    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 0);
+
+    return arrangement;
+  }
+
   Arrangement_2::Vertex_handle vertex_at(Arrangement_2& arrangement,
                                          const Point_2& point) {
     for (auto vertex : arrangement.vertex_handles()) {
@@ -247,6 +270,18 @@ TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
         Arrangement_2::Vertex_handle());
   CHECK(has_vertex_near(arrangement, Point_2(5.5, 5), 1e-9));
   CHECK(has_vertex_near(arrangement, Point_2(5, 5.5), 1e-9));
+}
+
+TEST_CASE("snapper collapses unconstrained short triangulation edges") {
+  auto arrangement = gapped_split_arrangement();
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.dist_thres = 0.02F,
+                                 .repair_non_manifold_vertices = false});
+
+  CHECK_FALSE(has_vertex_near(arrangement, Point_2(5, 5), 1e-9));
+  CHECK_FALSE(has_vertex_near(arrangement, Point_2(5.01, 5), 1e-9));
+  CHECK(has_vertex_near(arrangement, Point_2(5.005, 5), 1e-9));
+  CHECK(face_at(arrangement, Point_2(5, 7.5))->data().segid == 1);
 }
 
 TEST_CASE("snapper preserves a manifold four-way roof junction") {
