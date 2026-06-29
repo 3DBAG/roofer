@@ -130,6 +130,7 @@ struct RooferConfig {
   // Minimum building point density (points/m²); roofprints below
   // this are flagged pointcloud-insufficient. Deterministic per-building.
   float min_building_density = 1.0;
+  float max_nodata_fraction = 1.0;
   float terrain_grid_cellsize = 10.0;
   int terrain_grid_search_radius = 3;
   std::string terrain_nodata_mode = "fill_small_gaps";
@@ -456,6 +457,11 @@ struct RooferConfigHandler {
              "Minimum building-class point density (points/m²) below "
              "which a rootprint's pointcloud is flagged insufficient.",
              cfg_.min_building_density, {check::HigherOrEqualTo<float>(0)});
+    crop.add("max-nodata-fraction",
+             "Maximum fraction of the roofprint area without pointcloud data. "
+             "Above this threshold, a rootprint's pointcloud is flagged "
+             "insufficient.",
+             cfg_.max_nodata_fraction, {check::InRange<float>(0, 1)});
     crop.add("terrain-grid-cellsize",
              "Cellsize used for the crop phase terrain fallback grid.",
              cfg_.terrain_grid_cellsize, {check::HigherThan<float>(0)});

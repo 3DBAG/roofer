@@ -488,7 +488,9 @@ bool crop_tile(const roofer::TBox<double>& tile,
           input_pointclouds[selected->index].roof_elevations[i];
       building.force_lod11 = input_pointclouds[selected->index].lod11_forced[i];
       building.pointcloud_insufficient =
-          input_pointclouds[selected->index].pointcloud_insufficient[i];
+          input_pointclouds[selected->index].pointcloud_insufficient[i] ||
+          input_pointclouds[selected->index].nodata_fractions[i] >
+              cfg.max_nodata_fraction;
       building.is_glass_roof =
           input_pointclouds[selected->index].is_glass_roof[i];
 
