@@ -47,11 +47,30 @@ namespace roofer::reconstruction {
   }
 
   double calculate_volume(const TriangleCollection& triangle_collection) {
+    if (triangle_collection.empty()) {
+      return 0;
+    }
+
+    double centroid_x = 0;
+    double centroid_y = 0;
+    double centroid_z = 0;
+    size_t vertex_count = 0;
+    for (const auto& t : triangle_collection) {
+      for (const auto& p : t) {
+        centroid_x += p[0];
+        centroid_y += p[1];
+        centroid_z += p[2];
+        ++vertex_count;
+      }
+    }
+    Vector centroid(centroid_x / vertex_count, centroid_y / vertex_count,
+                    centroid_z / vertex_count);
+
     double sum = 0;
     for (const auto& t : triangle_collection) {
-      auto a = Vector(t[0][0], t[0][1], t[0][2]);
-      auto b = Vector(t[1][0], t[1][1], t[1][2]);
-      auto c = Vector(t[2][0], t[2][1], t[2][2]);
+      auto a = Vector(t[0][0], t[0][1], t[0][2]) - centroid;
+      auto b = Vector(t[1][0], t[1][1], t[1][2]) - centroid;
+      auto c = Vector(t[2][0], t[2][1], t[2][2]) - centroid;
       sum += CGAL::scalar_product(a, CGAL::cross_product(b, c));
     }
     return sum / 6;
