@@ -846,9 +846,10 @@ namespace roofer::reconstruction {
       }
     }
 
-    void restore_constraints(T& tri, T::Point_2& pnew,
+    void restore_constraints(T& tri, T::Point_2& pnew, bool boundary_vertex,
                              ConstraintSet& constraints_to_restore) {
       auto vnew = tri.insert(pnew);
+      vnew->info() = boundary_vertex;
 
       // restore constraints
       // std::cout << "restoring " << constraints_to_restore.size() << "
@@ -955,12 +956,16 @@ namespace roofer::reconstruction {
 
               // but first check points for being on the footprint boundary
               T::Point_2 pnew;
+              bool boundary_vertex = false;
               if (v0->info()) {
                 pnew = p0;
+                boundary_vertex = true;
               } else if (v1->info()) {
                 pnew = p1;
+                boundary_vertex = true;
               } else if (v2->info()) {
                 pnew = p2;
+                boundary_vertex = true;
               } else {
                 pnew = CGAL::centroid(p0, p1, p2);
               }
@@ -972,7 +977,8 @@ namespace roofer::reconstruction {
               tri.remove_incident_constraints(v2);
               tri.remove(v2);
 
-              restore_constraints(tri, pnew, constraints_to_restore);
+              restore_constraints(tri, pnew, boundary_vertex,
+                                  constraints_to_restore);
 
               found_small_face = true;
               break;  // we need to restart the loop because we may have
@@ -1010,10 +1016,13 @@ namespace roofer::reconstruction {
               // insert midpoint and restore constraints
               // first check points for being on the footprint boundary
               T::Point_2 pnew;
+              bool boundary_vertex = false;
               if (v1->info()) {
                 pnew = p1;
+                boundary_vertex = true;
               } else if (v2->info()) {
                 pnew = p2;
+                boundary_vertex = true;
               } else {
                 pnew = CGAL::midpoint(p1, p2);
               }
@@ -1024,7 +1033,8 @@ namespace roofer::reconstruction {
               tri.remove_incident_constraints(v2);
               tri.remove(v2);
 
-              restore_constraints(tri, pnew, constraints_to_restore);
+              restore_constraints(tri, pnew, boundary_vertex,
+                                  constraints_to_restore);
 
               found_short_edge = true;
               break;
