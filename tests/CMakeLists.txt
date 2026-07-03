@@ -72,9 +72,15 @@ target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
 add_executable("test_terrain" "${CMAKE_CURRENT_SOURCE_DIR}/test_terrain.cpp")
 target_link_libraries("test_terrain" PRIVATE Catch2::Catch2WithMain
                                              roofer-extra)
-target_include_directories("test_terrain" PRIVATE ${CMAKE_BINARY_DIR})
-if(TARGET update_git_hash)
-  add_dependencies("test_terrain" update_git_hash)
+
+# TODO: refactor config helpers so that we can depend without the githash
+if(RF_GIT_HASH)
+  target_compile_definitions("test_terrain" PRIVATE RF_GIT_HASH="${RF_GIT_HASH}")
+else()
+  target_include_directories("test_terrain" PRIVATE ${CMAKE_BINARY_DIR})
+  if(TARGET update_git_hash)
+    add_dependencies("test_terrain" update_git_hash)
+  endif()
 endif()
 catch_discover_tests("test_terrain")
 
