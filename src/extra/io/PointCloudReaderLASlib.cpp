@@ -46,6 +46,19 @@ namespace roofer::io {
   struct PointCloudReaderLASlib : public PointCloudReaderInterface {
     ~PointCloudReaderLASlib() { close(); };
 
+    void setOgcWktFromPayload(const void* data, size_t length, std::string& wkt,
+                              const char* record_type) {
+      auto& logger = logger::Logger::get_logger();
+      if (data == nullptr || length == 0) {
+        logger.warning(
+            "LASF_Projection {} record_id 2112 has no payload; ignoring",
+            record_type);
+        return;
+      }
+      wkt = std::string(reinterpret_cast<const char*>(data), length);
+      wkt.erase(wkt.find_last_not_of('\0') + 1);
+    }
+
     void getOgcWkt(LASheader* lasheader, std::string& wkt) {
       auto& logger = logger::Logger::get_logger();
 
@@ -70,7 +83,9 @@ namespace roofer::io {
                    2112)  // OGC COORDINATE SYSTEM WKT
         {
           // logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-          wkt = (char*)(lasheader->vlrs[i].data);
+          setOgcWktFromPayload(lasheader->vlrs[i].data,
+                               lasheader->vlrs[i].record_length_after_header,
+                               wkt, "VLR");
         } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
         {
           logger.debug("Found and ignored: GeoKeyDirectoryTag");
@@ -89,7 +104,11 @@ namespace roofer::io {
                      2112)  // OGC COORDINATE SYSTEM WKT
           {
             // logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-            wkt = (char*)(lasheader->evlrs[i].data);
+            setOgcWktFromPayload(
+                lasheader->evlrs[i].data,
+                static_cast<size_t>(
+                    lasheader->evlrs[i].record_length_after_header),
+                wkt, "EVLR");
           }
         }
       }

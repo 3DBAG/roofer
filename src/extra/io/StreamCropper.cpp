@@ -699,42 +699,6 @@ namespace roofer::io {
     }
   }
 
-  void getOgcWkt(LASheader* lasheader, std::string& wkt) {
-    auto& logger = logger::Logger::get_logger();
-    for (int i = 0; i < (int)lasheader->number_of_variable_length_records;
-         i++) {
-      if (lasheader->vlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
-      {
-        logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
-      } else if (lasheader->vlrs[i].record_id ==
-                 2112)  // OGC COORDINATE SYSTEM WKT
-      {
-        logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-        wkt = (char*)(lasheader->vlrs[i].data);
-      } else if (lasheader->vlrs[i].record_id == 34735)  // GeoKeyDirectoryTag
-      {
-        logger.debug("Found and ignored: GeoKeyDirectoryTag");
-      }
-    }
-
-    for (int i = 0;
-         i < (int)lasheader->number_of_extended_variable_length_records; i++) {
-      if (strcmp(lasheader->evlrs[i].user_id, "LASF_Projection") == 0) {
-        if (lasheader->evlrs[i].record_id == 2111)  // OGC MATH TRANSFORM WKT
-        {
-          logger.debug("Found and ignored: OGC MATH TRANSFORM WKT");
-
-        } else if (lasheader->evlrs[i].record_id ==
-                   2112)  // OGC COORDINATE SYSTEM WKT
-        {
-          logger.debug("Found: OGC COORDINATE SYSTEM WKT");
-          wkt = (char*)(lasheader->evlrs[i].data);
-        }
-      }
-    }
-    // std::cout << wkt << std::endl;
-  };
-
   struct PointCloudCropper : public PointCloudCropperInterface {
     using PointCloudCropperInterface::PointCloudCropperInterface;
 
@@ -778,11 +742,6 @@ namespace roofer::io {
         LASreadOpener lasreadopener;
         lasreadopener.set_file_name(lasfile.c_str());
         LASreader* lasreader = lasreadopener.open();
-
-        std::string wkt = cfg.wkt_;
-        if (wkt.size() == 0) {
-          getOgcWkt(&lasreader->header, wkt);
-        }
 
         if (!lasreader) {
           logger.warning("cannot read las file: {}", lasfile);

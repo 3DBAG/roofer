@@ -12,14 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional per-tile triangulated terrain output as CityJSON `TINRelief` features, see the `--terrain` option.
 - A new `max-nodata-fraction` configuration option to control the maximum fraction of nodata pixels in a building polygon that is allowed before a building pointcloud is considered insufficient.
 
+## Fixed
+- More robust handling of OGC WKT payloads in LAS/LAZ files.
+- Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion.
+- Correct squared-distance tolerance comparisons during extrusion.
+
 ## Changed
 - The pointcloud-insufficient test is now an absolute per-building density floor (`min-building-density`, points/m²) instead of a tile-relative `mean - 2·std` outlier test. The old test depended the entire tile that was being processed, so the same building could be flagged differently between runs with different tiling — potentially skipping point-rich buildings and leaving them without geometry. The decision is now deterministic and depends only on the building's own data.
 - Region growing no longer uses a wall-clock time limit, which could make a building reconstruct with success on one run and fall back to LoD 1.1 on the next given identical input due to resource starvation with multithreading. The deterministic plane-count limit (`lod11-fallback-planes`) is now the sole reconstruction-complexity cutoff. The `lod11-fallback-time` parameter is deprecated and removed.
 - Use mesh centroid for volume calculation
-
-### Fixed
-- Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion.
-- Correct squared-distance tolerance comparisons during extrusion.
 
 ## [1.0.0] - 2026-04-20
 

@@ -45,7 +45,6 @@ namespace roofer::io {
     float min_building_density = 1.0;
     int ground_class = 2;
     int building_class = 6;
-    std::string wkt_ = "";
     bool handle_overlap_points = false;
     bool use_acquisition_year = true;
     float terrain_grid_cellsize = 10.0;
