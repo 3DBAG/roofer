@@ -439,6 +439,26 @@ namespace roofer::reconstruction {
       return count;
     }
 
+    FaceInfo* incident_region_label(T& tri, Vertex_handle vertex) {
+      Face_circulator face = tri.incident_faces(vertex), done(face);
+      if (face == nullptr) return nullptr;
+
+      do {
+        if (!tri.is_infinite(face) && face->info().label != nullptr) {
+          return face->info().label;
+        }
+      } while (++face != done);
+      return nullptr;
+    }
+
+    void seed_removed_vertex_region(T& tri, const T::Point_2& point,
+                                    FaceInfo* label) {
+      if (label == nullptr) return;
+
+      auto face = tri.locate(point);
+      if (!tri.is_infinite(face)) face->info().label = label;
+    }
+
     void remove_dangling_constraints_and_vertices(T& tri) {
       // Build the constraint graph and peel its degree-one vertices. Updating
       // the graph as edges are peeled also detects constraint chains that only
@@ -487,7 +507,12 @@ namespace roofer::reconstruction {
           vertices_to_remove.push_back(vertex);
         }
       }
-      for (auto vertex : vertices_to_remove) tri.remove(vertex);
+      for (auto vertex : vertices_to_remove) {
+        auto* label = incident_region_label(tri, vertex);
+        auto point = vertex->point();
+        tri.remove(vertex);
+        seed_removed_vertex_region(tri, point, label);
+      }
     }
 
     // Calculate azimuth for each incident triangulation edge and sample the
@@ -1399,6 +1424,7 @@ namespace roofer::reconstruction {
           auto& p2_ = v2->point();
           auto p1 = Arrangement_2::Point_2(p1_.x(), p1_.y());
           auto p2 = Arrangement_2::Point_2(p2_.x(), p2_.y());
+          if (vertex2arr_map[v1] == vertex2arr_map[v2]) continue;
 
           // std::cout << p1 << "  --  " << p2 << std::endl;
 
