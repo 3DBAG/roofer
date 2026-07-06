@@ -3,7 +3,7 @@ name: Docker Builder Image
 on:
   push:
     branches:
-      - develop
+      - main
     tags:
       - "v*"
     paths-ignore:
@@ -11,7 +11,7 @@ on:
       - "**.rst"
   pull_request:
     branches:
-      - develop
+      - main
 
 jobs:
   build:
