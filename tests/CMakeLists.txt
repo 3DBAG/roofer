@@ -63,12 +63,11 @@ add_executable("test_app_reconstruction_config"
 target_include_directories(
   "test_app_reconstruction_config"
   PRIVATE "${PROJECT_SOURCE_DIR}/apps/roofer-app"
-          "${PROJECT_SOURCE_DIR}/apps/external" "${CMAKE_BINARY_DIR}")
+          "${PROJECT_SOURCE_DIR}/apps/external")
+target_compile_definitions("test_app_reconstruction_config"
+                           PRIVATE RF_GIT_HASH="test")
 target_link_libraries("test_app_reconstruction_config"
                       PRIVATE Catch2::Catch2WithMain roofer-core fmt::fmt)
-if(TARGET update_git_hash)
-  add_dependencies("test_app_reconstruction_config" update_git_hash)
-endif()
 catch_discover_tests("test_app_reconstruction_config")
 
 add_executable("test_arrangement_dissolver"
