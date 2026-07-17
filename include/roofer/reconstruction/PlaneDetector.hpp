@@ -20,13 +20,25 @@
 // Ravi Peters
 
 #pragma once
+#include <cmath>
 #include <memory>
+#include <numbers>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/common/ConfigField.hpp>
 
 #include "cgal_shared_definitions.hpp"
 
 namespace roofer::reconstruction {
+
+  inline float normal_angle_degrees_from_dot_product(float dot_product) {
+    return static_cast<float>(std::acos(dot_product) * 180.0 /
+                              std::numbers::pi_v<double>);
+  }
+
+  inline float normal_dot_product_from_angle_degrees(float angle) {
+    return static_cast<float>(
+        std::cos(angle * std::numbers::pi_v<double> / 180.0));
+  }
 
 #define ROOFER_PLANE_DETECTOR_FIELDS(X)                                        \
   X(int, normal_neighbour_count, 5, "Neighbours used to estimate normals.",    \
@@ -37,29 +49,28 @@ namespace roofer::reconstruction {
     config::greater_than(2), public_)                                          \
   X(float, plane_epsilon, 0.3F, "Maximum plane fitting distance, in metres.",  \
     config::greater_than(0.0F), public_)                                       \
-  X(float, plane_normal_threshold, 0.75F,                                      \
-    "Minimum normal dot-product similarity within a plane (unitless).",        \
-    config::in_range(0.0F, 1.0F), public_)                                     \
-  X(float, horizontal_threshold, 0.995F,                                       \
-    "Minimum absolute normal/vertical dot product for horizontal planes "      \
-    "(unitless).",                                                             \
-    config::in_range(0.0F, 1.0F), public_)                                     \
+  X(float, normal_angle_threshold,                                             \
+    normal_angle_degrees_from_dot_product(0.75F),                              \
+    "Maximum angle between normals within a plane, in degrees.",               \
+    config::in_range(0.0F, 90.0F), public_)                                    \
+  X(float, horizontal_angle_threshold, 5.731968F,                              \
+    "Maximum plane angle from horizontal for horizontal planes, in degrees.",  \
+    config::in_range(0.0F, 90.0F), public_)                                    \
   X(float, ransac_probability, 0.05F, "RANSAC miss probability.",              \
     config::in_range(0.0F, 1.0F), internal)                                    \
   X(float, ransac_cluster_epsilon, 0.3F,                                       \
     "RANSAC cluster distance, in metres.", config::greater_than(0.0F),         \
     internal)                                                                  \
-  X(float, wall_threshold, 0.3F,                                               \
-    "Maximum absolute normal/vertical dot product for wall planes "            \
-    "(unitless).",                                                             \
-    config::in_range(0.0F, 1.0F), public_)                                     \
+  X(float, wall_angle_threshold, 72.542397F,                                   \
+    "Minimum plane angle from horizontal for wall planes, in degrees.",        \
+    config::in_range(0.0F, 90.0F), public_)                                    \
   X(int, refit_interval, 5, "Plane refit interval.", config::greater_than(0),  \
     public_)                                                                   \
   X(bool, use_ransac, false, "Use RANSAC plane detection.",                    \
     config::no_validation<bool>(), internal)                                   \
   X(float, maximum_angle, 25.0F,                                               \
-    "Maximum plane regularisation angle, in degrees.", config::at_least(0.0F), \
-    public_)                                                                   \
+    "Maximum plane regularisation angle, in degrees.",                         \
+    config::in_range(0.0F, 90.0F), public_)                                    \
   X(float, maximum_offset, 0.5F,                                               \
     "Maximum plane regularisation offset, in metres.", config::at_least(0.0F), \
     public_)                                                                   \
@@ -104,12 +115,11 @@ namespace roofer::reconstruction {
   std::unique_ptr<PlaneDetectorInterface> createPlaneDetector();
 
   struct ShapeDetectorInterface {
-    virtual unsigned detectPlanes(PointCollection& point_collection,
-                                  vec3f& normals, vec1i& labels,
-                                  float probability = 0.01, int min_points = 15,
-                                  float epsilon = 0.2,
-                                  float cluster_epsilon = 0.5,
-                                  float normal_threshold = 0.8) = 0;
+    virtual unsigned detectPlanes(
+        PointCollection& point_collection, vec3f& normals, vec1i& labels,
+        float probability = 0.01, int min_points = 15, float epsilon = 0.2,
+        float cluster_epsilon = 0.5,
+        float normal_angle_threshold = 36.869896F) = 0;
   };
 
   std::unique_ptr<ShapeDetectorInterface> createShapeDetector();

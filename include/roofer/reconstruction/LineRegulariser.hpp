@@ -27,14 +27,15 @@
 
 namespace roofer::reconstruction {
 
-#define ROOFER_LINE_REGULARISER_FIELDS(X)                                     \
-  X(float, distance_threshold, 0.8F, "Line merge distance, in metres.",       \
-    config::at_least(0.0F), public_)                                          \
-  X(float, angle_threshold, 0.15F, "Line merge angle threshold, in radians.", \
-    config::at_least(0.0F), public_)                                          \
-  X(float, extension, 3.0F, "Regularised line extension, in metres.",         \
-    config::at_least(0.0F), public_)                                          \
-  X(bool, merge_intersection_lines, false, "Merge plane intersection lines.", \
+#define ROOFER_LINE_REGULARISER_FIELDS(X)                                      \
+  X(float, distance_threshold, 0.8F, "Line merge distance, in metres.",        \
+    config::at_least(0.0F), public_)                                           \
+  X(float, angle_threshold, 8.594367F,                                         \
+    "Line merge angle threshold, in degrees.", config::in_range(0.0F, 180.0F), \
+    public_)                                                                   \
+  X(float, extension, 3.0F, "Regularised line extension, in metres.",          \
+    config::at_least(0.0F), public_)                                           \
+  X(bool, merge_intersection_lines, false, "Merge plane intersection lines.",  \
     config::no_validation<bool>(), public_)
   struct LineRegulariserConfig {
     using Self = LineRegulariserConfig;

@@ -41,7 +41,7 @@ namespace roofer::reconstruction {
   X(float, horizontality_threshold, 5.0F,                                \
     "Intersection horizontality threshold for ridgeline detection, in "  \
     "degrees.",                                                          \
-    config::at_least(0.0F), public_)
+    config::in_range(0.0F, 90.0F), public_)
   struct PlaneIntersectorConfig {
     using Self = PlaneIntersectorConfig;
     ROOFER_CONFIG_MEMBERS(ROOFER_PLANE_INTERSECTOR_FIELDS)

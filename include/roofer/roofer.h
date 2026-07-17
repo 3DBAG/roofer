@@ -107,13 +107,11 @@ namespace roofer {
         reconstruction::PlaneDetectorConfig{}.plane_epsilon;
 
     /**
-     * @brief Maximum allowed angle between points inside the same
-     * detected plane. This value is compared to the dot product between two
-     * unit normals. Eg. 0 means 90 degrees (orthogonal normals), and 1.0 means
-     * 0 degrees (parallel normals)
+     * @brief Minimum dot-product similarity between unit normals within a
+     * detected plane. This legacy value ranges from 0 (90 degrees) to 1
+     * (0 degrees).
      */
-    float plane_detect_normal_angle =
-        reconstruction::PlaneDetectorConfig{}.plane_normal_threshold;
+    float plane_detect_normal_angle = 0.75F;
 
     /**
      * @brief Maximum distance from candidate points to line during line
@@ -186,8 +184,9 @@ namespace roofer {
         legacy.plane_detect_min_points;
     options.reconstruction.plane_detector.plane_epsilon =
         legacy.plane_detect_epsilon;
-    options.reconstruction.plane_detector.plane_normal_threshold =
-        legacy.plane_detect_normal_angle;
+    options.reconstruction.plane_detector.normal_angle_threshold =
+        reconstruction::normal_angle_degrees_from_dot_product(
+            legacy.plane_detect_normal_angle);
     options.reconstruction.line_detector.distance_threshold =
         legacy.line_detect_epsilon;
     options.reconstruction.alpha_shaper.alpha = legacy.thres_alpha;

@@ -22,6 +22,8 @@
 #include <roofer/reconstruction/LineRegulariser.hpp>
 #include <roofer/reconstruction/LineRegulariserBase.hpp>
 
+#include <numbers>
+
 namespace roofer::reconstruction {
 
   class LineRegulariser : public LineRegulariserInterface {
@@ -33,7 +35,8 @@ namespace roofer::reconstruction {
       LR.add_segments(0, edge_segments);
       LR.add_segments(2, ints_segments);
       LR.dist_threshold = cfg.distance_threshold * cfg.distance_threshold;
-      LR.angle_threshold = cfg.angle_threshold;
+      LR.angle_threshold =
+          cfg.angle_threshold * std::numbers::pi_v<double> / 180.0;
 
       LR.perform_angle_clustering();
       LR.perform_distance_clustering();

@@ -309,11 +309,20 @@ PYBIND11_MODULE(roofer, m) {
       [](roofer::ReconstructOptions& self) -> float& {
         return self.reconstruction.plane_detector.plane_epsilon;
       });
-  bind_deprecated_property(
-      reconstruct_config, "plane_detect_normal_angle",
-      "reconstruction.plane_detector.plane_normal_threshold",
-      [](roofer::ReconstructOptions& self) -> float& {
-        return self.reconstruction.plane_detector.plane_normal_threshold;
+  reconstruct_config.def_property(
+      "plane_detect_normal_angle",
+      [](roofer::ReconstructOptions& self) {
+        warn_deprecated("plane_detect_normal_angle",
+                        "reconstruction.plane_detector.normal_angle_threshold");
+        return roofer::reconstruction::normal_dot_product_from_angle_degrees(
+            self.reconstruction.plane_detector.normal_angle_threshold);
+      },
+      [](roofer::ReconstructOptions& self, float dot_product) {
+        warn_deprecated("plane_detect_normal_angle",
+                        "reconstruction.plane_detector.normal_angle_threshold");
+        self.reconstruction.plane_detector.normal_angle_threshold =
+            roofer::reconstruction::normal_angle_degrees_from_dot_product(
+                dot_product);
       });
   bind_deprecated_property(
       reconstruct_config, "line_detect_epsilon",
