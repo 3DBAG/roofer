@@ -44,8 +44,7 @@ namespace roofer::reconstruction {
   X(float, nodata_elevation, 3.0F,                                             \
     "Fallback elevation for nodata faces, in metres.", config::at_least(0.0F), \
     internal)                                                                  \
-  X(float, snap_tolerance_exp, 2.9F,                                           \
-    "Base-10 exponent for the snap tolerance in metres.",                      \
+  X(float, snap_tolerance, 0.001258925F, "Snap tolerance, in metres.",         \
     config::at_least(0.0F), public_)                                           \
   X(bool, lod2, true, "Generate LoD 2 topology (pipeline-derived).",           \
     config::no_validation<bool>(), internal)

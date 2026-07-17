@@ -109,7 +109,7 @@ namespace roofer::reconstruction {
                              vec1i& ring_ids,
                              const MeshTriangulatorConfig& cfg) {
       LinearRing poly = poly_;
-      float dupe_threshold = (float)std::pow(10, -cfg.duplicate_tolerance_exp);
+      float dupe_threshold = cfg.duplicate_tolerance;
       if (is_degenerate(poly, dupe_threshold)) {
         LinearRing new_poly = fix_duplicates(poly, dupe_threshold);
         if (is_degenerate(new_poly, dupe_threshold)) {

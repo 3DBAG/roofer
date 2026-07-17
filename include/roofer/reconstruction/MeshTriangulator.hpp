@@ -29,9 +29,9 @@
 namespace roofer::reconstruction {
 
 #define ROOFER_MESH_TRIANGULATOR_FIELDS(X)                            \
-  X(int, duplicate_tolerance_exp, 4,                                  \
-    "Base-10 exponent for the duplicate-vertex tolerance in metres.", \
-    config::at_least(0), internal)                                    \
+  X(float, duplicate_tolerance, 0.0001F,                              \
+    "Duplicate-vertex tolerance, in metres.", config::at_least(0.0F), \
+    internal)                                                         \
   X(bool, output_all_triangles, false, "Output all triangles.",       \
     config::no_validation<bool>(), internal)
   struct MeshTriangulatorConfig {

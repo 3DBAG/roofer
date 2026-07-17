@@ -45,6 +45,9 @@ normal-angle-threshold = 30
 
 [reconstruction.arrangement-optimiser]
 complexity-factor = 0.7
+
+[reconstruction.arrangement-extruder]
+snap-tolerance = 0.002
 )");
 
   RooferConfigHandler handler;
@@ -57,6 +60,8 @@ complexity-factor = 0.7
         0.7F);
   CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
         30.0F);
+  CHECK(handler.cfg_.reconstruction.arrangement_extruder.snap_tolerance ==
+        0.002F);
   CHECK(handler._deprecated_lod11_fallback_time == 1234);
   CHECK(handler.cfg_.reconstruction.plane_detector.max_plane_count == 900);
 }

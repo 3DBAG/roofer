@@ -26,6 +26,9 @@ TEST_CASE("reconstruction descriptor defaults are canonical") {
   CHECK(cfg.plane_detector.max_plane_count == 900);
   CHECK(cfg.arrangement_optimiser.complexity_factor == Catch::Approx(0.888F));
   CHECK(cfg.arrangement_snapper.distance_threshold == Catch::Approx(0.021F));
+  CHECK(cfg.arrangement_builder.snap_tolerance == Catch::Approx(0.01F));
+  CHECK(cfg.arrangement_extruder.snap_tolerance == Catch::Approx(0.001258925F));
+  CHECK(cfg.mesh_triangulator.duplicate_tolerance == Catch::Approx(0.0001F));
   CHECK_FALSE(cfg.validate().has_value());
 
   const auto cosine = [](float degrees) {
@@ -39,6 +42,12 @@ TEST_CASE("reconstruction descriptor defaults are canonical") {
   CHECK(cfg.line_regulariser.angle_threshold * std::numbers::pi_v<double> /
             180.0 ==
         Catch::Approx(0.15));
+  CHECK(-std::log10(cfg.arrangement_builder.snap_tolerance) ==
+        Catch::Approx(2.0));
+  CHECK(-std::log10(cfg.arrangement_extruder.snap_tolerance) ==
+        Catch::Approx(2.9));
+  CHECK(-std::log10(cfg.mesh_triangulator.duplicate_tolerance) ==
+        Catch::Approx(4.0));
 }
 
 TEST_CASE("reconstruction angle fields are bounded degree values") {
