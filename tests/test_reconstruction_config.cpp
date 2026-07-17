@@ -4,6 +4,8 @@
 #include <roofer/reconstruction/ReconstructionConfig.hpp>
 #include <roofer/roofer.h>
 
+#include <cmath>
+#include <numbers>
 #include <set>
 #include <string>
 
@@ -16,10 +18,41 @@ TEST_CASE("reconstruction descriptor defaults are canonical") {
   CHECK(cfg.plane_detector.plane_neighbour_count == 15);
   CHECK(cfg.plane_detector.min_plane_points == 15);
   CHECK(cfg.plane_detector.plane_epsilon == Catch::Approx(0.3F));
+  CHECK(cfg.plane_detector.normal_angle_threshold == Catch::Approx(41.409622F));
+  CHECK(cfg.plane_detector.horizontal_angle_threshold ==
+        Catch::Approx(5.731968F));
+  CHECK(cfg.plane_detector.wall_angle_threshold == Catch::Approx(72.542397F));
+  CHECK(cfg.line_regulariser.angle_threshold == Catch::Approx(8.594367F));
   CHECK(cfg.plane_detector.max_plane_count == 900);
   CHECK(cfg.arrangement_optimiser.complexity_factor == Catch::Approx(0.888F));
   CHECK(cfg.arrangement_snapper.distance_threshold == Catch::Approx(0.021F));
   CHECK_FALSE(cfg.validate().has_value());
+
+  const auto cosine = [](float degrees) {
+    return std::cos(degrees * std::numbers::pi_v<double> / 180.0);
+  };
+  CHECK(cosine(cfg.plane_detector.normal_angle_threshold) ==
+        Catch::Approx(0.75));
+  CHECK(cosine(cfg.plane_detector.horizontal_angle_threshold) ==
+        Catch::Approx(0.995));
+  CHECK(cosine(cfg.plane_detector.wall_angle_threshold) == Catch::Approx(0.3));
+  CHECK(cfg.line_regulariser.angle_threshold * std::numbers::pi_v<double> /
+            180.0 ==
+        Catch::Approx(0.15));
+}
+
+TEST_CASE("reconstruction angle fields are bounded degree values") {
+  ReconstructionConfig cfg;
+  cfg.plane_detector.normal_angle_threshold = 90.1F;
+  auto error = cfg.validate();
+  REQUIRE(error);
+  CHECK(error->starts_with("plane-detector.normal-angle-threshold"));
+
+  cfg = {};
+  cfg.line_regulariser.angle_threshold = 180.1F;
+  error = cfg.validate();
+  REQUIRE(error);
+  CHECK(error->starts_with("line-regulariser.angle-threshold"));
 }
 
 TEST_CASE("descriptor names convert to kebab case and hide derived fields") {
@@ -93,6 +126,15 @@ TEST_CASE("complexity factor exclusively balances both energy terms") {
 TEST_CASE("flattened API validation delegates to nested descriptors") {
   roofer::ReconstructionConfig legacy;
   CHECK(legacy.is_valid());
+  CHECK(legacy.plane_detect_normal_angle == Catch::Approx(0.75F));
+  CHECK(roofer::to_reconstruct_options(legacy)
+            .reconstruction.plane_detector.normal_angle_threshold ==
+        Catch::Approx(41.409622F));
+
+  legacy.plane_detect_normal_angle = 0.6F;
+  CHECK(roofer::to_reconstruct_options(legacy)
+            .reconstruction.plane_detector.normal_angle_threshold ==
+        Catch::Approx(53.130102F));
 
   legacy.plane_detect_min_points = 2;
   CHECK_FALSE(legacy.is_valid());

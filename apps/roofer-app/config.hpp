@@ -330,8 +330,8 @@ struct LegacyReconstructionDestination {
     true, false, true, FIELD, "", cfg_.reconstruction.plane_detector,          \
     PlaneDetector, plane_epsilon)                                              \
   X("plane-detect-normal-angle", "reconstruction.plane-detector",              \
-    "plane-normal-threshold", true, false, false, FIELD, "",                   \
-    cfg_.reconstruction.plane_detector, PlaneDetector, plane_normal_threshold) \
+    "normal-angle-threshold", true, false, false, NORMAL_DOT_PRODUCT, "",      \
+    _legacy_plane_detect_normal_angle, void, unused)                           \
   X("line-detect-epsilon", "reconstruction.line-detector",                     \
     "distance-threshold", true, false, false, FIELD, "",                       \
     cfg_.reconstruction.line_detector, LineDetector, distance_threshold)       \
@@ -404,6 +404,7 @@ struct RooferConfigHandler {
   std::string _config_path;
   int _jobs = default_jobs();
   int _deprecated_lod11_fallback_time = 1800000;
+  float _legacy_plane_detect_normal_angle = 0.75F;
 
   // methods
   RooferConfigHandler() {
@@ -597,6 +598,17 @@ struct RooferConfigHandler {
         owner);                                                            \
     parameter.example_ = example;                                          \
   } while (false);
+#define ROOFER_REGISTER_LEGACY_NORMAL_DOT_PRODUCT(key, cli_supported, example, \
+                                                  owner, type, member)         \
+  do {                                                                         \
+    static_assert(!cli_supported);                                             \
+    auto& parameter = root_only_reconstruction_aliases_.add(                   \
+        key,                                                                   \
+        "Minimum normal dot-product similarity within a plane "                \
+        "(unitless).",                                                         \
+        owner, {roofer::config::in_range(0.0F, 1.0F)});                        \
+    parameter.example_ = example;                                              \
+  } while (false);
 #define ROOFER_REGISTER_LEGACY(key, section, nested_key, deprecated, ignored, \
                                cli_supported, kind, example, owner, type,     \
                                member)                                        \
@@ -604,6 +616,7 @@ struct RooferConfigHandler {
                                 member)
     ROOFER_LEGACY_RECONSTRUCTION_ALIASES(ROOFER_REGISTER_LEGACY)
 #undef ROOFER_REGISTER_LEGACY
+#undef ROOFER_REGISTER_LEGACY_NORMAL_DOT_PRODUCT
 #undef ROOFER_REGISTER_LEGACY_IGNORED
 #undef ROOFER_REGISTER_LEGACY_FIELD
 
@@ -1381,6 +1394,11 @@ struct RooferConfigHandler {
             std::format("Failed to read value for {} from config file. {}",
                         key.data(), e.what()));
       }
+    }
+    if (config.contains("plane-detect-normal-angle")) {
+      cfg_.reconstruction.plane_detector.normal_angle_threshold =
+          roofer::reconstruction::normal_angle_degrees_from_dot_product(
+              _legacy_plane_detect_normal_angle);
     }
     if (const auto* reconstruction = config["reconstruction"].as_table()) {
       parse_reconstruction_table(*reconstruction);

@@ -27,6 +27,7 @@
 #include <CGAL/property_map.h>
 
 #include <boost/container_hash/hash_fwd.hpp>
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <roofer/reconstruction/PlaneDetector.hpp>
@@ -114,6 +115,13 @@ namespace roofer {
   }
 
   namespace reconstruction {
+
+    namespace {
+      double plane_angle_from_horizontal(const Vector& normal) {
+        const auto angle = CGAL::approximate_angle(Vector(0, 0, 1), normal);
+        return std::min(angle, 180.0 - angle);
+      }
+    }  // namespace
 
 // Concurrency
 #ifdef CGAL_LINKED_WITH_TBB
@@ -209,6 +217,8 @@ namespace roofer {
 
       void detect(const PointCollection& points,
                   const PlaneDetectorConfig cfg) override {
+        const auto normal_dot_product_threshold =
+            normal_dot_product_from_angle_degrees(cfg.normal_angle_threshold);
         // convert to cgal points with attributes
         PNL_vector pnl_points;
         for (auto& p : points) {
@@ -264,8 +274,8 @@ namespace roofer {
           planedect::PlaneDS PDS(points_vec, normals_vec,
                                  cfg.plane_neighbour_count);
           planedect::DistAndNormalTester DNTester(
-              cfg.plane_epsilon * cfg.plane_epsilon, cfg.plane_normal_threshold,
-              cfg.refit_interval);
+              cfg.plane_epsilon * cfg.plane_epsilon,
+              normal_dot_product_threshold, cfg.refit_interval);
           regiongrower::RegionGrower<planedect::PlaneDS, planedect::PlaneRegion>
               R;
           R.min_segment_count = cfg.min_plane_points;
@@ -286,10 +296,9 @@ namespace roofer {
             auto& plane = region.plane;
 
             Vector n = plane.orthogonal_vector();
-            // this dot product is close to 0 for vertical planes
-            auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.wall_threshold;
-            bool is_horizontal = horizontality > cfg.horizontal_threshold;
+            const auto angle = plane_angle_from_horizontal(n);
+            bool is_wall = angle > cfg.wall_angle_threshold;
+            bool is_horizontal = angle < cfg.horizontal_angle_threshold;
 
             // put slanted surface points at index -1 if we care only about
             // horzontal surfaces
@@ -342,9 +351,9 @@ namespace roofer {
           parameters.epsilon = cfg.plane_epsilon;
           // Set maximum Euclidean distance between points to be clustered.
           parameters.cluster_epsilon = cfg.ransac_cluster_epsilon;
-          // Set maximum normal deviation.
-          // 0.9 < dot(surface_normal, point_normal);
-          parameters.normal_threshold = cfg.plane_normal_threshold;
+          // CGAL represents the maximum normal deviation as a minimum dot
+          // product, so convert the public degree value at the boundary.
+          parameters.normal_threshold = normal_dot_product_threshold;
           // Detect shapes.
           ransac.detect(parameters);
           // Print number of detected shapes.
@@ -355,10 +364,9 @@ namespace roofer {
             RansacPlane* ransac_plane = dynamic_cast<RansacPlane*>(shape.get());
             Plane plane = static_cast<Plane>(*ransac_plane);
             Vector n = plane.orthogonal_vector();
-            // this dot product is close to 0 for vertical planes
-            auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.wall_threshold;
-            bool is_horizontal = horizontality > cfg.horizontal_threshold;
+            const auto angle = plane_angle_from_horizontal(n);
+            bool is_wall = angle > cfg.wall_angle_threshold;
+            bool is_horizontal = angle < cfg.horizontal_angle_threshold;
             // put slanted surface points at index -1 if we care only about
             // horzontal surfaces
             if (!is_wall) {
@@ -441,9 +449,8 @@ namespace roofer {
           int plane_cnt = 1;
           for (auto& [plane, pt_i_vec] : plane_merge_map) {
             Vector n = plane.orthogonal_vector();
-            // this dot product is close to 0 for vertical planes
-            auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.wall_threshold;
+            const auto angle = plane_angle_from_horizontal(n);
+            bool is_wall = angle > cfg.wall_angle_threshold;
 
             if (!is_wall) {
               std::vector<Point> ptvec;

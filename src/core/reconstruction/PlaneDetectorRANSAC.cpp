@@ -31,7 +31,9 @@
 #include <CGAL/property_map.h>
 #include <CGAL/tags.h>
 
+#include <cmath>
 #include <iostream>
+#include <numbers>
 #include <roofer/reconstruction/ShapeDetector.hpp>
 #include <utility>
 
@@ -55,7 +57,7 @@ namespace roofer::reconstruction {
     unsigned detectPlanes(PointCollection& point_collection, vec3f& normals,
                           vec1i& labels, float probability, int min_points,
                           float epsilon, float cluster_epsilon,
-                          float normal_threshold) override {
+                          float normal_angle_threshold) override {
       std::cout << "Efficient RANSAC" << std::endl;
 
       // Points with normals.
@@ -97,9 +99,9 @@ namespace roofer::reconstruction {
       parameters.epsilon = epsilon;
       // Set maximum Euclidean distance between points to be clustered.
       parameters.cluster_epsilon = cluster_epsilon;
-      // Set maximum normal deviation.
-      // 0.9 < dot(surface_normal, point_normal);
-      parameters.normal_threshold = normal_threshold;
+      // CGAL expects this angle as a minimum normal dot product.
+      parameters.normal_threshold =
+          std::cos(normal_angle_threshold * std::numbers::pi_v<double> / 180.0);
       // Detect shapes.
       ransac.detect(parameters);
       // Print number of detected shapes.

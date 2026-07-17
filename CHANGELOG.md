@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Region growing no longer uses a wall-clock time limit, which could make a building reconstruct with success on one run and fall back to LoD 1.1 on the next given identical input due to resource starvation with multithreading. The deterministic plane-count limit (`lod11-fallback-planes`) is now the sole reconstruction-complexity cutoff. The `lod11-fallback-time` behavior is removed; its CLI flag and root configuration key are accepted but ignored with a deprecation warning during 1.x compatibility.
 - Reconstruction configuration now uses nested TOML tables such as `[reconstruction.plane-detector]` and `[reconstruction.arrangement-optimiser]`. Core reconstruction stages receive their component configuration aggregates; pipeline-derived settings such as requested LoD and terrain availability are overlaid on local copies.
 - Reconstruction parameter descriptions now state physical and angular units where applicable; counts remain unit-free.
+- All canonical reconstruction angle parameters now use degrees.
+  Plane-detection normal, horizontal, and wall thresholds are expressed
+  directly as angles instead of dot products, and the line-regularisation
+  angle is no longer in radians. The legacy `plane-detect-normal-angle` alias
+  and compatibility API properties retain their 1.x dot-product semantics.
 - Descriptor-generated TOML documentation and Python bindings omit reconstruction components that have no public parameters.
 - `complexity-factor` now directly controls the optimiser energy balance: the data term is weighted by `complexity-factor` and the smoothness term by `1 - complexity-factor`. The independent `data_multiplier` and `smoothness_multiplier` component options were removed.
 - The flattened C++ `roofer::ReconstructionConfig` remains as a 1.x compatibility adapter, while its `reconstruct` overloads are deprecated. Its defaults and validation delegate to the nested configuration.
@@ -48,7 +53,7 @@ Legacy root keys, and matching legacy CLI flags where available, map as follows:
 | `plane-detect-k` | `[reconstruction.plane-detector] plane-neighbour-count` | Renamed; legacy CLI flag is deprecated. |
 | `plane-detect-min-points` | `[reconstruction.plane-detector] min-plane-points` | Renamed; legacy CLI flag is deprecated. |
 | `plane-detect-epsilon` | `[reconstruction.plane-detector] plane-epsilon` | Renamed; legacy CLI flag is deprecated. |
-| `plane-detect-normal-angle` | `[reconstruction.plane-detector] plane-normal-threshold` | Renamed; root TOML alias only. |
+| `plane-detect-normal-angle` | `[reconstruction.plane-detector] normal-angle-threshold` | Renamed; root TOML alias only. Legacy values remain unitless dot products and are converted to degrees. |
 | `line-detect-epsilon` | `[reconstruction.line-detector] distance-threshold` | Renamed; root TOML alias only. |
 | `thres-alpha` | `[reconstruction.alpha-shaper] alpha` | Renamed; root TOML alias only. |
 | `thres-reg-line-dist` | `[reconstruction.line-regulariser] distance-threshold` | Renamed; root TOML alias only. |

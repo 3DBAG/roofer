@@ -14,7 +14,7 @@ float ransac_probability = 0.01;
 int ransac_min_points = 15;
 float ransac_epsilon = 0.2;
 float ransac_cluster_epsilon = 0.5;
-float ransac_normal_threshold = 0.8;
+float ransac_normal_angle_threshold = 36.869896F;
 bool bid_changed = true;
 // int old_bid_changed;
 
@@ -35,7 +35,8 @@ void myCallback() {
   ImGui::InputInt("min_points", &ransac_min_points);
   ImGui::InputFloat("epsilon", &ransac_epsilon);
   ImGui::InputFloat("cluster_epsilon", &ransac_cluster_epsilon);
-  ImGui::InputFloat("normal_threshold", &ransac_normal_threshold);
+  ImGui::InputFloat("normal_angle_threshold_degrees",
+                    &ransac_normal_angle_threshold);
 
   if (ImGui::Button("Do RANSAC")) {
     // executes when button is pressed
@@ -44,7 +45,7 @@ void myCallback() {
     roofer::vec3f normals;
     auto nShapes = ShapeDetector->detectPlanes(
         pc, normals, labels, ransac_probability, ransac_min_points,
-        ransac_epsilon, ransac_cluster_epsilon, ransac_normal_threshold);
+        ransac_epsilon, ransac_cluster_epsilon, ransac_normal_angle_threshold);
 
     std::vector<std::array<double, 3>> randColor(nShapes);
     randColor[0] = {{0.0f, 0.0f, 0.0f}};

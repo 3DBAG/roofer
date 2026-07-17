@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "config.hpp"
@@ -40,6 +41,7 @@ clip-terrain = false
 
 [reconstruction.plane-detector]
 plane-neighbour-count = 23
+normal-angle-threshold = 30
 
 [reconstruction.arrangement-optimiser]
 complexity-factor = 0.7
@@ -53,10 +55,21 @@ complexity-factor = 0.7
   CHECK(handler.cfg_.reconstruction.plane_detector.plane_neighbour_count == 23);
   CHECK(handler.cfg_.reconstruction.arrangement_optimiser.complexity_factor ==
         0.7F);
-  CHECK(handler.cfg_.reconstruction.plane_detector.plane_normal_threshold ==
-        0.6F);
+  CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
+        30.0F);
   CHECK(handler._deprecated_lod11_fallback_time == 1234);
   CHECK(handler.cfg_.reconstruction.plane_detector.max_plane_count == 900);
+}
+
+TEST_CASE("legacy normal dot-product threshold is converted to degrees") {
+  TemporaryConfig file("plane-detect-normal-angle = 0.6\n");
+
+  RooferConfigHandler handler;
+  handler._config_path = file.string();
+  handler.parse_config_file();
+
+  CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
+        Catch::Approx(53.130102F));
 }
 
 TEST_CASE("nested reconstruction TOML errors contain complete dotted paths") {
