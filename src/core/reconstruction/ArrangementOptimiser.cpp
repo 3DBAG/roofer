@@ -249,7 +249,7 @@ namespace roofer::reconstruction {
           auto height_points = heightfield.rasterise_polygon(polygon, false);
 
           for (auto& [plane, plane_id] : points_per_plane) {
-            double volume = cfg.data_multiplier * cell_area *
+            double volume = cfg.data_weight() * cell_area *
                             volume_to_plane(plane, height_points);
             face->data().vertex_label_cost.push_back(volume);
             max_cost = std::max(max_cost, volume);
@@ -264,7 +264,7 @@ namespace roofer::reconstruction {
         ++label;
       }
       // normalise
-      if (cfg.do_normalise) {
+      if (cfg.normalise) {
         for (auto face : faces) {
           for (auto& c : face->data().vertex_label_cost) {
             c = (c / max_cost);
@@ -289,7 +289,7 @@ namespace roofer::reconstruction {
         bool fp_l = edge->face()->data().in_footprint;
         if (fp_u && fp_l) {  // only edges with both neighbour faces inside the
                              // footprint
-          double l = cfg.smoothness_multiplier * edge_length(edge);
+          double l = cfg.smoothness_weight() * edge_length(edge);
           edge->data().edge_weight = l;
           edge->twin()->data().edge_weight = l;
           max_weight = std::max(max_weight, l);
@@ -298,7 +298,7 @@ namespace roofer::reconstruction {
         }
       }
       // normalise
-      if (cfg.do_normalise) {
+      if (cfg.normalise) {
         for (auto edge : edges) {
           bool fp_l = edge->face()->data().in_footprint;
           double n_w = edge->data().edge_weight / max_weight;
@@ -351,7 +351,7 @@ namespace roofer::reconstruction {
         face->data().plane = std::get<0>(points_per_plane[i]);
         face->data().segid = std::get<1>(points_per_plane[i]);
         face->data().rms_error_to_avg = face->data().vertex_label_cost[i];
-        if (i >= roofplane_cnt && cfg.label_ground_outside_fp) {
+        if (i >= roofplane_cnt && cfg.label_ground_outside_footprint) {
           face->data().in_footprint = false;
           face->data().is_ground = true;
           LinearRing polygon;

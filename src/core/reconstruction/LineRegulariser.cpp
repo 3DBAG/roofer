@@ -32,7 +32,7 @@ namespace roofer::reconstruction {
       auto LR = linereg::LineRegulariser();
       LR.add_segments(0, edge_segments);
       LR.add_segments(2, ints_segments);
-      LR.dist_threshold = cfg.dist_threshold * cfg.dist_threshold;
+      LR.dist_threshold = cfg.distance_threshold * cfg.distance_threshold;
       LR.angle_threshold = cfg.angle_threshold;
 
       LR.perform_angle_clustering();

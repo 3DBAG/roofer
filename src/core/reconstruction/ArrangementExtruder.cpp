@@ -119,7 +119,7 @@ namespace roofer::reconstruction {
           elevation_provider.get_percentile(0.97);
 
       // floor
-      if (cfg.do_floor) {
+      if (cfg.generate_floor) {
         // std::cout << "arrangement has " << arr.number_of_unbounded_faces() <<
         // "unbounded faces\n"; there should only be one hole in the unbounded
         // face (building consists of one part)
@@ -199,13 +199,13 @@ namespace roofer::reconstruction {
           auto f = he->face();
           float h;
           if (f->data().in_footprint && f->data().segid != 0) {
-            if (cfg.LoD2) {
+            if (cfg.lod2) {
               auto& plane = f->data().plane;
               h = (plane.a() * CGAL::to_double(p.x()) +
                    plane.b() * CGAL::to_double(p.y()) + plane.d()) /
                   (-plane.c());
             } else {
-              if (cfg.lod1_extrude_to_max_)
+              if (cfg.lod1_extrude_to_max)
                 h = f->data().elevation_97p;
               else
                 h = f->data().elevation_70p;
@@ -239,7 +239,7 @@ namespace roofer::reconstruction {
       // store points that need to be created to do the walls right. We need
       // them later for the roofs
       std::unordered_map<Halfedge_handle, EPECK::Point_3> extra_wall_points;
-      if (cfg.do_walls) {
+      if (cfg.generate_walls) {
         for (auto edge : arr.edge_handles()) {
           auto e_a = edge->twin();
           auto e_b = edge;
@@ -459,7 +459,7 @@ namespace roofer::reconstruction {
       }
 
       // roofs
-      if (cfg.do_roofs) {
+      if (cfg.generate_roofs) {
         for (auto face : arr.face_handles()) {
           if (face->data().in_footprint) {
             LinearRing roofpart;

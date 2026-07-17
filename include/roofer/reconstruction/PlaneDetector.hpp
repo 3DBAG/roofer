@@ -22,39 +22,63 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 #include "cgal_shared_definitions.hpp"
 
 namespace roofer::reconstruction {
 
+#define ROOFER_PLANE_DETECTOR_FIELDS(X)                                        \
+  X(int, normal_neighbour_count, 5, "Neighbours used to estimate normals.",    \
+    config::greater_than(0), public_)                                          \
+  X(int, plane_neighbour_count, 15, "Neighbours used to grow planes.",         \
+    config::greater_than(0), public_)                                          \
+  X(int, min_plane_points, 15, "Minimum points in a detected plane.",          \
+    config::greater_than(2), public_)                                          \
+  X(float, plane_epsilon, 0.3F, "Maximum plane fitting distance, in metres.",  \
+    config::greater_than(0.0F), public_)                                       \
+  X(float, plane_normal_threshold, 0.75F,                                      \
+    "Minimum normal dot-product similarity within a plane (unitless).",        \
+    config::in_range(0.0F, 1.0F), public_)                                     \
+  X(float, horizontal_threshold, 0.995F,                                       \
+    "Minimum absolute normal/vertical dot product for horizontal planes "      \
+    "(unitless).",                                                             \
+    config::in_range(0.0F, 1.0F), public_)                                     \
+  X(float, ransac_probability, 0.05F, "RANSAC miss probability.",              \
+    config::in_range(0.0F, 1.0F), internal)                                    \
+  X(float, ransac_cluster_epsilon, 0.3F,                                       \
+    "RANSAC cluster distance, in metres.", config::greater_than(0.0F),         \
+    internal)                                                                  \
+  X(float, wall_threshold, 0.3F,                                               \
+    "Maximum absolute normal/vertical dot product for wall planes "            \
+    "(unitless).",                                                             \
+    config::in_range(0.0F, 1.0F), public_)                                     \
+  X(int, refit_interval, 5, "Plane refit interval.", config::greater_than(0),  \
+    public_)                                                                   \
+  X(bool, use_ransac, false, "Use RANSAC plane detection.",                    \
+    config::no_validation<bool>(), internal)                                   \
+  X(float, maximum_angle, 25.0F,                                               \
+    "Maximum plane regularisation angle, in degrees.", config::at_least(0.0F), \
+    public_)                                                                   \
+  X(float, maximum_offset, 0.5F,                                               \
+    "Maximum plane regularisation offset, in metres.", config::at_least(0.0F), \
+    public_)                                                                   \
+  X(bool, regularise_parallelism, false, "Regularise parallel planes.",        \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, regularise_orthogonality, false, "Regularise orthogonal planes.",    \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, regularise_coplanarity, false, "Regularise coplanar planes.",        \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, regularise_axis_symmetry, false, "Regularise plane symmetry.",       \
+    config::no_validation<bool>(), public_)                                    \
+  X(int, max_plane_count, 900, "Maximum detected planes before aborting.",     \
+    config::greater_than(0), public_)
+
   struct PlaneDetectorConfig {
-    int metrics_normal_k = 5;
-    int metrics_plane_k = 15;
-    int metrics_plane_min_points = 20;
-    float metrics_plane_epsilon = 0.2;
-    float metrics_plane_normal_threshold = 0.75;
-    float metrics_is_horizontal_threshold = 0.995;
-    float metrics_probability_ransac = 0.05;
-    float metrics_cluster_epsilon_ransac = 0.3;
-    float metrics_is_wall_threshold = 0.3;
-    int n_refit = 5;
-    bool use_ransac = false;
-    // float roof_percentile=0.5;
-
-    // plane regularisation
-    float maximum_angle_ = 25;
-    float maximum_offset_ = 0.5;
-    bool regularize_parallelism_ = false;
-    bool regularize_orthogonality_ = false;
-    bool regularize_coplanarity_ = false;
-    bool regularize_axis_symmetry_ = false;
-
-    // limits
-    bool with_limits = false;
-    // Deterministic complexity backstop: abort region growing (and fall back to
-    // LoD 1.1) once this many planes are detected.
-    int limit_n_regions = 100;
+    using Self = PlaneDetectorConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_PLANE_DETECTOR_FIELDS)
   };
+#undef ROOFER_PLANE_DETECTOR_FIELDS
 
   struct PlaneDetectorInterface {
     vec1i plane_id;

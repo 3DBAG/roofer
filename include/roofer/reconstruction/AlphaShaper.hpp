@@ -23,15 +23,26 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ALPHA_SHAPER_FIELDS(X)                                          \
+  X(float, alpha, 0.25F,                                                       \
+    "Alpha-shape squared-radius parameter, in square metres.",                 \
+    config::greater_than(0.0F), public_)                                       \
+  X(bool, extract_polygons, true, "Extract alpha-shape polygons.",             \
+    config::no_validation<bool>(), internal)                                   \
+  X(bool, optimal_alpha, false, "Autoselect alpha for 1 connected component.", \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, clamp_optimal_alpha, true,                                           \
+    "Clamp the optimal alpha to at least the configured alpha value.",         \
+    config::no_validation<bool>(), public_)
   struct AlphaShaperConfig {
-    float thres_alpha = 0.25;
-    bool extract_polygons = true;
-    bool optimal_alpha = false;
-    bool optimal_only_if_needed = true;
+    using Self = AlphaShaperConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ALPHA_SHAPER_FIELDS)
   };
+#undef ROOFER_ALPHA_SHAPER_FIELDS
 
   struct AlphaShaperInterface {
     std::vector<LinearRing> alpha_rings;

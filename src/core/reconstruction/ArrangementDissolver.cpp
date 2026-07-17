@@ -165,7 +165,7 @@ namespace roofer::reconstruction {
     void compute(Arrangement_2& arr, const RasterTools::Raster& heightfield,
                  const ElevationProvider& elevation_provider,
                  ArrangementDissolverConfig cfg) override {
-      if (cfg.dissolve_seg_edges) {
+      if (cfg.dissolve_segment_edges) {
         Face_merge_observer obs(arr);
         arr_dissolve_seg_edges(arr);
       }
@@ -238,7 +238,7 @@ namespace roofer::reconstruction {
       }
 
       // remove all lines not inside footprint
-      if (cfg.dissolve_outside_fp) {
+      if (cfg.dissolve_outside_footprint) {
         arr_dissolve_fp(arr, false, true);
       }
 

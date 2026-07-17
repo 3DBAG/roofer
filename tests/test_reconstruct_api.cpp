@@ -106,26 +106,29 @@ int main(int argc, const char* argv[]) {
               points_roof.size());
 
   // reconstruct
+  const auto options_for_lod = [floor_elevation](int lod) {
+    roofer::ReconstructOptions options;
+    options.lod = lod;
+    options.floor_elevation = floor_elevation;
+    options.override_with_floor_elevation = true;
+    return options;
+  };
+
   logger.info("Reconstructing LoD2.2");
-  auto mesh_lod22 =
-      roofer::reconstruct(points_roof, points_ground, footprints.front(),
-                          {.floor_elevation = floor_elevation,
-                           .override_with_floor_elevation = true});
+  auto lod22_options = options_for_lod(22);
+  lod22_options.reconstruction.arrangement_optimiser.complexity_factor = 0.888F;
+  auto mesh_lod22 = roofer::reconstruct(points_roof, points_ground,
+                                        footprints.front(), lod22_options);
 
   logger.info("Reconstructing LoD1.3");
-  auto mesh_lod13 =
-      roofer::reconstruct(points_roof, points_ground, footprints.front(),
-                          {.lod = 13,
-                           .lod13_step_height = 2,
-                           .floor_elevation = floor_elevation,
-                           .override_with_floor_elevation = true});
+  auto lod13_options = options_for_lod(13);
+  lod13_options.reconstruction.lod13_step_height = 2.0F;
+  auto mesh_lod13 = roofer::reconstruct(points_roof, points_ground,
+                                        footprints.front(), lod13_options);
 
   logger.info("Reconstructing LoD1.2");
-  auto mesh_lod12 =
-      roofer::reconstruct(points_roof, points_ground, footprints.front(),
-                          {.lod = 12,
-                           .floor_elevation = floor_elevation,
-                           .override_with_floor_elevation = true});
+  auto mesh_lod12 = roofer::reconstruct(
+      points_roof, points_ground, footprints.front(), options_for_lod(12));
 
   logger.info("Outputting to OBJ files");
   // lod22

@@ -315,11 +315,11 @@ namespace roofer::reconstruction {
         if (points.size() < 3) continue;
         Triangulation_2 T;
         T.insert(points.begin(), points.end());
-        Alpha_shape_2 A(T, FT(cfg.thres_alpha), Alpha_shape_2::GENERAL);
+        Alpha_shape_2 A(T, FT(cfg.alpha), Alpha_shape_2::GENERAL);
 
-        double alpha = cfg.thres_alpha;
-        if (cfg.optimal_alpha && cfg.optimal_only_if_needed) {
-          alpha = std::max(float(*A.find_optimal_alpha(1)), cfg.thres_alpha);
+        double alpha = cfg.alpha;
+        if (cfg.optimal_alpha && cfg.clamp_optimal_alpha) {
+          alpha = std::max(float(*A.find_optimal_alpha(1)), cfg.alpha);
         } else if (cfg.optimal_alpha) {
           alpha = *A.find_optimal_alpha(1);
         }

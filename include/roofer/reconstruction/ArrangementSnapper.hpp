@@ -24,17 +24,26 @@
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ARRANGEMENT_SNAPPER_FIELDS(X)                                   \
+  X(float, distance_threshold, 0.021F, "Vertex snapping distance, in metres.", \
+    config::at_least(0.0F), public_)                                           \
+  X(bool, repair_non_manifold_vertices, true, "Repair non-manifold vertices.", \
+    config::no_validation<bool>(), public_)                                    \
+  X(float, manifold_repair_radius, 0.02F,                                      \
+    "Non-manifold repair radius, in metres.", config::greater_than(0.0F),      \
+    public_)                                                                   \
+  X(float, manifold_height_tolerance, 1e-4F,                                   \
+    "Non-manifold height tolerance, in metres.", config::at_least(0.0F),       \
+    public_)
   struct ArrangementSnapperConfig {
-    float dist_thres = 0.021;
-    bool repair_non_manifold_vertices = true;
-    // manifold repairs with this radius, and down to half this radius in case
-    // clearance is limited. Below half this radius, repairs are skipped.
-    float manifold_repair_radius = 0.02;
-    float manifold_height_tolerance = 1e-4;
+    using Self = ArrangementSnapperConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_SNAPPER_FIELDS)
   };
+#undef ROOFER_ARRANGEMENT_SNAPPER_FIELDS
 
   struct ArrangementSnapperInterface {
     // add_output("triangles_og", typeid(TriangleCollection));

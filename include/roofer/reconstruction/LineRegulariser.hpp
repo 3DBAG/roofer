@@ -23,15 +23,24 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_LINE_REGULARISER_FIELDS(X)                                     \
+  X(float, distance_threshold, 0.8F, "Line merge distance, in metres.",       \
+    config::at_least(0.0F), public_)                                          \
+  X(float, angle_threshold, 0.15F, "Line merge angle threshold, in radians.", \
+    config::at_least(0.0F), public_)                                          \
+  X(float, extension, 3.0F, "Regularised line extension, in metres.",         \
+    config::at_least(0.0F), public_)                                          \
+  X(bool, merge_intersection_lines, false, "Merge plane intersection lines.", \
+    config::no_validation<bool>(), public_)
   struct LineRegulariserConfig {
-    float dist_threshold = 0.8;
-    float angle_threshold = 0.15;
-    float extension = 3.0;
-    bool merge_intersection_lines = false;
+    using Self = LineRegulariserConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_LINE_REGULARISER_FIELDS)
   };
+#undef ROOFER_LINE_REGULARISER_FIELDS
 
   struct LineRegulariserInterface {
     std::vector<EPECK::Segment_2> exact_regularised_edges;

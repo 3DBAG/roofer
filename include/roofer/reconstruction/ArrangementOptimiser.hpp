@@ -24,20 +24,37 @@
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ARRANGEMENT_OPTIMISER_FIELDS(X)                            \
+  X(float, complexity_factor, 0.888F,                                     \
+    "Balance between data fidelity (1) and smoothness (0).",              \
+    config::in_range(0.0F, 1.0F), public_)                                \
+  X(bool, preset_labels, false, "Preset graph-cut labels.",               \
+    config::no_validation<bool>(), internal)                              \
+  X(bool, normalise, false, "Normalise graph-cut costs.",                 \
+    config::no_validation<bool>(), internal)                              \
+  X(int, graph_cut_impl, 0, "Graph-cut implementation selector.",         \
+    config::at_least(0), internal)                                        \
+  X(bool, label_ground_outside_footprint, true,                           \
+    "Label ground outside the footprint.", config::no_validation<bool>(), \
+    internal)                                                             \
+  X(bool, use_ground, true, "Use ground labels (pipeline-derived).",      \
+    config::no_validation<bool>(), internal)
   struct ArrangementOptimiserConfig {
-    float data_multiplier = 8.0;
-    float smoothness_multiplier = 1.0;
-    bool preset_labels = false;
-    bool do_normalise = false;
-    int n_iterations = 1;
-    int graph_cut_impl = 0;
-    bool use_ground = true;
-    bool label_ground_outside_fp = true;
-    float z_percentile = 0.9;
+    using Self = ArrangementOptimiserConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_OPTIMISER_FIELDS)
+
+    [[nodiscard]] constexpr float data_weight() const {
+      return complexity_factor;
+    }
+    [[nodiscard]] constexpr float smoothness_weight() const {
+      return 1.0F - complexity_factor;
+    }
   };
+#undef ROOFER_ARRANGEMENT_OPTIMISER_FIELDS
 
   struct ArrangementOptimiserInterface {
     // add_input("arrangement", typeid(Arrangement_2));

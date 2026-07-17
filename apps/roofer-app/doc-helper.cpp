@@ -22,6 +22,42 @@
 #include <iostream>
 #include "config.hpp"
 
+template <typename T>
+std::string reconstruction_toml_value(const T& value) {
+  if constexpr (std::is_same_v<T, bool>) {
+    return value ? "true" : "false";
+  } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+    return '"' + std::format("{}", value) + '"';
+  } else if constexpr (std::is_same_v<
+                           T, roofer::reconstruction::PointCountRange>) {
+    return std::format("[{}, {}]", value.first, value.second);
+  } else {
+    return std::format("{}", value);
+  }
+}
+
+template <typename Config>
+void print_reconstruction_fields(const Config& config) {
+  roofer::config::for_each_field(config, [](auto field, const auto& value) {
+    std::cout << "## " << field.description << "\n";
+    std::cout << field.toml_name() << " = " << reconstruction_toml_value(value)
+              << "\n";
+  });
+}
+
+void print_reconstruction_toml(
+    const roofer::reconstruction::ReconstructionConfig& config) {
+  std::cout << "### Reconstruction options\n[reconstruction]\n";
+  print_reconstruction_fields(config);
+  config.visit_components([&](std::string_view name, const auto& component) {
+    using Component = std::remove_cvref_t<decltype(component)>;
+    if (!roofer::config::has_public_fields<Component>()) return;
+    std::cout << "\n[reconstruction." << name << "]\n";
+    print_reconstruction_fields(component);
+  });
+  std::cout << "\n";
+}
+
 void print_params(RooferConfigHandler::param_group_map& params) {
   for (const auto& [group_name, param_list] : params) {
     std::cout << "### " << group_name << " options\n\n";
@@ -34,7 +70,9 @@ void print_params(RooferConfigHandler::param_group_map& params) {
   }
 }
 
-void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
+void print_params_as_toml(
+    RooferConfigHandler::param_group_map& params,
+    const roofer::reconstruction::ReconstructionConfig& reconstruction) {
   std::cout << "## Path to roofprint polygons source. Can be an OGR supported "
                "file (eg. GPKG) or database connection string.\n";
   std::cout << "# polygon-source = \"\"\n";
@@ -42,6 +80,7 @@ void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
                "CityJSONSequence file in this directory.\n";
   std::cout << "# output-directory = \"\"\n\n";
   for (const auto& [group_name, param_list] : params) {
+    if (group_name == "Reconstruction") continue;
     std::cout << std::format("### {} options\n", group_name);
     for (const auto& param : param_list) {
       std::cout << std::format("## {}\n", param->description());
@@ -67,6 +106,7 @@ void print_params_as_toml(RooferConfigHandler::param_group_map& params) {
     }
     std::cout << "\n";
   }
+  print_reconstruction_toml(reconstruction);
   // print pointcloud block
   InputPointcloud pc_defaults{};
   std::cout << "[[pointclouds]]\n";
@@ -109,7 +149,7 @@ int main(int argc, const char* argv[]) {
   RooferConfigHandler rch{};
 
   if (format == "config") {
-    print_params_as_toml(rch.param_groups_);
+    print_params_as_toml(rch.param_groups_, rch.cfg_.reconstruction);
   } else if (format == "attr") {
     print_attributes(rch.output_attr_);
   } else if (format == "params") {

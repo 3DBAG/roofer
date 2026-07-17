@@ -253,7 +253,7 @@ TEST_CASE("snapper repairs an alternating four-way roof junction") {
   // the repair area.
   auto arrangement = cross_arrangement({15, 5, 15, 6});
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
+  snapper->compute(arrangement, {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F});
@@ -284,7 +284,7 @@ TEST_CASE("snapper removes dangling constraint chains before repair") {
   CGAL::insert(arrangement, Segment_2(Point_2(6, 5.5), Point_2(7, 6)));
 
   const roofer::reconstruction::ArrangementSnapperConfig config{
-      .dist_thres = 0.001F,
+      .distance_threshold = 0.001F,
       .repair_non_manifold_vertices = true,
       .manifold_repair_radius = 0.5F,
       .manifold_height_tolerance = 1e-4F};
@@ -309,7 +309,7 @@ TEST_CASE("snapper removes dangling constraint chains before repair") {
 TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
   auto arrangement = clearance_regression_arrangement();
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
+  snapper->compute(arrangement, {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F});
@@ -323,7 +323,7 @@ TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {
 TEST_CASE("snapper staggers close repair-cell vertices") {
   auto arrangement = narrow_angle_junction_arrangement();
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
+  snapper->compute(arrangement, {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F});
@@ -367,7 +367,7 @@ TEST_CASE("snapper staggers close repair-cell vertices") {
 TEST_CASE("snapper collapses unconstrained short triangulation edges") {
   auto arrangement = gapped_split_arrangement();
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.02F,
+  snapper->compute(arrangement, {.distance_threshold = 0.02F,
                                  .repair_non_manifold_vertices = false});
 
   CHECK_FALSE(has_vertex_near(arrangement, Point_2(5, 5), 1e-9));
@@ -379,7 +379,7 @@ TEST_CASE("snapper collapses unconstrained short triangulation edges") {
 TEST_CASE("snapper preserves a manifold four-way roof junction") {
   auto arrangement = cross_arrangement({0, 1, 2, 3});
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
+  snapper->compute(arrangement, {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F});
@@ -394,7 +394,7 @@ TEST_CASE("snapper repairs a repeated-face junction") {
   auto repeated_segid = face_at(arrangement, Point_2(7.5, 7.5))->data().segid;
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.dist_thres = 0.001F,
+  snapper->compute(arrangement, {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F});
@@ -409,7 +409,7 @@ TEST_CASE("snapper keeps a boundary repair cell inside the footprint") {
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
   snapper->compute(arrangement, 0.0F,
-                   {.dist_thres = 0.001F,
+                   {.distance_threshold = 0.001F,
                     .repair_non_manifold_vertices = true,
                     .manifold_repair_radius = 0.5F,
                     .manifold_height_tolerance = 1e-4F});
@@ -424,7 +424,7 @@ TEST_CASE("snapper keeps a finite exterior repair cell inside the footprint") {
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
   snapper->compute(arrangement, 0.0F,
-                   {.dist_thres = 0.001F,
+                   {.distance_threshold = 0.001F,
                     .repair_non_manifold_vertices = true,
                     .manifold_repair_radius = 0.5F,
                     .manifold_height_tolerance = 1e-4F});
@@ -439,7 +439,7 @@ TEST_CASE("snapper assigns a bridge repair cell to non-footprint") {
 
   auto snapper = roofer::reconstruction::createArrangementSnapper();
   snapper->compute(arrangement, 0.0F,
-                   {.dist_thres = 0.001F,
+                   {.distance_threshold = 0.001F,
                     .repair_non_manifold_vertices = true,
                     .manifold_repair_radius = 0.5F,
                     .manifold_height_tolerance = 1e-4F});
@@ -462,7 +462,7 @@ TEST_CASE("snapper rejects a non-finite exterior height") {
 
   CHECK_THROWS(snapper->compute(arrangement,
                                 std::numeric_limits<float>::quiet_NaN(),
-                                {.dist_thres = 0.001F,
+                                {.distance_threshold = 0.001F,
                                  .repair_non_manifold_vertices = true,
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F}));

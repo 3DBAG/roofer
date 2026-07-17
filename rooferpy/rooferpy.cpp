@@ -23,6 +23,11 @@
 #include <pybind11/stl.h>
 #include <roofer/roofer.h>
 
+#include <algorithm>
+#include <cctype>
+#include <type_traits>
+#include <utility>
+
 namespace py = pybind11;
 
 typedef std::vector<std::array<float, 3>> PyPointCollection;
@@ -102,7 +107,7 @@ namespace roofer {
   std::vector<PyMesh> py_reconstruct(
       const PyPointCollection& points_roof,
       const PyPointCollection& points_ground, const PyLinearRing& footprint,
-      ReconstructionConfig cfg = ReconstructionConfig()) {
+      ReconstructOptions cfg = ReconstructOptions()) {
     PointCollection points_roof_pc, points_ground_pc;
     for (const auto& pt : points_roof) {
       points_roof_pc.push_back({pt[0], pt[1], pt[2]});
@@ -119,7 +124,7 @@ namespace roofer {
 
   std::vector<PyMesh> py_reconstruct(
       const PyPointCollection& points_roof, const PyLinearRing& footprint,
-      ReconstructionConfig cfg = ReconstructionConfig()) {
+      ReconstructOptions cfg = ReconstructOptions()) {
     PointCollection points_roof_pc;
     for (const auto& pt : points_roof) {
       points_roof_pc.push_back({pt[0], pt[1], pt[2]});
@@ -154,54 +159,205 @@ namespace roofer {
 
 }  // namespace roofer
 
+template <typename Config>
+void bind_component_config(py::module_& m, const char* name) {
+  py::class_<Config> binding(m, name);
+  binding.def(py::init<>());
+  Config::visit_fields([&](auto field) {
+    if (field.visibility == roofer::config::Visibility::public_) {
+      binding.def_readwrite(field.name.data(), field.member);
+    }
+  });
+}
+
+void warn_deprecated(const char* name, const char* replacement) {
+  auto warnings = py::module_::import("warnings");
+  warnings.attr("warn")(
+      std::string(name) + " is deprecated; use " + replacement,
+      py::module_::import("builtins").attr("DeprecationWarning"), 2);
+}
+
+template <typename Accessor>
+void bind_deprecated_property(py::class_<roofer::ReconstructOptions>& binding,
+                              const char* name, const char* replacement,
+                              Accessor accessor) {
+  using Value = std::remove_cvref_t<
+      std::invoke_result_t<Accessor, roofer::ReconstructOptions&>>;
+  binding.def_property(
+      name,
+      [name, replacement, accessor](roofer::ReconstructOptions& self) -> Value {
+        warn_deprecated(name, replacement);
+        return accessor(self);
+      },
+      [name, replacement, accessor](roofer::ReconstructOptions& self,
+                                    Value value) {
+        warn_deprecated(name, replacement);
+        accessor(self) = std::move(value);
+      });
+}
+
+std::string component_class_name(std::string_view component_name) {
+  std::string result;
+  bool capitalise = true;
+  for (const char character : component_name) {
+    if (character == '-') {
+      capitalise = true;
+    } else {
+      result.push_back(capitalise ? static_cast<char>(std::toupper(character))
+                                  : character);
+      capitalise = false;
+    }
+  }
+  return result + "Config";
+}
+
+std::string component_property_name(std::string_view component_name) {
+  std::string result(component_name);
+  std::replace(result.begin(), result.end(), '-', '_');
+  return result;
+}
+
 PYBIND11_MODULE(roofer, m) {
-  py::class_<roofer::ReconstructionConfig>(m, "ReconstructionConfig")
-      .def(py::init<>())
-      .def_readwrite("complexity_factor",
-                     &roofer::ReconstructionConfig::complexity_factor)
-      .def_readwrite("clip_ground", &roofer::ReconstructionConfig::clip_ground)
-      .def_readwrite("lod", &roofer::ReconstructionConfig::lod)
-      .def_readwrite("lod13_step_height",
-                     &roofer::ReconstructionConfig::lod13_step_height)
+  using namespace roofer::reconstruction;
+  py::enum_<roofer::enums::TerrainStrategy>(m, "TerrainStrategy")
+      .value("BUFFER_TILE", roofer::enums::BUFFER_TILE)
+      .value("BUFFER_USER", roofer::enums::BUFFER_USER)
+      .value("USER", roofer::enums::USER);
+  roofer::reconstruction::ReconstructionConfig component_registry;
+  component_registry.visit_components(
+      [&](std::string_view name, auto& component) {
+        using Config = std::remove_cvref_t<decltype(component)>;
+        if (!roofer::config::has_public_fields<Config>()) return;
+        const auto class_name = component_class_name(name);
+        bind_component_config<Config>(m, class_name.c_str());
+      });
+
+  py::class_<roofer::reconstruction::ReconstructionConfig> pipeline_config(
+      m, "ReconstructionPipelineConfig");
+  pipeline_config.def(py::init<>());
+  roofer::reconstruction::ReconstructionConfig::visit_fields([&](auto field) {
+    pipeline_config.def_readwrite(field.name.data(), field.member);
+  });
+  roofer::reconstruction::ReconstructionConfig::visit_component_fields(
+      [&](std::string_view name, auto member) {
+        using Config =
+            std::remove_cvref_t<decltype(component_registry.*member)>;
+        if (!roofer::config::has_public_fields<Config>()) return;
+        const auto property_name = component_property_name(name);
+        pipeline_config.def_readwrite(property_name.c_str(), member);
+      });
+
+  py::class_<roofer::ReconstructOptions> reconstruct_config(
+      m, "ReconstructionConfig");
+  reconstruct_config.def(py::init<>())
+      .def_readwrite("reconstruction",
+                     &roofer::ReconstructOptions::reconstruction)
+      .def_readwrite("lod", &roofer::ReconstructOptions::lod);
+
+  roofer::reconstruction::ReconstructionConfig::visit_component_fields(
+      [&](std::string_view name, auto member) {
+        using Config =
+            std::remove_cvref_t<decltype(component_registry.*member)>;
+        if (!roofer::config::has_public_fields<Config>()) return;
+        const auto property_name = component_property_name(name);
+        reconstruct_config.def_property_readonly(
+            property_name.c_str(),
+            [member](roofer::ReconstructOptions& self) -> Config& {
+              return self.reconstruction.*member;
+            },
+            py::return_value_policy::reference_internal);
+      });
+
+  reconstruct_config
       .def_readwrite("floor_elevation",
-                     &roofer::ReconstructionConfig::floor_elevation)
-      .def_readwrite(
-          "override_with_floor_elevation",
-          &roofer::ReconstructionConfig::override_with_floor_elevation)
-      .def_readwrite("plane_detect_k",
-                     &roofer::ReconstructionConfig::plane_detect_k)
-      .def_readwrite("plane_detect_min_points",
-                     &roofer::ReconstructionConfig::plane_detect_min_points)
-      .def_readwrite("plane_detect_epsilon",
-                     &roofer::ReconstructionConfig::plane_detect_epsilon)
-      .def_readwrite("plane_detect_normal_angle",
-                     &roofer::ReconstructionConfig::plane_detect_normal_angle)
-      .def_readwrite("line_detect_epsilon",
-                     &roofer::ReconstructionConfig::line_detect_epsilon)
-      .def_readwrite("thres_alpha", &roofer::ReconstructionConfig::thres_alpha)
-      .def_readwrite("thres_reg_line_dist",
-                     &roofer::ReconstructionConfig::thres_reg_line_dist)
-      .def_readwrite("thres_reg_line_ext",
-                     &roofer::ReconstructionConfig::thres_reg_line_ext)
-      .def("is_valid", &roofer::ReconstructionConfig::is_valid);
+                     &roofer::ReconstructOptions::floor_elevation)
+      .def_readwrite("override_with_floor_elevation",
+                     &roofer::ReconstructOptions::override_with_floor_elevation)
+      .def("is_valid", &roofer::ReconstructOptions::is_valid);
+
+  bind_deprecated_property(reconstruct_config, "lod13_step_height",
+                           "reconstruction.lod13_step_height",
+                           [](roofer::ReconstructOptions& self) -> float& {
+                             return self.reconstruction.lod13_step_height;
+                           });
+  bind_deprecated_property(
+      reconstruct_config, "complexity_factor",
+      "reconstruction.arrangement_optimiser.complexity_factor",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.arrangement_optimiser.complexity_factor;
+      });
+  bind_deprecated_property(reconstruct_config, "clip_ground",
+                           "reconstruction.clip_terrain",
+                           [](roofer::ReconstructOptions& self) -> bool& {
+                             return self.reconstruction.clip_terrain;
+                           });
+  bind_deprecated_property(
+      reconstruct_config, "plane_detect_k",
+      "reconstruction.plane_detector.plane_neighbour_count",
+      [](roofer::ReconstructOptions& self) -> int& {
+        return self.reconstruction.plane_detector.plane_neighbour_count;
+      });
+  bind_deprecated_property(
+      reconstruct_config, "plane_detect_min_points",
+      "reconstruction.plane_detector.min_plane_points",
+      [](roofer::ReconstructOptions& self) -> int& {
+        return self.reconstruction.plane_detector.min_plane_points;
+      });
+  bind_deprecated_property(
+      reconstruct_config, "plane_detect_epsilon",
+      "reconstruction.plane_detector.plane_epsilon",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.plane_detector.plane_epsilon;
+      });
+  bind_deprecated_property(
+      reconstruct_config, "plane_detect_normal_angle",
+      "reconstruction.plane_detector.plane_normal_threshold",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.plane_detector.plane_normal_threshold;
+      });
+  bind_deprecated_property(
+      reconstruct_config, "line_detect_epsilon",
+      "reconstruction.line_detector.distance_threshold",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.line_detector.distance_threshold;
+      });
+  bind_deprecated_property(reconstruct_config, "thres_alpha",
+                           "reconstruction.alpha_shaper.alpha",
+                           [](roofer::ReconstructOptions& self) -> float& {
+                             return self.reconstruction.alpha_shaper.alpha;
+                           });
+  bind_deprecated_property(
+      reconstruct_config, "thres_reg_line_dist",
+      "reconstruction.line_regulariser.distance_threshold",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.line_regulariser.distance_threshold;
+      });
+  bind_deprecated_property(
+      reconstruct_config, "thres_reg_line_ext",
+      "reconstruction.line_regulariser.extension",
+      [](roofer::ReconstructOptions& self) -> float& {
+        return self.reconstruction.line_regulariser.extension;
+      });
+
+  m.attr("ReconstructOptions") = m.attr("ReconstructionConfig");
+  m.attr("NestedReconstructionConfig") = m.attr("ReconstructionPipelineConfig");
 
   m.def("reconstruct",
         py::overload_cast<const PyPointCollection&, const PyPointCollection&,
-                          const PyLinearRing&, roofer::ReconstructionConfig>(
+                          const PyLinearRing&, roofer::ReconstructOptions>(
             &roofer::py_reconstruct),
         "Reconstruct a single instance of a building from a point cloud with "
         "ground points",
         py::arg("points_roof"), py::arg("points_ground"), py::arg("footprint"),
-        py::arg("cfg") = roofer::ReconstructionConfig());
+        py::arg("cfg") = roofer::ReconstructOptions());
 
-  m.def(
-      "reconstruct",
-      py::overload_cast<const PyPointCollection&, const PyLinearRing&,
-                        roofer::ReconstructionConfig>(&roofer::py_reconstruct),
-      "Reconstruct a single instance of a building from a point cloud "
-      "without ground points",
-      py::arg("points_roof"), py::arg("footprint"),
-      py::arg("cfg") = roofer::ReconstructionConfig());
+  m.def("reconstruct",
+        py::overload_cast<const PyPointCollection&, const PyLinearRing&,
+                          roofer::ReconstructOptions>(&roofer::py_reconstruct),
+        "Reconstruct a single instance of a building from a point cloud "
+        "without ground points",
+        py::arg("points_roof"), py::arg("footprint"),
+        py::arg("cfg") = roofer::ReconstructOptions());
 
   m.def("triangulate_mesh", &roofer::py_triangulate_mesh, "Triangulate a mesh",
         py::arg("mesh"));
