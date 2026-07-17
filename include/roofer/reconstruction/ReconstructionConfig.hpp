@@ -54,6 +54,11 @@ namespace roofer::reconstruction {
     "Maximum step height dissolved during LoD 1.3 generalisation, in "   \
     "metres.",                                                           \
     config::greater_than(0.0F), public_)                                 \
+  X(float, unit_scale, 1.0F,                                             \
+    "Metres per input coordinate unit. Distance parameters specified "   \
+    "in metres are converted to input units for reconstruction using "   \
+    "this factor. E.g. for feet use 0.3048.",                            \
+    config::greater_than(0.0F), internal)                                \
   X(roofer::enums::TerrainStrategy, h_terrain_strategy,                  \
     roofer::enums::BUFFER_TILE, "Terrain elevation selection strategy.", \
     config::no_validation<roofer::enums::TerrainStrategy>(), public_)
@@ -111,6 +116,41 @@ namespace roofer::reconstruction {
           }
         }
       });
+      return result;
+    }
+
+    /**
+     * Convert metre-based parameters to input coordinate units. `unit_scale`
+     * is the number of metres per input coordinate unit.
+     */
+    [[nodiscard]] Self scaled_to_input_units() const {
+      Self result = *this;
+      const float distance_scale = 1.0F / unit_scale;
+      const float area_scale = distance_scale * distance_scale;
+
+      result.lod13_step_height *= distance_scale;
+      result.plane_detector.plane_epsilon *= distance_scale;
+      result.plane_detector.ransac_cluster_epsilon *= distance_scale;
+      result.plane_detector.maximum_offset *= distance_scale;
+      result.alpha_shaper.alpha *= area_scale;
+      result.line_detector.distance_threshold *= distance_scale;
+      result.line_detector.snap_threshold *= distance_scale;
+      result.line_detector.extension *= distance_scale;
+      result.plane_intersector.distance_to_line_threshold *= distance_scale;
+      result.plane_intersector.min_length *= distance_scale;
+      result.line_regulariser.distance_threshold *= distance_scale;
+      result.line_regulariser.extension *= distance_scale;
+      result.segment_rasteriser.cell_size *= distance_scale;
+      result.arrangement_builder.snap_tolerance *= distance_scale;
+      result.arrangement_builder.footprint_extension *= distance_scale;
+      result.arrangement_dissolver.step_height_threshold *= distance_scale;
+      result.arrangement_snapper.distance_threshold *= distance_scale;
+      result.arrangement_snapper.manifold_repair_radius *= distance_scale;
+      result.arrangement_snapper.manifold_height_tolerance *= distance_scale;
+      result.arrangement_extruder.nodata_elevation *= distance_scale;
+      result.arrangement_extruder.snap_tolerance *= distance_scale;
+      result.mesh_triangulator.duplicate_tolerance *= distance_scale;
+      result.unit_scale = 1.0F;
       return result;
     }
   };

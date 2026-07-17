@@ -64,6 +64,23 @@ TEST_CASE("reconstruction angle fields are bounded degree values") {
   CHECK(error->starts_with("line-regulariser.angle-threshold"));
 }
 
+TEST_CASE("unit scale converts metre distances to input coordinate units") {
+  ReconstructionConfig cfg;
+  cfg.unit_scale = 0.3048F;  // feet
+  const auto scaled = cfg.scaled_to_input_units();
+
+  CHECK(scaled.unit_scale == Catch::Approx(1.0F));
+  CHECK(scaled.plane_detector.plane_epsilon == Catch::Approx(0.984252F));
+  CHECK(scaled.alpha_shaper.alpha ==
+        Catch::Approx(0.25F / (0.3048F * 0.3048F)));
+  CHECK(scaled.segment_rasteriser.cell_size == Catch::Approx(0.164042F));
+  CHECK(scaled.arrangement_extruder.snap_tolerance ==
+        Catch::Approx(0.004130331F));
+
+  cfg.unit_scale = 0.0F;
+  CHECK(cfg.validate()->starts_with("unit-scale"));
+}
+
 TEST_CASE("descriptor names convert to kebab case and hide derived fields") {
   ReconstructionConfig cfg;
   std::set<std::string> optimiser_fields;
@@ -139,6 +156,10 @@ TEST_CASE("flattened API validation delegates to nested descriptors") {
   CHECK(roofer::to_reconstruct_options(legacy)
             .reconstruction.plane_detector.normal_angle_threshold ==
         Catch::Approx(41.409622F));
+
+  legacy.unit_scale = 0.3048F;
+  CHECK(roofer::to_reconstruct_options(legacy).reconstruction.unit_scale ==
+        Catch::Approx(0.3048F));
 
   legacy.plane_detect_normal_angle = 0.6F;
   CHECK(roofer::to_reconstruct_options(legacy)

@@ -74,6 +74,11 @@ namespace roofer {
     float lod13_step_height =
         reconstruction::ReconstructionConfig{}.lod13_step_height;
     /**
+     * @brief Metres per input coordinate unit. Distance parameters specified
+     * in metres are converted to input coordinate units for reconstruction.
+     */
+    float unit_scale = reconstruction::ReconstructionConfig{}.unit_scale;
+    /**
      * @brief Floor elevation in case it is not provided by the
      * footprint (API only).
      */
@@ -176,6 +181,7 @@ namespace roofer {
         legacy.override_with_floor_elevation;
     options.reconstruction.clip_terrain = legacy.clip_ground;
     options.reconstruction.lod13_step_height = legacy.lod13_step_height;
+    options.reconstruction.unit_scale = legacy.unit_scale;
     options.reconstruction.arrangement_optimiser.complexity_factor =
         legacy.complexity_factor;
     options.reconstruction.plane_detector.plane_neighbour_count =
@@ -224,6 +230,7 @@ namespace roofer {
       if (!cfg.is_valid()) {
         throw rooferException("Invalid roofer configuration.");
       }
+      auto reconstruction = cfg.reconstruction.scaled_to_input_units();
 
       // prepare footprint data type
       // template deduction will fail if not convertible to LinearRing
@@ -266,7 +273,7 @@ namespace roofer {
       }
 
       auto PlaneDetector = roofer::reconstruction::createPlaneDetector();
-      PlaneDetector->detect(points_roof, cfg.reconstruction.plane_detector);
+      PlaneDetector->detect(points_roof, reconstruction.plane_detector);
       if (PlaneDetector->roof_type == "no points" ||
           PlaneDetector->roof_type == "no planes") {
         throw rooferException(
@@ -275,41 +282,41 @@ namespace roofer {
       auto PlaneDetector_ground = roofer::reconstruction::createPlaneDetector();
       if (!points_ground.empty()) {
         PlaneDetector_ground->detect(points_ground,
-                                     cfg.reconstruction.plane_detector);
+                                     reconstruction.plane_detector);
       }
 
       auto AlphaShaper = roofer::reconstruction::createAlphaShaper();
       AlphaShaper->compute(PlaneDetector->pts_per_roofplane,
-                           cfg.reconstruction.alpha_shaper);
+                           reconstruction.alpha_shaper);
       if (AlphaShaper->alpha_rings.size() == 0) {
         throw rooferException(
             "Pointcloud insufficient; unable to extract boundary lines");
       }
       auto AlphaShaper_ground = roofer::reconstruction::createAlphaShaper();
       AlphaShaper_ground->compute(PlaneDetector_ground->pts_per_roofplane,
-                                  cfg.reconstruction.alpha_shaper);
+                                  reconstruction.alpha_shaper);
 
       auto LineDetector = roofer::reconstruction::createLineDetector();
       LineDetector->detect(AlphaShaper->alpha_rings, AlphaShaper->roofplane_ids,
                            PlaneDetector->pts_per_roofplane,
-                           cfg.reconstruction.line_detector);
+                           reconstruction.line_detector);
 
       auto PlaneIntersector = roofer::reconstruction::createPlaneIntersector();
       PlaneIntersector->compute(PlaneDetector->pts_per_roofplane,
                                 PlaneDetector->plane_adjacencies,
-                                cfg.reconstruction.plane_intersector);
+                                reconstruction.plane_intersector);
 
       auto LineRegulariser = roofer::reconstruction::createLineRegulariser();
       LineRegulariser->compute(LineDetector->edge_segments,
                                PlaneIntersector->segments,
-                               cfg.reconstruction.line_regulariser);
+                               reconstruction.line_regulariser);
 
       auto SegmentRasteriser =
           roofer::reconstruction::createSegmentRasteriser();
-      auto SegmentRasterizerCfg = cfg.reconstruction.segment_rasteriser;
+      auto SegmentRasterizerCfg = reconstruction.segment_rasteriser;
       if (points_ground.empty()) {
         SegmentRasterizerCfg.use_ground = false;
-        cfg.reconstruction.clip_terrain = false;
+        reconstruction.clip_terrain = false;
       }
       SegmentRasteriser->compute(AlphaShaper->alpha_triangles,
                                  AlphaShaper_ground->alpha_triangles,
@@ -320,12 +327,12 @@ namespace roofer {
           roofer::reconstruction::createArrangementBuilder();
       ArrangementBuilder->compute(arrangement, linear_ring,
                                   LineRegulariser->exact_regularised_edges,
-                                  cfg.reconstruction.arrangement_builder);
+                                  reconstruction.arrangement_builder);
 
       auto ArrangementOptimiser =
           roofer::reconstruction::createArrangementOptimiser();
-      auto optimiser_config = cfg.reconstruction.arrangement_optimiser;
-      optimiser_config.use_ground = cfg.reconstruction.clip_terrain;
+      auto optimiser_config = reconstruction.arrangement_optimiser;
+      optimiser_config.use_ground = reconstruction.clip_terrain;
       ArrangementOptimiser->compute(arrangement, SegmentRasteriser->heightfield,
                                     PlaneDetector->pts_per_roofplane,
                                     PlaneDetector_ground->pts_per_roofplane,
@@ -333,22 +340,21 @@ namespace roofer {
 
       auto ArrangementDissolver =
           roofer::reconstruction::createArrangementDissolver();
-      auto dissolver_config = cfg.reconstruction.arrangement_dissolver;
+      auto dissolver_config = reconstruction.arrangement_dissolver;
       dissolver_config.dissolve_step_edges = cfg.lod == 13;
       dissolver_config.dissolve_all_interior = cfg.lod == 12;
-      dissolver_config.step_height_threshold =
-          cfg.reconstruction.lod13_step_height;
+      dissolver_config.step_height_threshold = reconstruction.lod13_step_height;
       ArrangementDissolver->compute(arrangement, SegmentRasteriser->heightfield,
                                     *elevation_provider, dissolver_config);
 
       auto ArrangementSnapper =
           roofer::reconstruction::createArrangementSnapper();
       ArrangementSnapper->compute(arrangement, *elevation_provider,
-                                  cfg.reconstruction.arrangement_snapper);
+                                  reconstruction.arrangement_snapper);
 
       auto ArrangementExtruder =
           roofer::reconstruction::createArrangementExtruder();
-      auto extruder_config = cfg.reconstruction.arrangement_extruder;
+      auto extruder_config = reconstruction.arrangement_extruder;
       extruder_config.lod2 = cfg.lod == 22;
       ArrangementExtruder->compute(arrangement, *elevation_provider,
                                    extruder_config);

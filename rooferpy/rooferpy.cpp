@@ -280,6 +280,11 @@ PYBIND11_MODULE(roofer, m) {
                            [](roofer::ReconstructOptions& self) -> float& {
                              return self.reconstruction.lod13_step_height;
                            });
+  bind_deprecated_property(reconstruct_config, "unit_scale",
+                           "reconstruction.unit_scale",
+                           [](roofer::ReconstructOptions& self) -> float& {
+                             return self.reconstruction.unit_scale;
+                           });
   bind_deprecated_property(
       reconstruct_config, "complexity_factor",
       "reconstruction.arrangement_optimiser.complexity_factor",
