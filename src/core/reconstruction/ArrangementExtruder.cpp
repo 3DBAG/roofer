@@ -106,7 +106,7 @@ namespace roofer::reconstruction {
                  const ElevationProvider& elevation_provider,
                  ArrangementExtruderConfig cfg) override {
       typedef Arrangement_2::Traits_2 AT;
-      float snap_tolerance = std::pow(10, -cfg.snap_tolerance_exp);
+      float snap_tolerance = cfg.snap_tolerance;
       float snap_tolerance_sq = snap_tolerance * snap_tolerance;
 
       // assume we have only one unbounded faces that just has the building

@@ -258,18 +258,6 @@ namespace roofer::reconstruction {
           }
       }
 
-      // if (remove_duplicates) {
-      //   arr_snap_duplicates(arr, (double) std::pow(10,-dupe_threshold_exp));
-      // }
-      // snap edge shorter than snap_tolerance
-      // for (auto he : arr.edge_handles()) {
-      //   if(CGAL::squared_distance(he->source()->point(),
-      //   he->target()->point()) < snap_tolerance) {
-
-      //     arr.remove_edge(he->next());
-      //     arr.remove_edge(he->twin()->previous());
-      //   }
-      // }
       // compute final data_area and elevation stats for each face
       std::vector<float> all_elevations;
       for (auto face : arr.face_handles()) {

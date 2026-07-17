@@ -92,7 +92,7 @@ namespace roofer::reconstruction {
     }
 
     void arr_insert(Arrangement_2& arr, Segment_2 segment,
-                    int& dist_threshold_exp) {
+                    const double snap_tolerance) {
       std::list<CGAL::Object> zone_elems;
 
       Arrangement_2::Halfedge_handle edge;
@@ -114,9 +114,7 @@ namespace roofer::reconstruction {
         // vertices;
         auto p_source = segment.min();
         auto p_target = segment.max();
-        double dist_threshold = std::pow(10, -dist_threshold_exp);
-        dist_threshold *=
-            dist_threshold;  // we compare only squared distances later
+        const double dist_threshold = snap_tolerance * snap_tolerance;
 
         // take care of a first face
         if (assign(face, zone_elems.front())) {
@@ -350,7 +348,7 @@ namespace roofer::reconstruction {
         for (size_t i = 0; i < input_edges.size(); ++i) {
           auto& s = input_edges[i];
           if (cfg.insert_with_snap)
-            arr_insert(arrangement, s, cfg.snap_tolerance_exp);
+            arr_insert(arrangement, s, cfg.snap_tolerance);
           else {
             insert(arrangement, s);
           }
