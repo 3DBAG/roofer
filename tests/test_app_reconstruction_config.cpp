@@ -34,6 +34,7 @@ TEST_CASE("nested reconstruction TOML overrides deprecated root aliases") {
 complexity-factor = 0.1
 plane-detect-k = 7
 plane-detect-normal-angle = 0.6
+unit-scale = 0.3048
 lod11-fallback-time = 1234
 
 [reconstruction]
@@ -58,6 +59,7 @@ snap-tolerance = 0.002
   CHECK(handler.cfg_.reconstruction.plane_detector.plane_neighbour_count == 23);
   CHECK(handler.cfg_.reconstruction.arrangement_optimiser.complexity_factor ==
         0.7F);
+  CHECK(handler.cfg_.unit_scale == Catch::Approx(0.3048F));
   CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
         30.0F);
   CHECK(handler.cfg_.reconstruction.arrangement_extruder.snap_tolerance ==
@@ -75,6 +77,31 @@ TEST_CASE("legacy normal dot-product threshold is converted to degrees") {
 
   CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
         Catch::Approx(53.130102F));
+}
+
+TEST_CASE("crop and output metre parameters scale to input units") {
+  RooferConfig cfg;
+  cfg.unit_scale = 0.3048F;  // feet
+
+  CHECK(cfg.metres_to_input_units(0.5F) == Catch::Approx(1.64041996F));
+  CHECK(cfg.square_metres_to_input_units(69000.0F) ==
+        Catch::Approx(742709.82F));
+  CHECK(cfg.points_per_square_metre_to_input_units(20.0F) ==
+        Catch::Approx(1.8580608F));
+}
+
+TEST_CASE("global unit-scale is accepted as a CLI parameter") {
+  const char* argv[] = {"roofer", "--unit-scale", "0.3048"};
+  CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+  RooferConfigHandler handler;
+  handler.cfg_.source_footprints = "footprints.gpkg";
+  handler.cfg_.output_path = "output";
+  handler.input_pointclouds_.emplace_back();
+
+  handler.parse_cli_second_pass(arguments);
+
+  CHECK(handler.cfg_.unit_scale == Catch::Approx(0.3048F));
+  CHECK(arguments.args.empty());
 }
 
 TEST_CASE("nested reconstruction TOML errors contain complete dotted paths") {

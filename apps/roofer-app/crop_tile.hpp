@@ -74,9 +74,12 @@ bool crop_tile(const roofer::TBox<double>& tile,
 
   // simplify + buffer footprints
   logger.info("Simplifying and buffering footprints...");
-  if (cfg.simplify) vector_ops->simplify_polygons(footprints);
+  if (cfg.simplify) {
+    vector_ops->simplify_polygons(footprints, cfg.metres_to_input_units(0.01F));
+  }
   auto buffered_footprints = footprints;
-  vector_ops->buffer_polygons(buffered_footprints);
+  vector_ops->buffer_polygons(buffered_footprints,
+                              cfg.metres_to_input_units(4.0F));
 
   // compute true extent that includes all buffered footprints
   roofer::Box polygon_extent;
@@ -109,11 +112,15 @@ bool crop_tile(const roofer::TBox<double>& tile,
         lasfiles, footprints, buffered_footprints, ipc.building_clouds,
         ipc.ground_elevations, ipc.terrain_grid_elevations,
         ipc.acquisition_years, ipc.pointcloud_insufficient, polygon_extent,
-        {.min_building_density = cfg.min_building_density,
+        {.cellsize = cfg.metres_to_input_units(50.0F),
+         .buffer = cfg.metres_to_input_units(1.0F),
+         .min_building_density = cfg.points_per_square_metre_to_input_units(
+             cfg.min_building_density),
          .ground_class = ipc.grnd_class,
          .building_class = ipc.bld_class,
          .use_acquisition_year = static_cast<bool>(yoc_vec),
-         .terrain_grid_cellsize = cfg.terrain_grid_cellsize,
+         .terrain_grid_cellsize =
+             cfg.metres_to_input_units(cfg.terrain_grid_cellsize),
          .terrain_grid_search_radius = cfg.terrain_grid_search_radius,
          .retain_terrain_grid = terrain_pointcloud == ipc_index});
     ipc.min_ground_elevation = PointCloudCropper->get_min_terrain_elevation();
@@ -172,7 +179,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
   for (size_t i = 0; i < N_fp; ++i) {
     force_lod11_vec[i] =
         *force_lod11_vec[i] ||
-        std::fabs(footprints[i].signed_area()) > cfg.lod11_fallback_area;
+        std::fabs(footprints[i].signed_area()) >
+            cfg.square_metres_to_input_units(cfg.lod11_fallback_area);
   }
 
   // compute rasters
@@ -194,7 +202,8 @@ bool crop_tile(const roofer::TBox<double>& tile,
     roofer::arr2f nodata_c;
     for (unsigned i = 0; i < N_fp; ++i) {
       roofer::misc::RasterisePointcloud(ipc.building_clouds[i], footprints[i],
-                                        ipc.building_rasters[i], cfg.cellsize,
+                                        ipc.building_rasters[i],
+                                        cfg.metres_to_input_units(cfg.cellsize),
                                         ipc.grnd_class, ipc.bld_class);
       ipc.nodata_fractions[i] =
           roofer::misc::computeNoDataFraction(ipc.building_rasters[i]);
@@ -205,13 +214,15 @@ bool crop_tile(const roofer::TBox<double>& tile,
       ipc.roof_elevations[i] =
           roofer::misc::computeRoofElevation(ipc.building_rasters[i], 0.7);
 
-      auto target_density = cfg.ceil_point_density;
+      auto target_density =
+          cfg.points_per_square_metre_to_input_units(cfg.ceil_point_density);
       bool do_force_lod11 =
           *force_lod11_vec[i] || ipc.force_lod11 || ipc.is_glass_roof[i];
       ipc.lod11_forced[i] = do_force_lod11;
 
       if (do_force_lod11) {
-        target_density = cfg.lod11_fallback_density;
+        target_density = cfg.points_per_square_metre_to_input_units(
+            cfg.lod11_fallback_density);
         // logger.info(
         //     "Applying extra thinning and skipping nodata circle calculation "
         //     "[force_lod11 = {}]",
@@ -268,6 +279,10 @@ bool crop_tile(const roofer::TBox<double>& tile,
   // compute is_mutated attribute for first 2 pointclouds and add to footprint
   // attributes
   roofer::misc::selectPointCloudConfig select_pc_cfg;
+  select_pc_cfg.threshold_maxcircle =
+      cfg.metres_to_input_units(select_pc_cfg.threshold_maxcircle);
+  select_pc_cfg.threshold_mutation_difference =
+      cfg.metres_to_input_units(select_pc_cfg.threshold_mutation_difference);
   if (input_pointclouds.size() > 1) {
     // do roofer::misc::isMutated for each pair of consecutive pointclouds
     for (unsigned i = 0; i < input_pointclouds.size() - 1; ++i) {

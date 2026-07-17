@@ -56,12 +56,12 @@ namespace roofer::misc {
     // Thresholds determined from AHN3 Leiden
     // total fraction of no data area inside footprint
     float threshold_nodata = 0.06;
-    // max allowed nodata radius
+    // Maximum allowed nodata radius, in metres.
     float threshold_maxcircle = 0.5;
     // The >=50% change was determined by analyzing the data.
     // See the Leiden, percent_diff_AHN3_2020 plot.
     float threshold_mutation_fraction = 0.5;
-    // The threshold is 1.2 meters, because the accuracy of the Kadaster's
+    // The threshold is 1.2 metres, because the accuracy of the Kadaster's
     // Dense Image Matching point cloud is about 30cm, so we are at 4 sigma.
     // float threshold_mutation_difference = 1.2;
     float threshold_mutation_difference = 1.2;

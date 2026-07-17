@@ -103,6 +103,39 @@ inline std::optional<size_t> select_terrain_pointcloud(
 struct RooferConfigHandler;
 
 struct RooferConfig {
+  /**
+   * Metres per input coordinate unit. All app-level metre-based parameters
+   * are converted to input coordinate units using this factor.
+   */
+  float unit_scale = 1.0F;
+
+  /**
+   * Convert a distance expressed in metres to the input coordinate units.
+   * `unit_scale` is the number of metres per input coordinate unit.
+   */
+  [[nodiscard]] float metres_to_input_units(float metres) const {
+    return metres / unit_scale;
+  }
+
+  /** Convert an area expressed in square metres to input coordinate units. */
+  [[nodiscard]] float square_metres_to_input_units(float square_metres) const {
+    const auto distance_scale = metres_to_input_units(1.0F);
+    return square_metres * distance_scale * distance_scale;
+  }
+
+  /** Convert a density expressed in points per square metre to input units. */
+  [[nodiscard]] float points_per_square_metre_to_input_units(
+      float points_per_square_metre) const {
+    return points_per_square_metre * unit_scale * unit_scale;
+  }
+
+  [[nodiscard]] roofer::reconstruction::ReconstructionConfig
+  reconstruction_in_input_units() const {
+    auto result = reconstruction;
+    result.unit_scale = unit_scale;
+    return result.scaled_to_input_units();
+  }
+
   // footprint source parameters
   std::string source_footprints;
   std::string id_attribute;           // -> attr_building_id
@@ -408,7 +441,7 @@ struct RooferConfigHandler {
 
   // methods
   RooferConfigHandler() {
-    ParameterVector input, crop, reconstruction, output;
+    ParameterVector global, input, crop, reconstruction, output;
     ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
@@ -427,6 +460,13 @@ struct RooferConfigHandler {
 #ifdef RF_USE_RERUN
     general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
 #endif
+
+    global.add(
+        "unit-scale",
+        "Metres per input coordinate unit. All metre-based reconstruction, "
+        "crop, and output parameters are converted to input coordinate units "
+        "using this factor. For feet, use `0.3048`.",
+        cfg_.unit_scale, {roofer::config::greater_than(0.0F)});
 
     input.add(
         "id-attribute",
@@ -466,7 +506,9 @@ struct RooferConfigHandler {
         .add(
             "box",
             "Axis aligned bounding box specifying the region of interest. Data "
-            "outside of this region will be ignored.",
+            "outside of this region will be ignored. Coordinates are in the "
+            "input data's coordinate units and are not affected by "
+            "`unit-scale`.",
             cfg_.region_of_interest,
             {[](const std::optional<roofer::TBox<double>>& box)
                  -> std::optional<std::string> {
@@ -502,11 +544,12 @@ struct RooferConfigHandler {
         "Simplify input rootprints to remove (nearly) duplicated vertices.",
         cfg_.simplify);
     crop.add("ceil-point-density",
-             "Enforce this point density ceiling on each building pointcloud.",
+             "Enforce this point density ceiling (points per square metre) on "
+             "each building pointcloud.",
              cfg_.ceil_point_density, {roofer::config::greater_than(0.0F)});
     crop.add("cellsize",
              "Cellsize used for quick pointcloud analysis (eg. point density"
-             " and nodata regions).",
+             " and nodata regions), in metres.",
              cfg_.cellsize, {roofer::config::greater_than(0.0F)});
     crop.add("min-building-density",
              "Minimum building-class point density (points/m²) below "
@@ -518,7 +561,8 @@ struct RooferConfigHandler {
              "insufficient.",
              cfg_.max_nodata_fraction, {roofer::config::in_range(0.0F, 1.0F)});
     crop.add("terrain-grid-cellsize",
-             "Cellsize used for the crop phase terrain fallback grid.",
+             "Cellsize used for the crop phase terrain fallback grid, in "
+             "metres.",
              cfg_.terrain_grid_cellsize, {roofer::config::greater_than(0.0F)});
     crop.add("terrain-grid-search-radius",
              "Number of terrain grid cells to search around a building when "
@@ -533,7 +577,7 @@ struct RooferConfigHandler {
                  {"complete_quads", "local_triangles", "fill_small_gaps"})});
     crop.add(
         "lod11-fallback-area",
-        "LoD 1.1 fallback threshold area in square meters. If the area of the "
+        "LoD 1.1 fallback threshold area in square metres. If the area of the "
         "roofprint is larger than this value, the building will be always be "
         "reconstructed using a LoD 1.1 extrusion.",
         cfg_.lod11_fallback_area, {roofer::config::greater_than(0)});
@@ -621,7 +665,7 @@ struct RooferConfigHandler {
 #undef ROOFER_REGISTER_LEGACY_FIELD
 
     output.add("tiling", "Enable or disable output tiling.", _tiling);
-    output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
+    output.add("tilesize", "Tilesize for rectangular output tiles, in metres.",
                cfg_.tilesize, {check::AllHigherThan({0, 0})});
     output.add("split-cjseq",
                "Output CityJSONSequence file for each building instead of one "
@@ -634,12 +678,14 @@ struct RooferConfigHandler {
                "Write one triangulated TINRelief feature per tile from the "
                "highest-quality pointcloud source.",
                cfg_.output_terrain);
-    output.add("cj-scale", "Scaling applied to CityJSON output vertices",
+    output.add("cj-scale",
+               "CityJSON output vertex precision, in metres. It is converted "
+               "to input coordinate units before writing.",
                cfg_.cj_scale);
     output
         .add("cj-translate",
-             "Translation applied to CityJSON output vertices. Uses dataset "
-             "center by default.",
+             "Translation applied to CityJSON output vertices, in input "
+             "coordinate units. Uses dataset center by default.",
              cfg_.cj_translate)
         .example_ = "[100000, 200000, 0]";
 
@@ -675,11 +721,13 @@ struct RooferConfigHandler {
         DocAttrib(
             &cfg_.a_nodata_r,
             "Indicates the radius of the largest "
-            "circle in the roofprint that is not covered by pointcloud data"));
+            "circle in the roofprint that is not covered by pointcloud data, "
+            "in input map units"));
     output_attr_.emplace("pt_density",
                          DocAttrib(&cfg_.a_pt_density,
                                    "Indicates the point density inside the "
-                                   "roofprint"));
+                                   "roofprint, in points per square input map "
+                                   "unit"));
     output_attr_.emplace(
         "is_mutated",
         DocAttrib(&cfg_.a_is_mutated,
@@ -741,27 +789,27 @@ struct RooferConfigHandler {
     output_attr_.emplace("rmse_lod12",
                          DocAttrib(&cfg_.a_rmse_lod12,
                                    "The Root Mean Square Erorr of "
-                                   "the LOD12 geometry"));
+                                   "the LOD12 geometry, in input map units"));
     output_attr_.emplace("rmse_lod13",
                          DocAttrib(&cfg_.a_rmse_lod13,
                                    "The Root Mean Square Erorr of "
-                                   "the LOD13 geometry"));
+                                   "the LOD13 geometry, in input map units"));
     output_attr_.emplace("rmse_lod22",
                          DocAttrib(&cfg_.a_rmse_lod22,
                                    "The Root Mean Square Erorr of "
-                                   "the LOD22 geometry"));
+                                   "the LOD22 geometry, in input map units"));
     output_attr_.emplace("volume_lod12",
                          DocAttrib(&cfg_.a_volume_lod12,
-                                   "The volume in cubic meters of the LoD 1.2 "
-                                   "geometry"));
+                                   "The volume of the LoD 1.2 geometry, in "
+                                   "cubic input map units"));
     output_attr_.emplace("volume_lod13",
                          DocAttrib(&cfg_.a_volume_lod13,
-                                   "The volume in cubic meters of the LoD 1.3 "
-                                   "geometry"));
+                                   "The volume of the LoD 1.3 geometry, in "
+                                   "cubic input map units"));
     output_attr_.emplace("volume_lod22",
                          DocAttrib(&cfg_.a_volume_lod22,
-                                   "The volume in cubic meters of the LoD 2.2 "
-                                   "geometry"));
+                                   "The volume of the LoD 2.2 geometry, in "
+                                   "cubic input map units"));
     output_attr_.emplace("h_ground",
                          DocAttrib(&cfg_.a_h_ground,
                                    "The elevation of the floor of the "
@@ -791,6 +839,7 @@ struct RooferConfigHandler {
                " By default attribute names are prefixed with `rf_`.",
                output_attr_);
     // Move groups into param_group_map
+    param_groups_.emplace_back("Global", std::move(global));
     param_groups_.emplace_back("Input", std::move(input));
     param_groups_.emplace_back("Crop", std::move(crop));
     param_groups_.emplace_back("Reconstruction", std::move(reconstruction));

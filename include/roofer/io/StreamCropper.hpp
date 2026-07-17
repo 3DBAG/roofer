@@ -33,6 +33,8 @@ namespace roofer::io {
   };
 
   struct PointCloudCropperConfig {
+    // Distances are in input coordinate units. The roofer application converts
+    // its metre-based crop defaults before constructing this configuration.
     float cellsize = 50.0;
     float buffer = 1.0;
     float ground_percentile = 0.05;

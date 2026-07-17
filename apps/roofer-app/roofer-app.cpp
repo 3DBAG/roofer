@@ -456,8 +456,9 @@ int main(int argc, const char* argv[]) {
       building_tile.extent = roi;
       building_tile.proj_helper = roofer::misc::createProjHelper();
     } else {
-      auto tile_extents =
-          create_tiles(roi, handler.cfg_.tilesize[0], handler.cfg_.tilesize[1]);
+      auto tile_extents = create_tiles(
+          roi, handler.cfg_.metres_to_input_units(handler.cfg_.tilesize[0]),
+          handler.cfg_.metres_to_input_units(handler.cfg_.tilesize[1]));
 
       for (std::size_t tid = 0; tid < tile_extents.size(); tid++) {
         // intersect with roi, to avoid creating buildings outside of the roi
@@ -910,9 +911,12 @@ int main(int argc, const char* argv[]) {
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          CityJsonWriter->scale_x_ = handler.cfg_.cj_scale[0];
-          CityJsonWriter->scale_y_ = handler.cfg_.cj_scale[1];
-          CityJsonWriter->scale_z_ = handler.cfg_.cj_scale[2];
+          CityJsonWriter->scale_x_ =
+              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[0]);
+          CityJsonWriter->scale_y_ =
+              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[1]);
+          CityJsonWriter->scale_z_ =
+              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[2]);
 
           std::ofstream ofs;
           if (!handler.cfg_.split_cjseq) {
