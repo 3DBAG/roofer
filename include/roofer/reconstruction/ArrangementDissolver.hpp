@@ -25,17 +25,29 @@
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ARRANGEMENT_DISSOLVER_FIELDS(X)                                \
+  X(bool, dissolve_segment_edges, true, "Dissolve redundant segment edges.",  \
+    config::no_validation<bool>(), internal)                                  \
+  X(bool, dissolve_outside_footprint, true,                                   \
+    "Dissolve outside-footprint faces.", config::no_validation<bool>(),       \
+    internal)                                                                 \
+  X(bool, dissolve_step_edges, false, "Dissolve height steps (LoD-derived).", \
+    config::no_validation<bool>(), internal)                                  \
+  X(bool, dissolve_all_interior, false,                                       \
+    "Dissolve all interior edges (LoD-derived).",                             \
+    config::no_validation<bool>(), internal)                                  \
+  X(float, step_height_threshold, 3.0F,                                       \
+    "Step-height threshold in metres (LoD-derived).",                         \
+    config::greater_than(0.0F), internal)
   struct ArrangementDissolverConfig {
-    bool dissolve_seg_edges = true;
-    bool dissolve_step_edges = false;
-    bool dissolve_outside_fp = true;
-    bool dissolve_all_interior = false;
-    bool skip_execution = false;
-    float step_height_threshold = 3.0;
+    using Self = ArrangementDissolverConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_DISSOLVER_FIELDS)
   };
+#undef ROOFER_ARRANGEMENT_DISSOLVER_FIELDS
 
   struct ArrangementDissolverInterface {
     // add_input("arrangement", typeid(Arrangement_2));

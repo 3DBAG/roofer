@@ -328,13 +328,13 @@ namespace roofer::reconstruction {
         // }
         for (auto e = footprint.outer_boundary().edges_begin();
              e != footprint.outer_boundary().edges_end(); ++e) {
-          arr_extend_insert_segment(arrangement, *e, cfg.fp_extension);
+          arr_extend_insert_segment(arrangement, *e, cfg.footprint_extension);
         }
         obs.set_hole_mode(true);
         for (auto hole = footprint.holes_begin(); hole != footprint.holes_end();
              ++hole) {
           for (auto e = hole->edges_begin(); e != hole->edges_end(); ++e) {
-            arr_extend_insert_segment(arrangement, *e, cfg.fp_extension);
+            arr_extend_insert_segment(arrangement, *e, cfg.footprint_extension);
           }
         }
         obs.set_hole_mode(false);
@@ -350,7 +350,7 @@ namespace roofer::reconstruction {
         for (size_t i = 0; i < input_edges.size(); ++i) {
           auto& s = input_edges[i];
           if (cfg.insert_with_snap)
-            arr_insert(arrangement, s, cfg.dist_threshold_exp);
+            arr_insert(arrangement, s, cfg.snap_tolerance_exp);
           else {
             insert(arrangement, s);
           }

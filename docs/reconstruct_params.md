@@ -32,10 +32,37 @@ The roofer building reconstruction algorithm consists of the following steps:
 
 The roofer building reconstruction algorithm is largely data-driven, so the quality of the result depends on the quality of the input data.
 
+## Configuration
+
+Reconstruction settings live in the `[reconstruction]` TOML table. Settings
+for individual stages use nested tables such as
+`[reconstruction.plane-detector]` and
+`[reconstruction.arrangement-optimiser]`. The complete example configuration
+is generated from the C++ field descriptors, so it always reflects the runtime
+defaults and validation rules.
+
+The former root-level reconstruction keys remain compatibility aliases in the
+1.x series. They emit deprecation warnings and are scheduled for removal in
+2.0. The `--lod12`, `--lod13`, `--lod22`, `--clip-terrain`, and
+`--complexity-factor` CLI flags remain supported and are not deprecated. Other
+legacy reconstruction CLI flags emit deprecation warnings. Nested TOML values
+take precedence over root-level aliases; command-line arguments take
+precedence over both.
+
+The removed `lod11-fallback-time` root key and CLI flag are accepted but
+ignored during the 1.x compatibility period and emit a deprecation warning.
+Use `max-plane-count` under `[reconstruction.plane-detector]` as the
+deterministic reconstruction-complexity cutoff.
+
+Low-level C++ configuration member names were normalised to `snake_case` in
+1.x. The flattened reconstruction API remains available as a deprecated
+adapter, but code using component structs directly must use the cleaned names;
+those direct component member renames cannot be represented by C++ aliases.
+
 <!-- ### Parameters
 The following parameters can be tuned to optimise the performance for a given point cloud.
 
-```{doxygenstruct} roofer::ReconstructionConfig
+```{doxygenstruct} roofer::reconstruction::ReconstructionConfig
 :project: Roofer
 :members:
 :members-only:

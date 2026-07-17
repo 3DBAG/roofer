@@ -25,6 +25,7 @@
 #include <concepts>
 #include <thread>
 #include <algorithm>
+#include <array>
 #include "toml.hpp"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
@@ -33,21 +34,13 @@
 #include <roofer/common/formatters.hpp>
 #include <roofer/logger/logger.h>
 #include <roofer/misc/Vector2DOps.hpp>
+#include <roofer/reconstruction/ReconstructionConfig.hpp>
 #include <stdexcept>
 #include <string>
 #include <list>
 #include <filesystem>
 #include <utility>
 #include "version.hpp"
-
-namespace roofer::enums {
-  enum TerrainStrategy {
-    BUFFER_TILE = 0,
-    BUFFER_USER = 1,
-    USER = 2
-    // POLYGON_Z = 3
-  };
-}
 
 #include "validators.hpp"
 #include "parameter.hpp"
@@ -173,26 +166,9 @@ struct RooferConfig {
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
 
-  // reconstruct
-  roofer::enums::TerrainStrategy h_terrain_strategy =
-      roofer::enums::TerrainStrategy::BUFFER_TILE;
-  int lod11_fallback_planes = 900;
-  float complexity_factor = 0.888;
-
-  bool clip_ground = true;
-  bool lod_12 = false;
-  bool lod_13 = false;
-  bool lod_22 = true;
-  float lod13_step_height = 3.;
-  float floor_elevation = 0.;
-  int plane_detect_k = 15;
-  int plane_detect_min_points = 15;
-  float plane_detect_epsilon = 0.300000;
-  float plane_detect_normal_angle = 0.750000;
-  float line_detect_epsilon = 1.000000;
-  float thres_alpha = 0.250000;
-  float thres_reg_line_dist = 0.800000;
-  float thres_reg_line_ext = 3.000000;
+  // reconstruct: defaults and low-level options are owned by the shared
+  // descriptor-backed aggregate.
+  roofer::reconstruction::ReconstructionConfig reconstruction;
 
   // output attribute names
   std::string a_success = "rf_success";
@@ -321,6 +297,80 @@ struct CLIArgs {
   }
 };
 
+struct LegacyReconstructionDestination {
+  std::string_view legacy_key;
+  std::string_view section;
+  std::string_view nested_key;
+  bool cli_deprecated = true;
+  bool ignored = false;
+  bool cli_supported = true;
+};
+
+#define ROOFER_LEGACY_RECONSTRUCTION_ALIASES(X)                                \
+  X("lod12", "reconstruction", "lod12", false, false, true, FIELD, "",         \
+    cfg_.reconstruction, Reconstruction, lod12)                                \
+  X("lod13", "reconstruction", "lod13", false, false, true, FIELD, "",         \
+    cfg_.reconstruction, Reconstruction, lod13)                                \
+  X("lod22", "reconstruction", "lod22", false, false, true, FIELD, "",         \
+    cfg_.reconstruction, Reconstruction, lod22)                                \
+  X("complexity-factor", "reconstruction.arrangement-optimiser",               \
+    "complexity-factor", false, false, true, FIELD, "",                        \
+    cfg_.reconstruction.arrangement_optimiser, Optimiser, complexity_factor)   \
+  X("clip-terrain", "reconstruction", "clip-terrain", false, false, true,      \
+    FIELD, "", cfg_.reconstruction, Reconstruction, clip_terrain)              \
+  X("lod13-step-height", "reconstruction", "lod13-step-height", true, false,   \
+    true, FIELD, "", cfg_.reconstruction, Reconstruction, lod13_step_height)   \
+  X("plane-detect-k", "reconstruction.plane-detector",                         \
+    "plane-neighbour-count", true, false, true, FIELD, "",                     \
+    cfg_.reconstruction.plane_detector, PlaneDetector, plane_neighbour_count)  \
+  X("plane-detect-min-points", "reconstruction.plane-detector",                \
+    "min-plane-points", true, false, true, FIELD, "",                          \
+    cfg_.reconstruction.plane_detector, PlaneDetector, min_plane_points)       \
+  X("plane-detect-epsilon", "reconstruction.plane-detector", "plane-epsilon",  \
+    true, false, true, FIELD, "", cfg_.reconstruction.plane_detector,          \
+    PlaneDetector, plane_epsilon)                                              \
+  X("plane-detect-normal-angle", "reconstruction.plane-detector",              \
+    "plane-normal-threshold", true, false, false, FIELD, "",                   \
+    cfg_.reconstruction.plane_detector, PlaneDetector, plane_normal_threshold) \
+  X("line-detect-epsilon", "reconstruction.line-detector",                     \
+    "distance-threshold", true, false, false, FIELD, "",                       \
+    cfg_.reconstruction.line_detector, LineDetector, distance_threshold)       \
+  X("thres-alpha", "reconstruction.alpha-shaper", "alpha", true, false, false, \
+    FIELD, "", cfg_.reconstruction.alpha_shaper, AlphaShaper, alpha)           \
+  X("thres-reg-line-dist", "reconstruction.line-regulariser",                  \
+    "distance-threshold", true, false, false, FIELD, "",                       \
+    cfg_.reconstruction.line_regulariser, LineRegulariser, distance_threshold) \
+  X("thres-reg-line-ext", "reconstruction.line-regulariser", "extension",      \
+    true, false, false, FIELD, "", cfg_.reconstruction.line_regulariser,       \
+    LineRegulariser, extension)                                                \
+  X("h-terrain-strategy", "reconstruction", "h-terrain-strategy", true, false, \
+    true, FIELD, "\"buffer_tile\"", cfg_.reconstruction, Reconstruction,       \
+    h_terrain_strategy)                                                        \
+  X("lod11-fallback-planes", "reconstruction.plane-detector",                  \
+    "max-plane-count", true, false, true, FIELD, "",                           \
+    cfg_.reconstruction.plane_detector, PlaneDetector, max_plane_count)        \
+  X("lod11-fallback-time", "reconstruction.plane-detector", "max-plane-count", \
+    true, true, true, IGNORED, "", _deprecated_lod11_fallback_time, void,      \
+    unused)
+
+inline std::optional<LegacyReconstructionDestination>
+legacy_reconstruction_destination(std::string_view key) {
+#define ROOFER_LEGACY_DESTINATION(key, section, nested_key, deprecated,  \
+                                  ignored, cli_supported, kind, example, \
+                                  owner, type, member)                   \
+  LegacyReconstructionDestination{key,        section, nested_key,       \
+                                  deprecated, ignored, cli_supported},
+  static constexpr std::array destinations{
+      ROOFER_LEGACY_RECONSTRUCTION_ALIASES(ROOFER_LEGACY_DESTINATION)};
+#undef ROOFER_LEGACY_DESTINATION
+
+  const auto destination =
+      std::find_if(destinations.begin(), destinations.end(),
+                   [key](const auto& item) { return item.legacy_key == key; });
+  if (destination == destinations.end()) return std::nullopt;
+  return *destination;
+}
+
 struct RooferConfigHandler {
   RooferConfig cfg_;
 
@@ -332,6 +382,9 @@ struct RooferConfigHandler {
   DocAttribMap output_attr_;
   std::unordered_map<std::string, ConfigParameter*> param_index_;
   std::unordered_map<std::string, ConfigParameter*> app_param_index_;
+  ParameterVector root_only_reconstruction_aliases_;
+  std::unordered_map<std::string, ConfigParameter*>
+      root_only_reconstruction_alias_index_;
 
   static int default_jobs() {
     auto system_threads = std::thread::hardware_concurrency();
@@ -350,6 +403,7 @@ struct RooferConfigHandler {
   int _trace_interval = 10;
   std::string _config_path;
   int _jobs = default_jobs();
+  int _deprecated_lod11_fallback_time = 1800000;
 
   // methods
   RooferConfigHandler() {
@@ -363,11 +417,11 @@ struct RooferConfigHandler {
     general.add("jobs", 'j',
                 "Number of worker jobs to use. Reconstruction uses roughly "
                 "jobs - 1 threads.",
-                _jobs, {check::HigherThan<int>(0)});
+                _jobs, {roofer::config::greater_than(0)});
     general.add("config", 'c', "Configuration file", _config_path,
                 {check::PathExists, check::DirIsWritable});
     general.add("trace-interval", "Interval for tracing in seconds",
-                _trace_interval, {check::HigherThan<int>(0)});
+                _trace_interval, {roofer::config::greater_than(0)});
     general.add("loglevel", "Specify loglevel", _loglevel);
 #ifdef RF_USE_RERUN
     general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
@@ -434,10 +488,10 @@ struct RooferConfigHandler {
     // selection
     input.add("bld-class",
               "LAS classification code that contains the building points.",
-              cfg_.bld_class, {check::HigherOrEqualTo<int>(0)});
+              cfg_.bld_class, {roofer::config::at_least(0)});
     input.add("grnd-class",
               "LAS classification code that constains the ground points.",
-              cfg_.grnd_class, {check::HigherOrEqualTo<int>(0)});
+              cfg_.grnd_class, {roofer::config::at_least(0)});
     input.add("skip-pc-check",
               "Disable/enable check if all supplied pointcloud files exist.",
               _skip_pc_check);
@@ -448,27 +502,27 @@ struct RooferConfigHandler {
         cfg_.simplify);
     crop.add("ceil-point-density",
              "Enforce this point density ceiling on each building pointcloud.",
-             cfg_.ceil_point_density, {check::HigherThan<float>(0)});
+             cfg_.ceil_point_density, {roofer::config::greater_than(0.0F)});
     crop.add("cellsize",
              "Cellsize used for quick pointcloud analysis (eg. point density"
              " and nodata regions).",
-             cfg_.cellsize, {check::HigherThan<float>(0)});
+             cfg_.cellsize, {roofer::config::greater_than(0.0F)});
     crop.add("min-building-density",
              "Minimum building-class point density (points/m²) below "
              "which a rootprint's pointcloud is flagged insufficient.",
-             cfg_.min_building_density, {check::HigherOrEqualTo<float>(0)});
+             cfg_.min_building_density, {roofer::config::at_least(0.0F)});
     crop.add("max-nodata-fraction",
              "Maximum fraction of the roofprint area without pointcloud data. "
              "Above this threshold, a rootprint's pointcloud is flagged "
              "insufficient.",
-             cfg_.max_nodata_fraction, {check::InRange<float>(0, 1)});
+             cfg_.max_nodata_fraction, {roofer::config::in_range(0.0F, 1.0F)});
     crop.add("terrain-grid-cellsize",
              "Cellsize used for the crop phase terrain fallback grid.",
-             cfg_.terrain_grid_cellsize, {check::HigherThan<float>(0)});
+             cfg_.terrain_grid_cellsize, {roofer::config::greater_than(0.0F)});
     crop.add("terrain-grid-search-radius",
              "Number of terrain grid cells to search around a building when "
              "its local fallback cells do not contain terrain points.",
-             cfg_.terrain_grid_search_radius, {check::HigherOrEqualTo<int>(0)});
+             cfg_.terrain_grid_search_radius, {roofer::config::at_least(0)});
     crop.add("terrain-nodata-mode",
              "How missing terrain grid samples are handled during output "
              "triangulation: `complete_quads`, `local_triangles`, or "
@@ -481,7 +535,7 @@ struct RooferConfigHandler {
         "LoD 1.1 fallback threshold area in square meters. If the area of the "
         "roofprint is larger than this value, the building will be always be "
         "reconstructed using a LoD 1.1 extrusion.",
-        cfg_.lod11_fallback_area, {check::HigherThan<int>(0)});
+        cfg_.lod11_fallback_area, {roofer::config::greater_than(0)});
     crop.add("clear-insufficient",
              "Do not attempt to reconstruct buildings with insufficient "
              "pointcloud data."
@@ -514,80 +568,48 @@ struct RooferConfigHandler {
              "crop phase.",
              cfg_.write_index);
 
-    reconstruction.add("lod12",
-                       "Generate LoD 1.2 geometries in CityJSONSeq output.",
-                       cfg_.lod_12);
-    reconstruction.add("lod13",
-                       "Generate LoD 1.3 geometries in CityJSONSeq output.",
-                       cfg_.lod_13);
-    reconstruction.add("lod22",
-                       "Generate LoD 2.2 geometries in CityJSONSeq output.",
-                       cfg_.lod_22);
-    reconstruction.add(
-        "complexity-factor",
-        "Complexity factor for building model geometry. "
-        "A number between 0.0 and 1.0. Higher values lead to more detailed "
-        "building models, lower values to simpler models.",
-        cfg_.complexity_factor, {check::InRange<float>(0, 1)});
-    reconstruction.add(
-        "clip-terrain",
-        "Set to true to activate the procedure that clips parts from the "
-        "input roofprint wherever patches of ground points are detected."
-        "May cause irregular outlines in reconstruction result.",
-        cfg_.clip_ground, {});
-    reconstruction.add(
-        "lod13-step-height",
-        "Step height in meters, used for LoD 1.3 generalisation."
-        "Adjacent roofparts with a height discontinuity that is smaller "
-        "than this value are merged. Only affects LoD 1.3 geometry.",
-        cfg_.lod13_step_height, {check::HigherThan<float>(0)});
-    reconstruction.add("plane-detect-k",
-                       "Number of points used in nearest neighbour queries for "
-                       "plane detection. Higher values will lead to longer "
-                       "processing times, but may help with growing plane "
-                       "regions through areas with a poor point distribution.",
-                       cfg_.plane_detect_k, {check::HigherThan<int>(0)});
-    reconstruction.add("plane-detect-min-points",
-                       "Minimum number of points required for "
-                       "detecting a plane in the pointcloud.",
-                       cfg_.plane_detect_min_points,
-                       {check::HigherThan<int>(2)});
-    reconstruction.add("plane-detect-epsilon",
-                       "Maximum distance (in meters) from inliers to"
-                       " plane during plane fitting procedure. Higher values "
-                       "offer more robustness "
-                       "against oversegmentation, but may result in less "
-                       "accurate plane detection.",
-                       cfg_.plane_detect_epsilon,
-                       {check::HigherThan<float>(0)});
-    reconstruction
-        .add("h-terrain-strategy",
-             "Strategy to determine terrain elevation "
-             "that is used to set the height of building floors. "
-             "`buffer_tile`: use the 5th percentile lowest elevation point in "
-             "a 4 meter buffer around the roofprint. If no points are found, "
-             "we fall back to the local terrain grid minimum. If no local "
-             "terrain grid cells are found, we fall back to the lowest "
-             "elevation point in the current tile. "
-             "This may give undesired results for hilly areas. "
-             "`buffer_user`: use the same buffered pointcloud value, then "
-             "fall back to `--h-terrain-attribute`, then the local terrain "
-             "grid minimum, then the tile minimum. `user`: use "
-             "`--h-terrain-attribute`, then the local terrain grid minimum, "
-             "then the tile minimum.",
-             cfg_.h_terrain_strategy)
-        .example_ = "\"buffer_tile\"";
-    reconstruction.add(
-        "lod11-fallback-planes",
-        "Number of planes required for LoD 1.1 fallback. When more than this "
-        "number of planes is detected, abort the reconstruction process and "
-        "fallback to LoD 1.1 extrusion. This plane count is a deterministic "
-        "complexity cutoff that bounds reconstruction time per building.",
-        cfg_.lod11_fallback_planes, {check::HigherThan<int>(0)});
+    using Reconstruction = roofer::reconstruction::ReconstructionConfig;
+    using Optimiser = roofer::reconstruction::ArrangementOptimiserConfig;
+    using PlaneDetector = roofer::reconstruction::PlaneDetectorConfig;
+    using AlphaShaper = roofer::reconstruction::AlphaShaperConfig;
+    using LineDetector = roofer::reconstruction::LineDetectorConfig;
+    using LineRegulariser = roofer::reconstruction::LineRegulariserConfig;
+
+#define ROOFER_REGISTER_LEGACY_FIELD(key, cli_supported, example, owner, type, \
+                                     member)                                   \
+  do {                                                                         \
+    auto& parameter =                                                          \
+        (cli_supported)                                                        \
+            ? reconstruction.add_from_field(key, owner, &type::member)         \
+            : root_only_reconstruction_aliases_.add_from_field(key, owner,     \
+                                                               &type::member); \
+    parameter.example_ = example;                                              \
+  } while (false);
+#define ROOFER_REGISTER_LEGACY_IGNORED(key, cli_supported, example, owner, \
+                                       type, member)                       \
+  do {                                                                     \
+    static_assert(cli_supported);                                          \
+    auto& parameter = reconstruction.add(                                  \
+        key,                                                               \
+        "Deprecated and ignored. Wall-clock reconstruction limits were "   \
+        "removed because they are nondeterministic; use max-plane-count "  \
+        "under [reconstruction.plane-detector] instead.",                  \
+        owner);                                                            \
+    parameter.example_ = example;                                          \
+  } while (false);
+#define ROOFER_REGISTER_LEGACY(key, section, nested_key, deprecated, ignored, \
+                               cli_supported, kind, example, owner, type,     \
+                               member)                                        \
+  ROOFER_REGISTER_LEGACY_##kind(key, cli_supported, example, owner, type,     \
+                                member)
+    ROOFER_LEGACY_RECONSTRUCTION_ALIASES(ROOFER_REGISTER_LEGACY)
+#undef ROOFER_REGISTER_LEGACY
+#undef ROOFER_REGISTER_LEGACY_IGNORED
+#undef ROOFER_REGISTER_LEGACY_FIELD
 
     output.add("tiling", "Enable or disable output tiling.", _tiling);
     output.add("tilesize", "Tilesize for rectangular output tiles in meters.",
-               cfg_.tilesize, {check::HigherThan<roofer::arr2f>({0, 0})});
+               cfg_.tilesize, {check::AllHigherThan({0, 0})});
     output.add("split-cjseq",
                "Output CityJSONSequence file for each building instead of one "
                "file per tile.",
@@ -769,6 +791,8 @@ struct RooferConfigHandler {
     for (auto& [group_name, group] : app_param_groups_) {
       group.add_to_index(app_param_index_);
     }
+    root_only_reconstruction_aliases_.add_to_index(
+        root_only_reconstruction_alias_index_);
   };
 
   void validate() {
@@ -786,6 +810,9 @@ struct RooferConfigHandler {
                           group_name, param->longname_, *error_msg));
         }
       }
+    }
+    if (auto error = cfg_.reconstruction.validate()) {
+      throw std::runtime_error("Validation error for reconstruction." + *error);
     }
 
     if (input_pointclouds_.empty()) {
@@ -819,6 +846,69 @@ struct RooferConfigHandler {
     } catch (const std::exception& e) {
       throw std::runtime_error(std::format(
           "Failed to read value for {} from config file. {}", key, e.what()));
+    }
+  }
+
+  template <typename Config>
+  bool assign_reconstruction_field(const toml::key& key, const toml::node& node,
+                                   const std::string& parent_path,
+                                   Config& config) {
+    bool found = false;
+    roofer::config::for_each_field(config, [&](auto field, auto& field_value) {
+      if (found || key != field.toml_name()) return;
+      found = true;
+      const auto path = parent_path + "." + field.toml_name();
+      if (!assign_toml_value(node, field_value)) {
+        throw std::runtime_error("Invalid value type or value for " + path +
+                                 ".");
+      }
+      if (field.validator) {
+        if (auto error = field.validator(field_value)) {
+          throw std::runtime_error("Validation error for " + path + ": " +
+                                   *error + ".");
+        }
+      }
+    });
+    return found;
+  }
+
+  template <typename Component>
+  void parse_reconstruction_component(const toml::table& table,
+                                      const std::string& path,
+                                      Component& component) {
+    for (const auto& [key, node] : table) {
+      if (!assign_reconstruction_field(key, node, path, component)) {
+        throw std::runtime_error("Unknown reconstruction parameter: " + path +
+                                 "." + std::string(key.str()) + ".");
+      }
+    }
+  }
+
+  void parse_reconstruction_table(const toml::table& table) {
+    for (const auto& [key, node] : table) {
+      if (assign_reconstruction_field(key, node, "reconstruction",
+                                      cfg_.reconstruction)) {
+        continue;
+      }
+
+      bool found = false;
+      cfg_.reconstruction.visit_components(
+          [&](std::string_view component_name, auto& component) {
+            if (!found && key == component_name) {
+              found = true;
+              const auto* component_table = node.as_table();
+              const auto path = "reconstruction." + std::string(component_name);
+              if (!component_table) {
+                throw std::runtime_error(path + " must be a table.");
+              }
+              parse_reconstruction_component(*component_table, path, component);
+            }
+          });
+      if (!found) {
+        throw std::runtime_error(
+            "Unknown reconstruction parameter: reconstruction." +
+            std::string(key.str()) + ".");
+      }
     }
   }
 
@@ -1090,6 +1180,23 @@ struct RooferConfigHandler {
   }
 
   void parse_cli_second_pass(CLIArgs& c) {
+    auto& logger = roofer::logger::Logger::get_logger();
+    const auto warn_if_legacy = [&](const std::string& name) {
+      if (const auto destination = legacy_reconstruction_destination(name);
+          destination && destination->cli_deprecated) {
+        if (destination->ignored) {
+          logger.warning(
+              "Option --{} is deprecated and ignored; use {} under [{}] in "
+              "the configuration file instead. It will be rejected in 2.0.",
+              name, destination->nested_key, destination->section);
+        } else {
+          logger.warning(
+              "Option --{} is deprecated; use {} under [{}] in the "
+              "configuration file. It will be removed in 2.0.",
+              name, destination->nested_key, destination->section);
+        }
+      }
+    };
     auto it = c.args.begin();
     while (it != c.args.end()) {
       std::string arg = *it;
@@ -1098,6 +1205,7 @@ struct RooferConfigHandler {
         if (arg.starts_with("--no")) {
           auto argname = arg.substr(5);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
+            warn_if_legacy(argname);
             it = c.args.erase(it);
             p->second->unset();
           } else {
@@ -1106,6 +1214,7 @@ struct RooferConfigHandler {
         } else if (arg.starts_with("--")) {
           auto argname = arg.substr(2);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
+            warn_if_legacy(argname);
             it = c.args.erase(it);
             it = p->second->set(c.args, it);
           } else {
@@ -1171,6 +1280,20 @@ struct RooferConfigHandler {
     // iterate config table
     for (const auto& [key, value] : config) {
       try {
+        if (const auto destination =
+                legacy_reconstruction_destination(key.str())) {
+          if (destination->ignored) {
+            logger.warning(
+                "Root configuration key {} is deprecated and ignored; use {} "
+                "under [{}] instead. It will be rejected in 2.0.",
+                key.data(), destination->nested_key, destination->section);
+          } else {
+            logger.warning(
+                "Root configuration key {} is deprecated; use {} under [{}] "
+                "instead. It will be removed in 2.0.",
+                key.data(), destination->nested_key, destination->section);
+          }
+        }
         if (key == "polygon-source") {
           get_toml_value(config, "polygon-source", cfg_.source_footprints);
         } else if (key == "output-directory") {
@@ -1191,6 +1314,13 @@ struct RooferConfigHandler {
               }
             }
           }
+        } else if (key == "reconstruction") {
+          // Parsed after all root-level compatibility aliases so nested values
+          // deterministically take precedence, independent of table ordering.
+        } else if (auto p =
+                       root_only_reconstruction_alias_index_.find(key.data());
+                   p != root_only_reconstruction_alias_index_.end()) {
+          p->second->set_from_toml(config, key.data());
         } else if (auto p = param_index_.find(key.data());
                    p != param_index_.end()) {
           p->second->set_from_toml(config, key.data());
@@ -1252,8 +1382,15 @@ struct RooferConfigHandler {
                         key.data(), e.what()));
       }
     }
+    if (const auto* reconstruction = config["reconstruction"].as_table()) {
+      parse_reconstruction_table(*reconstruction);
+    } else if (config.contains("reconstruction")) {
+      throw std::runtime_error("reconstruction must be a table.");
+    }
   }
 };
+
+#undef ROOFER_LEGACY_RECONSTRUCTION_ALIASES
 
 template <>
 struct fmt::formatter<RooferConfigHandler> {

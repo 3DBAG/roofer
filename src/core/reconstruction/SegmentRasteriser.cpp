@@ -71,7 +71,7 @@ namespace roofer::reconstruction {
       if (cfg.use_ground && ground_triangles.size() > 0) {
         box.add(ground_triangles.box());
       }
-      auto cellsize_ = cfg.cellsize;
+      auto cellsize_ = cfg.cell_size;
       auto boxmin = box.min();
       auto boxmax = box.max();
       auto pixel_limit = cfg.megapixel_limit * 1E6;
@@ -93,7 +93,7 @@ namespace roofer::reconstruction {
       if (cfg.use_ground)
         rasterise_input(ground_triangles, heightfield, grounddata_area_cnt);
 
-      if (cfg.fill_nodata_) heightfield.fill_nn(cfg.fill_nodata_window_size_);
+      if (cfg.fill_nodata) heightfield.fill_nn(cfg.fill_nodata_window_size);
 
       PointCollection grid_points;
       vec1f values;

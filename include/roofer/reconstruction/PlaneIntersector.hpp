@@ -22,17 +22,31 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 #include "cgal_shared_definitions.hpp"
 
 namespace roofer::reconstruction {
 
+#define ROOFER_PLANE_INTERSECTOR_FIELDS(X)                               \
+  X(int, min_neighbour_points, 5,                                        \
+    "Minimum number of neighbouring plane points.", config::at_least(0), \
+    public_)                                                             \
+  X(float, distance_to_line_threshold, 1.0F,                             \
+    "Maximum distance from plane points to the intersection line, in "   \
+    "metres.",                                                           \
+    config::at_least(0.0F), public_)                                     \
+  X(float, min_length, 0.0F, "Minimum intersection length, in metres.",  \
+    config::at_least(0.0F), public_)                                     \
+  X(float, horizontality_threshold, 5.0F,                                \
+    "Intersection horizontality threshold for ridgeline detection, in "  \
+    "degrees.",                                                          \
+    config::at_least(0.0F), public_)
   struct PlaneIntersectorConfig {
-    int min_neighb_pts = 5;
-    float min_dist_to_line = 1.0;
-    float min_length = 0;
-    float thres_horiontality = 5;
+    using Self = PlaneIntersectorConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_PLANE_INTERSECTOR_FIELDS)
   };
+#undef ROOFER_PLANE_INTERSECTOR_FIELDS
 
   struct PlaneIntersectorInterface {
     SegmentCollection segments;

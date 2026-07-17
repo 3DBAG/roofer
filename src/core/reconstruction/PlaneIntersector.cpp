@@ -64,7 +64,8 @@ namespace roofer::reconstruction {
     void compute(const IndexedPlanesWithPoints& pts_per_roofplane,
                  const std::map<size_t, std::map<size_t, size_t>>& plane_adj,
                  PlaneIntersectorConfig cfg) override {
-      float min_dist_to_line_sq = cfg.min_dist_to_line * cfg.min_dist_to_line;
+      float min_dist_to_line_sq =
+          cfg.distance_to_line_threshold * cfg.distance_to_line_threshold;
       float sq_min_length = cfg.min_length * cfg.min_length;
 
       vec1f length;
@@ -76,7 +77,7 @@ namespace roofer::reconstruction {
         // // auto& alpha_ring = alpha_rings.get<LinearRing>(ring_cntr++);
         for (auto& [id_lo, cnt] : ids_lo) {
           // skip plain pairs with  low number of neighbouring points
-          if (cnt < cfg.min_neighb_pts) continue;
+          if (cnt < cfg.min_neighbour_points) continue;
           auto& plane_lo = pts_per_roofplane.at(id_lo).first;
           auto& plane_pts_lo = pts_per_roofplane.at(id_lo).second;
           auto result = CGAL::intersection(plane_hi, plane_lo);
@@ -125,7 +126,7 @@ namespace roofer::reconstruction {
                     length.push_back(std::sqrt(sq_length));
                     // check if the line is a ridgeline by checking if plane_hi
                     // and plane_lo have a normal that has an angle of more than
-                    // thres_horiontality degrees with the positive z axis
+                    // horizontality_threshold degrees with the positive z axis
                     auto n_hi = plane_hi.orthogonal_vector();
                     // ensure that n_hi is pointing upwards
                     if (float(CGAL::to_double(n_hi.z())) < 0) {
@@ -138,12 +139,13 @@ namespace roofer::reconstruction {
                     }
                     auto n_z = EPICK::Vector_3(0, 0, 1);
                     bool is_ridge = CGAL::approximate_angle(n_z, n_hi) >
-                                        cfg.thres_horiontality &&
+                                        cfg.horizontality_threshold &&
                                     CGAL::approximate_angle(n_z, n_lo) >
-                                        cfg.thres_horiontality;
+                                        cfg.horizontality_threshold;
                     auto a = CGAL::approximate_angle(ppmin, ppmax, ppmax + n_z);
-                    bool is_horizontal = a < (90 + cfg.thres_horiontality) &&
-                                         a > (90 - cfg.thres_horiontality);
+                    bool is_horizontal =
+                        a < (90 + cfg.horizontality_threshold) &&
+                        a > (90 - cfg.horizontality_threshold);
                     if (is_ridge && is_horizontal) {
                       is_ridgeline.push_back(true);
                     } else {

@@ -24,17 +24,27 @@
 #include <roofer/common/Raster.hpp>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_SEGMENT_RASTERISER_FIELDS(X)                                  \
+  X(float, cell_size, 0.05F, "Raster cell size, in metres.",                 \
+    config::greater_than(0.0F), public_)                                     \
+  X(int, megapixel_limit, 600, "Maximum raster size in megapixels.",         \
+    config::greater_than(0), public_)                                        \
+  X(bool, fill_nodata, false, "Fill nodata cells.",                          \
+    config::no_validation<bool>(), public_)                                  \
+  X(int, fill_nodata_window_size, 5,                                         \
+    "Nodata filling window size, in raster cells.", config::greater_than(0), \
+    public_)                                                                 \
+  X(bool, use_ground, true, "Use ground segments (pipeline-derived).",       \
+    config::no_validation<bool>(), internal)
   struct SegmentRasteriserConfig {
-    float cellsize = 0.05;
-    float thres_alpha = 0.25;
-    bool use_ground = true;
-    int megapixel_limit = 600;
-    bool fill_nodata_ = false;
-    int fill_nodata_window_size_ = 5;
+    using Self = SegmentRasteriserConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_SEGMENT_RASTERISER_FIELDS)
   };
+#undef ROOFER_SEGMENT_RASTERISER_FIELDS
 
   struct SegmentRasteriserInterface {
     RasterTools::Raster heightfield;

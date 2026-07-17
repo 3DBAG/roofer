@@ -52,6 +52,25 @@ add_executable("test_logger" "${CMAKE_CURRENT_SOURCE_DIR}/test_logger.cpp")
 target_link_libraries("test_logger" PUBLIC logger)
 target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
 
+add_executable("test_reconstruction_config"
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_reconstruction_config.cpp")
+target_link_libraries("test_reconstruction_config"
+                      PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests("test_reconstruction_config")
+
+add_executable("test_app_reconstruction_config"
+               "${CMAKE_CURRENT_SOURCE_DIR}/test_app_reconstruction_config.cpp")
+target_include_directories(
+  "test_app_reconstruction_config"
+  PRIVATE "${PROJECT_SOURCE_DIR}/apps/roofer-app"
+          "${PROJECT_SOURCE_DIR}/apps/external" "${CMAKE_BINARY_DIR}")
+target_link_libraries("test_app_reconstruction_config"
+                      PRIVATE Catch2::Catch2WithMain roofer-core fmt::fmt)
+if(TARGET update_git_hash)
+  add_dependencies("test_app_reconstruction_config" update_git_hash)
+endif()
+catch_discover_tests("test_app_reconstruction_config")
+
 add_executable("test_arrangement_dissolver"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_arrangement_dissolver.cpp")
 target_link_libraries("test_arrangement_dissolver"

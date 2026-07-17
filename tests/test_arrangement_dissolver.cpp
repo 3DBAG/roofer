@@ -45,7 +45,7 @@ TEST_CASE("terrain clipping marks a boundary subface as ground") {
   auto heightfield = empty_heightfield();
   dissolver->compute(
       arrangement, heightfield, *elevation_provider,
-      {.dissolve_seg_edges = false, .dissolve_outside_fp = false});
+      {.dissolve_segment_edges = false, .dissolve_outside_footprint = false});
 
   size_t roof_faces = 0;
   size_t ground_faces = 0;
@@ -78,7 +78,7 @@ TEST_CASE("terrain clipping marks an enclosed subface as a footprint hole") {
   auto heightfield = empty_heightfield();
   dissolver->compute(
       arrangement, heightfield, *elevation_provider,
-      {.dissolve_seg_edges = false, .dissolve_outside_fp = false});
+      {.dissolve_segment_edges = false, .dissolve_outside_footprint = false});
 
   size_t enclosed_ground_faces = 0;
   for (auto face : arrangement.face_handles()) {

@@ -1032,7 +1032,7 @@ int main(int argc, const char* argv[]) {
               std::unordered_map<int, roofer::Mesh>* ms12 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms13 = nullptr;
               std::unordered_map<int, roofer::Mesh>* ms22 = nullptr;
-              if (handler.cfg_.lod_12) {
+              if (handler.cfg_.reconstruction.lod12) {
                 ms12 = &building.multisolids_lod12;
 
                 if (!handler.cfg_.a_rmse_lod12.empty())
@@ -1047,7 +1047,7 @@ int main(int argc, const char* argv[]) {
                                          building.val3dity_lod12);
 #endif
               }
-              if (handler.cfg_.lod_13) {
+              if (handler.cfg_.reconstruction.lod13) {
                 ms13 = &building.multisolids_lod13;
                 if (!handler.cfg_.a_rmse_lod13.empty())
                   attrow.insert_optional(handler.cfg_.a_rmse_lod13,
@@ -1061,7 +1061,7 @@ int main(int argc, const char* argv[]) {
                                          building.val3dity_lod13);
 #endif
               }
-              if (handler.cfg_.lod_22) {
+              if (handler.cfg_.reconstruction.lod22) {
                 ms22 = &building.multisolids_lod22;
                 if (!handler.cfg_.a_rmse_lod22.empty())
                   attrow.insert_optional(handler.cfg_.a_rmse_lod22,

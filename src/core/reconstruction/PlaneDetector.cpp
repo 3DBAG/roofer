@@ -222,7 +222,7 @@ namespace roofer {
         // estimate normals
         if (points.size()) {
           CGAL::pca_estimate_normals<Concurrency_tag>(
-              pnl_points, cfg.metrics_normal_k,
+              pnl_points, cfg.normal_neighbour_count,
               CGAL::parameters::point_map(Point_map())
                   .normal_map(Normal_map()));
         }
@@ -261,19 +261,16 @@ namespace roofer {
                                    float(CGAL::to_double(n.z()))});
           }
           // perform plane detection
-          planedect::PlaneDS PDS(points_vec, normals_vec, cfg.metrics_plane_k);
+          planedect::PlaneDS PDS(points_vec, normals_vec,
+                                 cfg.plane_neighbour_count);
           planedect::DistAndNormalTester DNTester(
-              cfg.metrics_plane_epsilon * cfg.metrics_plane_epsilon,
-              cfg.metrics_plane_normal_threshold, cfg.n_refit);
+              cfg.plane_epsilon * cfg.plane_epsilon, cfg.plane_normal_threshold,
+              cfg.refit_interval);
           regiongrower::RegionGrower<planedect::PlaneDS, planedect::PlaneRegion>
               R;
-          R.min_segment_count = cfg.metrics_plane_min_points;
-          if (points.size() > cfg.metrics_plane_min_points) {
-            if (cfg.with_limits) {
-              R.grow_regions_with_limits(PDS, DNTester, cfg.limit_n_regions);
-            } else {
-              R.grow_regions(PDS, DNTester);
-            }
+          R.min_segment_count = cfg.min_plane_points;
+          if (points.size() > cfg.min_plane_points) {
+            R.grow_regions_with_limits(PDS, DNTester, cfg.max_plane_count);
           }
           total_plane_cnt = R.regions.size();
 
@@ -291,9 +288,8 @@ namespace roofer {
             Vector n = plane.orthogonal_vector();
             // this dot product is close to 0 for vertical planes
             auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.metrics_is_wall_threshold;
-            bool is_horizontal =
-                horizontality > cfg.metrics_is_horizontal_threshold;
+            bool is_wall = horizontality < cfg.wall_threshold;
+            bool is_horizontal = horizontality > cfg.horizontal_threshold;
 
             // put slanted surface points at index -1 if we care only about
             // horzontal surfaces
@@ -303,8 +299,8 @@ namespace roofer {
               std::vector<Point> segpts;
               for (auto& i : region.inliers) {
                 segpts.push_back(boost::get<0>(pnl_points[i]));
-                if (region.inliers.size() > cfg.metrics_plane_min_points * 4 ||
-                    total_pt_cnt <= cfg.metrics_plane_min_points * 4) {
+                if (region.inliers.size() > cfg.min_plane_points * 4 ||
+                    total_pt_cnt <= cfg.min_plane_points * 4) {
                   roof_elevations.push_back(
                       float(boost::get<0>(pnl_points[i]).z()));
                 }
@@ -339,16 +335,16 @@ namespace roofer {
           // Set parameters for shape detection.
           Efficient_ransac::Parameters parameters;
           // Set probability to miss the largest primitive at each iteration.
-          parameters.probability = cfg.metrics_probability_ransac;
+          parameters.probability = cfg.ransac_probability;
           // Detect shapes with at least 200 points.
-          parameters.min_points = cfg.metrics_plane_min_points;
+          parameters.min_points = cfg.min_plane_points;
           // Set maximum Euclidean distance between a point and a shape.
-          parameters.epsilon = cfg.metrics_plane_epsilon;
+          parameters.epsilon = cfg.plane_epsilon;
           // Set maximum Euclidean distance between points to be clustered.
-          parameters.cluster_epsilon = cfg.metrics_cluster_epsilon_ransac;
+          parameters.cluster_epsilon = cfg.ransac_cluster_epsilon;
           // Set maximum normal deviation.
           // 0.9 < dot(surface_normal, point_normal);
-          parameters.normal_threshold = cfg.metrics_plane_normal_threshold;
+          parameters.normal_threshold = cfg.plane_normal_threshold;
           // Detect shapes.
           ransac.detect(parameters);
           // Print number of detected shapes.
@@ -361,9 +357,8 @@ namespace roofer {
             Vector n = plane.orthogonal_vector();
             // this dot product is close to 0 for vertical planes
             auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.metrics_is_wall_threshold;
-            bool is_horizontal =
-                horizontality > cfg.metrics_is_horizontal_threshold;
+            bool is_wall = horizontality < cfg.wall_threshold;
+            bool is_horizontal = horizontality > cfg.horizontal_threshold;
             // put slanted surface points at index -1 if we care only about
             // horzontal surfaces
             if (!is_wall) {
@@ -407,8 +402,8 @@ namespace roofer {
         // Plane regularisation
 
         // START Regularize detected planes.
-        if (cfg.regularize_parallelism_ || cfg.regularize_orthogonality_ ||
-            cfg.regularize_coplanarity_ || cfg.regularize_axis_symmetry_) {
+        if (cfg.regularise_parallelism || cfg.regularise_orthogonality ||
+            cfg.regularise_coplanarity || cfg.regularise_axis_symmetry) {
           std::cout << "\nN planes before: " << pts_per_roofplane.size()
                     << std::endl;
           CGAL::Shape_regularization::Planes::regularize_planes(
@@ -416,12 +411,12 @@ namespace roofer {
               CGAL::parameters::plane_map(Custom_plane_map())
                   .point_map(Point_map())
                   .plane_index_map(Custom_plane_index_map(&pnl_points))
-                  .maximum_angle(cfg.maximum_angle_)
-                  .maximum_offset(cfg.maximum_offset_)
-                  .regularize_parallelism(cfg.regularize_parallelism_)
-                  .regularize_orthogonality(cfg.regularize_orthogonality_)
-                  .regularize_coplanarity(cfg.regularize_coplanarity_)
-                  .regularize_axis_symmetry(cfg.regularize_axis_symmetry_)
+                  .maximum_angle(cfg.maximum_angle)
+                  .maximum_offset(cfg.maximum_offset)
+                  .regularize_parallelism(cfg.regularise_parallelism)
+                  .regularize_orthogonality(cfg.regularise_orthogonality)
+                  .regularize_coplanarity(cfg.regularise_coplanarity)
+                  .regularize_axis_symmetry(cfg.regularise_axis_symmetry)
               // symmetry_direction(symmetry_direction_)
           );
 
@@ -448,7 +443,7 @@ namespace roofer {
             Vector n = plane.orthogonal_vector();
             // this dot product is close to 0 for vertical planes
             auto horizontality = CGAL::abs(n * Vector(0, 0, 1));
-            bool is_wall = horizontality < cfg.metrics_is_wall_threshold;
+            bool is_wall = horizontality < cfg.wall_threshold;
 
             if (!is_wall) {
               std::vector<Point> ptvec;
@@ -467,7 +462,7 @@ namespace roofer {
 
         // END Regularize detected planes.
 
-        AdjacencyFinder adj_finder(pnl_points, cfg.metrics_plane_k);
+        AdjacencyFinder adj_finder(pnl_points, cfg.plane_neighbour_count);
         plane_adjacencies = adj_finder.adjacencies;
 
         // int roof_type=-2; // as built: -2=undefined; -1=no pts; 0=LOD1,

@@ -20,6 +20,7 @@
 // Ravi Peters
 // Balázs Dukai
 #pragma once
+#include <roofer/common/ConfigField.hpp>
 #include <roofer/common/formatters.hpp>
 #include <string>
 #include <format>
@@ -109,6 +110,95 @@ struct std::formatter<roofer::logger::LogLevel> {
   }
 };
 
+/** Decode the scalar-like TOML types shared by app and reconstruction config.
+ */
+template <typename T>
+bool assign_toml_value(const toml::node& node, T& result) {
+  if constexpr (std::is_same_v<T, float>) {
+    if (auto value = node.value<double>()) {
+      result = static_cast<float>(*value);
+      return true;
+    }
+    if (auto value = node.value<int64_t>()) {
+      result = static_cast<float>(*value);
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, double>) {
+    if (auto value = node.value<double>()) {
+      result = *value;
+      return true;
+    }
+    if (auto value = node.value<int64_t>()) {
+      result = static_cast<double>(*value);
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, int>) {
+    if (auto value = node.value<int>()) {
+      result = *value;
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, bool>) {
+    if (auto value = node.value<bool>()) {
+      result = *value;
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::string>) {
+    if (auto value = node.value<std::string>()) {
+      result = std::move(*value);
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::optional<int>>) {
+    int value;
+    if (assign_toml_value(node, value)) {
+      result = value;
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::optional<float>>) {
+    float value;
+    if (assign_toml_value(node, value)) {
+      result = value;
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::optional<double>>) {
+    double value;
+    if (assign_toml_value(node, value)) {
+      result = value;
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::optional<std::string>>) {
+    std::string value;
+    if (assign_toml_value(node, value)) {
+      result = std::move(value);
+      return true;
+    }
+  } else if constexpr (std::is_same_v<T, std::pair<int, int>>) {
+    if (const auto* values = node.as_array(); values && values->size() == 2) {
+      auto lower = (*values)[0].value<int>();
+      auto upper = (*values)[1].value<int>();
+      if (lower && upper) {
+        result = {*lower, *upper};
+        return true;
+      }
+    }
+  } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
+    if (auto value = node.value<std::string>()) {
+      if (*value == "buffer_tile") {
+        result = roofer::enums::TerrainStrategy::BUFFER_TILE;
+        return true;
+      }
+      if (*value == "buffer_user") {
+        result = roofer::enums::TerrainStrategy::BUFFER_USER;
+        return true;
+      }
+      if (*value == "user") {
+        result = roofer::enums::TerrainStrategy::USER;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 struct ConfigParameter {
   std::string help_;
   std::string longname_;
@@ -149,17 +239,18 @@ template <typename T>
 struct ConfigParameterByReference : public ConfigParameter {
   T& value_;
   T default_value_;
-  std::vector<Validator<T>> _validators;
+  std::vector<roofer::config::Validator<T>> _validators;
 
-  ConfigParameterByReference(std::string longname, std::string help, T& value,
-                             std::vector<Validator<T>> validators)
+  ConfigParameterByReference(
+      std::string longname, std::string help, T& value,
+      std::vector<roofer::config::Validator<T>> validators)
       : ConfigParameter(longname, help),
         value_(value),
         default_value_(value),
         _validators(validators){};
-  ConfigParameterByReference(std::string longname, char shortname,
-                             std::string help, T& value,
-                             std::vector<Validator<T>> validators)
+  ConfigParameterByReference(
+      std::string longname, char shortname, std::string help, T& value,
+      std::vector<roofer::config::Validator<T>> validators)
       : ConfigParameter(longname, shortname, help),
         value_(value),
         default_value_(value),
@@ -375,17 +466,10 @@ struct ConfigParameterByReference : public ConfigParameter {
         }
       }
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
-      if (const toml::value<std::string>* s = table[name].as_string()) {
-        if (*s == "buffer_tile") {
-          value_ = roofer::enums::TerrainStrategy::BUFFER_TILE;
-        } else if (*s == "buffer_user") {
-          value_ = roofer::enums::TerrainStrategy::BUFFER_USER;
-        } else if (*s == "user") {
-          value_ = roofer::enums::TerrainStrategy::USER;
-        } else {
-          throw std::runtime_error("Failed to read value for " + name +
-                                   " from config file.");
-        }
+      const auto* node = table.get(name);
+      if (!node || !assign_toml_value(*node, value_)) {
+        throw std::runtime_error("Failed to read value for " + name +
+                                 " from config file.");
       }
     } else if constexpr (std::is_same_v<T, roofer::logger::LogLevel>) {
       if (const toml::value<std::string>* s = table[name].as_string()) {
@@ -413,9 +497,8 @@ struct ConfigParameterByReference : public ConfigParameter {
         }
       }
     } else {
-      if (auto value = table[name].value<T>(); value.has_value()) {
-        value_ = *value;
-      } else {
+      const auto* node = table.get(name);
+      if (!node || !assign_toml_value(*node, value_)) {
         std::string expected;
         if constexpr (std::is_same_v<T, bool>) {
           expected = "boolean";
@@ -492,20 +575,33 @@ class ParameterVector {
   ParameterVector& operator=(const ParameterVector&) = delete;
 
   template <typename T>
-  ConfigParameter& add(const std::string& longname, const std::string& help,
-                       T& value, std::vector<Validator<T>> validators = {}) {
+  ConfigParameter& add(
+      const std::string& longname, const std::string& help, T& value,
+      std::vector<roofer::config::Validator<T>> validators = {}) {
     params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
         longname, help, value, std::move(validators)));
     return *params_.back();
   }
 
   template <typename T>
-  ConfigParameter& add(const std::string& longname, const char shortname,
-                       const std::string& help, T& value,
-                       std::vector<Validator<T>> validators = {}) {
+  ConfigParameter& add(
+      const std::string& longname, const char shortname,
+      const std::string& help, T& value,
+      std::vector<roofer::config::Validator<T>> validators = {}) {
     params_.emplace_back(std::make_unique<ConfigParameterByReference<T>>(
         longname, shortname, help, value, std::move(validators)));
     return *params_.back();
+  }
+
+  /** Register a CLI/TOML alias while reusing canonical field metadata. */
+  template <typename Owner, typename T>
+  ConfigParameter& add_from_field(const std::string& longname, Owner& owner,
+                                  T Owner::*member) {
+    const auto field = roofer::config::field_for(member);
+    std::vector<roofer::config::Validator<T>> validators;
+    if (field.validator) validators.push_back(field.validator);
+    return add(longname, std::string(field.description), owner.*member,
+               std::move(validators));
   }
 
   void add_to_index(std::unordered_map<std::string, ConfigParameter*>& index) {

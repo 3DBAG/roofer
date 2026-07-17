@@ -23,20 +23,33 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+  using PointCountRange = std::pair<int, int>;
+#define ROOFER_LINE_DETECTOR_FIELDS(X)                                       \
+  X(float, distance_threshold, 1.0F,                                         \
+    "Maximum line fitting distance, in metres.", config::greater_than(0.0F), \
+    public_)                                                                 \
+  X(PointCountRange, min_point_count_range, (PointCountRange{5, 10}),        \
+    "Minimum point-count range.", config::ordered_range(1), public_)         \
+  X(int, neighbour_count, 10, "Neighbours used for line detection.",         \
+    config::greater_than(0), public_)                                        \
+  X(float, snap_threshold, 1.0F,                                             \
+    "Line endpoint snapping distance, in metres.", config::at_least(0.0F),   \
+    public_)                                                                 \
+  X(float, extension, 0.05F, "Line extension distance, in metres.",          \
+    config::at_least(0.0F), public_)                                         \
+  X(bool, perform_chaining, true, "Chain connected lines.",                  \
+    config::no_validation<bool>(), public_)                                  \
+  X(bool, remove_overlap, true, "Remove overlapping lines.",                 \
+    config::no_validation<bool>(), public_)
   struct LineDetectorConfig {
-    float dist_thres = 1.0;
-    std::pair<int, int> min_cnt_range = {5, 10};
-    int min_cnt_range_lower = 5;
-    int min_cnt_range_upper = 10;
-    int k = 10;
-    float snap_threshold = 1;
-    float line_extend = 0.05;
-    bool perform_chaining = true;
-    bool remove_overlap = true;
+    using Self = LineDetectorConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_LINE_DETECTOR_FIELDS)
   };
+#undef ROOFER_LINE_DETECTOR_FIELDS
 
   struct LineDetectorInterface {
     SegmentCollection edge_segments;

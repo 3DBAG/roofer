@@ -25,18 +25,35 @@
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/ElevationProvider.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 #include <vector>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ARRANGEMENT_EXTRUDER_FIELDS(X)                                  \
+  X(bool, generate_walls, true, "Generate walls.",                             \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, generate_roofs, true, "Generate roofs.",                             \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, generate_floor, true, "Generate floors.",                            \
+    config::no_validation<bool>(), public_)                                    \
+  X(bool, lod1_extrude_to_max, false,                                          \
+    "Extrude LoD 1 to maximum roof height"                                     \
+    " instead of 70th percentile.",                                            \
+    config::no_validation<bool>(), public_)                                    \
+  X(float, nodata_elevation, 3.0F,                                             \
+    "Fallback elevation for nodata faces, in metres.", config::at_least(0.0F), \
+    internal)                                                                  \
+  X(float, snap_tolerance_exp, 2.9F,                                           \
+    "Base-10 exponent for the snap tolerance in metres.",                      \
+    config::at_least(0.0F), public_)                                           \
+  X(bool, lod2, true, "Generate LoD 2 topology (pipeline-derived).",           \
+    config::no_validation<bool>(), internal)
   struct ArrangementExtruderConfig {
-    bool do_walls = true, do_roofs = true, do_floor = true;
-    bool LoD2 = true;
-    bool lod1_extrude_to_max_ = false;
-    // float base_elevation = 0;
-    float nodata_elevation = 3;
-    float snap_tolerance_exp = 2.9;
+    using Self = ArrangementExtruderConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_EXTRUDER_FIELDS)
   };
+#undef ROOFER_ARRANGEMENT_EXTRUDER_FIELDS
 
   struct ArrangementExtruderInterface {
     vec1i labels;

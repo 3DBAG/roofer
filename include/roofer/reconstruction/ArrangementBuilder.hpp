@@ -23,16 +23,26 @@
 #include <memory>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 namespace roofer::reconstruction {
 
+#define ROOFER_ARRANGEMENT_BUILDER_FIELDS(X)                                   \
+  X(int, snap_tolerance_exp, 2,                                                \
+    "Base-10 exponent for the snap tolerance in metres.", config::at_least(0), \
+    internal)                                                                  \
+  X(float, footprint_extension, 0.0F,                                          \
+    "Footprint extension distance, in metres.", config::at_least(0.0F),        \
+    public_)                                                                   \
+  X(bool, insert_with_snap, false, "Snap while inserting arrangement edges.",  \
+    config::no_validation<bool>(), internal)                                   \
+  X(bool, insert_lines, true, "Insert detected lines.",                        \
+    config::no_validation<bool>(), internal)
   struct ArrangementBuilderConfig {
-    int max_arr_complexity = 400;
-    int dist_threshold_exp = 2;
-    float fp_extension = 0.0;
-    bool insert_with_snap = false;
-    bool insert_lines = true;
+    using Self = ArrangementBuilderConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_BUILDER_FIELDS)
   };
+#undef ROOFER_ARRANGEMENT_BUILDER_FIELDS
 
   struct ArrangementBuilderInterface {
     // add_vector_input("lines", {typeid(Segment), typeid(linereg::Segment_2)});

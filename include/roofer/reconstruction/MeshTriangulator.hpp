@@ -22,16 +22,23 @@
 #pragma once
 #include <memory>
 #include <roofer/common/datastructures.hpp>
+#include <roofer/common/ConfigField.hpp>
 
 #include "cgal_shared_definitions.hpp"
 
 namespace roofer::reconstruction {
 
+#define ROOFER_MESH_TRIANGULATOR_FIELDS(X)                            \
+  X(int, duplicate_tolerance_exp, 4,                                  \
+    "Base-10 exponent for the duplicate-vertex tolerance in metres.", \
+    config::at_least(0), internal)                                    \
+  X(bool, output_all_triangles, false, "Output all triangles.",       \
+    config::no_validation<bool>(), internal)
   struct MeshTriangulatorConfig {
-    int dupe_threshold_exp = 4;
-    bool output_all_triangles = false;
-    bool output_mtc_for_every_input = false;
+    using Self = MeshTriangulatorConfig;
+    ROOFER_CONFIG_MEMBERS(ROOFER_MESH_TRIANGULATOR_FIELDS)
   };
+#undef ROOFER_MESH_TRIANGULATOR_FIELDS
 
   struct MeshTriangulatorInterface {
     TriangleCollection triangles;

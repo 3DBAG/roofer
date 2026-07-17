@@ -1137,7 +1137,7 @@ namespace roofer::reconstruction {
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2> Walk_pl;
 
         T tri;
-        float sq_dist_thres = cfg.dist_thres * cfg.dist_thres;
+        float sq_dist_thres = cfg.distance_threshold * cfg.distance_threshold;
 
         SourceFaceIds source_face_ids;
         std::size_t next_source_face_id = 0;
