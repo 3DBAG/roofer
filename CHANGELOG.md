@@ -8,26 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Repair of non-manifold and self-intersecting roof junctions during arrangement snapping. This prevents certain geometric errors like non-watertight meshes, and highly non-planar faces that could prevriously happen in complex roof arrangements. See #168.
+- Repair of non-manifold and self-intersecting roof junctions during arrangement snapping. This prevents certain geometric errors like non-watertight meshes, and highly non-planar faces that could previously happen in complex roof arrangements. See #168.
 - Optional per-tile triangulated terrain output as CityJSON `TINRelief` features, see the `--terrain` option.
 - A new `max-nodata-fraction` configuration option to control the maximum fraction of nodata pixels in a building polygon that is allowed before a building pointcloud is considered insufficient.
 - A descriptor-backed `roofer::reconstruction::ReconstructionConfig` that contains the configuration for every reconstruction stage. Field declarations are now the single source for defaults, descriptions, validation, nested TOML parsing, generated documentation, and Python bindings.
-- A nested C++ `ReconstructOptions` API and corresponding `reconstruct` overload. The nested reconstruction configuration is also available from Python, including each component configuration.
+- A nested C++ `ReconstructOptions` API and corresponding `reconstruct` overload. The nested reconstruction configuration is also available from Python, including each component configuration that exposes public parameters.
 
-## Fixed
+### Fixed
 - More robust handling of OGC WKT payloads in LAS/LAZ files.
 - Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion.
 - Correct squared-distance tolerance comparisons during extrusion.
+- Reject TOML integer values outside the supported `int` range instead of silently narrowing them.
 
-## Changed
+### Changed
 - The pointcloud-insufficient test is now an absolute per-building density floor (`min-building-density`, points/m²) instead of a tile-relative `mean - 2·std` outlier test. The old test depended the entire tile that was being processed, so the same building could be flagged differently between runs with different tiling — potentially skipping point-rich buildings and leaving them without geometry. The decision is now deterministic and depends only on the building's own data.
 - Region growing no longer uses a wall-clock time limit, which could make a building reconstruct with success on one run and fall back to LoD 1.1 on the next given identical input due to resource starvation with multithreading. The deterministic plane-count limit (`lod11-fallback-planes`) is now the sole reconstruction-complexity cutoff. The `lod11-fallback-time` behavior is removed; its CLI flag and root configuration key are accepted but ignored with a deprecation warning during 1.x compatibility.
-- Reconstruction configuration now uses nested TOML tables such as `[reconstruction.plane-detector]` and `[reconstruction.arrangement-optimiser]`. Complete component configurations are passed through the pipeline; pipeline-derived settings such as requested LoD and terrain availability are overlaid on local copies.
+- Reconstruction configuration now uses nested TOML tables such as `[reconstruction.plane-detector]` and `[reconstruction.arrangement-optimiser]`. Core reconstruction stages receive their component configuration aggregates; pipeline-derived settings such as requested LoD and terrain availability are overlaid on local copies.
 - Reconstruction parameter descriptions now state physical and angular units where applicable; counts remain unit-free.
 - Descriptor-generated TOML documentation and Python bindings omit reconstruction components that have no public parameters.
 - `complexity-factor` now directly controls the optimiser energy balance: the data term is weighted by `complexity-factor` and the smoothness term by `1 - complexity-factor`. The independent `data_multiplier` and `smoothness_multiplier` component options were removed.
-- The flattened C++ `roofer::ReconstructionConfig` and its `reconstruct` overload remain as deprecated 1.x adapters. Their defaults and validation delegate to the nested configuration.
-- Legacy root-level reconstruction TOML keys remain accepted during 1.x, emit a destination-specific deprecation warning, and are applied before nested TOML values. CLI arguments retain the highest precedence. The `--lod12`, `--lod13`, `--lod22`, `--clip-terrain`, and `--complexity-factor` flags remain supported without deprecation warnings; other legacy reconstruction CLI flags are deprecated.
+- The flattened C++ `roofer::ReconstructionConfig` remains as a 1.x compatibility adapter, while its `reconstruct` overloads are deprecated. Its defaults and validation delegate to the nested configuration.
+- Low-level C++ component configuration member names were normalised to `snake_case`, and obsolete members were removed. This is a source-breaking change for code that uses the component configuration structs directly; the flattened `roofer::ReconstructionConfig` adapter does not cover those direct uses.
+- Legacy root-level reconstruction TOML keys remain accepted during 1.x, emit a destination-specific deprecation warning, and are applied before nested TOML values. CLI arguments retain the highest precedence. The `--lod12`, `--lod13`, `--lod22`, `--clip-terrain`, and `--complexity-factor` flags remain supported without deprecation warnings. Other supported legacy reconstruction CLI flags remain accepted with deprecation warnings; several older names remain root-TOML-only aliases and are not accepted as CLI flags.
 - Use mesh centroid for volume calculation.
 
 ### Reconstruction parameter mapping
@@ -40,19 +42,19 @@ Legacy root keys, and matching legacy CLI flags where available, map as follows:
 | `lod13` | `[reconstruction] lod13` | CLI flag remains supported. |
 | `lod22` | `[reconstruction] lod22` | CLI flag remains supported. |
 | `clip-terrain` | `[reconstruction] clip-terrain` | CLI flag remains supported. |
-| `lod13-step-height` | `[reconstruction] lod13-step-height` | Relocated. |
-| `h-terrain-strategy` | `[reconstruction] h-terrain-strategy` | Relocated. |
+| `lod13-step-height` | `[reconstruction] lod13-step-height` | Relocated; legacy CLI flag is deprecated. |
+| `h-terrain-strategy` | `[reconstruction] h-terrain-strategy` | Relocated; legacy CLI flag is deprecated. |
 | `complexity-factor` | `[reconstruction.arrangement-optimiser] complexity-factor` | CLI flag remains supported. |
-| `plane-detect-k` | `[reconstruction.plane-detector] plane-neighbour-count` | Renamed. |
-| `plane-detect-min-points` | `[reconstruction.plane-detector] min-plane-points` | Renamed. |
-| `plane-detect-epsilon` | `[reconstruction.plane-detector] plane-epsilon` | Renamed. |
-| `plane-detect-normal-angle` | `[reconstruction.plane-detector] plane-normal-threshold` | Renamed. |
-| `line-detect-epsilon` | `[reconstruction.line-detector] distance-threshold` | Renamed. |
-| `thres-alpha` | `[reconstruction.alpha-shaper] alpha` | Renamed. |
-| `thres-reg-line-dist` | `[reconstruction.line-regulariser] distance-threshold` | Renamed. |
-| `thres-reg-line-ext` | `[reconstruction.line-regulariser] extension` | Renamed. |
-| `lod11-fallback-planes` | `[reconstruction.plane-detector] max-plane-count` | Renamed; deterministic complexity cutoff. |
-| `lod11-fallback-time` | `[reconstruction.plane-detector] max-plane-count` | The old value is ignored; `max-plane-count` is the deterministic replacement. |
+| `plane-detect-k` | `[reconstruction.plane-detector] plane-neighbour-count` | Renamed; legacy CLI flag is deprecated. |
+| `plane-detect-min-points` | `[reconstruction.plane-detector] min-plane-points` | Renamed; legacy CLI flag is deprecated. |
+| `plane-detect-epsilon` | `[reconstruction.plane-detector] plane-epsilon` | Renamed; legacy CLI flag is deprecated. |
+| `plane-detect-normal-angle` | `[reconstruction.plane-detector] plane-normal-threshold` | Renamed; root TOML alias only. |
+| `line-detect-epsilon` | `[reconstruction.line-detector] distance-threshold` | Renamed; root TOML alias only. |
+| `thres-alpha` | `[reconstruction.alpha-shaper] alpha` | Renamed; root TOML alias only. |
+| `thres-reg-line-dist` | `[reconstruction.line-regulariser] distance-threshold` | Renamed; root TOML alias only. |
+| `thres-reg-line-ext` | `[reconstruction.line-regulariser] extension` | Renamed; root TOML alias only. |
+| `lod11-fallback-planes` | `[reconstruction.plane-detector] max-plane-count` | Renamed; deprecated legacy CLI flag and deterministic complexity cutoff. |
+| `lod11-fallback-time` | `[reconstruction.plane-detector] max-plane-count` | Deprecated CLI flag and root key are accepted but ignored; `max-plane-count` is the deterministic replacement. |
 
 ## [1.0.0] - 2026-04-20
 
