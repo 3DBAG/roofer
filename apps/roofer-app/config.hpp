@@ -576,9 +576,10 @@ struct RooferConfigHandler {
              "its local fallback cells do not contain terrain points.",
              cfg_.terrain_grid_search_radius, {roofer::config::at_least(0)});
     crop.add("terrain-nodata-mode",
-             "How missing terrain grid samples are handled during output "
-             "triangulation: `complete_quads`, `local_triangles`, or "
-             "`fill_small_gaps`.",
+             "EXPERIMENTAL: How missing terrain grid samples are handled "
+             "during output triangulation when `--terrain` is enabled: "
+             "`complete_quads`, `local_triangles`, or `fill_small_gaps`. "
+             "This option may change or be removed in a future release.",
              cfg_.terrain_nodata_mode,
              {check::OneOf<std::string>(
                  {"complete_quads", "local_triangles", "fill_small_gaps"})});
@@ -682,8 +683,10 @@ struct RooferConfigHandler {
                "Omit metadata line in CityJSONSequence output.",
                cfg_.omit_metadata);
     output.add("terrain",
-               "Write one triangulated TINRelief feature per tile from the "
-               "highest-quality pointcloud source.",
+               "EXPERIMENTAL: Write one triangulated TINRelief feature per "
+               "tile from the highest-quality pointcloud source. Its "
+               "geometry, attributes, file naming, and configuration may "
+               "change, and the feature may be removed in a future release.",
                cfg_.output_terrain);
     output.add("cj-scale",
                "CityJSON output vertex precision, in input map units.",
