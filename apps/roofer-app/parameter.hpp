@@ -423,6 +423,11 @@ struct ConfigParameterByReference : public ConfigParameter {
 
   void set_from_toml(const toml::table& table,
                      const std::string& name) override {
+    [[maybe_unused]] const auto fail = [&name]() {
+      throw std::runtime_error("Failed to read value for " + name +
+                               " from config file.");
+    };
+
     if constexpr (std::is_same_v<T, std::array<float, 2>>) {
       if (const toml::array* a = table[name].as_array()) {
         if (a->size() == 2 &&
@@ -431,9 +436,10 @@ struct ConfigParameterByReference : public ConfigParameter {
           value_ = roofer::arr2f{*a->get(0)->value<float>(),
                                  *a->get(1)->value<float>()};
         } else {
-          throw std::runtime_error("Failed to read value for " + name +
-                                   " from config file.");
+          fail();
         }
+      } else {
+        fail();
       }
     } else if constexpr (std::is_same_v<T,
                                         std::optional<std::array<double, 3>>> ||
@@ -446,9 +452,10 @@ struct ConfigParameterByReference : public ConfigParameter {
                                  *a->get(1)->value<double>(),
                                  *a->get(2)->value<double>()};
         } else {
-          throw std::runtime_error("Failed to read value for " + name +
-                                   " from config file.");
+          fail();
         }
+      } else {
+        fail();
       }
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>> ||
@@ -461,15 +468,15 @@ struct ConfigParameterByReference : public ConfigParameter {
               *a->get(0)->value<double>(), *a->get(1)->value<double>(), 0,
               *a->get(2)->value<double>(), *a->get(3)->value<double>(), 0};
         } else {
-          throw std::runtime_error("Failed to read value for " + name +
-                                   " from config file.");
+          fail();
         }
+      } else {
+        fail();
       }
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
       const auto* node = table.get(name);
       if (!node || !assign_toml_value(*node, value_)) {
-        throw std::runtime_error("Failed to read value for " + name +
-                                 " from config file.");
+        fail();
       }
     } else if constexpr (std::is_same_v<T, roofer::logger::LogLevel>) {
       if (const toml::value<std::string>* s = table[name].as_string()) {
@@ -480,21 +487,28 @@ struct ConfigParameterByReference : public ConfigParameter {
         } else if (*s == "info") {
           value_ = roofer::logger::LogLevel::info;
         } else {
-          throw std::runtime_error("Failed to read value for " + name +
-                                   " from config file.");
+          fail();
         }
+      } else {
+        fail();
       }
     } else if constexpr (std::is_same_v<T, DocAttribMap>) {
       if (const toml::array* a = table[name].as_array()) {
         for (const auto& el : *a) {
-          if (const toml::table* tb = el.as_table()) {
-            for (const auto& [key, value] : *tb) {
-              std::string key_str(key.str());
-              std::string value_str = *value.value<std::string>();
-              value_.at(key_str) = value_str;
+          const auto* tb = el.as_table();
+          if (!tb) {
+            fail();
+          }
+          for (const auto& [key, value] : *tb) {
+            const auto value_str = value.value<std::string>();
+            if (!value_str) {
+              fail();
             }
+            value_.at(std::string(key.str())) = *value_str;
           }
         }
+      } else {
+        fail();
       }
     } else {
       const auto* node = table.get(name);
