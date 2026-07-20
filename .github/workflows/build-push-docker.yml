@@ -14,34 +14,52 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  prepare:
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      tags: ${{ steps.push_tags.outputs.tags }}
 
     steps:
-      - uses: actions/checkout@v5
-
       - name: Set docker image tag to 'develop'
-        run: echo "DOCKER_TAG=develop" >> $GITHUB_ENV
+        run: echo "DOCKER_TAG=develop" >> "$GITHUB_ENV"
 
       - name: Set docker image tag to git tag
         if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "DOCKER_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+        run: echo "DOCKER_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
 
       - name: Set immutable develop tag with commit hash
         if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
-        run: echo "EXTRA_TAG=develop-${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: echo "EXTRA_TAG=develop-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
-      - name: Assemble push tags
+      - name: Assemble image tags
         id: push_tags
-        if: github.event_name != 'pull_request'
         run: |
           tags="3dgi/roofer:${DOCKER_TAG}"
           if [ -n "${EXTRA_TAG:-}" ]; then
             tags="${tags},3dgi/roofer:${EXTRA_TAG}"
           fi
           echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
@@ -64,11 +82,13 @@ jobs:
           build-args: |
             JOBS=2
             GIT_HASH=${{ github.sha }}
+          platforms: ${{ matrix.platform }}
           push: false
-          tags: 3dgi/roofer:${{ env.DOCKER_TAG }}
-          cache-from: type=registry,ref=3dgi/roofer:buildcache
+          tags: ${{ needs.prepare.outputs.tags }}
+          cache-from: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }}
 
-      - name: Build and push
+      - name: Build and push by digest
+        id: build
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
@@ -78,7 +98,69 @@ jobs:
           build-args: |
             JOBS=2
             GIT_HASH=${{ github.sha }}
-          push: true
-          tags: ${{ steps.push_tags.outputs.tags }}
-          cache-from: type=registry,ref=3dgi/roofer:buildcache
-          cache-to: type=registry,ref=3dgi/roofer:buildcache,mode=max
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=3dgi/roofer,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }},mode=max
+
+      - name: Export image digest
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${IMAGE_DIGEST#sha256:}"
+
+      - name: Upload image digest
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    if: github.event_name != 'pull_request'
+    needs:
+      - prepare
+      - build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download image digests
+        uses: actions/download-artifact@v8
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create multi-platform manifest
+        env:
+          IMAGE_NAME: 3dgi/roofer
+          IMAGE_TAGS: ${{ needs.prepare.outputs.tags }}
+        run: |
+          IFS=',' read -r -a tags <<< "$IMAGE_TAGS"
+          tag_args=()
+          for tag in "${tags[@]}"; do
+            tag_args+=(--tag "$tag")
+          done
+
+          image_args=()
+          for digest in /tmp/digests/*; do
+            image_args+=("${IMAGE_NAME}@sha256:$(basename "$digest")")
+          done
+
+          docker buildx imagetools create "${tag_args[@]}" "${image_args[@]}"
+          docker buildx imagetools inspect "${tags[0]}"
