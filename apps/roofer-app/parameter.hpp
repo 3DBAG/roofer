@@ -22,8 +22,9 @@
 #pragma once
 #include <roofer/common/ConfigField.hpp>
 #include <roofer/common/formatters.hpp>
-#include <string>
+#include <cmath>
 #include <format>
+#include <string>
 
 struct DocAttrib {
   std::string* value;
@@ -39,6 +40,37 @@ struct DocAttrib {
   void operator=(const std::string& str) { *value = str; };
 };
 using DocAttribMap = std::map<std::string, DocAttrib>;
+
+template <typename T>
+T parse_cli_number(const std::string& token) {
+  std::size_t consumed = 0;
+  T value;
+  try {
+    if constexpr (std::is_same_v<T, int>) {
+      value = std::stoi(token, &consumed);
+    } else if constexpr (std::is_same_v<T, float>) {
+      value = std::stof(token, &consumed);
+    } else if constexpr (std::is_same_v<T, double>) {
+      value = std::stod(token, &consumed);
+    } else {
+      static_assert(!std::is_same_v<T, T>, "Unsupported numeric CLI type");
+    }
+  } catch (const std::invalid_argument&) {
+    throw std::runtime_error("Invalid numeric value: " + token + ".");
+  } catch (const std::out_of_range&) {
+    throw std::runtime_error("Numeric value out of range: " + token + ".");
+  }
+
+  if (consumed != token.size()) {
+    throw std::runtime_error("Invalid numeric value: " + token + ".");
+  }
+  if constexpr (std::is_floating_point_v<T>) {
+    if (!std::isfinite(value)) {
+      throw std::runtime_error("Numeric value must be finite: " + token + ".");
+    }
+  }
+  return value;
+}
 
 // std::formatter for DocAttribMap
 template <>
@@ -116,8 +148,11 @@ template <typename T>
 bool assign_toml_value(const toml::node& node, T& result) {
   if constexpr (std::is_same_v<T, float>) {
     if (auto value = node.value<double>()) {
-      result = static_cast<float>(*value);
-      return true;
+      const auto converted = static_cast<float>(*value);
+      if (std::isfinite(converted)) {
+        result = converted;
+        return true;
+      }
     }
     if (auto value = node.value<int64_t>()) {
       result = static_cast<float>(*value);
@@ -125,8 +160,10 @@ bool assign_toml_value(const toml::node& node, T& result) {
     }
   } else if constexpr (std::is_same_v<T, double>) {
     if (auto value = node.value<double>()) {
-      result = *value;
-      return true;
+      if (std::isfinite(*value)) {
+        result = *value;
+        return true;
+      }
     }
     if (auto value = node.value<int64_t>()) {
       result = static_cast<double>(*value);
@@ -215,6 +252,7 @@ struct ConfigParameter {
   virtual std::list<std::string>::iterator set(
       std::list<std::string>& args, std::list<std::string>::iterator it) = 0;
   virtual void unset() = 0;
+  [[nodiscard]] virtual bool supports_negation() const noexcept = 0;
 
   virtual void set_from_toml(const toml::table& table,
                              const std::string& name) = 0;
@@ -304,6 +342,10 @@ struct ConfigParameterByReference : public ConfigParameter {
     }
   }
 
+  [[nodiscard]] bool supports_negation() const noexcept override {
+    return std::is_same_v<T, bool>;
+  }
+
   std::list<std::string>::iterator set(
       std::list<std::string>& args,
       std::list<std::string>::iterator it) override {
@@ -315,15 +357,15 @@ struct ConfigParameterByReference : public ConfigParameter {
         throw std::runtime_error("Missing argument for parameter");
       } else if constexpr (std::is_same_v<T, int> ||
                            std::is_same_v<T, std::optional<int>>) {
-        value_ = std::stoi(*it);
+        value_ = parse_cli_number<int>(*it);
         return args.erase(it);
       } else if constexpr (std::is_same_v<T, float> ||
                            std::is_same_v<T, std::optional<float>>) {
-        value_ = std::stof(*it);
+        value_ = parse_cli_number<float>(*it);
         return args.erase(it);
       } else if constexpr (std::is_same_v<T, double> ||
                            std::is_same_v<T, std::optional<double>>) {
-        value_ = std::stod(*it);
+        value_ = parse_cli_number<double>(*it);
         return args.erase(it);
       } else if constexpr (std::is_same_v<T, std::string>) {
         value_ = *it;
@@ -338,13 +380,13 @@ struct ConfigParameterByReference : public ConfigParameter {
         }
 
         // Extract the values safely
-        box.pmin[0] = std::stod(*it);
+        box.pmin[0] = parse_cli_number<double>(*it);
         it = args.erase(it);
-        box.pmin[1] = std::stod(*it);
+        box.pmin[1] = parse_cli_number<double>(*it);
         it = args.erase(it);
-        box.pmax[0] = std::stod(*it);
+        box.pmax[0] = parse_cli_number<double>(*it);
         it = args.erase(it);
-        box.pmax[1] = std::stod(*it);
+        box.pmax[1] = parse_cli_number<double>(*it);
         it = args.erase(it);
         value_ = box;
         return it;
@@ -354,9 +396,9 @@ struct ConfigParameterByReference : public ConfigParameter {
         if (std::distance(it, args.end()) < 2) {
           throw std::runtime_error("Not enough arguments, need 2.");
         }
-        arr[0] = std::stof(*it);
+        arr[0] = parse_cli_number<float>(*it);
         it = args.erase(it);
-        arr[1] = std::stof(*it);
+        arr[1] = parse_cli_number<float>(*it);
         it = args.erase(it);
         value_ = arr;
         return it;
@@ -367,11 +409,11 @@ struct ConfigParameterByReference : public ConfigParameter {
         if (std::distance(it, args.end()) < 3) {
           throw std::runtime_error("Not enough arguments, need 3.");
         }
-        arr[0] = std::stod(*it);
+        arr[0] = parse_cli_number<double>(*it);
         it = args.erase(it);
-        arr[1] = std::stod(*it);
+        arr[1] = parse_cli_number<double>(*it);
         it = args.erase(it);
-        arr[2] = std::stod(*it);
+        arr[2] = parse_cli_number<double>(*it);
         it = args.erase(it);
         value_ = arr;
         return it;
@@ -429,50 +471,40 @@ struct ConfigParameterByReference : public ConfigParameter {
     };
 
     if constexpr (std::is_same_v<T, std::array<float, 2>>) {
-      if (const toml::array* a = table[name].as_array()) {
-        if (a->size() == 2 &&
-            (a->is_homogeneous(toml::node_type::floating_point) ||
-             a->is_homogeneous(toml::node_type::integer))) {
-          value_ = roofer::arr2f{*a->get(0)->value<float>(),
-                                 *a->get(1)->value<float>()};
-        } else {
-          fail();
-        }
-      } else {
+      const auto* values = table[name].as_array();
+      roofer::arr2f value;
+      if (!values || values->size() != value.size() ||
+          !assign_toml_value(*values->get(0), value[0]) ||
+          !assign_toml_value(*values->get(1), value[1])) {
         fail();
       }
+      value_ = value;
     } else if constexpr (std::is_same_v<T,
                                         std::optional<std::array<double, 3>>> ||
                          std::is_same_v<T, std::array<double, 3>>) {
-      if (const toml::array* a = table[name].as_array()) {
-        if (a->size() == 3 &&
-            (a->is_homogeneous(toml::node_type::floating_point) ||
-             a->is_homogeneous(toml::node_type::integer))) {
-          value_ = roofer::arr3d{*a->get(0)->value<double>(),
-                                 *a->get(1)->value<double>(),
-                                 *a->get(2)->value<double>()};
-        } else {
-          fail();
-        }
-      } else {
+      const auto* values = table[name].as_array();
+      roofer::arr3d value;
+      if (!values || values->size() != value.size() ||
+          !assign_toml_value(*values->get(0), value[0]) ||
+          !assign_toml_value(*values->get(1), value[1]) ||
+          !assign_toml_value(*values->get(2), value[2])) {
         fail();
       }
+      value_ = value;
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>> ||
                          std::is_same_v<T, roofer::TBox<double>>) {
-      if (const toml::array* a = table[name].as_array()) {
-        if (a->size() == 4 &&
-            (a->is_homogeneous(toml::node_type::floating_point) ||
-             a->is_homogeneous(toml::node_type::integer))) {
-          value_ = roofer::TBox<double>{
-              *a->get(0)->value<double>(), *a->get(1)->value<double>(), 0,
-              *a->get(2)->value<double>(), *a->get(3)->value<double>(), 0};
-        } else {
-          fail();
-        }
-      } else {
+      const auto* values = table[name].as_array();
+      std::array<double, 4> coordinates;
+      if (!values || values->size() != 4 ||
+          !assign_toml_value(*values->get(0), coordinates[0]) ||
+          !assign_toml_value(*values->get(1), coordinates[1]) ||
+          !assign_toml_value(*values->get(2), coordinates[2]) ||
+          !assign_toml_value(*values->get(3), coordinates[3])) {
         fail();
       }
+      value_ = roofer::TBox<double>{coordinates[0], coordinates[1], 0,
+                                    coordinates[2], coordinates[3], 0};
     } else if constexpr (std::is_same_v<T, roofer::enums::TerrainStrategy>) {
       const auto* node = table.get(name);
       if (!node || !assign_toml_value(*node, value_)) {

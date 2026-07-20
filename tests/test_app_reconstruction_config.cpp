@@ -195,6 +195,31 @@ quality = "high"
         handler.parse_config_file(),
         Catch::Matchers::ContainsSubstring("output.attributes.success"));
   }
+
+  SECTION("non-finite number") {
+    TemporaryConfig file("[output]\ntilesize = [nan, 1000]\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(handler.parse_config_file(),
+                      Catch::Matchers::ContainsSubstring("output.tilesize"));
+  }
+}
+
+TEST_CASE("TOML syntax errors retain parser diagnostics") {
+  TemporaryConfig file("[input\nunit-scale = 1\n");
+  RooferConfigHandler handler;
+  handler._config_path = file.string();
+
+  try {
+    handler.parse_config_file();
+    FAIL("Expected malformed TOML to be rejected");
+  } catch (const std::exception& error) {
+    CHECK_THAT(error.what(),
+               Catch::Matchers::ContainsSubstring("Failed to parse TOML"));
+    CHECK_THAT(error.what(),
+               Catch::Matchers::ContainsSubstring("error occurred at"));
+    CHECK_THAT(error.what(), Catch::Matchers::ContainsSubstring(file.string()));
+  }
 }
 
 TEST_CASE("nested reconstruction TOML errors contain complete dotted paths") {
@@ -324,6 +349,70 @@ TEST_CASE("public reconstruction CLI flags remain supported") {
         0.4F);
   CHECK_FALSE(handler.cfg_.reconstruction.clip_terrain);
   CHECK(arguments.args.empty());
+}
+
+TEST_CASE("CLI numeric parameters require complete finite values") {
+  SECTION("trailing characters") {
+    const char* argv[] = {"roofer", "--cellsize", "0.5m"};
+    CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+    RooferConfigHandler handler;
+    handler.cfg_.source_footprints = "footprints.gpkg";
+    handler.cfg_.output_path = "output";
+    handler.input_pointclouds_.emplace_back();
+
+    CHECK_THROWS_WITH(
+        handler.parse_cli_second_pass(arguments),
+        Catch::Matchers::ContainsSubstring("Invalid numeric value: 0.5m"));
+  }
+
+  SECTION("non-finite value") {
+    const char* argv[] = {"roofer", "--cellsize", "inf"};
+    CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+    RooferConfigHandler handler;
+    handler.cfg_.source_footprints = "footprints.gpkg";
+    handler.cfg_.output_path = "output";
+    handler.input_pointclouds_.emplace_back();
+
+    CHECK_THROWS_WITH(
+        handler.parse_cli_second_pass(arguments),
+        Catch::Matchers::ContainsSubstring("Numeric value must be finite"));
+  }
+}
+
+TEST_CASE("CLI negation is limited to boolean parameters") {
+  const char* argv[] = {"roofer", "--no-cellsize"};
+  CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+  RooferConfigHandler handler;
+  handler.cfg_.source_footprints = "footprints.gpkg";
+  handler.cfg_.output_path = "output";
+  handler.input_pointclouds_.emplace_back();
+
+  CHECK_THROWS_WITH(
+      handler.parse_cli_second_pass(arguments),
+      Catch::Matchers::ContainsSubstring("cannot negate non-boolean"));
+}
+
+TEST_CASE("general CLI parameter validators are applied") {
+  const char* argv[] = {"roofer", "--trace-interval", "0"};
+  CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+  RooferConfigHandler handler;
+  handler.parse_cli_first_pass(arguments);
+
+  CHECK_THROWS_WITH(
+      handler.validate(),
+      Catch::Matchers::ContainsSubstring("General parameter trace-interval"));
+}
+
+TEST_CASE("configuration paths are checked during the CLI first pass") {
+  const auto missing = (std::filesystem::temp_directory_path() /
+                        "roofer-config-that-does-not-exist.toml")
+                           .string();
+  const char* argv[] = {"roofer", "--config", missing.c_str()};
+  CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+  RooferConfigHandler handler;
+
+  CHECK_THROWS_WITH(handler.parse_cli_first_pass(arguments),
+                    Catch::Matchers::ContainsSubstring("does not exist"));
 }
 
 TEST_CASE("removed fallback time option is accepted and ignored") {

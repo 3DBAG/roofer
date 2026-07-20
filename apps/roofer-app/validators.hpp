@@ -21,6 +21,7 @@
 // Balázs Dukai
 #pragma once
 #include <algorithm>
+#include <cmath>
 #include <format>
 #include <optional>
 #include <vector>
@@ -29,6 +30,9 @@ namespace roofer::validators {
   // Array-specific application validation; scalar bounds use roofer::config.
   inline auto AllHigherThan(roofer::arr2f min) {
     return [min](const roofer::arr2f& val) -> std::optional<std::string> {
+      if (!std::isfinite(val[0]) || !std::isfinite(val[1])) {
+        return "Values must be finite.";
+      }
       if (val[0] <= min[0] || val[1] <= min[1]) {
         return std::format(
             "One of the values of [{}, {}] is too low. Values must be higher "
@@ -54,6 +58,10 @@ namespace roofer::validators {
   // Box validator
   auto ValidBox =
       [](const roofer::TBox<double>& box) -> std::optional<std::string> {
+    if (!std::isfinite(box.pmin[0]) || !std::isfinite(box.pmin[1]) ||
+        !std::isfinite(box.pmax[0]) || !std::isfinite(box.pmax[1])) {
+      return "Box coordinates must be finite.";
+    }
     if (box.pmin[0] >= box.pmax[0] || box.pmin[1] >= box.pmax[1]) {
       return "Box is invalid.";
     }

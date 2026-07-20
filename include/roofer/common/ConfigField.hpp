@@ -14,6 +14,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <optional>
 #include <stdexcept>
@@ -56,6 +57,9 @@ namespace roofer::config {
   template <typename T>
   Validator<T> greater_than(T lower) {
     return [lower](const T& value) -> std::optional<std::string> {
+      if constexpr (std::is_floating_point_v<T>) {
+        if (!std::isfinite(value)) return "must be finite";
+      }
       if (value > lower) return std::nullopt;
       return "must be greater than " + std::to_string(lower);
     };
@@ -64,6 +68,9 @@ namespace roofer::config {
   template <typename T>
   Validator<T> at_least(T lower) {
     return [lower](const T& value) -> std::optional<std::string> {
+      if constexpr (std::is_floating_point_v<T>) {
+        if (!std::isfinite(value)) return "must be finite";
+      }
       if (value >= lower) return std::nullopt;
       return "must be at least " + std::to_string(lower);
     };
@@ -72,6 +79,9 @@ namespace roofer::config {
   template <typename T>
   Validator<T> in_range(T lower, T upper) {
     return [lower, upper](const T& value) -> std::optional<std::string> {
+      if constexpr (std::is_floating_point_v<T>) {
+        if (!std::isfinite(value)) return "must be finite";
+      }
       if (value >= lower && value <= upper) return std::nullopt;
       return "must be in [" + std::to_string(lower) + ", " +
              std::to_string(upper) + "]";
@@ -81,6 +91,11 @@ namespace roofer::config {
   template <typename T>
   Validator<std::pair<T, T>> ordered_range(T lower) {
     return [lower](const std::pair<T, T>& value) -> std::optional<std::string> {
+      if constexpr (std::is_floating_point_v<T>) {
+        if (!std::isfinite(value.first) || !std::isfinite(value.second)) {
+          return "values must be finite";
+        }
+      }
       if (value.first >= lower && value.second >= value.first) {
         return std::nullopt;
       }
