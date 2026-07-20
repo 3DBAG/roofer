@@ -24,13 +24,11 @@ Interval for tracing in seconds
 ```{option} --loglevel (trace|debug|info) (default: info)
 Specify loglevel
 ```
-### Global options
+### Input options
 
 ```{option} --unit-scale <float> (default: 1)
 Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use `0.3048`.
 ```
-### Input options
-
 ```{option} --id-attribute <string> (default: <no value>)
 Building ID attribute to be used as identifier in CityJSONSeq output.
 ```
@@ -91,7 +89,7 @@ Cellsize used for the crop phase terrain fallback grid, in metres.
 Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.
 ```
 ```{option} --terrain-nodata-mode <string> (default: fill_small_gaps)
-How missing terrain grid samples are handled during output triangulation: `complete_quads`, `local_triangles`, or `fill_small_gaps`.
+EXPERIMENTAL: How missing terrain grid samples are handled during output triangulation when `--terrain` is enabled: `complete_quads`, `local_triangles`, or `fill_small_gaps`. This option may change or be removed in a future release.
 ```
 ```{option} --lod11-fallback-area <int> (default: 69000)
 LoD 1.1 fallback threshold area in square metres. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.
@@ -170,7 +168,7 @@ Output CityJSONSequence file for each building instead of one file per tile.
 Omit metadata line in CityJSONSequence output.
 ```
 ```{option} --[no-]terrain  (default: false)
-Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source.
+EXPERIMENTAL: Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.
 ```
 ```{option} --cj-scale (x y z) (default: [1e-04,1e-04,1e-04])
 CityJSON output vertex precision, in input map units.

@@ -359,17 +359,14 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </dd></dl>
 
 </section>
-<section id="global-options">
-<h3>Global options<a class="headerlink" href="#global-options" title="Link to this heading">¶</a></h3>
+<section id="input-options">
+<h3>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h3>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-unit-scale">
 <span class="sig-name descname"><span class="pre">--unit-scale</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">1)</span></span><a class="headerlink" href="#cmdoption-unit-scale" title="Link to this definition">¶</a></dt>
 <dd><p>Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use <code class="docutils literal notranslate"><span class="pre">0.3048</span></code>.</p>
 </dd></dl>
 
-</section>
-<section id="input-options">
-<h3>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h3>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-id-attribute">
 <span class="sig-name descname"><span class="pre">--id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-id-attribute" title="Link to this definition">¶</a></dt>
@@ -490,7 +487,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-terrain-nodata-mode">
 <span class="sig-name descname"><span class="pre">--terrain-nodata-mode</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">fill_small_gaps)</span></span><a class="headerlink" href="#cmdoption-terrain-nodata-mode" title="Link to this definition">¶</a></dt>
-<dd><p>How missing terrain grid samples are handled during output triangulation: <code class="docutils literal notranslate"><span class="pre">complete_quads</span></code>, <code class="docutils literal notranslate"><span class="pre">local_triangles</span></code>, or <code class="docutils literal notranslate"><span class="pre">fill_small_gaps</span></code>.</p>
+<dd><p>EXPERIMENTAL: How missing terrain grid samples are handled during output triangulation when <code class="docutils literal notranslate"><span class="pre">--terrain</span></code> is enabled: <code class="docutils literal notranslate"><span class="pre">complete_quads</span></code>, <code class="docutils literal notranslate"><span class="pre">local_triangles</span></code>, or <code class="docutils literal notranslate"><span class="pre">fill_small_gaps</span></code>. This option may change or be removed in a future release.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -646,7 +643,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-terrain">
 <span class="sig-name descname"><span class="pre">--[no-]terrain</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-terrain" title="Link to this definition">¶</a></dt>
-<dd><p>Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source.</p>
+<dd><p>EXPERIMENTAL: Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -672,6 +669,10 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <section id="output-format">
 <h2>Output format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h2>
 <p>The output of the <strong class="program">roofer</strong> CLI application are <a class="reference external" href="https://www.cityjson.org/cityjsonseq/">CityJSONSequence</a> files. These are JSON Lines files that contain a sequence of CityJSON features. Each feature represents one building, with an optional per-tile <code class="docutils literal notranslate"><span class="pre">TINRelief</span></code> terrain feature when <code class="docutils literal notranslate"><span class="pre">--terrain</span></code> is enabled.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Terrain output is experimental. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.</p>
+</div>
 <p>For terrain output, <code class="docutils literal notranslate"><span class="pre">--terrain-nodata-mode</span></code> controls whether only complete grid quads are triangulated, three-sample local triangles are retained, or isolated missing samples are interpolated before local triangulation.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -888,16 +889,12 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <section id="config-file">
 <h2>Config file<a class="headerlink" href="#config-file" title="Link to this heading">¶</a></h2>
 <p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Some of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1">## Path to roofprint polygons source. Can be an OGR supported file (eg. GPKG) or database connection string.</span>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1">### Input options</span>
+<span class="k">[input]</span>
+<span class="c1">## Path to roofprint polygons source. Can be an OGR supported file (eg. GPKG) or database connection string.</span>
 <span class="c1"># polygon-source = &quot;&quot;</span>
-<span class="c1">## Output directory. The building models will be written to a CityJSONSequence file in this directory.</span>
-<span class="c1"># output-directory = &quot;&quot;</span>
-
-<span class="c1">### Global options</span>
 <span class="c1">## Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use `0.3048`.</span>
 <span class="n">unit-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
-
-<span class="c1">### Input options</span>
 <span class="c1">## Building ID attribute to be used as identifier in CityJSONSeq output.</span>
 <span class="c1"># id-attribute = </span>
 <span class="c1">## Input attribute (boolean) to force individual buildings to always be reconstructed using simple extrusion (LoD 1.1).</span>
@@ -923,7 +920,26 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1">## Disable/enable check if all supplied pointcloud files exist.</span>
 <span class="n">skip-pc-check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
+<span class="k">[[input.pointclouds]]</span>
+<span class="c1">## Name of the pointcloud</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="c1">## Path to the pointcloud</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
+<span class="c1">## LAS classification code that contains the ground points.</span>
+<span class="n">ground_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="c1">## LAS classification code that contains the building points.</span>
+<span class="n">building_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span>
+<span class="c1">## Quality</span>
+<span class="n">quality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Date</span>
+<span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Force LoD11</span>
+<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Select only for date</span>
+<span class="n">select_only_for_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
 <span class="c1">### Crop options</span>
+<span class="k">[crop]</span>
 <span class="c1">## Simplify input rootprints to remove (nearly) duplicated vertices.</span>
 <span class="n">simplify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="c1">## Enforce this point density ceiling (points per square metre) on each building pointcloud.</span>
@@ -938,7 +954,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">terrain-grid-cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
 <span class="c1">## Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</span>
 <span class="n">terrain-grid-search-radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
-<span class="c1">## How missing terrain grid samples are handled during output triangulation: `complete_quads`, `local_triangles`, or `fill_small_gaps`.</span>
+<span class="c1">## EXPERIMENTAL: How missing terrain grid samples are handled during output triangulation when `--terrain` is enabled: `complete_quads`, `local_triangles`, or `fill_small_gaps`. This option may change or be removed in a future release.</span>
 <span class="n">terrain-nodata-mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;fill_small_gaps&quot;</span>
 <span class="c1">## LoD 1.1 fallback threshold area in square metres. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</span>
 <span class="n">lod11-fallback-area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">69000</span>
@@ -956,93 +972,6 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">crop-rasters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1">## Output index.gpkg file with quick pointcloud analystics from crop phase.</span>
 <span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-
-<span class="c1">### Output options</span>
-<span class="c1">## Enable or disable output tiling.</span>
-<span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Tilesize for rectangular output tiles, in metres.</span>
-<span class="n">tilesize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">]</span>
-<span class="c1">## Output CityJSONSequence file for each building instead of one file per tile.</span>
-<span class="n">split-cjseq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Omit metadata line in CityJSONSequence output.</span>
-<span class="n">omit-metadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source.</span>
-<span class="n">terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## CityJSON output vertex precision, in input map units.</span>
-<span class="n">cj-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">]</span>
-<span class="c1">## Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.</span>
-<span class="c1"># cj-translate = [100000, 200000, 0]</span>
-<span class="c1">## Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.</span>
-
-<span class="k">[output-attributes]</span>
-<span class="c1">## The azimuth of a roofpart in degrees</span>
-<span class="n">azimuth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_azimuth&quot;</span>
-<span class="c1">## Indicates what extrusion mode was used for the building. `standard`: the regular LoD 1.2, 1.3 or 2.2 extrusion. `lod11_fallback`: all geometry was substituted with an LoD 1.1 extrusion. `skip`: no 3D geometry was generated</span>
-<span class="n">extrusion_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_extrusion_mode&quot;</span>
-<span class="c1">## Indicates if LoD 1.1 extrusion was forced for the building</span>
-<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_force_lod11&quot;</span>
-<span class="c1">## The elevation of the floor of the building</span>
-<span class="n">h_ground</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_ground&quot;</span>
-<span class="c1">## The 98th percentile elevation of the building pointcloud</span>
-<span class="n">h_pc_98p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_pc_98p&quot;</span>
-<span class="c1">## The 50th percentile roof elevation</span>
-<span class="n">h_roof_50p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_50p&quot;</span>
-<span class="c1">## The 70th percentile roof elevation</span>
-<span class="n">h_roof_70p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_70p&quot;</span>
-<span class="c1">## The maximum roof elevation</span>
-<span class="n">h_roof_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_max&quot;</span>
-<span class="c1">## The minimum roof elevation</span>
-<span class="n">h_roof_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_min&quot;</span>
-<span class="c1">## The main ridge elevation</span>
-<span class="n">h_roof_ridge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_ridge&quot;</span>
-<span class="c1">## Indicates if a glass roof was detected</span>
-<span class="n">is_glass_roof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_glass_roof&quot;</span>
-<span class="c1">## Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)</span>
-<span class="n">is_mutated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_mutated&quot;</span>
-<span class="c1">## Indicates fraction (in the range [0,1]) of the roofprint area that is not covered by pointcloud data</span>
-<span class="n">nodata_frac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_frac&quot;</span>
-<span class="c1">## Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data, in input map units</span>
-<span class="n">nodata_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_r&quot;</span>
-<span class="c1">## Indicates why the input pointcloud was selected for reconstruction. Only relevant if multiple input pointclouds were provided</span>
-<span class="n">pc_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_select&quot;</span>
-<span class="c1">## Indicates which input pointcloud was used for reconstruction</span>
-<span class="n">pc_source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_source&quot;</span>
-<span class="c1">## Indicates the acquisition year of the selected input pointcloud</span>
-<span class="n">pc_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_year&quot;</span>
-<span class="c1">## Indicates if the pointcloud was found to be insufficient for reconstruction</span>
-<span class="n">pointcloud_unusable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pointcloud_unusable&quot;</span>
-<span class="c1">## Indicates the point density inside the roofprint, in points per square input map unit</span>
-<span class="n">pt_density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pt_density&quot;</span>
-<span class="c1">## Reconstruction time in milliseconds</span>
-<span class="n">reconstruction_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_t_run&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD12 geometry, in input map units</span>
-<span class="n">rmse_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod12&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD13 geometry, in input map units</span>
-<span class="n">rmse_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod13&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD22 geometry, in input map units</span>
-<span class="n">rmse_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod22&quot;</span>
-<span class="c1">## The number of roofplanes detected in the pointcloud (could be different from the generated mesh model)</span>
-<span class="n">roof_n_planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_planes&quot;</span>
-<span class="c1">## The number of ridgelines detected in the pointcloud (could be different from the generated mesh model)</span>
-<span class="n">roof_n_ridgelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_ridgelines&quot;</span>
-<span class="c1">## Roof type. Can be `no points`, `no planes`, `horizontal`, `multiple horizontal`, or `slanted`</span>
-<span class="n">roof_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_type&quot;</span>
-<span class="c1">## The slope of a roofpart in degrees</span>
-<span class="n">slope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_slope&quot;</span>
-<span class="c1">## Indicates if processing completed without unexpected errors</span>
-<span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_success&quot;</span>
-<span class="c1">## Lists val3dity codes for LoD 1.2 geometry</span>
-<span class="n">val3dity_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod12&quot;</span>
-<span class="c1">## Lists val3dity codes for LoD 1.3 geometry</span>
-<span class="n">val3dity_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod13&quot;</span>
-<span class="c1">## Lists val3dity codes for LoD 2.2 geometry</span>
-<span class="n">val3dity_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod22&quot;</span>
-<span class="c1">## The volume of the LoD 1.2 geometry, in cubic input map units</span>
-<span class="n">volume_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod12&quot;</span>
-<span class="c1">## The volume of the LoD 1.3 geometry, in cubic input map units</span>
-<span class="n">volume_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod13&quot;</span>
-<span class="c1">## The volume of the LoD 2.2 geometry, in cubic input map units</span>
-<span class="n">volume_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod22&quot;</span>
 
 <span class="c1">### Reconstruction options</span>
 <span class="k">[reconstruction]</span>
@@ -1175,23 +1104,95 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1">## Snap tolerance, in metres.</span>
 <span class="n">snap-tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.001258925</span>
 
-<span class="k">[[pointclouds]]</span>
-<span class="c1">## Name of the pointcloud</span>
-<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="c1">## Path to the pointcloud</span>
-<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="c1">## LAS classification code that contains the ground points.</span>
-<span class="n">ground_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
-<span class="c1">## LAS classification code that contains the building points.</span>
-<span class="n">building_class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span>
-<span class="c1">## Quality</span>
-<span class="n">quality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
-<span class="c1">## Date</span>
-<span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
-<span class="c1">## Force LoD11</span>
-<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Select only for date</span>
-<span class="n">select_only_for_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">### Output options</span>
+<span class="k">[output]</span>
+<span class="c1">## Output directory. The building models will be written to a CityJSONSequence file in this directory.</span>
+<span class="c1"># output-directory = &quot;&quot;</span>
+<span class="c1">## Enable or disable output tiling.</span>
+<span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Tilesize for rectangular output tiles, in metres.</span>
+<span class="n">tilesize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">]</span>
+<span class="c1">## Output CityJSONSequence file for each building instead of one file per tile.</span>
+<span class="n">split-cjseq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Omit metadata line in CityJSONSequence output.</span>
+<span class="n">omit-metadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## EXPERIMENTAL: Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.</span>
+<span class="n">terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## CityJSON output vertex precision, in input map units.</span>
+<span class="n">cj-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">]</span>
+<span class="c1">## Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.</span>
+<span class="c1"># cj-translate = [100000, 200000, 0]</span>
+
+<span class="c1">## Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.</span>
+<span class="k">[output.attributes]</span>
+<span class="c1">## The azimuth of a roofpart in degrees</span>
+<span class="n">azimuth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_azimuth&quot;</span>
+<span class="c1">## Indicates what extrusion mode was used for the building. `standard`: the regular LoD 1.2, 1.3 or 2.2 extrusion. `lod11_fallback`: all geometry was substituted with an LoD 1.1 extrusion. `skip`: no 3D geometry was generated</span>
+<span class="n">extrusion_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_extrusion_mode&quot;</span>
+<span class="c1">## Indicates if LoD 1.1 extrusion was forced for the building</span>
+<span class="n">force_lod11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_force_lod11&quot;</span>
+<span class="c1">## The elevation of the floor of the building</span>
+<span class="n">h_ground</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_ground&quot;</span>
+<span class="c1">## The 98th percentile elevation of the building pointcloud</span>
+<span class="n">h_pc_98p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_pc_98p&quot;</span>
+<span class="c1">## The 50th percentile roof elevation</span>
+<span class="n">h_roof_50p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_50p&quot;</span>
+<span class="c1">## The 70th percentile roof elevation</span>
+<span class="n">h_roof_70p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_70p&quot;</span>
+<span class="c1">## The maximum roof elevation</span>
+<span class="n">h_roof_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_max&quot;</span>
+<span class="c1">## The minimum roof elevation</span>
+<span class="n">h_roof_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_min&quot;</span>
+<span class="c1">## The main ridge elevation</span>
+<span class="n">h_roof_ridge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_ridge&quot;</span>
+<span class="c1">## Indicates if a glass roof was detected</span>
+<span class="n">is_glass_roof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_glass_roof&quot;</span>
+<span class="c1">## Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)</span>
+<span class="n">is_mutated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_mutated&quot;</span>
+<span class="c1">## Indicates fraction (in the range [0,1]) of the roofprint area that is not covered by pointcloud data</span>
+<span class="n">nodata_frac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_frac&quot;</span>
+<span class="c1">## Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data, in input map units</span>
+<span class="n">nodata_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_r&quot;</span>
+<span class="c1">## Indicates why the input pointcloud was selected for reconstruction. Only relevant if multiple input pointclouds were provided</span>
+<span class="n">pc_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_select&quot;</span>
+<span class="c1">## Indicates which input pointcloud was used for reconstruction</span>
+<span class="n">pc_source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_source&quot;</span>
+<span class="c1">## Indicates the acquisition year of the selected input pointcloud</span>
+<span class="n">pc_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_year&quot;</span>
+<span class="c1">## Indicates if the pointcloud was found to be insufficient for reconstruction</span>
+<span class="n">pointcloud_unusable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pointcloud_unusable&quot;</span>
+<span class="c1">## Indicates the point density inside the roofprint, in points per square input map unit</span>
+<span class="n">pt_density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pt_density&quot;</span>
+<span class="c1">## Reconstruction time in milliseconds</span>
+<span class="n">reconstruction_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_t_run&quot;</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD12 geometry, in input map units</span>
+<span class="n">rmse_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod12&quot;</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD13 geometry, in input map units</span>
+<span class="n">rmse_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod13&quot;</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD22 geometry, in input map units</span>
+<span class="n">rmse_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod22&quot;</span>
+<span class="c1">## The number of roofplanes detected in the pointcloud (could be different from the generated mesh model)</span>
+<span class="n">roof_n_planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_planes&quot;</span>
+<span class="c1">## The number of ridgelines detected in the pointcloud (could be different from the generated mesh model)</span>
+<span class="n">roof_n_ridgelines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_ridgelines&quot;</span>
+<span class="c1">## Roof type. Can be `no points`, `no planes`, `horizontal`, `multiple horizontal`, or `slanted`</span>
+<span class="n">roof_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_type&quot;</span>
+<span class="c1">## The slope of a roofpart in degrees</span>
+<span class="n">slope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_slope&quot;</span>
+<span class="c1">## Indicates if processing completed without unexpected errors</span>
+<span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_success&quot;</span>
+<span class="c1">## Lists val3dity codes for LoD 1.2 geometry</span>
+<span class="n">val3dity_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod12&quot;</span>
+<span class="c1">## Lists val3dity codes for LoD 1.3 geometry</span>
+<span class="n">val3dity_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod13&quot;</span>
+<span class="c1">## Lists val3dity codes for LoD 2.2 geometry</span>
+<span class="n">val3dity_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod22&quot;</span>
+<span class="c1">## The volume of the LoD 1.2 geometry, in cubic input map units</span>
+<span class="n">volume_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod12&quot;</span>
+<span class="c1">## The volume of the LoD 1.3 geometry, in cubic input map units</span>
+<span class="n">volume_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod13&quot;</span>
+<span class="c1">## The volume of the LoD 2.2 geometry, in cubic input map units</span>
+<span class="n">volume_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod22&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -1264,7 +1265,6 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#positional-arguments">Positional arguments</a></li>
 <li><a class="reference internal" href="#general-options">General options</a></li>
-<li><a class="reference internal" href="#global-options">Global options</a></li>
 <li><a class="reference internal" href="#input-options">Input options</a></li>
 <li><a class="reference internal" href="#crop-options">Crop options</a></li>
 <li><a class="reference internal" href="#reconstruction-options">Reconstruction options</a></li>

@@ -306,17 +306,14 @@
 </dd></dl>
 
 </section>
-<section id="global-options">
-<h1>Global options<a class="headerlink" href="#global-options" title="Link to this heading">¶</a></h1>
+<section id="input-options">
+<h1>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h1>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-unit-scale">
 <span class="sig-name descname"><span class="pre">--unit-scale</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">1)</span></span><a class="headerlink" href="#cmdoption-unit-scale" title="Link to this definition">¶</a></dt>
 <dd><p>Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use <code class="docutils literal notranslate"><span class="pre">0.3048</span></code>.</p>
 </dd></dl>
 
-</section>
-<section id="input-options">
-<h1>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h1>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-id-attribute">
 <span class="sig-name descname"><span class="pre">--id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-id-attribute" title="Link to this definition">¶</a></dt>
@@ -437,7 +434,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-terrain-nodata-mode">
 <span class="sig-name descname"><span class="pre">--terrain-nodata-mode</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">fill_small_gaps)</span></span><a class="headerlink" href="#cmdoption-terrain-nodata-mode" title="Link to this definition">¶</a></dt>
-<dd><p>How missing terrain grid samples are handled during output triangulation: <code class="docutils literal notranslate"><span class="pre">complete_quads</span></code>, <code class="docutils literal notranslate"><span class="pre">local_triangles</span></code>, or <code class="docutils literal notranslate"><span class="pre">fill_small_gaps</span></code>.</p>
+<dd><p>EXPERIMENTAL: How missing terrain grid samples are handled during output triangulation when <code class="docutils literal notranslate"><span class="pre">--terrain</span></code> is enabled: <code class="docutils literal notranslate"><span class="pre">complete_quads</span></code>, <code class="docutils literal notranslate"><span class="pre">local_triangles</span></code>, or <code class="docutils literal notranslate"><span class="pre">fill_small_gaps</span></code>. This option may change or be removed in a future release.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -593,7 +590,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-terrain">
 <span class="sig-name descname"><span class="pre">--[no-]terrain</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-terrain" title="Link to this definition">¶</a></dt>
-<dd><p>Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source.</p>
+<dd><p>EXPERIMENTAL: Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.</p>
 </dd></dl>
 
 <dl class="std option">
