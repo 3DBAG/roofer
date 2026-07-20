@@ -372,6 +372,12 @@ int main(int argc, const char* argv[]) {
   bool do_tracing = false;
   auto trace_interval = std::chrono::seconds(handler._trace_interval);
   logger.set_level(handler._loglevel);
+  if (handler.cfg_.output_terrain) {
+    logger.warning(
+        "Terrain output is experimental. Its geometry, attributes, file "
+        "naming, and configuration may change, and the feature may be removed "
+        "in a future release.");
+  }
   if (handler._loglevel == roofer::logger::LogLevel::trace) {
     trace_interval = std::chrono::seconds(handler._trace_interval);
     do_tracing = true;
