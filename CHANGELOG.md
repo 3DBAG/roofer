@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added global `unit-scale` (metres per input coordinate unit) to convert
   metre-based reconstruction, crop, and output parameters for input data that
   uses another unit.
+- Set the default cityjson scale in the transform object to 0.0001. This helps with improving geometric validity. The previous 0.001 setting regurlarly caused validity issues due to the relatively large quatisation error.
 - Descriptor-generated TOML documentation and Python bindings omit reconstruction components that have no public parameters.
 - `complexity-factor` now directly controls the optimiser energy balance: the data term is weighted by `complexity-factor` and the smoothness term by `1 - complexity-factor`. The independent `data_multiplier` and `smoothness_multiplier` component options were removed.
 - The flattened C++ `roofer::ReconstructionConfig` remains as a 1.x compatibility adapter, while its `reconstruct` overloads are deprecated. Its defaults and validation delegate to the nested configuration.

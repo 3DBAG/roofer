@@ -183,7 +183,7 @@ struct RooferConfig {
   bool split_cjseq = false;
   bool omit_metadata = false;
   bool output_terrain = false;
-  roofer::arr3d cj_scale = {0.001, 0.001, 0.001};
+  roofer::arr3d cj_scale = {0.0001, 0.0001, 0.0001};
   std::optional<roofer::arr3d> cj_translate;
   std::string building_toml_file_spec =
       "{path}/objects/{bid}/config_{pc_name}.toml";
@@ -679,8 +679,7 @@ struct RooferConfigHandler {
                "highest-quality pointcloud source.",
                cfg_.output_terrain);
     output.add("cj-scale",
-               "CityJSON output vertex precision, in metres. It is converted "
-               "to input coordinate units before writing.",
+               "CityJSON output vertex precision, in input map units.",
                cfg_.cj_scale);
     output
         .add("cj-translate",

@@ -911,12 +911,9 @@ int main(int argc, const char* argv[]) {
                 "Tile {} has no data offset, cannot write to cityjson",
                 building_tile.id));
           }
-          CityJsonWriter->scale_x_ =
-              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[0]);
-          CityJsonWriter->scale_y_ =
-              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[1]);
-          CityJsonWriter->scale_z_ =
-              handler.cfg_.metres_to_input_units(handler.cfg_.cj_scale[2]);
+          CityJsonWriter->scale_x_ = handler.cfg_.cj_scale[0];
+          CityJsonWriter->scale_y_ = handler.cfg_.cj_scale[1];
+          CityJsonWriter->scale_z_ = handler.cfg_.cj_scale[2];
 
           std::ofstream ofs;
           if (!handler.cfg_.split_cjseq) {
