@@ -70,46 +70,9 @@ void print_params(RooferConfigHandler::param_group_map& params) {
   }
 }
 
-void print_params_as_toml(
-    RooferConfigHandler::param_group_map& params,
-    const roofer::reconstruction::ReconstructionConfig& reconstruction) {
-  std::cout << "## Path to roofprint polygons source. Can be an OGR supported "
-               "file (eg. GPKG) or database connection string.\n";
-  std::cout << "# polygon-source = \"\"\n";
-  std::cout << "## Output directory. The building models will be written to a "
-               "CityJSONSequence file in this directory.\n";
-  std::cout << "# output-directory = \"\"\n\n";
-  for (const auto& [group_name, param_list] : params) {
-    if (group_name == "Reconstruction") continue;
-    std::cout << std::format("### {} options\n", group_name);
-    for (const auto& param : param_list) {
-      std::cout << std::format("## {}\n", param->description());
-      // check if param is a string
-      auto str = std::format("{}", param->to_string());
-      if (param->example_.size() != 0) {
-        std::cout << std::format("# {} = {}\n", param->longname_,
-                                 param->example_);
-      } else if (str.size() == 0) {
-        std::cout << std::format("# {} = {}\n", param->longname_,
-                                 param->to_string());
-      } else if (param->type_description() == "<string>") {
-        std::cout << std::format("{} = \"{}\"\n", param->longname_,
-                                 param->to_string());
-      } else if (param->longname_ == "attribute-rename") {
-        std::cout << std::format("\n[output-attributes]\n", group_name,
-                                 param->longname_);
-        std::cout << param->to_toml();
-      } else {
-        std::cout << std::format("{} = {}\n", param->longname_,
-                                 param->to_string());
-      }
-    }
-    std::cout << "\n";
-  }
-  print_reconstruction_toml(reconstruction);
-  // print pointcloud block
+void print_pointcloud_toml() {
   InputPointcloud pc_defaults{};
-  std::cout << "[[pointclouds]]\n";
+  std::cout << "\n[[input.pointclouds]]\n";
   std::cout << "## Name of the pointcloud\n";
   std::cout << "name = \"\"\n";
   std::cout << "## Path to the pointcloud\n";
@@ -129,6 +92,55 @@ void print_params_as_toml(
   std::cout << "## Select only for date\n";
   std::cout << "select_only_for_date = "
             << (pc_defaults.select_only_for_date ? "true" : "false") << "\n";
+}
+
+void print_params_as_toml(
+    RooferConfigHandler::param_group_map& params,
+    const roofer::reconstruction::ReconstructionConfig& reconstruction) {
+  for (const auto& [group_name, param_list] : params) {
+    if (group_name == "Reconstruction") {
+      print_reconstruction_toml(reconstruction);
+      continue;
+    }
+    std::cout << std::format("### {} options\n", group_name);
+    if (group_name == "Input") {
+      std::cout << "[input]\n";
+      std::cout << "## Path to roofprint polygons source. Can be an OGR "
+                   "supported file (eg. GPKG) or database connection string.\n";
+      std::cout << "# polygon-source = \"\"\n";
+    } else if (group_name == "Crop") {
+      std::cout << "[crop]\n";
+    } else if (group_name == "Output") {
+      std::cout << "[output]\n";
+      std::cout << "## Output directory. The building models will be written "
+                   "to a CityJSONSequence file in this directory.\n";
+      std::cout << "# output-directory = \"\"\n";
+    }
+    for (const auto& param : param_list) {
+      if (param->longname_ == "attribute-rename") std::cout << "\n";
+      std::cout << std::format("## {}\n", param->description());
+      // check if param is a string
+      auto str = std::format("{}", param->to_string());
+      if (param->example_.size() != 0) {
+        std::cout << std::format("# {} = {}\n", param->longname_,
+                                 param->example_);
+      } else if (str.size() == 0) {
+        std::cout << std::format("# {} = {}\n", param->longname_,
+                                 param->to_string());
+      } else if (param->type_description() == "<string>") {
+        std::cout << std::format("{} = \"{}\"\n", param->longname_,
+                                 param->to_string());
+      } else if (param->longname_ == "attribute-rename") {
+        std::cout << "[output.attributes]\n";
+        std::cout << param->to_toml();
+      } else {
+        std::cout << std::format("{} = {}\n", param->longname_,
+                                 param->to_string());
+      }
+    }
+    if (group_name == "Input") print_pointcloud_toml();
+    std::cout << "\n";
+  }
 }
 
 void print_attributes(DocAttribMap& attributes) {

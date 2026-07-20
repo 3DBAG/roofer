@@ -415,6 +415,9 @@ struct RooferConfigHandler {
   DocAttribMap output_attr_;
   std::unordered_map<std::string, ConfigParameter*> param_index_;
   std::unordered_map<std::string, ConfigParameter*> app_param_index_;
+  std::unordered_map<std::string, ConfigParameter*> input_param_index_;
+  std::unordered_map<std::string, ConfigParameter*> crop_param_index_;
+  std::unordered_map<std::string, ConfigParameter*> output_param_index_;
   ParameterVector root_only_reconstruction_aliases_;
   std::unordered_map<std::string, ConfigParameter*>
       root_only_reconstruction_alias_index_;
@@ -441,7 +444,7 @@ struct RooferConfigHandler {
 
   // methods
   RooferConfigHandler() {
-    ParameterVector global, input, crop, reconstruction, output;
+    ParameterVector input, crop, reconstruction, output;
     ParameterVector general;
 
     general.add("help", 'h', "Show help message", _print_help);
@@ -461,7 +464,7 @@ struct RooferConfigHandler {
     general.add("rerun", "Log intermediate results to rerun", cfg_.use_rerun);
 #endif
 
-    global.add(
+    input.add(
         "unit-scale",
         "Metres per input coordinate unit. All metre-based reconstruction, "
         "crop, and output parameters are converted to input coordinate units "
@@ -838,7 +841,6 @@ struct RooferConfigHandler {
                " By default attribute names are prefixed with `rf_`.",
                output_attr_);
     // Move groups into param_group_map
-    param_groups_.emplace_back("Global", std::move(global));
     param_groups_.emplace_back("Input", std::move(input));
     param_groups_.emplace_back("Crop", std::move(crop));
     param_groups_.emplace_back("Reconstruction", std::move(reconstruction));
@@ -848,6 +850,13 @@ struct RooferConfigHandler {
     // Add to index
     for (auto& [group_name, group] : param_groups_) {
       group.add_to_index(param_index_);
+      if (group_name == "Input") {
+        group.add_to_index(input_param_index_);
+      } else if (group_name == "Crop") {
+        group.add_to_index(crop_param_index_);
+      } else if (group_name == "Output") {
+        group.add_to_index(output_param_index_);
+      }
     }
     for (auto& [group_name, group] : app_param_groups_) {
       group.add_to_index(app_param_index_);
@@ -1329,6 +1338,139 @@ struct RooferConfigHandler {
     }
   };
 
+  void warn_deprecated_root_key(std::string_view key,
+                                std::string_view canonical_path) {
+    roofer::logger::Logger::get_logger().warning(
+        "Root configuration key {} is deprecated; use {} instead. It will be "
+        "removed in 2.0.",
+        key, canonical_path);
+  }
+
+  void parse_output_attributes(const toml::table& table,
+                               std::string_view path) {
+    for (const auto& [key, value] : table) {
+      if (auto attribute = output_attr_.find(key.data());
+          attribute != output_attr_.end()) {
+        get_toml_value(table, key.data(), *(attribute->second.value));
+      } else {
+        throw std::runtime_error(
+            std::format("Unknown output attribute: {}.{}.", path, key.data()));
+      }
+    }
+  }
+
+  void parse_pointclouds(const toml::node& node, std::string_view path) {
+    const auto* pointclouds = node.as_array();
+    if (!pointclouds) {
+      throw std::runtime_error(std::format("{} must be an array.", path));
+    }
+
+    for (const auto& element : *pointclouds) {
+      const auto* table = element.as_table();
+      if (!table) {
+        throw std::runtime_error(
+            std::format("{} entries must be tables.", path));
+      }
+      auto& pointcloud = input_pointclouds_.emplace_back();
+
+      for (const auto& [key, value] : *table) {
+        if (key == "name") {
+          get_toml_value(*table, "name", pointcloud.name);
+        } else if (key == "quality") {
+          get_toml_value(*table, "quality", pointcloud.quality);
+        } else if (key == "date") {
+          get_toml_value(*table, "date", pointcloud.date);
+        } else if (key == "force_lod11") {
+          get_toml_value(*table, "force_lod11", pointcloud.force_lod11);
+        } else if (key == "select_only_for_date") {
+          get_toml_value(*table, "select_only_for_date",
+                         pointcloud.select_only_for_date);
+        } else if (key == "building_class") {
+          get_toml_value(*table, "building_class", pointcloud.bld_class);
+        } else if (key == "ground_class") {
+          get_toml_value(*table, "ground_class", pointcloud.grnd_class);
+        } else if (key == "source") {
+          std::list<std::string> input_paths;
+          if (const auto* sources = table->get("source")->as_array()) {
+            for (const auto& source : *sources) {
+              const auto source_path = source.value<std::string>();
+              if (!source_path) {
+                throw std::runtime_error(
+                    std::format("{} source entries must be strings.", path));
+              }
+              input_paths.push_back(*source_path);
+            }
+          } else {
+            throw std::runtime_error(std::format(
+                "Failed to read {}.source. Make sure it is a list of strings.",
+                path));
+          }
+          pointcloud.paths = find_filepaths(
+              input_paths, {".las", ".LAS", ".laz", ".LAZ"}, _skip_pc_check);
+        } else {
+          throw std::runtime_error(std::format(
+              "Unknown parameter in {} table: {}.", path, key.data()));
+        }
+      }
+    }
+  }
+
+  void parse_parameter_table(
+      const toml::table& table,
+      const std::unordered_map<std::string, ConfigParameter*>& parameters,
+      std::string_view path) {
+    for (const auto& [key, value] : table) {
+      if (auto parameter = parameters.find(key.data());
+          parameter != parameters.end()) {
+        parameter->second->set_from_toml(table, key.data());
+      } else {
+        throw std::runtime_error(
+            std::format("Unknown parameter in [{}]: {}.", path, key.data()));
+      }
+    }
+  }
+
+  void parse_input_table(const toml::table& table) {
+    if (const auto* pointclouds = table.get("pointclouds")) {
+      input_pointclouds_.clear();
+      parse_pointclouds(*pointclouds, "input.pointclouds");
+    }
+
+    for (const auto& [key, value] : table) {
+      if (key == "polygon-source") {
+        get_toml_value(table, "polygon-source", cfg_.source_footprints);
+      } else if (key == "pointclouds") {
+        continue;
+      } else if (auto parameter = input_param_index_.find(key.data());
+                 parameter != input_param_index_.end()) {
+        parameter->second->set_from_toml(table, key.data());
+      } else {
+        throw std::runtime_error(
+            std::format("Unknown parameter in [input]: {}.", key.data()));
+      }
+    }
+  }
+
+  void parse_output_table(const toml::table& table) {
+    for (const auto& [key, value] : table) {
+      if (key == "output-directory") {
+        get_toml_value(table, "output-directory", cfg_.output_path);
+      } else if (key == "attributes") {
+        const auto* attributes = value.as_table();
+        if (!attributes) {
+          throw std::runtime_error("output.attributes must be a table.");
+        }
+        parse_output_attributes(*attributes, "output.attributes");
+      } else if (auto parameter = output_param_index_.find(key.data());
+                 parameter != output_param_index_.end()) {
+        parameter->second->set_from_toml(table, key.data());
+      } else {
+        throw std::runtime_error(
+            std::format("Unknown parameter in [output]: {}.", key.data()));
+      }
+    }
+  }
+
   void parse_config_file() {
     auto& logger = roofer::logger::Logger::get_logger();
     toml::table config;
@@ -1338,7 +1480,8 @@ struct RooferConfigHandler {
       throw std::runtime_error(std::format("Syntax error."));
     }
 
-    // iterate config table
+    // Parse root-level compatibility aliases first. Canonical section values
+    // are parsed below and therefore take precedence irrespective of order.
     for (const auto& [key, value] : config) {
       try {
         if (const auto destination =
@@ -1355,84 +1498,50 @@ struct RooferConfigHandler {
                 key.data(), destination->nested_key, destination->section);
           }
         }
+
+        if (key == "input" || key == "crop" || key == "output" ||
+            key == "reconstruction") {
+          continue;
+        }
         if (key == "polygon-source") {
+          warn_deprecated_root_key(key.str(), "[input].polygon-source");
           get_toml_value(config, "polygon-source", cfg_.source_footprints);
         } else if (key == "output-directory") {
+          warn_deprecated_root_key(key.str(), "[output].output-directory");
           get_toml_value(config, "output-directory", cfg_.output_path);
         } else if (key == "output-attributes") {
-          if (toml::table* tb = config["output-attributes"].as_table()) {
-            for (const auto& [key, value] : *tb) {
-              if (auto p = output_attr_.find(key.data());
-                  p != output_attr_.end()) {
-                std::string name = "";
-                get_toml_value(*tb, key.data(), *(p->second.value));
-                // if (!name.empty()) {
-                //   p->second = name;
-                // }
-              } else {
-                throw std::runtime_error(
-                    fmt::format("Unknown output attribute: {}.", key.data()));
-              }
-            }
+          warn_deprecated_root_key(key.str(), "[output.attributes]");
+          const auto* attributes = value.as_table();
+          if (!attributes) {
+            throw std::runtime_error("output-attributes must be a table.");
           }
-        } else if (key == "reconstruction") {
-          // Parsed after all root-level compatibility aliases so nested values
-          // deterministically take precedence, independent of table ordering.
-        } else if (auto p =
+          parse_output_attributes(*attributes, "output-attributes");
+        } else if (auto parameter =
                        root_only_reconstruction_alias_index_.find(key.data());
-                   p != root_only_reconstruction_alias_index_.end()) {
-          p->second->set_from_toml(config, key.data());
-        } else if (auto p = param_index_.find(key.data());
-                   p != param_index_.end()) {
-          p->second->set_from_toml(config, key.data());
+                   parameter != root_only_reconstruction_alias_index_.end()) {
+          parameter->second->set_from_toml(config, key.data());
+        } else if (auto parameter = input_param_index_.find(key.data());
+                   parameter != input_param_index_.end()) {
+          warn_deprecated_root_key(key.str(),
+                                   std::format("[input].{}", key.str()));
+          parameter->second->set_from_toml(config, key.data());
+        } else if (auto parameter = crop_param_index_.find(key.data());
+                   parameter != crop_param_index_.end()) {
+          warn_deprecated_root_key(key.str(),
+                                   std::format("[crop].{}", key.str()));
+          parameter->second->set_from_toml(config, key.data());
+        } else if (auto parameter = output_param_index_.find(key.data());
+                   parameter != output_param_index_.end()) {
+          warn_deprecated_root_key(key.str(),
+                                   std::format("[output].{}", key.str()));
+          parameter->second->set_from_toml(config, key.data());
+        } else if (auto parameter = param_index_.find(key.data());
+                   parameter != param_index_.end()) {
+          // Remaining indexed root keys are deprecated reconstruction aliases.
+          parameter->second->set_from_toml(config, key.data());
         } else if (key == "pointclouds") {
-          if (toml::array* arr = config["pointclouds"].as_array()) {
-            // visitation with for_each() helps deal with heterogeneous data
-            for (auto& el : *arr) {
-              toml::table* tb = el.as_table();
-              auto& pc = input_pointclouds_.emplace_back();
-
-              for (const auto& [key, value] : *tb) {
-                if (key == "name") {
-                  get_toml_value(*tb, "name", pc.name);
-                } else if (key == "quality") {
-                  get_toml_value(*tb, "quality", pc.quality);
-                } else if (key == "date") {
-                  get_toml_value(*tb, "date", pc.date);
-                } else if (key == "force_lod11") {
-                  get_toml_value(*tb, "force_lod11", pc.force_lod11);
-                } else if (key == "select_only_for_date") {
-                  get_toml_value(*tb, "select_only_for_date",
-                                 pc.select_only_for_date);
-                } else if (key == "building_class") {
-                  get_toml_value(*tb, "building_class", pc.bld_class);
-                } else if (key == "ground_class") {
-                  get_toml_value(*tb, "ground_class", pc.grnd_class);
-                } else if (key == "source") {
-                  std::list<std::string> input_paths;
-                  if (toml::array* pc_paths = tb->at("source").as_array()) {
-                    for (auto& pc_path : *pc_paths) {
-                      input_paths.push_back(*pc_path.value<std::string>());
-                    }
-                  } else {
-                    throw std::runtime_error(
-                        "Failed to read pointclouds.source. Make sure it is "
-                        "a "
-                        "list of "
-                        "strings.");
-                  }
-                  pc.paths = find_filepaths(input_paths,
-                                            {".las", ".LAS", ".laz", ".LAZ"},
-                                            _skip_pc_check);
-                } else {
-                  throw std::runtime_error(std::format(
-                      "Unknown parameter in [[pointcloud]] table in "
-                      "config file: {}.",
-                      key.data()));
-                }
-              }
-            };
-          }
+          warn_deprecated_root_key(key.str(), "[input].pointclouds");
+          parse_pointclouds(value, "pointclouds");
         } else {
           throw std::runtime_error(
               std::format("Unknown parameter in config file: {}.", key.data()));
@@ -1443,10 +1552,26 @@ struct RooferConfigHandler {
                         key.data(), e.what()));
       }
     }
+
     if (config.contains("plane-detect-normal-angle")) {
       cfg_.reconstruction.plane_detector.normal_angle_threshold =
           roofer::reconstruction::normal_angle_degrees_from_dot_product(
               _legacy_plane_detect_normal_angle);
+    }
+    if (const auto* input = config["input"].as_table()) {
+      parse_input_table(*input);
+    } else if (config.contains("input")) {
+      throw std::runtime_error("input must be a table.");
+    }
+    if (const auto* crop = config["crop"].as_table()) {
+      parse_parameter_table(*crop, crop_param_index_, "crop");
+    } else if (config.contains("crop")) {
+      throw std::runtime_error("crop must be a table.");
+    }
+    if (const auto* output = config["output"].as_table()) {
+      parse_output_table(*output);
+    } else if (config.contains("output")) {
+      throw std::runtime_error("output must be a table.");
     }
     if (const auto* reconstruction = config["reconstruction"].as_table()) {
       parse_reconstruction_table(*reconstruction);
