@@ -76,7 +76,7 @@ void print_pointcloud_toml() {
   std::cout << "## Name of the pointcloud\n";
   std::cout << "name = \"\"\n";
   std::cout << "## Path to the pointcloud\n";
-  std::cout << "source = \"\"\n";
+  std::cout << "source = [\"\"]\n";
   std::cout << "## LAS classification code that contains the ground points.\n";
   std::cout << "ground_class = " << pc_defaults.grnd_class << "\n";
   std::cout

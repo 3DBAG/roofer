@@ -907,15 +907,19 @@ struct RooferConfigHandler {
   }
 
   template <typename T, typename node>
-  void get_toml_value(const node& config, const std::string& key, T& result) {
+  void get_toml_value(const node& config, const std::string& key, T& result,
+                      std::string_view path = {}) {
     try {
-      if (auto tml_value = config[key].template value<T>();
-          tml_value.has_value()) {
-        result = *tml_value;
+      const auto tml_value = config[key].template value<T>();
+      if (!tml_value) {
+        throw std::runtime_error("Type mismatch.");
       }
+      result = *tml_value;
     } catch (const std::exception& e) {
-      throw std::runtime_error(std::format(
-          "Failed to read value for {} from config file. {}", key, e.what()));
+      const auto value_path = path.empty() ? std::string_view(key) : path;
+      throw std::runtime_error(
+          std::format("Failed to read value for {} from config file. {}",
+                      value_path, e.what()));
     }
   }
 
@@ -1351,7 +1355,8 @@ struct RooferConfigHandler {
     for (const auto& [key, value] : table) {
       if (auto attribute = output_attr_.find(key.data());
           attribute != output_attr_.end()) {
-        get_toml_value(table, key.data(), *(attribute->second.value));
+        get_toml_value(table, key.data(), *(attribute->second.value),
+                       std::format("{}.{}", path, key.data()));
       } else {
         throw std::runtime_error(
             std::format("Unknown output attribute: {}.{}.", path, key.data()));
@@ -1375,20 +1380,27 @@ struct RooferConfigHandler {
 
       for (const auto& [key, value] : *table) {
         if (key == "name") {
-          get_toml_value(*table, "name", pointcloud.name);
+          get_toml_value(*table, "name", pointcloud.name,
+                         std::format("{}.name", path));
         } else if (key == "quality") {
-          get_toml_value(*table, "quality", pointcloud.quality);
+          get_toml_value(*table, "quality", pointcloud.quality,
+                         std::format("{}.quality", path));
         } else if (key == "date") {
-          get_toml_value(*table, "date", pointcloud.date);
+          get_toml_value(*table, "date", pointcloud.date,
+                         std::format("{}.date", path));
         } else if (key == "force_lod11") {
-          get_toml_value(*table, "force_lod11", pointcloud.force_lod11);
+          get_toml_value(*table, "force_lod11", pointcloud.force_lod11,
+                         std::format("{}.force_lod11", path));
         } else if (key == "select_only_for_date") {
           get_toml_value(*table, "select_only_for_date",
-                         pointcloud.select_only_for_date);
+                         pointcloud.select_only_for_date,
+                         std::format("{}.select_only_for_date", path));
         } else if (key == "building_class") {
-          get_toml_value(*table, "building_class", pointcloud.bld_class);
+          get_toml_value(*table, "building_class", pointcloud.bld_class,
+                         std::format("{}.building_class", path));
         } else if (key == "ground_class") {
-          get_toml_value(*table, "ground_class", pointcloud.grnd_class);
+          get_toml_value(*table, "ground_class", pointcloud.grnd_class,
+                         std::format("{}.ground_class", path));
         } else if (key == "source") {
           std::list<std::string> input_paths;
           if (const auto* sources = table->get("source")->as_array()) {
@@ -1415,17 +1427,31 @@ struct RooferConfigHandler {
     }
   }
 
+  bool parse_indexed_parameter(
+      const toml::table& table, const toml::key& key,
+      const std::unordered_map<std::string, ConfigParameter*>& parameters,
+      std::string_view path) {
+    const auto parameter = parameters.find(key.data());
+    if (parameter == parameters.end()) return false;
+
+    const auto parameter_path = std::format("{}.{}", path, key.data());
+    try {
+      parameter->second->set_from_toml(table, key.data());
+    } catch (const std::exception& error) {
+      throw std::runtime_error(std::format("Failed to read value for {}. {}",
+                                           parameter_path, error.what()));
+    }
+    return true;
+  }
+
   void parse_parameter_table(
       const toml::table& table,
       const std::unordered_map<std::string, ConfigParameter*>& parameters,
       std::string_view path) {
     for (const auto& [key, value] : table) {
-      if (auto parameter = parameters.find(key.data());
-          parameter != parameters.end()) {
-        parameter->second->set_from_toml(table, key.data());
-      } else {
+      if (!parse_indexed_parameter(table, key, parameters, path)) {
         throw std::runtime_error(
-            std::format("Unknown parameter in [{}]: {}.", path, key.data()));
+            std::format("Unknown parameter: {}.{}.", path, key.data()));
       }
     }
   }
@@ -1438,15 +1464,14 @@ struct RooferConfigHandler {
 
     for (const auto& [key, value] : table) {
       if (key == "polygon-source") {
-        get_toml_value(table, "polygon-source", cfg_.source_footprints);
+        get_toml_value(table, "polygon-source", cfg_.source_footprints,
+                       "input.polygon-source");
       } else if (key == "pointclouds") {
         continue;
-      } else if (auto parameter = input_param_index_.find(key.data());
-                 parameter != input_param_index_.end()) {
-        parameter->second->set_from_toml(table, key.data());
-      } else {
+      } else if (!parse_indexed_parameter(table, key, input_param_index_,
+                                          "input")) {
         throw std::runtime_error(
-            std::format("Unknown parameter in [input]: {}.", key.data()));
+            std::format("Unknown parameter: input.{}.", key.data()));
       }
     }
   }
@@ -1454,19 +1479,18 @@ struct RooferConfigHandler {
   void parse_output_table(const toml::table& table) {
     for (const auto& [key, value] : table) {
       if (key == "output-directory") {
-        get_toml_value(table, "output-directory", cfg_.output_path);
+        get_toml_value(table, "output-directory", cfg_.output_path,
+                       "output.output-directory");
       } else if (key == "attributes") {
         const auto* attributes = value.as_table();
         if (!attributes) {
           throw std::runtime_error("output.attributes must be a table.");
         }
         parse_output_attributes(*attributes, "output.attributes");
-      } else if (auto parameter = output_param_index_.find(key.data());
-                 parameter != output_param_index_.end()) {
-        parameter->second->set_from_toml(table, key.data());
-      } else {
+      } else if (!parse_indexed_parameter(table, key, output_param_index_,
+                                          "output")) {
         throw std::runtime_error(
-            std::format("Unknown parameter in [output]: {}.", key.data()));
+            std::format("Unknown parameter: output.{}.", key.data()));
       }
     }
   }

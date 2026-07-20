@@ -147,6 +147,56 @@ success = "canonical_success"
   CHECK(handler.input_pointclouds_.front().quality == 2);
 }
 
+TEST_CASE("sectioned app configuration errors contain complete dotted paths") {
+  SECTION("input value") {
+    TemporaryConfig file("[input]\npolygon-source = 42\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        handler.parse_config_file(),
+        Catch::Matchers::ContainsSubstring("input.polygon-source"));
+  }
+
+  SECTION("pointcloud value") {
+    TemporaryConfig file(R"(
+[[input.pointclouds]]
+source = ["input.laz"]
+quality = "high"
+)");
+    RooferConfigHandler handler;
+    handler._skip_pc_check = true;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        handler.parse_config_file(),
+        Catch::Matchers::ContainsSubstring("input.pointclouds.quality"));
+  }
+
+  SECTION("crop parameter") {
+    TemporaryConfig file("[crop]\ncellsize = \"small\"\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(handler.parse_config_file(),
+                      Catch::Matchers::ContainsSubstring("crop.cellsize"));
+  }
+
+  SECTION("output array parameter") {
+    TemporaryConfig file("[output]\ntilesize = \"large\"\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(handler.parse_config_file(),
+                      Catch::Matchers::ContainsSubstring("output.tilesize"));
+  }
+
+  SECTION("output attribute") {
+    TemporaryConfig file("[output.attributes]\nsuccess = false\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        handler.parse_config_file(),
+        Catch::Matchers::ContainsSubstring("output.attributes.success"));
+  }
+}
+
 TEST_CASE("nested reconstruction TOML errors contain complete dotted paths") {
   SECTION("unknown field") {
     TemporaryConfig file(R"(
