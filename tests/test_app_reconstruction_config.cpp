@@ -104,6 +104,49 @@ TEST_CASE("global unit-scale is accepted as a CLI parameter") {
   CHECK(arguments.args.empty());
 }
 
+TEST_CASE("sectioned app configuration overrides deprecated root keys") {
+  TemporaryConfig file(R"(
+polygon-source = "legacy.gpkg"
+unit-scale = 1.0
+cellsize = 1.0
+output-directory = "legacy-output"
+pointclouds = [{ name = "legacy", source = ["legacy.laz"] }]
+
+[output-attributes]
+success = "legacy_success"
+
+[input]
+polygon-source = "canonical.gpkg"
+unit-scale = 0.3048
+pointclouds = [{ name = "canonical", source = ["canonical.laz"], quality = 2 }]
+
+[crop]
+cellsize = 0.25
+
+[output]
+output-directory = "canonical-output"
+tilesize = [64, 32]
+
+[output.attributes]
+success = "canonical_success"
+)");
+
+  RooferConfigHandler handler;
+  handler._skip_pc_check = true;
+  handler._config_path = file.string();
+  handler.parse_config_file();
+
+  CHECK(handler.cfg_.source_footprints == "canonical.gpkg");
+  CHECK(handler.cfg_.unit_scale == Catch::Approx(0.3048F));
+  CHECK(handler.cfg_.cellsize == Catch::Approx(0.25F));
+  CHECK(handler.cfg_.output_path == "canonical-output");
+  CHECK(handler.cfg_.tilesize == roofer::arr2f{64.0F, 32.0F});
+  CHECK(handler.cfg_.a_success == "canonical_success");
+  REQUIRE(handler.input_pointclouds_.size() == 1);
+  CHECK(handler.input_pointclouds_.front().name == "canonical");
+  CHECK(handler.input_pointclouds_.front().quality == 2);
+}
+
 TEST_CASE("nested reconstruction TOML errors contain complete dotted paths") {
   SECTION("unknown field") {
     TemporaryConfig file(R"(
