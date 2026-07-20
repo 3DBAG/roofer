@@ -359,6 +359,15 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </dd></dl>
 
 </section>
+<section id="global-options">
+<h3>Global options<a class="headerlink" href="#global-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-unit-scale">
+<span class="sig-name descname"><span class="pre">--unit-scale</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">1)</span></span><a class="headerlink" href="#cmdoption-unit-scale" title="Link to this definition">¶</a></dt>
+<dd><p>Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use <code class="docutils literal notranslate"><span class="pre">0.3048</span></code>.</p>
+</dd></dl>
+
+</section>
 <section id="input-options">
 <h3>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h3>
 <dl class="std option">
@@ -406,7 +415,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-box">
 <span class="sig-name descname"><span class="pre">--box</span></span><span class="sig-prename descclassname"> <span class="pre">(xmin</span> <span class="pre">ymin</span> <span class="pre">xmax</span> <span class="pre">ymax)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-box" title="Link to this definition">¶</a></dt>
-<dd><p>Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.</p>
+<dd><p>Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored. Coordinates are in the input data’s coordinate units and are not affected by <code class="docutils literal notranslate"><span class="pre">unit-scale</span></code>.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -445,13 +454,13 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ceil-point-density">
 <span class="sig-name descname"><span class="pre">--ceil-point-density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">20)</span></span><a class="headerlink" href="#cmdoption-ceil-point-density" title="Link to this definition">¶</a></dt>
-<dd><p>Enforce this point density ceiling on each building pointcloud.</p>
+<dd><p>Enforce this point density ceiling (points per square metre) on each building pointcloud.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cellsize">
 <span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
-<dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</p>
+<dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions), in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -469,7 +478,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-terrain-grid-cellsize">
 <span class="sig-name descname"><span class="pre">--terrain-grid-cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">10)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-cellsize" title="Link to this definition">¶</a></dt>
-<dd><p>Cellsize used for the crop phase terrain fallback grid.</p>
+<dd><p>Cellsize used for the crop phase terrain fallback grid, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -487,7 +496,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod11-fallback-area">
 <span class="sig-name descname"><span class="pre">--lod11-fallback-area</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">69000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-area" title="Link to this definition">¶</a></dt>
-<dd><p>LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</p>
+<dd><p>LoD 1.1 fallback threshold area in square metres. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -538,67 +547,73 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod12">
 <span class="sig-name descname"><span class="pre">--[no-]lod12</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod12" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 1.2 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 1.2 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod13">
 <span class="sig-name descname"><span class="pre">--[no-]lod13</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod13" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 1.3 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 1.3 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod22">
 <span class="sig-name descname"><span class="pre">--[no-]lod22</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-lod22" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 2.2 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 2.2 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-complexity-factor">
 <span class="sig-name descname"><span class="pre">--complexity-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.888)</span></span><a class="headerlink" href="#cmdoption-complexity-factor" title="Link to this definition">¶</a></dt>
-<dd><p>Complexity factor for building model geometry. A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.</p>
+<dd><p>Balance between data fidelity (1) and smoothness (0).</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-clip-terrain">
 <span class="sig-name descname"><span class="pre">--[no-]clip-terrain</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-clip-terrain" title="Link to this definition">¶</a></dt>
-<dd><p>Set to true to activate the procedure that clips parts from the input roofprint wherever patches of ground points are detected.May cause irregular outlines in reconstruction result.</p>
+<dd><p>Clip roofprints where patches of terrain points are detected.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod13-step-height">
 <span class="sig-name descname"><span class="pre">--lod13-step-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">3)</span></span><a class="headerlink" href="#cmdoption-lod13-step-height" title="Link to this definition">¶</a></dt>
-<dd><p>Step height in meters, used for LoD 1.3 generalisation.Adjacent roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 geometry.</p>
+<dd><p>Maximum step height dissolved during LoD 1.3 generalisation, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-k">
 <span class="sig-name descname"><span class="pre">--plane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-k" title="Link to this definition">¶</a></dt>
-<dd><p>Number of points used in nearest neighbour queries for plane detection. Higher values will lead to longer processing times, but may help with growing plane regions through areas with a poor point distribution.</p>
+<dd><p>Neighbours used to grow planes.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-min-points">
 <span class="sig-name descname"><span class="pre">--plane-detect-min-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-min-points" title="Link to this definition">¶</a></dt>
-<dd><p>Minimum number of points required for detecting a plane in the pointcloud.</p>
+<dd><p>Minimum points in a detected plane.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-epsilon">
 <span class="sig-name descname"><span class="pre">--plane-detect-epsilon</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.3)</span></span><a class="headerlink" href="#cmdoption-plane-detect-epsilon" title="Link to this definition">¶</a></dt>
-<dd><p>Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.</p>
+<dd><p>Maximum plane fitting distance, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
 <span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
-<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: use the same buffered pointcloud value, then fall back to <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum. <code class="docutils literal notranslate"><span class="pre">user</span></code>: use <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum.</p>
+<dd><p>Terrain elevation selection strategy.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod11-fallback-planes">
 <span class="sig-name descname"><span class="pre">--lod11-fallback-planes</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">900)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-planes" title="Link to this definition">¶</a></dt>
-<dd><p>Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.</p>
+<dd><p>Maximum detected planes before aborting.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod11-fallback-time">
+<span class="sig-name descname"><span class="pre">--lod11-fallback-time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">1800000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-time" title="Link to this definition">¶</a></dt>
+<dd><p>Deprecated and ignored. Wall-clock reconstruction limits were removed because they are nondeterministic; use max-plane-count under [reconstruction.plane-detector] instead.</p>
 </dd></dl>
 
 </section>
@@ -613,7 +628,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-tilesize">
 <span class="sig-name descname"><span class="pre">--tilesize</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y)</span> <span class="pre">(default:</span> <span class="pre">[1000,1000])</span></span><a class="headerlink" href="#cmdoption-tilesize" title="Link to this definition">¶</a></dt>
-<dd><p>Tilesize for rectangular output tiles in meters.</p>
+<dd><p>Tilesize for rectangular output tiles, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -636,14 +651,14 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cj-scale">
-<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">[0.001,0.001,0.001])</span></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
-<dd><p>Scaling applied to CityJSON output vertices</p>
+<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">[1e-04,1e-04,1e-04])</span></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
+<dd><p>CityJSON output vertex precision, in input map units.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cj-translate">
 <span class="sig-name descname"><span class="pre">--cj-translate</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-cj-translate" title="Link to this definition">¶</a></dt>
-<dd><p>Translation applied to CityJSON output vertices. Uses dataset center by default.</p>
+<dd><p>Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -745,7 +760,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-nodata_r">
 <span class="sig-name descname"><span class="pre">nodata_r</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_nodata_r)</span></span><a class="headerlink" href="#cmdoption-arg-nodata_r" title="Link to this definition">¶</a></dt>
-<dd><p>Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data</p>
+<dd><p>Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data, in input map units</p>
 </dd></dl>
 
 <dl class="std option">
@@ -775,7 +790,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-pt_density">
 <span class="sig-name descname"><span class="pre">pt_density</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_pt_density)</span></span><a class="headerlink" href="#cmdoption-arg-pt_density" title="Link to this definition">¶</a></dt>
-<dd><p>Indicates the point density inside the roofprint</p>
+<dd><p>Indicates the point density inside the roofprint, in points per square input map unit</p>
 </dd></dl>
 
 <dl class="std option">
@@ -787,19 +802,19 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-rmse_lod12">
 <span class="sig-name descname"><span class="pre">rmse_lod12</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod12)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod12" title="Link to this definition">¶</a></dt>
-<dd><p>The Root Mean Square Erorr of the LOD12 geometry</p>
+<dd><p>The Root Mean Square Erorr of the LOD12 geometry, in input map units</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-rmse_lod13">
 <span class="sig-name descname"><span class="pre">rmse_lod13</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod13)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod13" title="Link to this definition">¶</a></dt>
-<dd><p>The Root Mean Square Erorr of the LOD13 geometry</p>
+<dd><p>The Root Mean Square Erorr of the LOD13 geometry, in input map units</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-rmse_lod22">
 <span class="sig-name descname"><span class="pre">rmse_lod22</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_rmse_lod22)</span></span><a class="headerlink" href="#cmdoption-arg-rmse_lod22" title="Link to this definition">¶</a></dt>
-<dd><p>The Root Mean Square Erorr of the LOD22 geometry</p>
+<dd><p>The Root Mean Square Erorr of the LOD22 geometry, in input map units</p>
 </dd></dl>
 
 <dl class="std option">
@@ -853,30 +868,34 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-volume_lod12">
 <span class="sig-name descname"><span class="pre">volume_lod12</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod12)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod12" title="Link to this definition">¶</a></dt>
-<dd><p>The volume in cubic meters of the LoD 1.2 geometry</p>
+<dd><p>The volume of the LoD 1.2 geometry, in cubic input map units</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-volume_lod13">
 <span class="sig-name descname"><span class="pre">volume_lod13</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod13)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod13" title="Link to this definition">¶</a></dt>
-<dd><p>The volume in cubic meters of the LoD 1.3 geometry</p>
+<dd><p>The volume of the LoD 1.3 geometry, in cubic input map units</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-volume_lod22">
 <span class="sig-name descname"><span class="pre">volume_lod22</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-arg-volume_lod22" title="Link to this definition">¶</a></dt>
-<dd><p>The volume in cubic meters of the LoD 2.2 geometry</p>
+<dd><p>The volume of the LoD 2.2 geometry, in cubic input map units</p>
 </dd></dl>
 
 </section>
 </section>
-<section id="example-config-file">
-<h2>Example config file<a class="headerlink" href="#example-config-file" title="Link to this heading">¶</a></h2>
-<p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Noticed that these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
+<section id="config-file">
+<h2>Config file<a class="headerlink" href="#config-file" title="Link to this heading">¶</a></h2>
+<p>Below is an example of a <a class="reference external" href="https://toml.io/en/">TOML</a> configuration file for the <strong class="program">roofer</strong> CLI application. It shows all the available options. Some of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1">## Path to roofprint polygons source. Can be an OGR supported file (eg. GPKG) or database connection string.</span>
 <span class="c1"># polygon-source = &quot;&quot;</span>
 <span class="c1">## Output directory. The building models will be written to a CityJSONSequence file in this directory.</span>
 <span class="c1"># output-directory = &quot;&quot;</span>
+
+<span class="c1">### Global options</span>
+<span class="c1">## Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use `0.3048`.</span>
+<span class="n">unit-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
 
 <span class="c1">### Input options</span>
 <span class="c1">## Building ID attribute to be used as identifier in CityJSONSeq output.</span>
@@ -893,7 +912,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1"># polygon-source-layer = </span>
 <span class="c1">## Specify WHERE clause in OGR SQL to select specfic features from `&lt;polygon-source&gt;`. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where</span>
 <span class="c1"># filter = </span>
-<span class="c1">## Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.</span>
+<span class="c1">## Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored. Coordinates are in the input data&#39;s coordinate units and are not affected by `unit-scale`.</span>
 <span class="c1"># box = [100, 100, 200, 200]</span>
 <span class="c1">## Manually set or override Spatial Reference System for input data.</span>
 <span class="c1"># srs = &quot;EPSG:7415&quot;</span>
@@ -907,21 +926,21 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1">### Crop options</span>
 <span class="c1">## Simplify input rootprints to remove (nearly) duplicated vertices.</span>
 <span class="n">simplify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1">## Enforce this point density ceiling on each building pointcloud.</span>
+<span class="c1">## Enforce this point density ceiling (points per square metre) on each building pointcloud.</span>
 <span class="n">ceil-point-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
-<span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</span>
+<span class="c1">## Cellsize used for quick pointcloud analysis (eg. point density and nodata regions), in metres.</span>
 <span class="n">cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
 <span class="c1">## Minimum building-class point density (points/m²) below which a rootprint&#39;s pointcloud is flagged insufficient.</span>
 <span class="n">min-building-density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
 <span class="c1">## Maximum fraction of the roofprint area without pointcloud data. Above this threshold, a rootprint&#39;s pointcloud is flagged insufficient.</span>
 <span class="n">max-nodata-fraction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
-<span class="c1">## Cellsize used for the crop phase terrain fallback grid.</span>
+<span class="c1">## Cellsize used for the crop phase terrain fallback grid, in metres.</span>
 <span class="n">terrain-grid-cellsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
 <span class="c1">## Number of terrain grid cells to search around a building when its local fallback cells do not contain terrain points.</span>
 <span class="n">terrain-grid-search-radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
 <span class="c1">## How missing terrain grid samples are handled during output triangulation: `complete_quads`, `local_triangles`, or `fill_small_gaps`.</span>
 <span class="n">terrain-nodata-mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;fill_small_gaps&quot;</span>
-<span class="c1">## LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</span>
+<span class="c1">## LoD 1.1 fallback threshold area in square metres. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</span>
 <span class="n">lod11-fallback-area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">69000</span>
 <span class="c1">## Do not attempt to reconstruct buildings with insufficient pointcloud data. If `--h-roof-attribute` is set, an LoD 1.1 extrusion will be performed, otherwise no 3D model will be generated.</span>
 <span class="n">clear-insufficient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
@@ -938,34 +957,10 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1">## Output index.gpkg file with quick pointcloud analystics from crop phase.</span>
 <span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
-<span class="c1">### Reconstruction options</span>
-<span class="c1">## Generate LoD 1.2 geometries in CityJSONSeq output.</span>
-<span class="n">lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Generate LoD 1.3 geometries in CityJSONSeq output.</span>
-<span class="n">lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Generate LoD 2.2 geometries in CityJSONSeq output.</span>
-<span class="n">lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1">## Complexity factor for building model geometry. A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.</span>
-<span class="n">complexity-factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.888</span>
-<span class="c1">## Set to true to activate the procedure that clips parts from the input roofprint wherever patches of ground points are detected.May cause irregular outlines in reconstruction result.</span>
-<span class="n">clip-terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1">## Step height in meters, used for LoD 1.3 generalisation.Adjacent roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 geometry.</span>
-<span class="n">lod13-step-height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
-<span class="c1">## Number of points used in nearest neighbour queries for plane detection. Higher values will lead to longer processing times, but may help with growing plane regions through areas with a poor point distribution.</span>
-<span class="n">plane-detect-k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
-<span class="c1">## Minimum number of points required for detecting a plane in the pointcloud.</span>
-<span class="n">plane-detect-min-points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
-<span class="c1">## Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.</span>
-<span class="n">plane-detect-epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span>
-<span class="c1">## Strategy to determine terrain elevation that is used to set the height of building floors. `buffer_tile`: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. `buffer_user`: use the same buffered pointcloud value, then fall back to `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum. `user`: use `--h-terrain-attribute`, then the local terrain grid minimum, then the tile minimum.</span>
-<span class="c1"># h-terrain-strategy = &quot;buffer_tile&quot;</span>
-<span class="c1">## Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.</span>
-<span class="n">lod11-fallback-planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">900</span>
-
 <span class="c1">### Output options</span>
 <span class="c1">## Enable or disable output tiling.</span>
 <span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Tilesize for rectangular output tiles in meters.</span>
+<span class="c1">## Tilesize for rectangular output tiles, in metres.</span>
 <span class="n">tilesize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">]</span>
 <span class="c1">## Output CityJSONSequence file for each building instead of one file per tile.</span>
 <span class="n">split-cjseq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
@@ -973,9 +968,9 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">omit-metadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1">## Write one triangulated TINRelief feature per tile from the highest-quality pointcloud source.</span>
 <span class="n">terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<span class="c1">## Scaling applied to CityJSON output vertices</span>
-<span class="n">cj-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.001</span><span class="p">]</span>
-<span class="c1">## Translation applied to CityJSON output vertices. Uses dataset center by default.</span>
+<span class="c1">## CityJSON output vertex precision, in input map units.</span>
+<span class="n">cj-scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">,</span><span class="mf">1e-04</span><span class="p">]</span>
+<span class="c1">## Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.</span>
 <span class="c1"># cj-translate = [100000, 200000, 0]</span>
 <span class="c1">## Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.</span>
 
@@ -1006,7 +1001,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">is_mutated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_mutated&quot;</span>
 <span class="c1">## Indicates fraction (in the range [0,1]) of the roofprint area that is not covered by pointcloud data</span>
 <span class="n">nodata_frac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_frac&quot;</span>
-<span class="c1">## Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data</span>
+<span class="c1">## Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data, in input map units</span>
 <span class="n">nodata_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_nodata_r&quot;</span>
 <span class="c1">## Indicates why the input pointcloud was selected for reconstruction. Only relevant if multiple input pointclouds were provided</span>
 <span class="n">pc_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_select&quot;</span>
@@ -1016,15 +1011,15 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">pc_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pc_year&quot;</span>
 <span class="c1">## Indicates if the pointcloud was found to be insufficient for reconstruction</span>
 <span class="n">pointcloud_unusable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pointcloud_unusable&quot;</span>
-<span class="c1">## Indicates the point density inside the roofprint</span>
+<span class="c1">## Indicates the point density inside the roofprint, in points per square input map unit</span>
 <span class="n">pt_density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_pt_density&quot;</span>
 <span class="c1">## Reconstruction time in milliseconds</span>
 <span class="n">reconstruction_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_t_run&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD12 geometry</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD12 geometry, in input map units</span>
 <span class="n">rmse_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod12&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD13 geometry</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD13 geometry, in input map units</span>
 <span class="n">rmse_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod13&quot;</span>
-<span class="c1">## The Root Mean Square Erorr of the LOD22 geometry</span>
+<span class="c1">## The Root Mean Square Erorr of the LOD22 geometry, in input map units</span>
 <span class="n">rmse_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_rmse_lod22&quot;</span>
 <span class="c1">## The number of roofplanes detected in the pointcloud (could be different from the generated mesh model)</span>
 <span class="n">roof_n_planes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_roof_planes&quot;</span>
@@ -1042,12 +1037,143 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">val3dity_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod13&quot;</span>
 <span class="c1">## Lists val3dity codes for LoD 2.2 geometry</span>
 <span class="n">val3dity_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_val3dity_lod22&quot;</span>
-<span class="c1">## The volume in cubic meters of the LoD 1.2 geometry</span>
+<span class="c1">## The volume of the LoD 1.2 geometry, in cubic input map units</span>
 <span class="n">volume_lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod12&quot;</span>
-<span class="c1">## The volume in cubic meters of the LoD 1.3 geometry</span>
+<span class="c1">## The volume of the LoD 1.3 geometry, in cubic input map units</span>
 <span class="n">volume_lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod13&quot;</span>
-<span class="c1">## The volume in cubic meters of the LoD 2.2 geometry</span>
+<span class="c1">## The volume of the LoD 2.2 geometry, in cubic input map units</span>
 <span class="n">volume_lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_volume_lod22&quot;</span>
+
+<span class="c1">### Reconstruction options</span>
+<span class="k">[reconstruction]</span>
+<span class="c1">## Generate LoD 1.2 geometry.</span>
+<span class="n">lod12</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Generate LoD 1.3 geometry.</span>
+<span class="n">lod13</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Generate LoD 2.2 geometry.</span>
+<span class="n">lod22</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Clip roofprints where patches of terrain points are detected.</span>
+<span class="n">clip-terrain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Maximum step height dissolved during LoD 1.3 generalisation, in metres.</span>
+<span class="n">lod13-step-height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="c1">## Terrain elevation selection strategy.</span>
+<span class="n">h-terrain-strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;buffer_tile&quot;</span>
+
+<span class="k">[reconstruction.plane-detector]</span>
+<span class="c1">## Neighbours used to estimate normals.</span>
+<span class="n">normal-neighbour-count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="c1">## Neighbours used to grow planes.</span>
+<span class="n">plane-neighbour-count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
+<span class="c1">## Minimum points in a detected plane.</span>
+<span class="n">min-plane-points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span>
+<span class="c1">## Maximum plane fitting distance, in metres.</span>
+<span class="n">plane-epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span>
+<span class="c1">## Maximum angle between normals within a plane, in degrees.</span>
+<span class="n">normal-angle-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">41.409622</span>
+<span class="c1">## Maximum plane angle from horizontal for horizontal planes, in degrees.</span>
+<span class="n">horizontal-angle-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.731968</span>
+<span class="c1">## Minimum plane angle from horizontal for wall planes, in degrees.</span>
+<span class="n">wall-angle-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">72.5424</span>
+<span class="c1">## Plane refit interval.</span>
+<span class="n">refit-interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="c1">## Maximum plane regularisation angle, in degrees.</span>
+<span class="n">maximum-angle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">25</span>
+<span class="c1">## Maximum plane regularisation offset, in metres.</span>
+<span class="n">maximum-offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="c1">## Regularise parallel planes.</span>
+<span class="n">regularise-parallelism</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Regularise orthogonal planes.</span>
+<span class="n">regularise-orthogonality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Regularise coplanar planes.</span>
+<span class="n">regularise-coplanarity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Regularise plane symmetry.</span>
+<span class="n">regularise-axis-symmetry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Maximum detected planes before aborting.</span>
+<span class="n">max-plane-count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">900</span>
+
+<span class="k">[reconstruction.alpha-shaper]</span>
+<span class="c1">## Alpha-shape squared-radius parameter, in square metres.</span>
+<span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span>
+<span class="c1">## Autoselect alpha for 1 connected component.</span>
+<span class="n">optimal-alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Clamp the optimal alpha to at least the configured alpha value.</span>
+<span class="n">clamp-optimal-alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[reconstruction.line-detector]</span>
+<span class="c1">## Maximum line fitting distance, in metres.</span>
+<span class="n">distance-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="c1">## Minimum point-count range.</span>
+<span class="n">min-point-count-range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">]</span>
+<span class="c1">## Neighbours used for line detection.</span>
+<span class="n">neighbour-count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<span class="c1">## Line endpoint snapping distance, in metres.</span>
+<span class="n">snap-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="c1">## Line extension distance, in metres.</span>
+<span class="n">extension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.05</span>
+<span class="c1">## Chain connected lines.</span>
+<span class="n">perform-chaining</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Remove overlapping lines.</span>
+<span class="n">remove-overlap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[reconstruction.plane-intersector]</span>
+<span class="c1">## Minimum number of neighbouring plane points.</span>
+<span class="n">min-neighbour-points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="c1">## Maximum distance from plane points to the intersection line, in metres.</span>
+<span class="n">distance-to-line-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="c1">## Minimum intersection length, in metres.</span>
+<span class="n">min-length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1">## Intersection horizontality threshold for ridgeline detection, in degrees.</span>
+<span class="n">horizontality-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="k">[reconstruction.line-regulariser]</span>
+<span class="c1">## Line merge distance, in metres.</span>
+<span class="n">distance-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span>
+<span class="c1">## Line merge angle threshold, in degrees.</span>
+<span class="n">angle-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">8.594367</span>
+<span class="c1">## Regularised line extension, in metres.</span>
+<span class="n">extension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="c1">## Merge plane intersection lines.</span>
+<span class="n">merge-intersection-lines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[reconstruction.segment-rasteriser]</span>
+<span class="c1">## Raster cell size, in metres.</span>
+<span class="n">cell-size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.05</span>
+<span class="c1">## Maximum raster size in megapixels.</span>
+<span class="n">megapixel-limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span>
+<span class="c1">## Fill nodata cells.</span>
+<span class="n">fill-nodata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Nodata filling window size, in raster cells.</span>
+<span class="n">fill-nodata-window-size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="k">[reconstruction.arrangement-builder]</span>
+<span class="c1">## Footprint extension distance, in metres.</span>
+<span class="n">footprint-extension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="k">[reconstruction.arrangement-optimiser]</span>
+<span class="c1">## Balance between data fidelity (1) and smoothness (0).</span>
+<span class="n">complexity-factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.888</span>
+
+<span class="k">[reconstruction.arrangement-snapper]</span>
+<span class="c1">## Vertex snapping distance, in metres.</span>
+<span class="n">distance-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.021</span>
+<span class="c1">## Repair non-manifold vertices.</span>
+<span class="n">repair-non-manifold-vertices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Non-manifold repair radius, in metres.</span>
+<span class="n">manifold-repair-radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.02</span>
+<span class="c1">## Non-manifold height tolerance, in metres.</span>
+<span class="n">manifold-height-tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-04</span>
+
+<span class="k">[reconstruction.arrangement-extruder]</span>
+<span class="c1">## Generate walls.</span>
+<span class="n">generate-walls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Generate roofs.</span>
+<span class="n">generate-roofs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Generate floors.</span>
+<span class="n">generate-floor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Extrude LoD 1 to maximum roof height instead of 70th percentile.</span>
+<span class="n">lod1-extrude-to-max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1">## Snap tolerance, in metres.</span>
+<span class="n">snap-tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.001258925</span>
 
 <span class="k">[[pointclouds]]</span>
 <span class="c1">## Name of the pointcloud</span>
@@ -1138,6 +1264,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#positional-arguments">Positional arguments</a></li>
 <li><a class="reference internal" href="#general-options">General options</a></li>
+<li><a class="reference internal" href="#global-options">Global options</a></li>
 <li><a class="reference internal" href="#input-options">Input options</a></li>
 <li><a class="reference internal" href="#crop-options">Crop options</a></li>
 <li><a class="reference internal" href="#reconstruction-options">Reconstruction options</a></li>
@@ -1148,7 +1275,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <li><a class="reference internal" href="#output-attributes">Output attributes</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#example-config-file">Example config file</a></li>
+<li><a class="reference internal" href="#config-file">Config file</a></li>
 </ul>
 </li>
 </ul>

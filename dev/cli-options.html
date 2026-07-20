@@ -306,6 +306,15 @@
 </dd></dl>
 
 </section>
+<section id="global-options">
+<h1>Global options<a class="headerlink" href="#global-options" title="Link to this heading">¶</a></h1>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-unit-scale">
+<span class="sig-name descname"><span class="pre">--unit-scale</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">1)</span></span><a class="headerlink" href="#cmdoption-unit-scale" title="Link to this definition">¶</a></dt>
+<dd><p>Metres per input coordinate unit. All metre-based reconstruction, crop, and output parameters are converted to input coordinate units using this factor. For feet, use <code class="docutils literal notranslate"><span class="pre">0.3048</span></code>.</p>
+</dd></dl>
+
+</section>
 <section id="input-options">
 <h1>Input options<a class="headerlink" href="#input-options" title="Link to this heading">¶</a></h1>
 <dl class="std option">
@@ -353,7 +362,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-box">
 <span class="sig-name descname"><span class="pre">--box</span></span><span class="sig-prename descclassname"> <span class="pre">(xmin</span> <span class="pre">ymin</span> <span class="pre">xmax</span> <span class="pre">ymax)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-box" title="Link to this definition">¶</a></dt>
-<dd><p>Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored.</p>
+<dd><p>Axis aligned bounding box specifying the region of interest. Data outside of this region will be ignored. Coordinates are in the input data’s coordinate units and are not affected by <code class="docutils literal notranslate"><span class="pre">unit-scale</span></code>.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -392,13 +401,13 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ceil-point-density">
 <span class="sig-name descname"><span class="pre">--ceil-point-density</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">20)</span></span><a class="headerlink" href="#cmdoption-ceil-point-density" title="Link to this definition">¶</a></dt>
-<dd><p>Enforce this point density ceiling on each building pointcloud.</p>
+<dd><p>Enforce this point density ceiling (points per square metre) on each building pointcloud.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cellsize">
 <span class="sig-name descname"><span class="pre">--cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.5)</span></span><a class="headerlink" href="#cmdoption-cellsize" title="Link to this definition">¶</a></dt>
-<dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions).</p>
+<dd><p>Cellsize used for quick pointcloud analysis (eg. point density and nodata regions), in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -416,7 +425,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-terrain-grid-cellsize">
 <span class="sig-name descname"><span class="pre">--terrain-grid-cellsize</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">10)</span></span><a class="headerlink" href="#cmdoption-terrain-grid-cellsize" title="Link to this definition">¶</a></dt>
-<dd><p>Cellsize used for the crop phase terrain fallback grid.</p>
+<dd><p>Cellsize used for the crop phase terrain fallback grid, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -434,7 +443,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod11-fallback-area">
 <span class="sig-name descname"><span class="pre">--lod11-fallback-area</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">69000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-area" title="Link to this definition">¶</a></dt>
-<dd><p>LoD 1.1 fallback threshold area in square meters. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</p>
+<dd><p>LoD 1.1 fallback threshold area in square metres. If the area of the roofprint is larger than this value, the building will be always be reconstructed using a LoD 1.1 extrusion.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -485,67 +494,73 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod12">
 <span class="sig-name descname"><span class="pre">--[no-]lod12</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod12" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 1.2 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 1.2 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod13">
 <span class="sig-name descname"><span class="pre">--[no-]lod13</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">false)</span></span><a class="headerlink" href="#cmdoption-no-lod13" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 1.3 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 1.3 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-lod22">
 <span class="sig-name descname"><span class="pre">--[no-]lod22</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-lod22" title="Link to this definition">¶</a></dt>
-<dd><p>Generate LoD 2.2 geometries in CityJSONSeq output.</p>
+<dd><p>Generate LoD 2.2 geometry.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-complexity-factor">
 <span class="sig-name descname"><span class="pre">--complexity-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.888)</span></span><a class="headerlink" href="#cmdoption-complexity-factor" title="Link to this definition">¶</a></dt>
-<dd><p>Complexity factor for building model geometry. A number between 0.0 and 1.0. Higher values lead to more detailed building models, lower values to simpler models.</p>
+<dd><p>Balance between data fidelity (1) and smoothness (0).</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-no-clip-terrain">
 <span class="sig-name descname"><span class="pre">--[no-]clip-terrain</span></span><span class="sig-prename descclassname">&#160; <span class="pre">(default:</span> <span class="pre">true)</span></span><a class="headerlink" href="#cmdoption-no-clip-terrain" title="Link to this definition">¶</a></dt>
-<dd><p>Set to true to activate the procedure that clips parts from the input roofprint wherever patches of ground points are detected.May cause irregular outlines in reconstruction result.</p>
+<dd><p>Clip roofprints where patches of terrain points are detected.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod13-step-height">
 <span class="sig-name descname"><span class="pre">--lod13-step-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">3)</span></span><a class="headerlink" href="#cmdoption-lod13-step-height" title="Link to this definition">¶</a></dt>
-<dd><p>Step height in meters, used for LoD 1.3 generalisation.Adjacent roofparts with a height discontinuity that is smaller than this value are merged. Only affects LoD 1.3 geometry.</p>
+<dd><p>Maximum step height dissolved during LoD 1.3 generalisation, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-k">
 <span class="sig-name descname"><span class="pre">--plane-detect-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-k" title="Link to this definition">¶</a></dt>
-<dd><p>Number of points used in nearest neighbour queries for plane detection. Higher values will lead to longer processing times, but may help with growing plane regions through areas with a poor point distribution.</p>
+<dd><p>Neighbours used to grow planes.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-min-points">
 <span class="sig-name descname"><span class="pre">--plane-detect-min-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">15)</span></span><a class="headerlink" href="#cmdoption-plane-detect-min-points" title="Link to this definition">¶</a></dt>
-<dd><p>Minimum number of points required for detecting a plane in the pointcloud.</p>
+<dd><p>Minimum points in a detected plane.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-plane-detect-epsilon">
 <span class="sig-name descname"><span class="pre">--plane-detect-epsilon</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0.3)</span></span><a class="headerlink" href="#cmdoption-plane-detect-epsilon" title="Link to this definition">¶</a></dt>
-<dd><p>Maximum distance (in meters) from inliers to plane during plane fitting procedure. Higher values offer more robustness against oversegmentation, but may result in less accurate plane detection.</p>
+<dd><p>Maximum plane fitting distance, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-h-terrain-strategy">
 <span class="sig-name descname"><span class="pre">--h-terrain-strategy</span></span><span class="sig-prename descclassname"> <span class="pre">(buffer_tile|buffer_user|user)</span> <span class="pre">(default:</span> <span class="pre">buffer_tile)</span></span><a class="headerlink" href="#cmdoption-h-terrain-strategy" title="Link to this definition">¶</a></dt>
-<dd><p>Strategy to determine terrain elevation that is used to set the height of building floors. <code class="docutils literal notranslate"><span class="pre">buffer_tile</span></code>: use the 5th percentile lowest elevation point in a 4 meter buffer around the roofprint. If no points are found, we fall back to the local terrain grid minimum. If no local terrain grid cells are found, we fall back to the lowest elevation point in the current tile. This may give undesired results for hilly areas. <code class="docutils literal notranslate"><span class="pre">buffer_user</span></code>: use the same buffered pointcloud value, then fall back to <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum. <code class="docutils literal notranslate"><span class="pre">user</span></code>: use <code class="docutils literal notranslate"><span class="pre">--h-terrain-attribute</span></code>, then the local terrain grid minimum, then the tile minimum.</p>
+<dd><p>Terrain elevation selection strategy.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-lod11-fallback-planes">
 <span class="sig-name descname"><span class="pre">--lod11-fallback-planes</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">900)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-planes" title="Link to this definition">¶</a></dt>
-<dd><p>Number of planes required for LoD 1.1 fallback. When more than this number of planes is detected, abort the reconstruction process and fallback to LoD 1.1 extrusion. This plane count is a deterministic complexity cutoff that bounds reconstruction time per building.</p>
+<dd><p>Maximum detected planes before aborting.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-lod11-fallback-time">
+<span class="sig-name descname"><span class="pre">--lod11-fallback-time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;int&gt;</span> <span class="pre">(default:</span> <span class="pre">1800000)</span></span><a class="headerlink" href="#cmdoption-lod11-fallback-time" title="Link to this definition">¶</a></dt>
+<dd><p>Deprecated and ignored. Wall-clock reconstruction limits were removed because they are nondeterministic; use max-plane-count under [reconstruction.plane-detector] instead.</p>
 </dd></dl>
 
 </section>
@@ -560,7 +575,7 @@
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-tilesize">
 <span class="sig-name descname"><span class="pre">--tilesize</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y)</span> <span class="pre">(default:</span> <span class="pre">[1000,1000])</span></span><a class="headerlink" href="#cmdoption-tilesize" title="Link to this definition">¶</a></dt>
-<dd><p>Tilesize for rectangular output tiles in meters.</p>
+<dd><p>Tilesize for rectangular output tiles, in metres.</p>
 </dd></dl>
 
 <dl class="std option">
@@ -583,14 +598,14 @@
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cj-scale">
-<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">[0.001,0.001,0.001])</span></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
-<dd><p>Scaling applied to CityJSON output vertices</p>
+<span class="sig-name descname"><span class="pre">--cj-scale</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">[1e-04,1e-04,1e-04])</span></span><a class="headerlink" href="#cmdoption-cj-scale" title="Link to this definition">¶</a></dt>
+<dd><p>CityJSON output vertex precision, in input map units.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-cj-translate">
 <span class="sig-name descname"><span class="pre">--cj-translate</span></span><span class="sig-prename descclassname"> <span class="pre">(x</span> <span class="pre">y</span> <span class="pre">z)</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-cj-translate" title="Link to this definition">¶</a></dt>
-<dd><p>Translation applied to CityJSON output vertices. Uses dataset center by default.</p>
+<dd><p>Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.</p>
 </dd></dl>
 
 <dl class="std option">

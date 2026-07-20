@@ -38,7 +38,7 @@ Indicates if the building was mutated between multiple input pointclouds (if mul
 Indicates fraction (in the range [0,1]) of the roofprint area that is not covered by pointcloud data
 ```
 ```{option} nodata_r (default name: rf_nodata_r)
-Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data
+Indicates the radius of the largest circle in the roofprint that is not covered by pointcloud data, in input map units
 ```
 ```{option} pc_select (default name: rf_pc_select)
 Indicates why the input pointcloud was selected for reconstruction. Only relevant if multiple input pointclouds were provided
@@ -53,19 +53,19 @@ Indicates the acquisition year of the selected input pointcloud
 Indicates if the pointcloud was found to be insufficient for reconstruction
 ```
 ```{option} pt_density (default name: rf_pt_density)
-Indicates the point density inside the roofprint
+Indicates the point density inside the roofprint, in points per square input map unit
 ```
 ```{option} reconstruction_time (default name: rf_t_run)
 Reconstruction time in milliseconds
 ```
 ```{option} rmse_lod12 (default name: rf_rmse_lod12)
-The Root Mean Square Erorr of the LOD12 geometry
+The Root Mean Square Erorr of the LOD12 geometry, in input map units
 ```
 ```{option} rmse_lod13 (default name: rf_rmse_lod13)
-The Root Mean Square Erorr of the LOD13 geometry
+The Root Mean Square Erorr of the LOD13 geometry, in input map units
 ```
 ```{option} rmse_lod22 (default name: rf_rmse_lod22)
-The Root Mean Square Erorr of the LOD22 geometry
+The Root Mean Square Erorr of the LOD22 geometry, in input map units
 ```
 ```{option} roof_n_planes (default name: rf_roof_planes)
 The number of roofplanes detected in the pointcloud (could be different from the generated mesh model)
@@ -92,11 +92,11 @@ Lists val3dity codes for LoD 1.3 geometry
 Lists val3dity codes for LoD 2.2 geometry
 ```
 ```{option} volume_lod12 (default name: rf_volume_lod12)
-The volume in cubic meters of the LoD 1.2 geometry
+The volume of the LoD 1.2 geometry, in cubic input map units
 ```
 ```{option} volume_lod13 (default name: rf_volume_lod13)
-The volume in cubic meters of the LoD 1.3 geometry
+The volume of the LoD 1.3 geometry, in cubic input map units
 ```
 ```{option} volume_lod22 (default name: rf_volume_lod22)
-The volume in cubic meters of the LoD 2.2 geometry
+The volume of the LoD 2.2 geometry, in cubic input map units
 ```
