@@ -39,6 +39,7 @@
 #include <string>
 #include <list>
 #include <filesystem>
+#include <sstream>
 #include <utility>
 #include "version.hpp"
 
@@ -456,7 +457,10 @@ struct RooferConfigHandler {
                 "jobs - 1 threads.",
                 _jobs, {roofer::config::greater_than(0)});
     general.add("config", 'c', "Configuration file", _config_path,
-                {check::PathExists, check::DirIsWritable});
+                {[](const std::string& path) -> std::optional<std::string> {
+                  if (path.empty()) return std::nullopt;
+                  return check::PathExists(path);
+                }});
     general.add("trace-interval", "Interval for tracing in seconds",
                 _trace_interval, {roofer::config::greater_than(0)});
     general.add("loglevel", "Specify loglevel", _loglevel);
@@ -866,21 +870,19 @@ struct RooferConfigHandler {
   };
 
   void validate() {
-    if (_jobs < 1) {
-      throw std::runtime_error(
-          "Validation error for jobs parameter. Value must be higher "
-          "than 0.");
-    }
-
-    for (auto& [group_name, group] : param_groups_) {
-      for (auto& param : group) {
-        if (auto error_msg = param->validate()) {
-          throw std::runtime_error(
-              std::format("Validation error for {} parameter {}. {}",
-                          group_name, param->longname_, *error_msg));
+    const auto validate_groups = [](param_group_map& groups) {
+      for (auto& [group_name, group] : groups) {
+        for (auto& parameter : group) {
+          if (auto error = parameter->validate()) {
+            throw std::runtime_error(
+                std::format("Validation error for {} parameter {}. {}",
+                            group_name, parameter->longname_, *error));
+          }
         }
       }
-    }
+    };
+    validate_groups(app_param_groups_);
+    validate_groups(param_groups_);
     if (auto error = cfg_.reconstruction.validate()) {
       throw std::runtime_error("Validation error for reconstruction." + *error);
     }
@@ -1240,7 +1242,7 @@ struct RooferConfigHandler {
       if (argname == "t" || argname == "trace-interval") {
         _loglevel = roofer::logger::LogLevel::trace;
       }
-      if (argname == "-c" || argname == "--config") {
+      if (argname == "c" || argname == "config") {
         if (auto error_msg = check::PathExists(_config_path)) {
           throw std::runtime_error(std::format(
               "Invalid argument for -c or --config. {}", *error_msg));
@@ -1276,9 +1278,14 @@ struct RooferConfigHandler {
       std::string arg = *it;
 
       try {
-        if (arg.starts_with("--no")) {
+        if (arg.starts_with("--no-")) {
           auto argname = arg.substr(5);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
+            if (!p->second->supports_negation()) {
+              throw std::runtime_error(std::format(
+                  "Option {} cannot negate non-boolean parameter {}.", arg,
+                  argname));
+            }
             warn_if_legacy(argname);
             it = c.args.erase(it);
             p->second->unset();
@@ -1500,8 +1507,13 @@ struct RooferConfigHandler {
     toml::table config;
     try {
       config = toml::parse_file(_config_path);
-    } catch (const std::exception& e) {
-      throw std::runtime_error(std::format("Syntax error."));
+    } catch (const toml::parse_error& error) {
+      std::ostringstream message;
+      message << error;
+      throw std::runtime_error("Failed to parse TOML. " + message.str());
+    } catch (const std::exception& error) {
+      throw std::runtime_error("Failed to read configuration file. " +
+                               std::string(error.what()));
     }
 
     // Parse root-level compatibility aliases first. Canonical section values
