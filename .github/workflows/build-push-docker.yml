@@ -30,7 +30,7 @@ jobs:
         run: echo "DOCKER_TAG=${{ github.ref_name }}" >> "$GITHUB_ENV"
 
       - name: Set immutable develop tag with commit hash
-        if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: echo "EXTRA_TAG=develop-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - name: Assemble image tags
