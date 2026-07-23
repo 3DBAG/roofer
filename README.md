@@ -8,7 +8,7 @@
 
 - It reconstructs a 3D building model from a pointcloud and a 2D roofprint polygon
 - It is a fully automated process, there is no manual modelling required.
-- It is possible to tweak the reconstruction parameters to adjust it a little to different input data qualities.
+- It is possible to tweak the reconstruction parameters to adjust it to different input data qualities.
 - It can output different Level of Details: LoD1.2, LoD1.3, LoD2.2. See [the refined Level of Details by the 3D geoinformation research group](https://3d.bk.tudelft.nl/lod/).
 - Usable either as a command line application or as a library with C++ and Python bindings.
 - With the CLI application the building models are outputted to a [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) file.
@@ -20,8 +20,8 @@ The source code is available at [https://github.com/3DBAG/roofer](https://github
 
 ## Origin
 
-The building reconstruction algorithms underpinning roofer were originally developed within the [3D geoinformation research group](https://3d.bk.tudelft.nl/) at the Technical University of Delft.
-From 2022 onwards, [3DGI](https://3dgi.nl), a spinoff company from the aforementioned research group, joined the development efforts.
+The building reconstruction algorithms that underpin roofer were originally developed within the [3D geoinformation research group](https://3d.bk.tudelft.nl/) at the Technical University of Delft.
+In 2022, the core developers of roofer founded [3DGI](https://3dgi.nl), a spin-off company from the same research group, and have continued the development of roofer through the company.
 
 This project has received funding from the European Research Council (ERC):
 - *2016-2022* under the European Unions Horizon2020 Research & Innovation Programme (grant agreement no. 677312 UMnD: Urban modelling in higher dimensions).
@@ -30,6 +30,12 @@ This project has received funding from the European Research Council (ERC):
 In *2024* this project has received funding from Kadaster, the Netherlands' Cadastre, Land Registry and Mapping Agency.
 
 Prior to 2024 the building reconstruction algorithms were developed as part of *Geoflow* and the *gfp-building-reconstruction plugin*. During the summer of 2024 the code was refactored and the *roofer* project was born.
+
+## Sponsorship
+
+Software doesn't maintain itself. If you are a (professional) user of roofer and have an interest in ensuring that roofer is maintained, bugs are fixed and new features are added, consider supporting the project through sponsorship.
+
+You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](info@3dgi.nl).
 
 ## License
 

@@ -16,6 +16,7 @@ This releases contains several bugfixes, stability improvements, and new functio
 
 
 ### Added
+- A sponsorship button. Software doesn't maintain itself. If you are a (professional) user of roofer and have an interest in ensuring that roofer is maintained, bugs are fixed and new features are added, consider supporting the project through sponsorship. You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](info@3dgi.nl).
 - Repair of non-manifold and self-intersecting roof junctions during arrangement snapping. This prevents certain geometric errors like non-watertight meshes, and highly non-planar faces that could previously happen in complex roof arrangements. See #168.
 - Experimental optional per-tile triangulated terrain output as CityJSON `TINRelief` features, see the `--terrain` option. Its output and configuration may change, and the feature may be removed in a future release.
 - A new `max-nodata-fraction` configuration option to control the maximum fraction of nodata pixels in a building polygon that is allowed before a building pointcloud is considered insufficient.
