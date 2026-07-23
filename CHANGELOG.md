@@ -9,30 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This releases contains several bugfixes, stability improvements, and new functionalities. Some highlights include:
 
-1. significantly improved geometric validity of the generated building models; in the order of 10x less errors with val3dity. This was achieved by detecting and fixing locally 2D arrangement configurations that led to e.g. non-manifold edges after extrusion and self intersecting faces. Likewise it is now detected if a slanted roofplane would be extruded to under the floor elevation, the below the floor part is now cut off from the footprint.
-2. User access to all reconstruction parameters.
-3. Reorganised config file. Parameters are now divided into Input, Crop, Reconstruction, and Output sections. Old parameters locations will give a deprecation warning, and be removed in v2.0.
+1. significantly improved geometric validity of the generated building models; in the order of 10x less errors with val3dity. This was achieved by detecting and fixing locally 2D arrangement configurations that led to e.g. non-manifold edges after extrusion and self intersecting faces. Likewise it is now detected if a slanted roofplane would be extruded to under the floor elevation, the below the floor part is now cut off from the footprint. This work was sponsored via the project ["Innovatieve algoritmes voor betrouwbare, stedelijke 3D-modellen"](https://zichtopnl.nl/datafundament/actueel-overzicht/nieuws/3144867.aspx?t=3DBAG+breidt+uit+).
+2. Reorganised configuration file. Parameters are now divided into Input, Crop, Reconstruction, and Output sections. Old parameters locations will give a deprecation warning, and be removed in v2.0.
+3. All reconstruction parameters are now configurable via the configuration file.
 4. A new `unit-scale` parameter that scales parameter values that are defined in metres. For example if you data is in feet, this can be used to get good results with the default parameter values. One user also reported that a scale of 0.55 can help with getting better results on low density point clouds.
 
-
 ### Added
-- A sponsorship button. Software doesn't maintain itself. If you are a (professional) user of roofer and have an interest in ensuring that roofer is maintained, bugs are fixed and new features are added, consider supporting the project through sponsorship. You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](info@3dgi.nl).
+- A github sponsorship button. Software doesn't maintain itself. If you are a (professional) user of roofer and have an interest in ensuring that roofer is maintained, bugs are fixed and new features are added, consider supporting the project through sponsorship. You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](mailto:info@3dgi.nl).
 - Repair of non-manifold and self-intersecting roof junctions during arrangement snapping. This prevents certain geometric errors like non-watertight meshes, and highly non-planar faces that could previously happen in complex roof arrangements. See #168.
 - Experimental optional per-tile triangulated terrain output as CityJSON `TINRelief` features, see the `--terrain` option. Its output and configuration may change, and the feature may be removed in a future release.
 - A new `max-nodata-fraction` configuration option to control the maximum fraction of nodata pixels in a building polygon that is allowed before a building pointcloud is considered insufficient.
-- A descriptor-backed `roofer::reconstruction::ReconstructionConfig` that contains the configuration for every reconstruction stage. Field declarations are now the single source for defaults, descriptions, validation, nested TOML parsing, generated documentation, and Python bindings.
+- New struct `roofer::reconstruction::ReconstructionConfig` that contains the configuration for every reconstruction stage. Field declarations are now the single source for defaults, descriptions, validation, nested TOML parsing, generated documentation, and Python bindings.
 - A nested C++ `ReconstructOptions` API and corresponding `reconstruct` overload. The nested reconstruction configuration is also available from Python, including each component configuration that exposes public parameters.
-- Arm64 docker image
+- Linux arm64 docker image.
 
 ### Fixed
 - More robust handling of OGC WKT payloads in LAS/LAZ files.
-- Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion.
+- Prevent roof-ground bow-ties by clipping roof faces against the terrain before extrusion. Fixes #17.
 - Correct squared-distance tolerance comparisons during extrusion.
 - Reject TOML integer values outside the supported `int` range instead of silently narrowing them.
 - Reject malformed or non-finite numeric CLI and TOML values instead of accepting numeric prefixes or propagating `NaN`/infinity. CLI `--no-` options are now limited to boolean parameters, general CLI validators are applied consistently, and TOML syntax errors retain their source location and parser explanation.
 
 ### Changed
-- Application configuration is organised into `[input]`, `[crop]`, `[reconstruction]`, and `[output]` tables, with output attribute names under `[output.attributes]` and pointclouds under `[[input.pointclouds]]`. Deprecated root keys remain supported during 1.x, while canonical section values take precedence. Generated example configuration now uses the canonical layout.
+- Application configuration is organised into `[input]`, `[crop]`, `[reconstruction]`, and `[output]` tables, with output attribute names under `[output.attributes]` and pointclouds under `[[input.pointclouds]]`. Deprecated root keys remain supported during 1.x, while canonical section values take precedence.
 - The pointcloud-insufficient test is now an absolute per-building density floor (`min-building-density`, points/m²) instead of a tile-relative `mean - 2·std` outlier test. The old test depended the entire tile that was being processed, so the same building could be flagged differently between runs with different tiling — potentially skipping point-rich buildings and leaving them without geometry. The decision is now deterministic and depends only on the building's own data.
 - Region growing no longer uses a wall-clock time limit, which could make a building reconstruct with success on one run and fall back to LoD 1.1 on the next given identical input due to resource starvation with multithreading. The deterministic plane-count limit (`lod11-fallback-planes`) is now the sole reconstruction-complexity cutoff. The `lod11-fallback-time` behavior is removed; its CLI flag and root configuration key are accepted but ignored with a deprecation warning during 1.x compatibility.
 - Reconstruction configuration now uses nested TOML tables such as `[reconstruction.plane-detector]` and `[reconstruction.arrangement-optimiser]`. Core reconstruction stages receive their component configuration aggregates; pipeline-derived settings such as requested LoD and terrain availability are overlaid on local copies.

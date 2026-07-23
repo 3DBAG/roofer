@@ -27,7 +27,7 @@ This project has received funding from the European Research Council (ERC):
 - *2016-2022* under the European Unions Horizon2020 Research & Innovation Programme (grant agreement no. 677312 UMnD: Urban modelling in higher dimensions).
 - *2022-2024* under the Horizon Europe Research & Innovation Programme (grant agreement no. 101068452 3DBAG: detailed 3D Building models Automatically Generated for very large areas).
 
-In *2024* this project has received funding from Kadaster, the Netherlands' Cadastre, Land Registry and Mapping Agency.
+In *2024-2026* this project has received funding from Kadaster, the Netherlands' Cadastre, Land Registry and Mapping Agency.
 
 Prior to 2024 the building reconstruction algorithms were developed as part of *Geoflow* and the *gfp-building-reconstruction plugin*. During the summer of 2024 the code was refactored and the *roofer* project was born.
 
@@ -35,7 +35,7 @@ Prior to 2024 the building reconstruction algorithms were developed as part of *
 
 Software doesn't maintain itself. If you are a (professional) user of roofer and have an interest in ensuring that roofer is maintained, bugs are fixed and new features are added, consider supporting the project through sponsorship.
 
-You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](info@3dgi.nl).
+You can make one-off donations via [this link](https://bunq.me/fundroofer). If you would like to sponsor the roofer project in another way, or need an invoice, please reach out to us via [email](mailto:info@3dgi.nl).
 
 ## License
 
