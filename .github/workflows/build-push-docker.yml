@@ -9,6 +9,7 @@ on:
     paths-ignore:
       - "**.md"
       - "**.rst"
+      - "**FUNDING.yml"
   pull_request:
     branches:
       - main
