@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-beta.1] - 2026-07-30
+
 This releases contains several bugfixes, stability improvements, and new functionalities. Some highlights include:
 
 1. significantly improved geometric validity of the generated building models; in the order of 10x less errors with val3dity. This was achieved by detecting and fixing locally 2D arrangement configurations that led to e.g. non-manifold edges after extrusion and self intersecting faces. Likewise it is now detected if a slanted roofplane would be extruded to under the floor elevation, the below the floor part is now cut off from the footprint. This work was sponsored via the project ["Innovatieve algoritmes voor betrouwbare, stedelijke 3D-modellen"](https://zichtopnl.nl/datafundament/actueel-overzicht/nieuws/3144867.aspx?t=3DBAG+breidt+uit+).

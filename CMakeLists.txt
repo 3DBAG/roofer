@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.25)
 
 # Load the toolchain before declaring project options, so Conan-provided
 # variables can override option defaults via CMP0077.
-project(roofer VERSION 1.0.0 LANGUAGES C CXX)
+project(roofer VERSION 1.1.0 LANGUAGES C CXX)
 
 # Options
 option(RF_USE_LOGGER_SPDLOG "Use spdlog as logging backend." OFF)

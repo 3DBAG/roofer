@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps
 
 class RooferRecipe(ConanFile):
     name = "roofer"
-    version = "1.0.0"
+    version = "1.1.0-beta.1"
     settings = "os", "compiler", "build_type", "arch"
 
     options = {
