@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RooferSharp.Test": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
