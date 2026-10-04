@@ -501,7 +501,7 @@ namespace roofer::io {
 
       // merge buffer ground points into regular point_clouds now that the
       // proper counts have been established
-      for (size_t poly_i; poly_i < polygons.size(); poly_i++) {
+      for (size_t poly_i = 0; poly_i < polygons.size(); poly_i++) {
         auto& point_cloud = point_clouds.at(poly_i);
         auto classification =
             point_cloud.attributes.get_if<int>("classification");
