@@ -59,8 +59,8 @@ namespace roofer::linereg {
     lv = lv / CGAL::sqrt(CGAL::to_double(lv.squared_length()));
 
     bool setminmax = false;
-    Point_2 pmin, pmax;
-    double dmin, dmax;
+    Point_2 pmin = centroid, pmax = centroid;
+    double dmin = 0, dmax = 0;
     for (auto& line : lines) {
       auto p = line->segment.source();
       auto d = CGAL::to_double(Vector_2(p.x(), p.y()) * lv);
