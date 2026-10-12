@@ -983,6 +983,9 @@ namespace roofer::reconstruction {
                                                 Vertex_handle from,
                                                 Vertex_handle to) {
       ConstraintToRestore constraint{to, nullptr, nullptr};
+      // a 1-dimensional triangulation, all its vertices on one line, has no
+      // faces either side of an edge to take labels from
+      if (tri.dimension() < 2) return constraint;
 
       auto face = edge.first;
       auto neighbour = face->neighbor(edge.second);
@@ -1030,6 +1033,8 @@ namespace roofer::reconstruction {
                                     Vertex_handle from, Vertex_handle to,
                                     FaceInfo* left_label, FaceInfo* right_label,
                                     std::vector<FaceLabelSeed>& seeds) {
+      // a 1-dimensional triangulation has no faces either side of an edge
+      if (tri.dimension() < 2) return;
       add_constraint_face_label_seed(tri, edge.first, edge.second, from, to,
                                      left_label, right_label, seeds);
 
