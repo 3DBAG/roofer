@@ -453,7 +453,9 @@ namespace roofer::reconstruction {
 
     void seed_removed_vertex_region(T& tri, const T::Point_2& point,
                                     FaceInfo* label) {
-      if (label == nullptr) return;
+      // below 2 dimensions there is no face to label, and once every vertex
+      // is removed locate gives no face at all
+      if (label == nullptr || tri.dimension() < 2) return;
 
       auto face = tri.locate(point);
       if (!tri.is_infinite(face)) face->info().label = label;
