@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
+
 ## [1.1.0-beta.1] - 2026-07-30
 
 This releases contains several bugfixes, stability improvements, and new functionalities. Some highlights include:
