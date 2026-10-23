@@ -4,7 +4,7 @@ find_package(Catch2 3 REQUIRED)
 include(FetchContent)
 
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
-set(DATA_URL_ROOT "https://data.3dbag.nl/testdata/roofer")
+set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 set(TEST_ENVIRONMENT
     "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal"
