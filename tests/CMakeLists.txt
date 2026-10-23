@@ -20,14 +20,14 @@ FetchContent_MakeAvailable(wippolder)
 FetchContent_Declare(
   issue-64
   URL "${DATA_URL_ROOT}/issue-64.zip"
-  URL_HASH MD5=49fe5d2f088f4c81089813f746264002
+  URL_HASH MD5=48da25355d73829d02a1f64113973bb5
   SOURCE_DIR "${DATA_DIR}/issue-64")
 FetchContent_MakeAvailable(issue-64)
 
 FetchContent_Declare(
   issue-71-v2
   URL "${DATA_URL_ROOT}/issue-71-v2.zip"
-  URL_HASH MD5=7143bc65f71ac7c66f57bc9a57947e85
+  URL_HASH MD5=e3cc87f5ff0dd7d2689d7faa7542c3bd
   SOURCE_DIR "${DATA_DIR}/issue-71-v2")
 FetchContent_MakeAvailable(issue-71-v2)
 
