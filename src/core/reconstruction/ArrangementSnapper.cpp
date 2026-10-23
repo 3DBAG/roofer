@@ -471,9 +471,15 @@ namespace roofer::reconstruction {
         adjacency[second].insert(first);
       }
 
+      // seed the leaves in vertex order, not in the hash map's, which follows
+      // memory addresses: the order constraints are removed in can change the
+      // triangulation
       std::queue<Vertex_handle> leaves;
-      for (const auto& [vertex, neighbours] : adjacency) {
-        if (neighbours.size() == 1) leaves.push(vertex);
+      for (auto vertex = tri.finite_vertices_begin();
+           vertex != tri.finite_vertices_end(); ++vertex) {
+        if (auto it = adjacency.find(vertex);
+            it != adjacency.end() && it->second.size() == 1)
+          leaves.push(vertex);
       }
 
       while (!leaves.empty()) {
@@ -1265,17 +1271,44 @@ namespace roofer::reconstruction {
         bool found_short_edge;
         do {
           found_short_edge = false;
+          // collapse the shortest short edge, ties broken by its endpoints:
+          // CGAL's edge iterator reports each edge from whichever of its two
+          // faces sits lower in memory, so "the first short edge" used to
+          // depend on the heap layout
+          auto lex_less = [](const T::Point_2& a, const T::Point_2& b) {
+            return a.x() < b.x() || (a.x() == b.x() && a.y() < b.y());
+          };
+          bool have_shortest = false;
+          Vertex_handle shortest1, shortest2;
+          double shortest_d = 0;
           for (Finite_edges_iterator ceit = tri.finite_edges_begin();
                ceit != tri.finite_edges_end(); ++ceit) {
-            auto v1 = ceit->first->vertex(tri.cw(ceit->second));
-            auto v2 = ceit->first->vertex(tri.ccw(ceit->second));
+            auto a = ceit->first->vertex(tri.cw(ceit->second));
+            auto b = ceit->first->vertex(tri.ccw(ceit->second));
+            if (lex_less(b->point(), a->point())) std::swap(a, b);
+            double d = CGAL::squared_distance(a->point(), b->point());
+            if (d >= sq_dist_thres) continue;
+            if (!have_shortest || d < shortest_d ||
+                (d == shortest_d &&
+                 (lex_less(a->point(), shortest1->point()) ||
+                  (a->point() == shortest1->point() &&
+                   lex_less(b->point(), shortest2->point()))))) {
+              have_shortest = true;
+              shortest_d = d;
+              shortest1 = a;
+              shortest2 = b;
+            }
+          }
+          if (have_shortest) {
+            auto v1 = shortest1;
+            auto v2 = shortest2;
             auto& p1 = v1->point();
             auto& p2 = v2->point();
 
             // do not collapse if this edge is on the footprint boundary
             // if (v1->info() && v2->info()) continue;
 
-            if (CGAL::squared_distance(p1, p2) < sq_dist_thres) {
+            {
               // std::cout << "short edge between " << p1 << "  and  " << p2
               // << std::endl;
 
@@ -1309,7 +1342,6 @@ namespace roofer::reconstruction {
                                   unbounded_label);
 
               found_short_edge = true;
-              break;
             }
           }
         } while (found_short_edge);
@@ -1407,8 +1439,13 @@ namespace roofer::reconstruction {
         std::unordered_map<T::Vertex_handle, Arrangement_2::Vertex_handle>
             vertex2arr_map;
 
+        // vertices in iteration order, which is deterministic; the edges are
+        // inserted in the order of their endpoints' indices, not in the order
+        // CGAL's edge iterator reports them, which follows memory addresses
+        std::unordered_map<T::Vertex_handle, std::size_t> vertex_index;
         for (auto vh = tri.finite_vertices_begin();
              vh != tri.finite_vertices_end(); ++vh) {
+          vertex_index[vh] = vertex_index.size();
           // make sure not to add isolated vertices
           if (tri.are_there_incident_constraints(vh)) {
             vertex2arr_map[vh] = insert_point(
@@ -1417,9 +1454,21 @@ namespace roofer::reconstruction {
           }
         }
 
+        std::vector<std::pair<T::Vertex_handle, T::Vertex_handle>> cedges;
         for (auto ce : tri.constrained_edges()) {
-          auto v1 = ce.first->vertex(tri.cw(ce.second));
-          auto v2 = ce.first->vertex(tri.ccw(ce.second));
+          auto a = ce.first->vertex(tri.cw(ce.second));
+          auto b = ce.first->vertex(tri.ccw(ce.second));
+          if (vertex_index[b] < vertex_index[a]) std::swap(a, b);
+          cedges.emplace_back(a, b);
+        }
+        std::sort(cedges.begin(), cedges.end(),
+                  [&vertex_index](const auto& l, const auto& r) {
+                    return std::make_pair(vertex_index[l.first],
+                                          vertex_index[l.second]) <
+                           std::make_pair(vertex_index[r.first],
+                                          vertex_index[r.second]);
+                  });
+        for (auto& [v1, v2] : cedges) {
           auto& p1_ = v1->point();
           auto& p2_ = v2->point();
           auto p1 = Arrangement_2::Point_2(p1_.x(), p1_.y());

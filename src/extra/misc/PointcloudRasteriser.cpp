@@ -185,7 +185,7 @@ namespace roofer::misc {
       auto& p = pointcloud[pi];
       auto& c = (*classification)[pi];
       auto i = getLinearCoord(cnt_image, p[0], p[1]);
-      if (i < 0 || i > cnt_image.array.size()) continue;
+      if (i < 0 || i >= cnt_image.array.size()) continue;
 
       // check if we have too many points in this cell
       if (cnt_image.array[i] > max_cnt_per_cell) {

@@ -45,6 +45,9 @@ namespace roofer::linereg {
 
   template <typename T>
   struct Cluster {
+    // creation order: sets of clusters are ordered by it, not by address, so
+    // that the clustering does not depend on where the clusters land in memory
+    size_t id = 0;
     T value;
     bool has_intersection_line;
     std::vector<linetype*> lines;
@@ -59,6 +62,17 @@ namespace roofer::linereg {
     double distance(Cluster<Segment_2>* other_cluster) override;
     void calc_mean_value() override;
   };
+
+  // orders cluster handles by their creation order
+  struct ClusterHLess {
+    template <typename ClusterH>
+    bool operator()(const ClusterH& lhs, const ClusterH& rhs) const {
+      return lhs->id < rhs->id;
+    }
+  };
+
+  template <typename ClusterH>
+  using ClusterSet = std::set<ClusterH, ClusterHLess>;
 
   template <typename ClusterH>
   struct DistanceTable {
@@ -103,9 +117,10 @@ namespace roofer::linereg {
 
     Cluster2DistPairMap cluster_to_dist_pairs;
     DistanceHeap distances;
-    std::set<ClusterH>& clusters;
+    ClusterSet<ClusterH>& clusters;
 
-    DistanceTable(std::set<ClusterH>& clusters);  // computes initial distances
+    DistanceTable(
+        ClusterSet<ClusterH>& clusters);  // computes initial distances
     void merge(
         ClusterH lhs,
         ClusterH rhs);  // merges two clusters, then removes one from the
@@ -166,8 +181,8 @@ namespace roofer::linereg {
     double angle_threshold, dist_threshold;
 
     std::unordered_map<size_t, SegmentVec> segments;
-    std::set<AngleClusterH> angle_clusters;
-    std::set<DistClusterH> dist_clusters;
+    ClusterSet<AngleClusterH> angle_clusters;
+    ClusterSet<DistClusterH> dist_clusters;
 
     LineRegulariser() = default;
 

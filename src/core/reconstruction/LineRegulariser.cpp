@@ -93,8 +93,13 @@ namespace roofer::reconstruction {
           for (auto line : prio_lines) {
             double mean_angle = line->angle;
             auto centroid = line->midpoint;
-            segment = linereg::calc_segment(centroid, mean_angle, other_lines,
-                                            cfg.extension);
+            // a cluster of intersection lines only has no other line to bound
+            // them: calc_segment would then read its uninitialised extremes, so
+            // the intersection line bounds itself
+            std::vector<linereg::linetype*> own_line{line};
+            segment = linereg::calc_segment(
+                centroid, mean_angle,
+                other_lines.empty() ? own_line : other_lines, cfg.extension);
             auto new_seg = Segment();
             new_seg[0] = {float(CGAL::to_double(segment.source().x())),
                           float(CGAL::to_double(segment.source().y())), 0};
