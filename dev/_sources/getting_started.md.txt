@@ -43,10 +43,10 @@ roofer --version
 ```
 
 ## Running roofer
-To test if roofer is correctly installed you can try to run it with our small [test dataset](https://data.3dbag.nl/testdata/roofer/wippolder.zip). To download this data you can do:
+To test if roofer is correctly installed you can try to run it with our small [test dataset](https://data.3dgi.xyz/roofer-test-data/wippolder.zip). To download this data you can do:
 
 ```bash
-curl -LO https://data.3dbag.nl/testdata/roofer/wippolder.zip
+curl -LO https://data.3dgi.xyz/roofer-test-data/wippolder.zip
 unzip wippolder.zip
 ```
 
