@@ -22,11 +22,24 @@
 #pragma once
 #include <memory>
 #include <optional>
+#include <cstdint>
 #include <roofer/common/datastructures.hpp>
 #include <roofer/io/SpatialReferenceSystem.hpp>
 #include <roofer/misc/projHelper.hpp>
 
 namespace roofer::io {
+  /** A polygon in the source CRS, before applying a local coordinate offset.
+   * Multipart features produce one record per polygon, retaining their FID.
+   * Only explicitly requested attributes are read; null values remain null.
+   */
+  struct PolygonFeature {
+    std::int64_t fid = -1;
+    std::vector<arr3d> exterior;
+    std::vector<std::vector<arr3d>> holes;
+    std::unordered_map<std::string, std::optional<std::string>> text_attributes;
+    std::unordered_map<std::string, std::optional<double>> numeric_attributes;
+  };
+
   struct VectorReaderInterface {
     roofer::misc::projHelperInterface& pjHelper;
     std::optional<roofer::TBox<double>> region_of_interest;
@@ -36,6 +49,10 @@ namespace roofer::io {
     std::string layer_name = "";
     std::string attribute_filter = "";
     bool skip_invalid_polygons = false;
+    bool skip_unsupported_geometries = false;
+    bool strict_layer_name = false;
+    // Optional horizontal CRS check; compound vertical components are ignored.
+    std::string expected_crs;
 
     VectorReaderInterface(roofer::misc::projHelperInterface& pjh)
         : pjHelper(pjh){};
@@ -49,6 +66,14 @@ namespace roofer::io {
 
     virtual void readPolygons(std::vector<LinearRing>&,
                               AttributeVecMap* attributes = nullptr) = 0;
+
+    // Original-coordinate alternative to the local float LinearRing output.
+    // Text fields also accept numeric source fields without narrowing their
+    // IDs.
+    virtual void readPolygons(
+        std::vector<PolygonFeature>& polygons,
+        const std::vector<std::string>& text_fields = {},
+        const std::vector<std::string>& numeric_fields = {}) = 0;
   };
 
   std::unique_ptr<VectorReaderInterface> createVectorReaderOGR(

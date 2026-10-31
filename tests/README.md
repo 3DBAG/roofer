@@ -1,5 +1,17 @@
 # Test data description
 
+## underpasses-10-434-716
+
+An Amsterdam tile with 583 building footprints, two original AHN5 COPC/LAZ files,
+and 94 underpass polygons, including pillar holes and one deliberately retained
+invalid source polygon. The archive is approximately 350 MiB.
+
+CMake downloads [underpasses-10-434-716.zip](https://data.3dgi.xyz/roofer-test-data/underpasses-10-434-716.zip)
+to `tests/data/underpasses-10-434-716/` when testing is enabled and verifies
+MD5 `6a9b64f9f3b834ed52552976c6584542`. Run the `roofer-underpasses-10-434-716`
+CTest test, or use `config/roofer-underpasses-10-434-716.toml` from `tests/`.
+The config assumes 4 metre underpass clearance above the floor.
+
 ## wateringen
 
 A medium area, with four point cloud files.

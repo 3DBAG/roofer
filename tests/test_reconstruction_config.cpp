@@ -28,6 +28,7 @@ TEST_CASE("reconstruction descriptor defaults are canonical") {
   CHECK(cfg.arrangement_snapper.distance_threshold == Catch::Approx(0.021F));
   CHECK(cfg.arrangement_builder.snap_tolerance == Catch::Approx(0.01F));
   CHECK(cfg.arrangement_extruder.snap_tolerance == Catch::Approx(0.001258925F));
+  CHECK(cfg.arrangement_extruder.underpass_roof_margin == Catch::Approx(0.03F));
   CHECK(cfg.mesh_triangulator.duplicate_tolerance == Catch::Approx(0.0001F));
   CHECK_FALSE(cfg.validate().has_value());
 
@@ -70,6 +71,8 @@ TEST_CASE("unit scale converts metre distances to input coordinate units") {
   const auto scaled = cfg.scaled_to_input_units();
 
   CHECK(scaled.unit_scale == Catch::Approx(1.0F));
+  CHECK(scaled.arrangement_extruder.underpass_roof_margin ==
+        Catch::Approx(0.03F / 0.3048F));
   CHECK(scaled.plane_detector.plane_epsilon == Catch::Approx(0.984252F));
   CHECK(scaled.alpha_shaper.alpha ==
         Catch::Approx(0.25F / (0.3048F * 0.3048F)));
@@ -168,4 +171,41 @@ TEST_CASE("flattened API validation delegates to nested descriptors") {
 
   legacy.plane_detect_min_points = 2;
   CHECK_FALSE(legacy.is_valid());
+}
+
+TEST_CASE("underpass roof margin must be finite and positive") {
+  ReconstructionConfig cfg;
+  for (const auto invalid :
+       {0.0F, -0.01F, std::numeric_limits<float>::infinity()}) {
+    cfg.arrangement_extruder.underpass_roof_margin = invalid;
+    CHECK(cfg.validate().has_value());
+  }
+}
+
+TEST_CASE("reconstruction API forwards optional underpasses only to LoD22") {
+  roofer::PointCollection points;
+  for (int y = 0; y <= 20; ++y)
+    for (int x = 0; x <= 20; ++x) points.push_back({x * 0.5F, y * 0.5F, 10});
+  roofer::LinearRing footprint;
+  footprint.insert(footprint.end(),
+                   {{0, 0, 0}, {10, 0, 0}, {10, 10, 0}, {0, 10, 0}});
+  roofer::Underpass passage;
+  passage.polygon.insert(passage.polygon.end(),
+                         {{-1, 3, 0}, {11, 3, 0}, {11, 7, 0}, {-1, 7, 0}});
+  passage.ceiling_elevation = 4;
+  std::vector<roofer::Underpass> underpasses{passage};
+  roofer::ReconstructOptions options;
+  options.override_with_floor_elevation = true;
+  options.reconstruction.clip_terrain = false;
+  for (int lod : {12, 13, 22}) {
+    options.lod = lod;
+    const auto meshes =
+        roofer::reconstruct(points, footprint, underpasses, options);
+    REQUIRE_FALSE(meshes.empty());
+    int ceilings = 0;
+    for (const auto& mesh : meshes)
+      ceilings +=
+          std::count(mesh.get_labels().begin(), mesh.get_labels().end(), 4);
+    CHECK((ceilings > 0) == (lod == 22));
+  }
 }

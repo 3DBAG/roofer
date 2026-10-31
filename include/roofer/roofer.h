@@ -224,7 +224,9 @@ namespace roofer {
   template <typename Footprint>
   std::vector<Mesh> reconstruct(const PointCollection& points_roof,
                                 const PointCollection& points_ground,
-                                Footprint& footprint, ReconstructOptions cfg) {
+                                Footprint& footprint,
+                                std::span<const Underpass> underpasses,
+                                ReconstructOptions cfg) {
     try {
       // check if configuration is valid
       if (!cfg.is_valid()) {
@@ -357,7 +359,7 @@ namespace roofer {
       auto extruder_config = reconstruction.arrangement_extruder;
       extruder_config.lod2 = cfg.lod == 22;
       ArrangementExtruder->compute(arrangement, *elevation_provider,
-                                   extruder_config);
+                                   underpasses, extruder_config);
 
       return ArrangementExtruder->meshes;
 
@@ -368,6 +370,25 @@ namespace roofer {
 #endif
       throw rooferException(e.what());
     }
+  }
+
+  /** Reconstruct without optional underpass input. */
+  template <typename Footprint>
+  std::vector<Mesh> reconstruct(const PointCollection& points_roof,
+                                const PointCollection& points_ground,
+                                Footprint& footprint, ReconstructOptions cfg) {
+    return reconstruct(points_roof, points_ground, footprint,
+                       std::span<const Underpass>{}, cfg);
+  }
+
+  /** Reconstruct with underpasses when no ground point cloud is supplied. */
+  template <typename Footprint>
+  std::vector<Mesh> reconstruct(const PointCollection& points_roof,
+                                Footprint& footprint,
+                                std::span<const Underpass> underpasses,
+                                ReconstructOptions cfg) {
+    return reconstruct(points_roof, PointCollection{}, footprint, underpasses,
+                       cfg);
   }
 
   /** Compatibility overload for the flattened 1.x configuration. */

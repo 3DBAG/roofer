@@ -70,6 +70,7 @@ namespace roofer {
   };
   struct EdgeInfo {
     bool blocks = false;
+    int boundary_chain_id = -1;
 
     // graph-cut optimisation
     double edge_weight;

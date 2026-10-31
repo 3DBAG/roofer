@@ -31,6 +31,13 @@ FetchContent_Declare(
   SOURCE_DIR "${DATA_DIR}/issue-71-v2")
 FetchContent_MakeAvailable(issue-71-v2)
 
+FetchContent_Declare(
+  underpasses-10-434-716
+  URL "${DATA_URL_ROOT}/underpasses-10-434-716.zip"
+  URL_HASH MD5=6a9b64f9f3b834ed52552976c6584542
+  SOURCE_DIR "${DATA_DIR}/underpasses-10-434-716")
+FetchContent_MakeAvailable(underpasses-10-434-716)
+
 #FetchContent_Declare(
 #  wateringen
 #  URL "${DATA_URL_ROOT}/wateringen.zip"
@@ -102,6 +109,15 @@ else()
 endif()
 catch_discover_tests("test_terrain")
 
+add_executable(test_underpasses test_underpasses.cpp)
+target_link_libraries(test_underpasses PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_underpasses)
+
+add_executable(test_underpass_io test_underpass_io.cpp)
+target_link_libraries(test_underpass_io PRIVATE Catch2::Catch2WithMain roofer-extra)
+target_compile_definitions(test_underpass_io PRIVATE UNDERPASS_DATA_DIR="${DATA_DIR}/underpasses-10-434-716")
+catch_discover_tests(test_underpass_io)
+
 # --- API testing
 include_directories("${PROJECT_SOURCE_DIR}/apps/external")
 add_executable("reconstruct_api"
@@ -151,7 +167,13 @@ if(RF_BUILD_APPS)
     COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-71-v2.toml"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "roofer-wippolder;issue-64;issue-71-v2")
+  add_test(
+    NAME "roofer-underpasses-10-434-716"
+    COMMAND $<TARGET_FILE:roofer> --config
+            "${CONFIG_DIR}/roofer-underpasses-10-434-716.toml" --jobs 4
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  set(tests_built "roofer-wippolder;issue-64;issue-71-v2;roofer-underpasses-10-434-716")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 

@@ -27,6 +27,8 @@
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
 #include <roofer/common/ConfigField.hpp>
 #include <vector>
+#include <span>
+#include <roofer/reconstruction/Underpass.hpp>
 
 namespace roofer::reconstruction {
 
@@ -37,6 +39,9 @@ namespace roofer::reconstruction {
     config::no_validation<bool>(), public_)                                    \
   X(bool, generate_floor, true, "Generate floors.",                            \
     config::no_validation<bool>(), public_)                                    \
+  X(float, underpass_roof_margin, 0.03F,                                       \
+    "Minimum vertical gap between underpass ceilings and roofs, in metres.",   \
+    config::greater_than(0.0F), public_)                                       \
   X(bool, lod1_extrude_to_max, false,                                          \
     "Extrude LoD 1 to maximum roof height"                                     \
     " instead of 70th percentile.",                                            \
@@ -69,6 +74,18 @@ namespace roofer::reconstruction {
     // add_output("multisolid", typeid(std::unordered_map<int, Mesh>));
 
     virtual ~ArrangementExtruderInterface() = default;
+
+    virtual void compute(Arrangement_2& arrangement,
+                         const ElevationProvider& elevation_provider,
+                         std::span<const Underpass> underpasses,
+                         ArrangementExtruderConfig config) = 0;
+
+    void compute(Arrangement_2& arrangement, float base_elevation,
+                 std::span<const Underpass> underpasses,
+                 ArrangementExtruderConfig config) {
+      auto provider = createElevationProvider(base_elevation);
+      compute(arrangement, *provider, underpasses, config);
+    }
 
     virtual void compute(
         Arrangement_2& arrangement, const ElevationProvider& elevation_provider,

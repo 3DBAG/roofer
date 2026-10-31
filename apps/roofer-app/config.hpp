@@ -147,6 +147,11 @@ struct RooferConfig {
   std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
+  std::string underpass_source;
+  std::string underpass_layer;
+  std::string underpass_id_attribute;
+  std::string underpass_height_attribute;
+  float underpass_default_height = 4.0F;
 
   int bld_class = 6;
   int grnd_class = 2;
@@ -504,6 +509,22 @@ struct RooferConfigHandler {
               "Select this layer name from `<polygon-source>`. By default the "
               "first layer is used.",
               cfg_.layer_name);
+    input.add("underpass-source", "Optional OGR underpass polygon datasource.",
+              cfg_.underpass_source);
+    input.add("underpass-source-layer",
+              "Underpass layer (default: first layer).", cfg_.underpass_layer);
+    input.add("underpass-id-attribute",
+              "Underpass building ID attribute (default: id-attribute).",
+              cfg_.underpass_id_attribute);
+    input.add("underpass-height-attribute",
+              "Numeric absolute ceiling elevation attribute. If omitted, use "
+              "underpass-default-height above the building floor.",
+              cfg_.underpass_height_attribute);
+    input.add("underpass-default-height",
+              "Underpass clearance above the floor when no height attribute is "
+              "specified, in metres.",
+              cfg_.underpass_default_height,
+              {roofer::config::greater_than(0.0F)});
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
               "`<polygon-source>`. See "
@@ -888,6 +909,10 @@ struct RooferConfigHandler {
     validate_groups(param_groups_);
     if (auto error = cfg_.reconstruction.validate()) {
       throw std::runtime_error("Validation error for reconstruction." + *error);
+    }
+    if (!cfg_.underpass_source.empty() && cfg_.id_attribute.empty()) {
+      throw std::runtime_error(
+          "underpass-source requires a footprint id-attribute");
     }
 
     if (input_pointclouds_.empty()) {

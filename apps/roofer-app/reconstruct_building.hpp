@@ -235,8 +235,11 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
       roofer::reconstruction::createArrangementExtruder();
   auto extruder_config = reconstruction.arrangement_extruder;
   extruder_config.lod2 = extrude_LoD2;
-  ArrangementExtruder->compute(arrangement, *elevation_provider,
-                               extruder_config);
+  ArrangementExtruder->compute(
+      arrangement, *elevation_provider,
+      lod == LOD22 ? std::span<const roofer::Underpass>(building.underpasses)
+                   : std::span<const roofer::Underpass>{},
+      extruder_config);
   // logger.debug("Completed ArrangementExtruder");
 #ifdef RF_USE_RERUN
   if (cfg->use_rerun) {

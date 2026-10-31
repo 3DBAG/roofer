@@ -429,3 +429,27 @@ TEST_CASE("removed fallback time option is accepted and ignored") {
   CHECK(handler.cfg_.reconstruction.plane_detector.max_plane_count == 900);
   CHECK(arguments.args.empty());
 }
+
+TEST_CASE("underpass input and roof margin are read from sectioned TOML") {
+  TemporaryConfig file(R"(
+[input]
+underpass-source = "passages.gpkg"
+underpass-source-layer = "passages"
+underpass-id-attribute = "bid"
+underpass-height-attribute = "ceiling"
+underpass-default-height = 4.0
+[reconstruction.arrangement-extruder]
+underpass-roof-margin = 0.05
+)");
+  RooferConfigHandler handler;
+  handler._config_path = file.string();
+  handler.parse_config_file();
+  CHECK(handler.cfg_.underpass_source == "passages.gpkg");
+  CHECK(handler.cfg_.underpass_layer == "passages");
+  CHECK(handler.cfg_.underpass_id_attribute == "bid");
+  CHECK(handler.cfg_.underpass_height_attribute == "ceiling");
+  CHECK(handler.cfg_.underpass_default_height == Catch::Approx(4.0F));
+  CHECK(
+      handler.cfg_.reconstruction.arrangement_extruder.underpass_roof_margin ==
+      Catch::Approx(0.05F));
+}
