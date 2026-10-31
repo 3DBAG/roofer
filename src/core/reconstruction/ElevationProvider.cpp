@@ -23,6 +23,7 @@
 #include <roofer/reconstruction/cdt_util.hpp>
 
 #include <optional>
+#include <limits>
 
 namespace roofer::reconstruction {
 
@@ -144,6 +145,10 @@ namespace roofer::reconstruction {
       return floor_elevation_;
     }
 
+    float get_max_elevation(const Polygon_with_holes_2&) const override {
+      return floor_elevation_;
+    }
+
     std::vector<Segment_2> get_intersections(
         const Plane& roof_plane,
         const CGAL::Polygon_with_holes_2<EPECK>& bounds) const override {
@@ -168,6 +173,30 @@ namespace roofer::reconstruction {
 
     virtual float get(const Point_2 pt) const override {
       return proj_tri_util::interpolate_from_cdt(pt, *base_cdt_ptr_);
+    }
+
+    float get_max_elevation(const Polygon_with_holes_2& bounds) const override {
+      float maximum = -std::numeric_limits<float>::infinity();
+      auto add = [&](const Point_2& p) { maximum = std::max(maximum, get(p)); };
+      for (const auto& p : bounds.outer_boundary()) add(p);
+      for (const auto& hole : bounds.holes())
+        for (const auto& p : hole) add(p);
+      // A piecewise-linear floor reaches its extrema at domain vertices,
+      // included triangulation vertices, or domain/triangulation crossings.
+      for (const auto& v : base_cdt_ptr_->finite_vertex_handles()) {
+        Point_2 p(v->point().x(), v->point().y());
+        if (is_inside(p, bounds)) add(p);
+      }
+      for (auto edge = base_cdt_ptr_->finite_edges_begin();
+           edge != base_cdt_ptr_->finite_edges_end(); ++edge) {
+        auto s = base_cdt_ptr_->segment(*edge);
+        Segment_2 projected(Point_2(s.source().x(), s.source().y()),
+                            Point_2(s.target().x(), s.target().y()));
+        std::vector<Point_2> points;
+        add_boundary_intersections(projected, bounds, points);
+        for (const auto& p : points) add(p);
+      }
+      return maximum;
     }
 
     virtual float get_percentile(float percentile) const override {

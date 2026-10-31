@@ -35,6 +35,13 @@ namespace roofer::reconstruction {
 
     virtual float get_percentile(float percentile) const = 0;
 
+    // Conservative default for custom providers. Built-in providers restrict
+    // the maximum to the supplied polygon, including its holes.
+    virtual float get_max_elevation(
+        const CGAL::Polygon_with_holes_2<EPECK>& bounds) const {
+      return get_percentile(1.0F);
+    }
+
     virtual std::vector<Segment_2> get_intersections(
         const Plane& roof_plane,
         const CGAL::Polygon_with_holes_2<EPECK>& bounds) const = 0;

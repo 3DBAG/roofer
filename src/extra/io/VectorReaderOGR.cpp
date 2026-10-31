@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <functional>
 #include <iostream>
 #include <roofer/io/VectorReader.hpp>
 #include <sstream>
@@ -38,7 +39,7 @@ namespace roofer::io {
 
   class VectorReaderOGR : public VectorReaderInterface {
     GDALDatasetUniquePtr poDS;
-    OGRLayer* poLayer;
+    OGRLayer* poLayer = nullptr;
 
     int layer_count = 0;
     float base_elevation = 0;
@@ -161,6 +162,10 @@ namespace roofer::io {
 
       poLayer = poDS->GetLayerByName(layer_name.c_str());
       if (poLayer == nullptr) {
+        if (strict_layer_name && !layer_name.empty())
+          throw rooferException(
+              "[VectorReaderOGR] Requested layer does not exist: " +
+              layer_name);
         if (layer_id >= layer_count) {
           throw(
               rooferException("[VectorReaderOGR] Illegal layer ID! Layer ID "
@@ -177,6 +182,22 @@ namespace roofer::io {
       if (poLayer == nullptr)
         throw(rooferException(
             "[VectorReaderOGR] Could not get the selected layer "));
+
+      if (!expected_crs.empty() && poLayer->GetSpatialRef()) {
+        OGRSpatialReference expected;
+        if (expected.SetFromUserInput(expected_crs.c_str()) != OGRERR_NONE)
+          throw rooferException("[VectorReaderOGR] Invalid expected CRS");
+        expected.StripVertical();
+        auto actual = std::unique_ptr<OGRSpatialReference>(
+            poLayer->GetSpatialRef()->Clone());
+        actual->StripVertical();
+        expected.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        actual->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        if (!expected.IsSame(actual.get()))
+          throw rooferException(
+              "[VectorReaderOGR] Source does not use the expected horizontal "
+              "CRS");
+      }
 
       if (attribute_filter.size()) {
         auto error_code = poLayer->SetAttributeFilter(attribute_filter.c_str());
@@ -209,10 +230,11 @@ namespace roofer::io {
       } else {
         OGREnvelope extent;
         auto error = poLayer->GetExtent(&extent);
-        if (error) {
+        if (error && poLayer->GetFeatureCount() != 0) {
           throw(rooferException(
               "[VectorReaderOGR] Could not get the extent of the layer"));
         }
+        if (error) extent.MinX = extent.MaxX = extent.MinY = extent.MaxY = 0;
         layer_extent = {extent.MinX, extent.MinY, 0,
                         extent.MaxX, extent.MaxY, 0};
       }
@@ -249,42 +271,124 @@ namespace roofer::io {
       }
     }
 
-    void read_polygon(OGRPolygon* poPolygon,
-                      std::vector<LinearRing>& polygons) {
-      LinearRing gf_polygon;
-      // for(auto& poPoint : poPolygon->getExteriorRing()) {
-      OGRPoint poPoint;
-      auto ogr_ering = poPolygon->getExteriorRing();
+   private:
+    template <typename Convert>
+    auto read_ring(OGRLinearRing* ring, bool exterior, Convert convert) {
+      using Coordinate = decltype(convert(0.0, 0.0, 0.0));
+      std::vector<Coordinate> points;
+      if (!ring) return points;
+      if (bool(ring->isClockwise()) == exterior) ring->reversePoints();
+      const int count = ring->getNumPoints() - (ring->get_IsClosed() ? 1 : 0);
+      for (int i = 0; i < count; ++i)
+        points.push_back(convert(ring->getX(i), ring->getY(i), ring->getZ(i)));
+      return points;
+    }
 
-      // ensure we output ccw exterior ring
-      if (ogr_ering->isClockwise()) {
-        ogr_ering->reversePoints();
+    void read_polygon(OGRPolygon* polygon, std::vector<LinearRing>& polygons) {
+      auto convert = [&](double x, double y, double z) {
+        return pjHelper.coord_transform_fwd(
+            x, y, base_elevation == 0 ? z : base_elevation);
+      };
+      LinearRing result;
+      auto exterior = read_ring(polygon->getExteriorRing(), true, convert);
+      result.insert(result.end(), exterior.begin(), exterior.end());
+      for (int i = 0; i < polygon->getNumInteriorRings(); ++i)
+        result.interior_rings().push_back(
+            read_ring(polygon->getInteriorRing(i), false, convert));
+      polygons.push_back(std::move(result));
+    }
+
+    void for_each_polygon(
+        const std::function<void(const OGRFeature&, OGRPolygon*)>& visit) {
+      if (!poLayer)
+        throw rooferException("[VectorReaderOGR] Layer is not open");
+      poLayer->ResetReading();
+      if (region_of_interest) {
+        const auto& roi = *region_of_interest;
+        poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0],
+                                      roi.pmax[1]);
+      } else {
+        poLayer->SetSpatialFilter(nullptr);
       }
-      for (size_t i = 0; i < ogr_ering->getNumPoints() - 1; ++i) {
-        ogr_ering->getPoint(i, &poPoint);
-        std::array<float, 3> p = pjHelper.coord_transform_fwd(
-            poPoint.getX(), poPoint.getY(),
-            base_elevation == 0 ? poPoint.getZ() : base_elevation);
-        gf_polygon.push_back(p);
-      }
-      // also read the interior rings (holes)
-      for (size_t i = 0; i < poPolygon->getNumInteriorRings(); ++i) {
-        auto ogr_iring = poPolygon->getInteriorRing(i);
-        // ensure we output cw interior ring
-        if (!ogr_iring->isClockwise()) {
-          ogr_iring->reversePoints();
+      for (auto&& feature : *poLayer) {
+        auto* geometry = feature->GetGeometryRef();
+        if (!geometry || geometry->IsEmpty()) continue;
+        if (region_of_interest) {
+          OGRPoint centroid;
+          geometry->Centroid(&centroid);
+          if (!region_of_interest->intersects(
+                  arr3d{centroid.getX(), centroid.getY(), centroid.getZ()}))
+            continue;
         }
-        vec3f gf_iring;
-        for (size_t j = 0; j < ogr_iring->getNumPoints() - 1; ++j) {
-          ogr_iring->getPoint(j, &poPoint);
-          std::array<float, 3> p = pjHelper.coord_transform_fwd(
-              poPoint.getX(), poPoint.getY(),
-              base_elevation == 0 ? poPoint.getZ() : base_elevation);
-          gf_iring.push_back(p);
-        }
-        gf_polygon.interior_rings().push_back(gf_iring);
+        auto add = [&](OGRPolygon* polygon,
+                       std::optional<size_t> part = std::nullopt) {
+          if (!polygon->IsEmpty() &&
+              !should_skip_polygon(polygon, *feature, part))
+            visit(*feature, polygon);
+        };
+        const auto type = wkbFlatten(geometry->getGeometryType());
+        if (type == wkbPolygon)
+          add(geometry->toPolygon());
+        else if (type == wkbMultiPolygon) {
+          size_t part = 0;
+          for (auto* polygon : *geometry->toMultiPolygon())
+            add(polygon, part++);
+        } else if (skip_unsupported_geometries) {
+          logger::Logger::get_logger().warning(
+              "[VectorReaderOGR] Skipping unsupported geometry, FID: {}",
+              feature->GetFID());
+        } else
+          throw rooferException("[VectorReaderOGR] Unsupported geometry type");
       }
-      polygons.push_back(gf_polygon);
+    }
+
+   public:
+    void readPolygons(std::vector<PolygonFeature>& polygons,
+                      const std::vector<std::string>& text_fields,
+                      const std::vector<std::string>& numeric_fields) override {
+      if (!poLayer)
+        throw rooferException("[VectorReaderOGR] Layer is not open");
+      auto* definition = poLayer->GetLayerDefn();
+      auto fields = [&](const auto& names, bool numeric) {
+        std::vector<int> indices;
+        for (const auto& name : names) {
+          int index = definition->GetFieldIndex(name.c_str());
+          if (index < 0)
+            throw rooferException("[VectorReaderOGR] Missing attribute: " +
+                                  name);
+          auto type = definition->GetFieldDefn(index)->GetType();
+          if (numeric && type != OFTReal && type != OFTInteger &&
+              type != OFTInteger64)
+            throw rooferException(
+                "[VectorReaderOGR] Attribute must be numeric: " + name);
+          indices.push_back(index);
+        }
+        return indices;
+      };
+      auto text_indices = fields(text_fields, false),
+           numeric_indices = fields(numeric_fields, true);
+      for_each_polygon([&](const OGRFeature& feature, OGRPolygon* polygon) {
+        PolygonFeature result;
+        result.fid = feature.GetFID();
+        auto convert = [](double x, double y, double z) {
+          return arr3d{x, y, z};
+        };
+        result.exterior = read_ring(polygon->getExteriorRing(), true, convert);
+        for (int i = 0; i < polygon->getNumInteriorRings(); ++i)
+          result.holes.push_back(
+              read_ring(polygon->getInteriorRing(i), false, convert));
+        for (size_t i = 0; i < text_fields.size(); ++i) {
+          auto& value = result.text_attributes[text_fields[i]];
+          if (feature.IsFieldSetAndNotNull(text_indices[i]))
+            value = feature.GetFieldAsString(text_indices[i]);
+        }
+        for (size_t i = 0; i < numeric_fields.size(); ++i) {
+          auto& value = result.numeric_attributes[numeric_fields[i]];
+          if (feature.IsFieldSetAndNotNull(numeric_indices[i]))
+            value = feature.GetFieldAsDouble(numeric_indices[i]);
+        }
+        polygons.push_back(std::move(result));
+      });
     }
 
     void readPolygons(std::vector<LinearRing>& polygons,
@@ -339,78 +443,10 @@ namespace roofer::io {
         }
       }
 
-      poLayer->ResetReading();
-      if (this->region_of_interest.has_value()) {
-        // logger.info("Setting spatial filter");
-        auto& roi = *this->region_of_interest;
-        poLayer->SetSpatialFilterRect(roi.pmin[0], roi.pmin[1], roi.pmax[0],
-                                      roi.pmax[1]);
-      }
-
-      OGRFeature* poFeature;
-      while ((poFeature = poLayer->GetNextFeature()) != NULL)
-      // for (auto &poFeature : poLayer)
-      {
-        // read feature geometry
-        OGRGeometry* poGeometry;
-        poGeometry = poFeature->GetGeometryRef();
-
-        // FIXME: we should check if te layer geometrytype matches
-        // with this feature's geometry type. Messy because they
-        // can be a bit different eg. wkbLineStringZM and
-        // wkbLineString25D
-        if (poGeometry == nullptr) {
-          continue;
-        }
-
-        if (auto roi = this->region_of_interest) {
-          OGRPoint poPoint;
-          poGeometry->Centroid(&poPoint);
-          arr3d p = {poPoint.getX(), poPoint.getY(), poPoint.getZ()};
-          if (!roi->intersects(p)) {
-            continue;
-          }
-        }
-
-        if (wkbFlatten(poGeometry->getGeometryType()) == wkbPolygon) {
-          OGRPolygon* poPolygon = poGeometry->toPolygon();
-          if (should_skip_polygon(poPolygon, *poFeature)) {
-            continue;
-          }
-
-          read_polygon(poPolygon, polygons);
-
-          // area.push_back(float(poPolygon->get_Area()));
-          // is_valid.push_back(bool(poPolygon->IsValid()));
-          if (attributes)
-            push_attributes(*poFeature, attributes, field_name_map);
-
-        } else if (wkbFlatten(poGeometry->getGeometryType()) ==
-                   wkbMultiPolygon) {
-          OGRMultiPolygon* poMultiPolygon = poGeometry->toMultiPolygon();
-          size_t multipolygon_index = 0;
-          for (auto poly_it = poMultiPolygon->begin();
-               poly_it != poMultiPolygon->end();
-               ++poly_it, ++multipolygon_index) {
-            if (should_skip_polygon(*poly_it, *poFeature, multipolygon_index)) {
-              continue;
-            }
-            read_polygon(*poly_it, polygons);
-
-            // area.push_back(float((*poly_it)->get_Area()));
-            // is_valid.push_back(bool((*poly_it)->IsValid()));
-            if (attributes)
-              push_attributes(*poFeature, attributes, field_name_map);
-          }
-        } else {
-          throw rooferException(
-              "[VectorReaderOGR] Unsupported geometry type\n");
-        }
-      }
-      if (polygons.size() > 0) {
-        // std::cout << "pushed " << polygons.size() << " linear_ring
-        // features...\n";
-      }
+      for_each_polygon([&](const OGRFeature& feature, OGRPolygon* polygon) {
+        read_polygon(polygon, polygons);
+        if (attributes) push_attributes(feature, attributes, field_name_map);
+      });
     }
   };
 

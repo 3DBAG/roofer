@@ -21,6 +21,7 @@
 
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
+#include "FloorArrangement.hpp"
 
 namespace roofer::reconstruction {
 
@@ -75,13 +76,11 @@ namespace roofer::reconstruction {
   void push_ccb(
       T& ring, Halfedge_handle hedge,
       std::unordered_map<Vertex_handle, std::vector<hf_pair>>& vertex_columns,
-      std::unordered_map<Halfedge_handle, EPECK::Point_3>& extra_wall_points,
-      const float snap_tolerance, const float snap_tolerance_sq) {
+      std::unordered_map<Halfedge_handle, EPECK::Point_3>& extra_wall_points) {
     auto first = hedge;
     do {
       auto v = hedge->source();
-      if (CGAL::squared_distance(v->point(), hedge->target()->point()) >
-          snap_tolerance_sq) {
+      if (CGAL::squared_distance(v->point(), hedge->target()->point()) > 0) {
         for (auto& [h, f_h] : vertex_columns[v]) {
           if (f_h == hedge->face()) {
             ring.push_back(v2p(v, h));
@@ -105,12 +104,23 @@ namespace roofer::reconstruction {
     void compute(Arrangement_2& arr,
                  const ElevationProvider& elevation_provider,
                  ArrangementExtruderConfig cfg) override {
-      typedef Arrangement_2::Traits_2 AT;
+      compute(arr, elevation_provider, std::span<const Underpass>{}, cfg);
+    }
+
+    void compute(Arrangement_2& arr,
+                 const ElevationProvider& elevation_provider,
+                 std::span<const Underpass> underpasses,
+                 ArrangementExtruderConfig cfg) override {
+      faces.clear();
+      labels.clear();
+      meshes.clear();
+      multisolid.clear();
+      if (auto error = config::validate(cfg)) throw rooferException(*error);
+      for (auto face : arr.face_handles())
+        if (face->data().in_footprint && face->data().part_id < 0)
+          face->data().part_id = 0;
       float snap_tolerance = cfg.snap_tolerance;
       float snap_tolerance_sq = snap_tolerance * snap_tolerance;
-
-      // assume we have only one unbounded faces that just has the building
-      // footprint as a hole
 
       auto unbounded_face = arr.unbounded_face();
       unbounded_face->data().elevation_70p =
@@ -118,72 +128,28 @@ namespace roofer::reconstruction {
       unbounded_face->data().elevation_97p =
           elevation_provider.get_percentile(0.97);
 
-      // floor
-      if (cfg.generate_floor) {
-        // std::cout << "arrangement has " << arr.number_of_unbounded_faces() <<
-        // "unbounded faces\n"; there should only be one hole in the unbounded
-        // face (building consists of one part)
-        for (Arrangement_2::Hole_iterator floorpart_ =
-                 unbounded_face->holes_begin();
-             floorpart_ != unbounded_face->holes_end(); ++floorpart_) {
-          LinearRing floor;
-          auto he = *floorpart_;
-          auto first = he;
-          do {
-            if (CGAL::squared_distance(he->source()->point(),
-                                       he->target()->point()) >
-                snap_tolerance_sq) {
-              float pt_elevation =
-                  elevation_provider.get(he->source()->point());
-              floor.push_back(v2p(he->source(), pt_elevation));
-            }
-            he = he->next();
-          } while (he != first);
-
-          faces.push_back(floor);
-          labels.push_back(int(0));
-
-          // create a mesh
-          Mesh mesh;
-          mesh.push_polygon(floor, int(0));
-          multisolid[he->twin()->face()->data().part_id] = mesh;
-          // mesh.push_attribute("surface_type", int(0));
-        }
-        // get the holes
-        for (auto face : arr.face_handles()) {
-          if (face->data().is_footprint_hole) {
-            vec3f hole;
-            auto he = face->outer_ccb();
-            auto first = he;
-            do {
-              if (CGAL::squared_distance(he->source()->point(),
-                                         he->target()->point()) >
-                  snap_tolerance_sq) {
-                float pt_elevation =
-                    elevation_provider.get(he->source()->point());
-                hole.push_back(v2p(he->source(), pt_elevation));
-              }
-              he = he->next();
-            } while (he != first);
-
-            // attach hole to appropriate mesh and linear ring
-            const auto part_id = he->twin()->face()->data().part_id;
-            if (hole.size() != 0 &&
-                multisolid.find(part_id) != multisolid.end()) {
-              auto& floor = multisolid[part_id].get_polygons()[0];
-              floor.interior_rings().push_back(hole);
-            } else {
-              std::cout << "skipping a hole for which no polygon exists...\n";
-            }
-          }
-        }
-      }
+      detail::FloorArrangement underside;
+      underside.prepare(arr, elevation_provider, underpasses, cfg);
 
       // check for no detected planes (if one face inside fp has none then all
       // have none)
       for (const auto f : arr.face_handles()) {
         if (f->data().in_footprint && f->data().segid == 0) {
-          meshes.push_back(multisolid[0]);
+          underside.emit(
+              arr, elevation_provider,
+              [&] {
+                auto c = cfg;
+                c.generate_walls = false;
+                return c;
+              }(),
+              [](Vertex_handle, Face_handle) { return 0.0F; }, multisolid);
+          for (auto& [part, mesh] : multisolid) {
+            faces.insert(faces.end(), mesh.get_polygons().begin(),
+                         mesh.get_polygons().end());
+            labels.insert(labels.end(), mesh.get_labels().begin(),
+                          mesh.get_labels().end());
+            meshes.push_back(mesh);
+          }
           return;
         }
       }
@@ -251,14 +217,12 @@ namespace roofer::reconstruction {
           auto f_b = e_b->face();
           bool fp_a = f_a->data().in_footprint;
           bool fp_b = f_b->data().in_footprint;
-          auto& pl_a = f_a->data().plane;
-          auto& pl_b = f_b->data().plane;
 
           // edge has no length
           if (CGAL::squared_distance(p1, p2) < snap_tolerance_sq) continue;
 
-          // edge is not in footprint nor on its boundary
-          if (!fp_a && !fp_b) {
+          // Footprint walls are assembled from the floor and roof profiles.
+          if (!fp_a || !fp_b) {
             continue;
           }
 
@@ -269,25 +233,9 @@ namespace roofer::reconstruction {
           vec3f v2_other =
               get_heights(vertex_columns[v2], v2, f_a, f_b, h2a, h2b);
 
-          // // set base (ground) elevation to vertices adjacent to a face
-          // oustide the building fp
-          int part_id;
-          if (fp_a && !fp_b) {
-            h1b = elevation_provider.get(p1);
-            h2b = elevation_provider.get(p2);
-            part_id = f_a->data().part_id;
-          } else if (!fp_a && fp_b) {
-            h1a = elevation_provider.get(p1);
-            h2a = elevation_provider.get(p2);
-            part_id = f_b->data().part_id;
-          } else {  // both sides have the same part_id
-            part_id = f_b->data().part_id;
-          }
-
+          const int part_id = f_b->data().part_id;
           auto& mesh = multisolid[part_id];
-
-          int wall_label = 3;                  // inner wall
-          if (!fp_a || !fp_b) wall_label = 2;  // outer wall
+          const int wall_label = 3;  // Roof-step wall, away from the footprint.
 
           LinearRing wall_face_1;
           if ((h1a < h1b) and (h2a < h2b)) {
@@ -465,15 +413,13 @@ namespace roofer::reconstruction {
             LinearRing roofpart;
             auto he = face->outer_ccb();
 
-            push_ccb(roofpart, he, vertex_columns, extra_wall_points,
-                     snap_tolerance, snap_tolerance_sq);
+            push_ccb(roofpart, he, vertex_columns, extra_wall_points);
 
             for (Arrangement_2::Hole_iterator hole = face->holes_begin();
                  hole != face->holes_end(); ++hole) {
               vec3f roofpart_hole;
               auto he = *hole;
-              push_ccb(roofpart_hole, he, vertex_columns, extra_wall_points,
-                       snap_tolerance, snap_tolerance_sq);
+              push_ccb(roofpart_hole, he, vertex_columns, extra_wall_points);
               if (roofpart_hole.size() > 2) {
                 roofpart.interior_rings().push_back(roofpart_hole);
               }
@@ -489,8 +435,23 @@ namespace roofer::reconstruction {
         }
       }
 
-      for (auto& mm : multisolid) {
-        meshes.push_back(mm.second);
+      underside.emit(
+          arr, elevation_provider, cfg,
+          [&](Vertex_handle vertex, Face_handle face) {
+            for (auto [height, candidate] : vertex_columns.at(vertex))
+              if (candidate == face) return height;
+            throw rooferException("Missing roof vertex height");
+          },
+          multisolid);
+      detail::conform_vertical_edges(multisolid);
+      faces.clear();
+      labels.clear();
+      for (auto& [part, mesh] : multisolid) {
+        faces.insert(faces.end(), mesh.get_polygons().begin(),
+                     mesh.get_polygons().end());
+        labels.insert(labels.end(), mesh.get_labels().begin(),
+                      mesh.get_labels().end());
+        meshes.push_back(mesh);
       }
     }
 

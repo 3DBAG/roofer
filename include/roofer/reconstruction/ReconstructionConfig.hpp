@@ -149,6 +149,7 @@ namespace roofer::reconstruction {
       result.arrangement_snapper.manifold_height_tolerance *= distance_scale;
       result.arrangement_extruder.nodata_elevation *= distance_scale;
       result.arrangement_extruder.snap_tolerance *= distance_scale;
+      result.arrangement_extruder.underpass_roof_margin *= distance_scale;
       result.mesh_triangulator.duplicate_tolerance *= distance_scale;
       result.unit_scale = 1.0F;
       return result;

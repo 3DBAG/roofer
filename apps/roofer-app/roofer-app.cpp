@@ -46,6 +46,7 @@ namespace fs = std::filesystem;
 #include <roofer/io/RasterWriter.hpp>
 #include <roofer/io/StreamCropper.hpp>
 #include <roofer/io/VectorReader.hpp>
+#include <roofer/io/UnderpassReader.hpp>
 #include <roofer/io/VectorWriter.hpp>
 #include <roofer/misc/NodataCircleComputer.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
@@ -100,6 +101,8 @@ struct BuildingObject {
   roofer::PointCollection pointcloud_ground;
   roofer::PointCollection pointcloud_building;
   roofer::LinearRing footprint;
+  std::string id;
+  std::vector<roofer::Underpass> underpasses;
   float z_offset = 0;
 
   std::unordered_map<int, roofer::Mesh> multisolids_lod12;
@@ -486,6 +489,24 @@ int main(int argc, const char* argv[]) {
   const size_t initial_tiles_count = initial_tiles.size();
   logger.debug("Created {} batch tile regions", initial_tiles_count);
 
+  roofer::io::UnderpassIndex underpass_index;
+  if (!handler.cfg_.underpass_source.empty()) {
+    const auto& cfg = handler.cfg_;
+    try {
+      underpass_index = roofer::io::readUnderpasses(
+          cfg.underpass_source, cfg.underpass_layer,
+          cfg.underpass_id_attribute.empty() ? cfg.id_attribute
+                                             : cfg.underpass_id_attribute,
+          cfg.underpass_height_attribute,
+          project_srs->is_valid() ? project_srs->export_wkt() : std::string{});
+      logger.info("Loaded underpasses for {} building IDs",
+                  underpass_index.size());
+    } catch (const std::exception& ex) {
+      logger.error("Failed to load underpasses: {}", ex.what());
+      return EXIT_FAILURE;
+    }
+  }
+
   // Multithreading setup. The -j/--jobs value is the user-facing worker budget.
   // The cropper, sorter, serializer, logger, and optional tracer use additional
   // mostly-blocking pipeline threads, so keep one job aside for that overhead
@@ -584,6 +605,16 @@ int main(int argc, const char* argv[]) {
           logger.info("No footprints found in tile {}, skipping...",
                       building_tile.id);
         } else {
+          for (auto& building : building_tile.buildings) {
+            auto input = underpass_index.find(building.id);
+            if (input == underpass_index.end() || !building.h_ground) continue;
+            for (const auto& feature : input->second) {
+              building.underpasses.push_back(feature.localize(
+                  *building_tile.proj_helper->data_offset, *building.h_ground,
+                  handler.cfg_.metres_to_input_units(
+                      handler.cfg_.underpass_default_height)));
+            }
+          }
           building_tile.buildings_cnt = building_tile.buildings.size();
           building_tile.buildings_progresses.resize(
               building_tile.buildings_cnt);

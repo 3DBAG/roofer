@@ -423,6 +423,7 @@ bool crop_tile(const roofer::TBox<double>& tile,
     {
       BuildingObject& building = output_building_tile.buildings.emplace_back();
       building.attribute_index = i;
+      building.id = bid;
       building.z_offset = (*pj->data_offset)[2];
       using TerrainStrategy = roofer::enums::TerrainStrategy;
 

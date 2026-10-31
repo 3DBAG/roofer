@@ -136,6 +136,11 @@ namespace roofer::io {
           sem_values.push_back(1);
         } else if (label == 3) {  // WallSurface not on footprint edge
           sem_values.push_back(2);
+        } else if (label == 4) {  // OuterCeilingSurface
+          auto semantic_object =
+              nlohmann::json::object({{"type", "OuterCeilingSurface"}});
+          semantic_objects.push_back(semantic_object);
+          sem_values.push_back(wallSurface_cntr++);
         } else {
           throw rooferException("Unknown label in mesh");
         }
