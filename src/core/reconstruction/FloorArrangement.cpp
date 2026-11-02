@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <iterator>
 #include <map>
 #include <set>
 
@@ -13,16 +14,6 @@ namespace roofer::reconstruction::detail {
     using Polygon = CGAL::Polygon_2<EPECK>;
     using Domain = CGAL::Polygon_with_holes_2<EPECK>;
     using Location = CGAL::Arr_naive_point_location<Arrangement_2>;
-
-    class EdgeObserver : public CGAL::Arr_observer<Arrangement_2> {
-     public:
-      using CGAL::Arr_observer<Arrangement_2>::Arr_observer;
-      // Preserve facade IDs on both halves of a split roof boundary edge.
-      void after_split_edge(Halfedge_handle a, Halfedge_handle b) override {
-        b->data() = a->data();
-        a->twin()->data() = b->twin()->data() = a->data();
-      }
-    };
 
     // Clean duplicate vertices and validate a ring using XY coordinates only.
     Polygon ring_polygon(const vec3f& ring) {
@@ -235,12 +226,8 @@ namespace roofer::reconstruction::detail {
       throw rooferException("Floor sample lies on a roof constraint");
     }
 
-    // Evaluate the roof plane, or the configured flat LoD 1 elevation.
-    float roof_z(Face_const_handle face, const Point_2& p,
-                 const ArrangementExtruderConfig& cfg) {
-      if (!cfg.lod2)
-        return cfg.lod1_extrude_to_max ? face->data().elevation_97p
-                                       : face->data().elevation_70p;
+    // Evaluate the roof plane for underpass clearance.
+    float roof_z(Face_const_handle face, const Point_2& p) {
       const auto& plane = face->data().plane;
       return float(-(plane.a() * CGAL::to_double(p.x()) +
                      plane.b() * CGAL::to_double(p.y()) + plane.d()) /
@@ -271,21 +258,28 @@ namespace roofer::reconstruction::detail {
                  0;
     }
 
-    // Group exterior and courtyard boundaries into maximal straight facades.
-    std::vector<std::vector<Halfedge_handle>> boundary_chains(
-        Arrangement_2& arr, bool assign_ids = true) {
+    std::vector<std::vector<Halfedge_handle>> boundary_loops(
+        Arrangement_2& arr) {
       std::set<Halfedge_handle> visited;
-      std::vector<std::vector<Halfedge_handle>> chains;
+      std::vector<std::vector<Halfedge_handle>> loops;
       for (auto edge : arr.halfedge_handles()) {
         if (!boundary(edge) || visited.contains(edge)) continue;
-        // Follow each complete boundary loop once.
-        std::vector<Halfedge_handle> loop;
+        auto& loop = loops.emplace_back();
         auto e = edge;
         do {
           loop.push_back(e);
           visited.insert(e);
           e = next_boundary(e);
         } while (e != edge);
+      }
+      return loops;
+    }
+
+    // Group exterior and courtyard boundaries into maximal straight facades.
+    std::vector<std::vector<Halfedge_handle>> boundary_chains(
+        Arrangement_2& arr) {
+      std::vector<std::vector<Halfedge_handle>> chains;
+      for (const auto& loop : boundary_loops(arr)) {
         // Start at a corner so a facade is not split across the loop's start.
         std::size_t start = 0;
         while (start < loop.size() &&
@@ -295,13 +289,10 @@ namespace roofer::reconstruction::detail {
         if (start == loop.size())
           throw rooferException("Degenerate footprint loop");
         for (std::size_t i = 0; i < loop.size(); ++i) {
-          e = loop[(start + i) % loop.size()];
+          auto e = loop[(start + i) % loop.size()];
           if (i == 0 || !straight(chains.back().back(), e))
             chains.emplace_back();
           chains.back().push_back(e);
-          if (assign_ids)
-            e->data().boundary_chain_id = e->twin()->data().boundary_chain_id =
-                int(chains.size() - 1);
         }
       }
       return chains;
@@ -330,92 +321,126 @@ namespace roofer::reconstruction::detail {
       bool enabled = true;
     };
 
+    using EdgeKey = std::pair<Point_2, Point_2>;
+    using BoundarySources = std::map<EdgeKey, std::vector<std::size_t>>;
+
+    EdgeKey edge_key(Halfedge_const_handle e) {
+      auto p = e->source()->point(), q = e->target()->point();
+      return p < q ? EdgeKey{p, q} : EdgeKey{q, p};
+    }
+
+    // Dissolving rejected constraints leaves collinear split vertices behind.
+    // Retain original roof boundary vertices so the two profiles still match.
+    void merge_collinear(Arrangement_2& floor, BoundarySources& sources,
+                         const std::set<Point_2>& footprint_vertices) {
+      for (auto it = floor.vertices_begin(); it != floor.vertices_end();) {
+        Vertex_handle vertex = it++;
+        if (vertex->degree() != 2 ||
+            footprint_vertices.contains(vertex->point()))
+          continue;
+        auto incident = vertex->incident_halfedges();
+        Halfedge_handle a = incident, b = (++incident)->twin();
+        const auto p = a->source()->point(), q = b->target()->point();
+        if (!CGAL::collinear(p, vertex->point(), q)) continue;
+        auto values = sources.at(edge_key(a));
+        const auto& other = sources.at(edge_key(b));
+        values.insert(values.end(), other.begin(), other.end());
+        auto merged = floor.merge_edge(a, b, Segment_2(p, q));
+        sources[edge_key(merged)] = std::move(values);
+      }
+    }
+
     // Find cutouts whose floor regions would collapse at the mesh tolerance.
+    template <typename AddSources>
     std::set<std::size_t> sub_tolerance_regions(
         Arrangement_2& floor,
         const std::unordered_map<Face_const_handle, FloorRegion>& regions,
-        float tolerance) {
+        float tolerance, AddSources&& add_sources) {
       const double tolerance_sq = double(tolerance) * tolerance;
       std::set<std::size_t> invalid_ceiling, invalid_ground;
+      std::set<std::size_t> isolated_ceiling, isolated_ground;
+      std::set<std::size_t> short_ceiling, short_ground;
       for (auto face : floor.face_handles()) {
         const auto& owner = regions.at(face);
         if (owner.part < 0) continue;
-        std::vector<std::vector<Point_2>> rings;
-        std::set<std::size_t> sources(owner.sources.begin(),
-                                      owner.sources.end());
+        struct BoundaryEdge {
+          Halfedge_const_handle handle;
+          Segment_2 segment;
+        };
+        auto rounded = [](const Point_2& p) {
+          return Point_2(float(CGAL::to_double(p.x())),
+                         float(CGAL::to_double(p.y())));
+        };
+        std::vector<std::vector<BoundaryEdge>> rings;
         auto ring = [&](auto first) {
-          auto& points = rings.emplace_back();
+          auto& edges = rings.emplace_back();
           auto e = first;
           do {
-            const auto& p = e->source()->point();
-            // Detect collapses in the precision used by Mesh, too.
-            points.emplace_back(float(CGAL::to_double(p.x())),
-                                float(CGAL::to_double(p.y())));
-            if (!owner.ceiling) {
-              // Attribute a narrow ground gap to its neighbouring cutouts.
-              const auto& values = regions.at(e->twin()->face()).sources;
-              sources.insert(values.begin(), values.end());
-            }
+            edges.push_back({e, Segment_2(rounded(e->source()->point()),
+                                          rounded(e->target()->point()))});
           } while (++e != first);
         };
         ring(face->outer_ccb());
         for (auto hole :
              CGAL::make_range(face->inner_ccbs_begin(), face->inner_ccbs_end()))
           ring(hole);
-        if (sources.empty()) continue;
-        // Check short edges and near contacts between non-adjacent boundaries.
-        bool collapse = false;
-        for (std::size_t a = 0; a < rings.size() && !collapse; ++a) {
-          for (std::size_t i = 0; i < rings[a].size() && !collapse; ++i) {
-            Segment_2 first(rings[a][i], rings[a][(i + 1) % rings[a].size()]);
-            if (first.squared_length() <= tolerance_sq) {
-              collapse = true;
-              break;
-            }
-            for (std::size_t b = a; b < rings.size() && !collapse; ++b)
+        auto& invalid = owner.ceiling ? invalid_ceiling : invalid_ground;
+        auto& isolated = owner.ceiling ? isolated_ceiling : isolated_ground;
+        auto& short_edges = owner.ceiling ? short_ceiling : short_ground;
+        auto record_failure = [&](Halfedge_const_handle a,
+                                  Halfedge_const_handle b) {
+          std::set<std::size_t> sources;
+          add_sources(a, sources);
+          add_sources(b, sources);
+          invalid.insert(sources.begin(), sources.end());
+          if (sources.size() == 1) isolated.insert(*sources.begin());
+        };
+        for (std::size_t a = 0; a < rings.size(); ++a) {
+          for (std::size_t i = 0; i < rings[a].size(); ++i) {
+            const auto& first = rings[a][i].segment;
+            if (first.squared_length() <= tolerance_sq)
+              add_sources(rings[a][i].handle, short_edges);
+            for (std::size_t b = a; b < rings.size(); ++b)
               for (std::size_t j = b == a ? i + 1 : 0; j < rings[b].size();
                    ++j) {
                 if (a == b &&
                     (j == i + 1 || (i == 0 && j + 1 == rings[a].size())))
                   continue;
-                Segment_2 second(rings[b][j],
-                                 rings[b][(j + 1) % rings[b].size()]);
-                if (CGAL::squared_distance(first, second) <= tolerance_sq) {
-                  collapse = true;
-                  break;
+                if (CGAL::squared_distance(first, rings[b][j].segment) <=
+                    tolerance_sq) {
+                  record_failure(rings[a][i].handle, rings[b][j].handle);
                 }
               }
           }
         }
-        if (collapse) {
-          auto& invalid = owner.ceiling ? invalid_ceiling : invalid_ground;
-          invalid.insert(sources.begin(), sources.end());
-        }
       }
-      // Remove a thin raised patch first, before considering the surrounding
-      // ground region; this can retain another valid overlapping underpass.
-      return invalid_ceiling.empty() ? invalid_ground : invalid_ceiling;
+      // Short edges identify narrow inputs before nearby boundary fragments
+      // implicate their neighbours. Then prefer contacts attributable to one
+      // input over conflicts between inputs. Raised patches precede ground
+      // gaps.
+      if (!short_ceiling.empty()) return short_ceiling;
+      if (!isolated_ceiling.empty()) return isolated_ceiling;
+      if (!invalid_ceiling.empty()) return invalid_ceiling;
+      if (!short_ground.empty()) return short_ground;
+      return isolated_ground.empty() ? invalid_ground : isolated_ground;
     }
 
     // Find cutouts that would create non-manifold vertical edges at vertices.
+    template <typename AddSources>
     std::set<std::size_t> invalid_junctions(
         Arrangement_2& floor,
         const std::unordered_map<Face_const_handle, FloorRegion>& regions,
-        const ElevationProvider& elevations) {
+        const ElevationProvider& elevations, AddSources&& add_sources) {
       std::set<std::size_t> invalid;
       for (auto vertex : floor.vertex_handles()) {
         if (vertex->degree() < 4) continue;
-        // Collect cyclic underside heights; exterior sectors contain no solid.
         std::vector<float> heights;
-        std::vector<std::size_t> sources;
         auto first = vertex->incident_halfedges(), e = first;
         do {
           const auto& region = regions.at(e->face());
           heights.push_back(region.part < 0
                                 ? std::numeric_limits<float>::infinity()
                                 : lower_z(region, elevations, vertex->point()));
-          sources.insert(sources.end(), region.sources.begin(),
-                         region.sources.end());
         } while (++e != first);
         auto levels = heights;
         std::sort(levels.begin(), levels.end());
@@ -427,10 +452,64 @@ namespace roofer::reconstruction::detail {
           for (std::size_t j = 0; j < heights.size(); ++j)
             transitions += ((heights[j] <= threshold) !=
                             (heights[(j + 1) % heights.size()] <= threshold));
-          if (transitions > 2) invalid.insert(sources.begin(), sources.end());
+          if (transitions > 2) {
+            do {
+              add_sources(e, invalid);
+            } while (++e != first);
+            break;
+          }
         }
       }
       return invalid;
+    }
+
+    struct FloorCell {
+      int part = -1;
+      std::vector<std::size_t> covered;
+    };
+
+    struct ClearanceOverlay {
+      FaceInfo operator()(const FaceInfo& roof, const FaceInfo& floor) const {
+        auto result = roof;
+        result.label = floor.label;
+        return result;
+      }
+    };
+
+    // Ordinary floors use the roof's footprint loops directly, without another
+    // arrangement. Attach each courtyard to its containing exterior in its
+    // part.
+    void emit_ground(Arrangement_2& roof, const ElevationProvider& elevations,
+                     std::unordered_map<int, Mesh>& meshes) {
+      struct Ground {
+        int part;
+        Polygon domain;
+        LinearRing polygon;
+      };
+      std::vector<Ground> exteriors, holes;
+      for (const auto& loop : boundary_loops(roof)) {
+        Ground ground{loop.front()->face()->data().part_id, {}, {}};
+        for (auto e : loop) {
+          const auto& p = e->source()->point();
+          ground.domain.push_back(p);
+          append(ground.polygon, lifted(p, elevations.get(p)));
+        }
+        std::reverse(ground.polygon.begin(), ground.polygon.end());
+        auto& output =
+            ground.domain.is_counterclockwise_oriented() ? exteriors : holes;
+        output.push_back(std::move(ground));
+      }
+      for (auto& hole : holes)
+        for (auto& exterior : exteriors)
+          if (hole.part == exterior.part &&
+              exterior.domain.bounded_side(hole.domain[0]) ==
+                  CGAL::ON_BOUNDED_SIDE) {
+            exterior.polygon.interior_rings().push_back(
+                std::move(hole.polygon));
+            break;
+          }
+      for (auto& exterior : exteriors)
+        meshes[exterior.part].push_polygon(exterior.polygon, 0);
     }
   }  // namespace
 
@@ -439,170 +518,189 @@ namespace roofer::reconstruction::detail {
                                  const ElevationProvider& elevations,
                                  std::span<const Underpass> underpasses,
                                  const ArrangementExtruderConfig& cfg) {
+    floor.clear();
+    regions.clear();
+    if (!cfg.lod2 || underpasses.empty()) return;
     auto& log = logger::Logger::get_logger();
-    // Copy only the final footprint boundary, retaining its facade chains.
-    auto chains = boundary_chains(roof);
     std::vector<Segment_2> footprint;
-    for (const auto& chain : chains)
-      for (auto e : chain)
+    std::set<Point_2> footprint_vertices;
+    for (auto e : roof.halfedge_handles())
+      if (boundary(e)) {
         footprint.emplace_back(e->source()->point(), e->target()->point());
+        footprint_vertices.insert(e->source()->point());
+      }
 
-    // Validate and snap each input independently; carving applies to LoD 2.2.
     std::vector<Candidate> candidates;
-    if (cfg.lod2) {
-      for (std::size_t i = 0; i < underpasses.size(); ++i) {
-        const auto id = underpasses[i].source_id.empty()
-                            ? std::to_string(i)
-                            : underpasses[i].source_id;
-        try {
-          if (!std::isfinite(underpasses[i].ceiling_elevation))
-            throw rooferException("non-finite ceiling elevation");
-          for (const auto& p : underpasses[i].polygon)
-            if (!std::isfinite(p[0]) || !std::isfinite(p[1]))
-              throw rooferException("non-finite polygon coordinate");
-          candidates.push_back(
-              {snap_to_footprint(input_polygon(underpasses[i].polygon),
-                                 footprint, cfg.snap_tolerance),
-               id, float(underpasses[i].ceiling_elevation)});
-        } catch (const std::exception& ex) {
-          log.warning("Skipping underpass {}: {}", id, ex.what());
-        }
+    for (std::size_t i = 0; i < underpasses.size(); ++i) {
+      const auto id = underpasses[i].source_id.empty()
+                          ? std::to_string(i)
+                          : underpasses[i].source_id;
+      try {
+        if (!std::isfinite(underpasses[i].ceiling_elevation))
+          throw rooferException("non-finite ceiling elevation");
+        candidates.push_back(
+            {snap_to_footprint(input_polygon(underpasses[i].polygon), footprint,
+                               cfg.snap_tolerance),
+             id, float(underpasses[i].ceiling_elevation)});
+      } catch (const std::exception& ex) {
+        log.warning("Skipping underpass {}: {}", id, ex.what());
       }
     }
+    if (candidates.empty()) return;
 
-    if (!candidates.empty()) {
-      // Scratch overlay for clearance queries only. The actual roof receives
-      // no underpass interior edges, including pillar boundaries.
-      Arrangement_2 overlay = roof;
-      for (const auto& candidate : candidates)
-        insert_polygon(overlay, candidate.polygon);
-      Location overlay_location(overlay), roof_location(roof);
-      std::vector<float> minimum(candidates.size(),
-                                 std::numeric_limits<float>::infinity());
-      std::vector<float> maximum(candidates.size(),
-                                 -std::numeric_limits<float>::infinity());
-      // Accumulate roof minima and floor maxima over each covered interior
-      // cell.
-      for (auto face : overlay.face_handles()) {
-        if (face->is_unbounded()) continue;
-        auto sample = interior_point(face, overlay_location);
-        auto roof_face = located_face(roof_location, sample);
-        if (!roof_face->data().in_footprint) continue;
-        std::vector<std::size_t> covered;
-        for (std::size_t i = 0; i < candidates.size(); ++i)
-          if (contains(candidates[i].polygon, sample)) covered.push_back(i);
-        if (covered.empty()) continue;
-        float min_z = std::numeric_limits<float>::infinity();
-        visit_points(face, [&](const Point_2& p) {
-          min_z = std::min(min_z, roof_z(roof_face, p, cfg));
-        });
-        auto max_z = elevations.get_max_elevation(face_domain(face));
-        for (auto i : covered) {
-          minimum[i] = std::min(minimum[i], min_z);
-          maximum[i] = std::max(maximum[i], max_z);
-        }
+    // Retain this subdivision and its coverage labels through rejection
+    // retries.
+    Arrangement_2 subdivision;
+    for (const auto& segment : footprint) CGAL::insert(subdivision, segment);
+    for (const auto& c : candidates) insert_polygon(subdivision, c.polygon);
+    Location floor_location(subdivision), roof_location(roof);
+    std::vector<FloorCell> cells;
+    std::vector<float> minimum(candidates.size(),
+                               std::numeric_limits<float>::infinity());
+    std::vector<float> maximum(candidates.size(),
+                               -std::numeric_limits<float>::infinity());
+    for (auto face : subdivision.face_handles()) {
+      face->data().label = cells.size();
+      auto& cell = cells.emplace_back();
+      if (face->is_unbounded()) continue;
+      auto sample = interior_point(face, floor_location);
+      auto parent = located_face(roof_location, sample);
+      if (!parent->data().in_footprint) continue;
+      cell.part = parent->data().part_id;
+      for (std::size_t i = 0; i < candidates.size(); ++i)
+        if (contains(candidates[i].polygon, sample)) cell.covered.push_back(i);
+      if (cell.covered.empty()) continue;
+      // Terrain queries depend only on floor cells, not on roof subdivisions.
+      const auto max_z = elevations.get_max_elevation(face_domain(face));
+      for (auto i : cell.covered) maximum[i] = std::max(maximum[i], max_z);
+    }
+
+    BoundarySources boundary_sources;
+    for (auto e : subdivision.edge_handles()) {
+      const auto& a = cells[e->face()->data().label].covered;
+      const auto& b = cells[e->twin()->face()->data().label].covered;
+      auto& sources = boundary_sources[edge_key(e)];
+      std::set_symmetric_difference(a.begin(), a.end(), b.begin(), b.end(),
+                                    std::back_inserter(sources));
+    }
+
+    // The overlay transfers roof planes and floor coverage without new samples
+    // or repeated containment tests. Interior constraints never enter the roof.
+    Arrangement_2 overlay;
+    CGAL::Arr_face_overlay_traits<Arrangement_2, Arrangement_2, Arrangement_2,
+                                  ClearanceOverlay>
+        traits;
+    CGAL::overlay(roof, subdivision, overlay, traits);
+    for (auto face : overlay.face_handles()) {
+      if (face->is_unbounded() || !face->data().in_footprint) continue;
+      const auto& covered = cells[face->data().label].covered;
+      if (covered.empty()) continue;
+      float min_z = std::numeric_limits<float>::infinity();
+      visit_points(face, [&](const Point_2& p) {
+        min_z = std::min(min_z, roof_z(face, p));
+      });
+      for (auto i : covered) minimum[i] = std::min(minimum[i], min_z);
+    }
+    overlay.clear();
+    // Keep one flat ceiling per input and discard cutouts without clearance.
+    for (std::size_t i = 0; i < candidates.size(); ++i) {
+      auto& c = candidates[i];
+      if (!std::isfinite(minimum[i])) {
+        c.enabled = false;
+        continue;
       }
-      // Keep one flat ceiling per input and discard cutouts without clearance.
+      // Reserve the roof margin plus room for subsequent height snapping.
+      const float limit =
+          minimum[i] - cfg.underpass_roof_margin - cfg.snap_tolerance;
+      if (c.height > limit) {
+        log.info("Lowering underpass {} ceiling from {} to {}", c.input,
+                 c.height, limit);
+        c.height = limit;
+      }
+      if (!std::isfinite(c.height) ||
+          c.height <= maximum[i] + cfg.snap_tolerance) {
+        c.enabled = false;
+        log.warning("Skipping underpass {}: no floor clearance below the roof",
+                    c.input);
+      }
+    }
+    // Equalise nearby ceiling heights downward to avoid tiny vertical walls
+    // while preserving every individual roof-clearance bound.
+    std::map<float, float> canonical;
+    for (const auto& c : candidates)
+      if (c.enabled) canonical.emplace(c.height, c.height);
+    if (!canonical.empty()) {
+      float reference = canonical.begin()->first;
+      for (auto& [height, value] : canonical) {
+        if (height - reference > cfg.snap_tolerance) reference = height;
+        value = reference;
+      }
       for (std::size_t i = 0; i < candidates.size(); ++i) {
         auto& c = candidates[i];
-        if (!std::isfinite(minimum[i])) {
-          c.enabled = false;
-          continue;
-        }
-        // Reserve the roof margin plus room for subsequent height snapping.
-        const float limit =
-            minimum[i] - cfg.underpass_roof_margin - cfg.snap_tolerance;
-        if (c.height > limit) {
-          log.info("Lowering underpass {} ceiling from {} to {}", c.input,
-                   c.height, limit);
-          c.height = limit;
-        }
-        if (!std::isfinite(c.height) ||
-            c.height <= maximum[i] + cfg.snap_tolerance) {
+        if (!c.enabled) continue;
+        c.height = canonical.at(c.height);
+        if (c.height <= maximum[i] + cfg.snap_tolerance) {
           c.enabled = false;
           log.warning(
-              "Skipping underpass {}: no floor clearance below the roof",
+              "Skipping underpass {}: no floor clearance after height "
+              "snapping",
               c.input);
         }
       }
-      // Equalise nearby ceiling heights downward to avoid tiny vertical walls
-      // while preserving every individual roof-clearance bound.
-      std::map<float, float> canonical;
-      for (const auto& c : candidates)
-        if (c.enabled) canonical.emplace(c.height, c.height);
-      if (!canonical.empty()) {
-        float reference = canonical.begin()->first;
-        for (auto& [height, value] : canonical) {
-          if (height - reference > cfg.snap_tolerance) reference = height;
-          value = reference;
-        }
-        for (std::size_t i = 0; i < candidates.size(); ++i) {
-          auto& c = candidates[i];
-          if (!c.enabled) continue;
-          c.height = canonical.at(c.height);
-          if (c.height <= maximum[i] + cfg.snap_tolerance) {
-            c.enabled = false;
-            log.warning(
-                "Skipping underpass {}: no floor clearance after height "
-                "snapping",
-                c.input);
-          }
-        }
-      }
     }
 
-    // Rebuild after rejecting cutouts that cause invalid or collapsing regions.
     for (;;) {
-      floor.clear();
+      if (std::none_of(candidates.begin(), candidates.end(),
+                       [](const auto& c) { return c.enabled; })) {
+        floor.clear();
+        regions.clear();
+        return;
+      }
+      // Copy exact topology, then relabel. No intersections or point-location
+      // queries need to be repeated when a candidate is disabled.
+      floor = subdivision;
       regions.clear();
-      for (const auto& segment : footprint) CGAL::insert(floor, segment);
-      for (const auto& c : candidates)
-        if (c.enabled) insert_polygon(floor, c.polygon);
-      Location floor_location(floor), roof_location(roof);
-      // Label interior regions; overlapping cutouts use the highest ceiling.
       for (auto face : floor.face_handles()) {
+        const auto& cell = cells[face->data().label];
         FloorRegion region;
-        if (!face->is_unbounded()) {
-          auto sample = interior_point(face, floor_location);
-          auto roof_face = located_face(roof_location, sample);
-          if (roof_face->data().in_footprint) {
-            region.part = roof_face->data().part_id;
-            for (std::size_t i = 0; i < candidates.size(); ++i) {
-              const auto& c = candidates[i];
-              if (c.enabled && contains(c.polygon, sample)) {
-                region.sources.push_back(i);
-                region.ceiling =
-                    std::max(region.ceiling.value_or(c.height), c.height);
-              }
-            }
-          }
-        }
+        region.part = cell.part;
+        for (auto i : cell.covered)
+          if (candidates[i].enabled)
+            region.ceiling =
+                std::max(region.ceiling.value_or(candidates[i].height),
+                         candidates[i].height);
         face->data().in_footprint = region.part >= 0;
         face->data().part_id = region.part;
-        regions.emplace(face, std::move(region));
+        regions.emplace(face, region);
       }
-      // Dissolve equal-height subdivisions while retaining their source IDs.
+      // Keep coverage on the original cells. Merged face provenance is too
+      // coarse to identify a small offending input on an otherwise valid patch.
       for (auto it = floor.edges_begin(); it != floor.edges_end();) {
         Halfedge_handle edge = it;
         ++it;
         auto a = edge->face(), b = edge->twin()->face();
-        auto ra = regions.at(a);
-        const auto rb = regions.at(b);
-        if (ra.part >= 0 && ra.part == rb.part && ra.ceiling == rb.ceiling) {
-          ra.sources.insert(ra.sources.end(), rb.sources.begin(),
-                            rb.sources.end());
-          std::sort(ra.sources.begin(), ra.sources.end());
-          ra.sources.erase(std::unique(ra.sources.begin(), ra.sources.end()),
-                           ra.sources.end());
+        const auto ra = regions.at(a), rb = regions.at(b);
+        if (ra.part == rb.part && ra.ceiling == rb.ceiling) {
           auto merged = floor.remove_edge(edge);
           regions.erase(a);
           regions.erase(b);
           regions[merged] = ra;
         }
       }
-
-      auto invalid = invalid_junctions(floor, regions, elevations);
-      auto small = sub_tolerance_regions(floor, regions, cfg.snap_tolerance);
+      auto sources = boundary_sources;
+      merge_collinear(floor, sources, footprint_vertices);
+      auto add_sources = [&](Halfedge_const_handle e,
+                             std::set<std::size_t>& invalid) {
+        const auto& a = regions.at(e->face());
+        const auto& b = regions.at(e->twin()->face());
+        for (auto i : sources.at(edge_key(e)))
+          if (candidates[i].enabled && (a.ceiling == candidates[i].height ||
+                                        b.ceiling == candidates[i].height))
+            invalid.insert(i);
+      };
+      auto invalid = invalid_junctions(floor, regions, elevations, add_sources);
+      auto small = sub_tolerance_regions(floor, regions, cfg.snap_tolerance,
+                                         add_sources);
       invalid.insert(small.begin(), small.end());
       if (invalid.empty()) break;
       for (auto i : invalid) {
@@ -614,24 +712,10 @@ namespace roofer::reconstruction::detail {
       }
     }
 
-    // Transfer facade IDs and synchronise floor and roof boundary vertices.
-    EdgeObserver observer(roof);
+    // Synchronise only the footprint boundary vertices.
     std::set<Point_2> points;
     for (auto e : floor.halfedge_handles())
-      if (boundary(e)) {
-        points.insert(e->source()->point());
-        points.insert(e->target()->point());
-        for (const auto& chain : chains) {
-          Segment_2 line(chain.front()->source()->point(),
-                         chain.back()->target()->point());
-          if (line.has_on(e->source()->point()) &&
-              line.has_on(e->target()->point())) {
-            e->data().boundary_chain_id = e->twin()->data().boundary_chain_id =
-                chain.front()->data().boundary_chain_id;
-            break;
-          }
-        }
-      }
+      if (boundary(e)) points.insert(e->source()->point());
     for (const auto& point : points) CGAL::insert_point(roof, point);
   }
 
@@ -642,7 +726,9 @@ namespace roofer::reconstruction::detail {
       const std::function<float(Vertex_handle, Face_handle)>& roof_height,
       std::unordered_map<int, Mesh>& meshes) const {
     // Reverse the arrangement winding so ground and ceiling normals point down.
-    if (cfg.generate_floor) {
+    if (cfg.generate_floor && floor.is_empty())
+      emit_ground(roof, elevations, meshes);
+    if (cfg.generate_floor && !floor.is_empty()) {
       for (auto face : floor.face_handles()) {
         const auto& region = regions.at(face);
         if (region.part < 0) continue;
@@ -690,22 +776,25 @@ namespace roofer::reconstruction::detail {
 
     // Both arrangements retain the same footprint splits. Match by oriented
     // exact endpoints rather than by DCEL handles belonging to another graph.
-    std::map<std::tuple<int, Point_2, Point_2>, Face_const_handle> floor_edges;
+    std::map<EdgeKey, Face_const_handle> floor_edges;
     for (auto e : floor.halfedge_handles())
       if (boundary(e))
-        floor_edges[{e->data().boundary_chain_id, e->source()->point(),
-                     e->target()->point()}] = e->face();
+        floor_edges[{e->source()->point(), e->target()->point()}] = e->face();
     // Trace each facade's floor profile forward and its roof profile backward.
-    for (const auto& chain : boundary_chains(roof, false)) {
+    const FloorRegion ground;
+    for (const auto& chain : boundary_chains(roof)) {
       vec3f bottom, top;
       for (auto e : chain) {
         auto p = e->source()->point(), q = e->target()->point();
-        auto f = floor_edges.find({e->data().boundary_chain_id, p, q});
-        if (f == floor_edges.end())
-          throw rooferException("Roof/floor footprint boundary mismatch");
-        const auto& region = regions.at(f->second);
-        append(bottom, lifted(p, lower_z(region, elevations, p)));
-        append(bottom, lifted(q, lower_z(region, elevations, q)));
+        const FloorRegion* region = &ground;
+        if (!floor.is_empty()) {
+          auto f = floor_edges.find({p, q});
+          if (f == floor_edges.end())
+            throw rooferException("Roof/floor footprint boundary mismatch");
+          region = &regions.at(f->second);
+        }
+        append(bottom, lifted(p, lower_z(*region, elevations, p)));
+        append(bottom, lifted(q, lower_z(*region, elevations, q)));
         append(top, lifted(p, roof_height(e->source(), e->face())));
         append(top, lifted(q, roof_height(e->target(), e->face())));
       }

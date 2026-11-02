@@ -8,7 +8,6 @@ namespace roofer::reconstruction::detail {
   struct FloorRegion {
     int part = -1;
     std::optional<float> ceiling;
-    std::vector<std::size_t> sources;
   };
 
   // Built only after roof snapping. All underpass interior constraints stay
