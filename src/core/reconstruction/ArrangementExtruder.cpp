@@ -38,40 +38,6 @@ namespace roofer::reconstruction {
   }
 
   typedef std::pair<float, Face_handle> hf_pair;
-  vec3f get_heights(std::vector<hf_pair>& vertex_column, Vertex_handle v,
-                    Face_handle f_a, Face_handle f_b, float& h_a, float& h_b) {
-    vec3f v_other;
-    float h_prev = -999999;
-    bool found_first = false;
-    for (auto& [h, face] : vertex_column) {
-      if (face == f_a) {
-        h_a = h;
-        if (!found_first)
-          found_first = true;
-        else {
-          if (h == h_prev && v_other.size()) {
-            v_other.erase(v_other.end() - 1);
-          }
-          break;
-        }
-      } else if (face == f_b) {
-        h_b = h;
-        if (!found_first)
-          found_first = true;
-        else {
-          if (h == h_prev && v_other.size()) {
-            v_other.erase(v_other.end() - 1);
-          }
-          break;
-        }
-      } else if (found_first) {
-        if (h != h_prev) v_other.push_back(v2p(v, h));
-      }  // else break;
-      h_prev = h;
-    }
-    return v_other;
-  }
-
   template <typename T>
   void push_ccb(
       T& ring, Halfedge_handle hedge,
@@ -129,30 +95,22 @@ namespace roofer::reconstruction {
           elevation_provider.get_percentile(0.97);
 
       detail::FloorArrangement underside;
-      underside.prepare(arr, elevation_provider, underpasses, cfg);
 
       // check for no detected planes (if one face inside fp has none then all
       // have none)
       for (const auto f : arr.face_handles()) {
         if (f->data().in_footprint && f->data().segid == 0) {
+          auto floor_config = cfg;
+          floor_config.generate_walls = false;
           underside.emit(
-              arr, elevation_provider,
-              [&] {
-                auto c = cfg;
-                c.generate_walls = false;
-                return c;
-              }(),
+              arr, elevation_provider, floor_config,
               [](Vertex_handle, Face_handle) { return 0.0F; }, multisolid);
-          for (auto& [part, mesh] : multisolid) {
-            faces.insert(faces.end(), mesh.get_polygons().begin(),
-                         mesh.get_polygons().end());
-            labels.insert(labels.end(), mesh.get_labels().begin(),
-                          mesh.get_labels().end());
-            meshes.push_back(mesh);
-          }
+          collect_outputs();
           return;
         }
       }
+
+      underside.prepare(arr, elevation_provider, underpasses, cfg);
 
       // compute all heights for each vertex
       std::unordered_map<Vertex_handle, std::vector<hf_pair>> vertex_columns;
@@ -201,207 +159,54 @@ namespace roofer::reconstruction {
         vertex_columns[v] = heights;
       }
 
-      // walls
-      // store points that need to be created to do the walls right. We need
-      // them later for the roofs
+      const auto roof_height = [&](Vertex_handle vertex, Face_handle face) {
+        for (const auto& [height, candidate] : vertex_columns.at(vertex))
+          if (candidate == face) return height;
+        throw rooferException("Missing roof vertex height");
+      };
+
+      // Roof profiles may cross along a step. Keep that intersection in both
+      // roof rings; intermediate vertical heights are inserted once, at the
+      // end.
       std::unordered_map<Halfedge_handle, EPECK::Point_3> extra_wall_points;
       if (cfg.generate_walls) {
         for (auto edge : arr.edge_handles()) {
-          auto e_a = edge->twin();
-          auto e_b = edge;
-          auto v1 = e_a->target();
-          auto v2 = e_a->source();
-          auto& p1 = v1->point();
-          auto& p2 = v2->point();
-          auto f_a = e_a->face();
-          auto f_b = e_b->face();
-          bool fp_a = f_a->data().in_footprint;
-          bool fp_b = f_b->data().in_footprint;
-
-          // edge has no length
+          auto a = edge->twin()->face(), b = edge->face();
+          if (!a->data().in_footprint || !b->data().in_footprint) continue;
+          auto v1 = edge->source(), v2 = edge->target();
+          const auto& p1 = v1->point();
+          const auto& p2 = v2->point();
           if (CGAL::squared_distance(p1, p2) < snap_tolerance_sq) continue;
-
-          // Footprint walls are assembled from the floor and roof profiles.
-          if (!fp_a || !fp_b) {
-            continue;
-          }
-
-          // get precomputed heights from vertex column
-          float h1a, h1b, h2a, h2b;
-          vec3f v1_other =
-              get_heights(vertex_columns[v1], v1, f_a, f_b, h1a, h1b);
-          vec3f v2_other =
-              get_heights(vertex_columns[v2], v2, f_a, f_b, h2a, h2b);
-
-          const int part_id = f_b->data().part_id;
-          auto& mesh = multisolid[part_id];
-          const int wall_label = 3;  // Roof-step wall, away from the footprint.
-
-          LinearRing wall_face_1;
-          if ((h1a < h1b) and (h2a < h2b)) {
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other desc
-            wall_face_1.insert(wall_face_1.end(), v1_other.rbegin(),
-                               v1_other.rend());
-            wall_face_1.push_back(v2p(v1, h1a));
-            wall_face_1.push_back(v2p(v2, h2a));
-            // v2_other asc
-            wall_face_1.insert(wall_face_1.end(), v2_other.begin(),
-                               v2_other.end());
-            wall_face_1.push_back(v2p(v2, h2b));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h1a > h1b) and (h2a > h2b)) {
-            wall_face_1.push_back(v2p(v2, h2a));
-            // v2_other desc
-            wall_face_1.insert(wall_face_1.end(), v2_other.rbegin(),
-                               v2_other.rend());
-            wall_face_1.push_back(v2p(v2, h2b));
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other asc
-            wall_face_1.insert(wall_face_1.end(), v1_other.begin(),
-                               v1_other.end());
-            wall_face_1.push_back(v2p(v1, h1a));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h1a < h1b) and (h2a > h2b)) {
-            // compute vx and hx
-            auto l_a = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1a),
-                                     EPECK::Point_3(p2.x(), p2.y(), h2a));
-            auto l_b = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1b),
-                                     EPECK::Point_3(p2.x(), p2.y(), h2b));
-            auto result = CGAL::intersection(l_a, l_b);
-            auto px = std::get_if<typename EPECK::Point_3>(&*result);
-
-            // TODO: check if distance from px to p1 and p2 is longer than
-            // snap_tolerance?
-
-            if (px != nullptr)
-              extra_wall_points[edge] = *px;
-            else
-              throw roofer::rooferException(
-                  "Invalid intersection point in Extruder");
-            // EPECK::Point_2 px_2d(px->x(),px->y());
-            // arr.split_edge(edge, AT::Segment_2(p1,px_2d),
-            // AT::Segment_2(px_2d,p2)); if (result) { auto px = )
-            // }
-
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other desc
-            wall_face_1.insert(wall_face_1.end(), v1_other.rbegin(),
-                               v1_other.rend());
-            wall_face_1.push_back(v2p(v1, h1a));
-            wall_face_1.push_back(p2p(px));
-
-            LinearRing wall_face_2;
-            wall_face_2.push_back(v2p(v2, h2a));
-            // v2_other desc
-            wall_face_2.insert(wall_face_2.end(), v2_other.rbegin(),
-                               v2_other.rend());
-            wall_face_2.push_back(v2p(v2, h2b));
-            wall_face_2.push_back(p2p(px));
-
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-            faces.push_back(wall_face_2);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_2, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h1a > h1b) and (h2a < h2b)) {
-            // compute vx and hx
-            auto l_a = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1a),
-                                     EPECK::Point_3(p2.x(), p2.y(), h2a));
-            auto l_b = EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1b),
-                                     EPECK::Point_3(p2.x(), p2.y(), h2b));
-            auto result = CGAL::intersection(l_a, l_b);
-            auto px = std::get_if<typename EPECK::Point_3>(&*result);
-
-            // TODO: check if distance from px to p1 and p2 is longer than
-            // snap_tolerance?
-
-            if (px != nullptr)
-              extra_wall_points[edge] = *px;
-            else
-              throw roofer::rooferException(
-                  "Invalid intersection point in Extruder");
-            // EPECK::Point_2 px_2d(px->x(),px->y());
-            // arr.split_edge(edge, AT::Segment_2(p1,px_2d),
-            // AT::Segment_2(px_2d,p2)); if (result) { auto px = )
-            // }
-
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other asc
-            wall_face_1.insert(wall_face_1.end(), v1_other.begin(),
-                               v1_other.end());
-            wall_face_1.push_back(v2p(v1, h1a));
-            wall_face_1.push_back(p2p(px));
-
-            LinearRing wall_face_2;
-            wall_face_2.push_back(v2p(v2, h2a));
-            // v2_other asc
-            wall_face_2.insert(wall_face_2.end(), v2_other.begin(),
-                               v2_other.end());
-            wall_face_2.push_back(v2p(v2, h2b));
-            wall_face_2.push_back(p2p(px));
-
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-            faces.push_back(wall_face_2);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_2, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h1a > h1b) and (h2a == h2b)) {
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other asc
-            wall_face_1.insert(wall_face_1.end(), v1_other.begin(),
-                               v1_other.end());
-            wall_face_1.push_back(v2p(v1, h1a));
-            wall_face_1.push_back(v2p(v2, h2a));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h1a < h1b) and (h2a == h2b)) {
-            wall_face_1.push_back(v2p(v1, h1b));
-            // v1_other desc
-            wall_face_1.insert(wall_face_1.end(), v1_other.rbegin(),
-                               v1_other.rend());
-            wall_face_1.push_back(v2p(v1, h1a));
-            wall_face_1.push_back(v2p(v2, h2a));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h2b > h2a) and (h1a == h1b)) {
-            wall_face_1.push_back(v2p(v2, h2a));
-            // v2_other asc
-            wall_face_1.insert(wall_face_1.end(), v2_other.begin(),
-                               v2_other.end());
-            wall_face_1.push_back(v2p(v2, h2b));
-            wall_face_1.push_back(v2p(v1, h1a));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
-          } else if ((h2b < h2a) and (h1a == h1b)) {
-            wall_face_1.push_back(v2p(v2, h2a));
-            // v2_other desc
-            wall_face_1.insert(wall_face_1.end(), v2_other.rbegin(),
-                               v2_other.rend());
-            wall_face_1.push_back(v2p(v2, h2b));
-            wall_face_1.push_back(v2p(v1, h1a));
-            faces.push_back(wall_face_1);
-            labels.push_back(wall_label);
-            mesh.push_polygon(wall_face_1, wall_label);
-            // mesh.push_attribute("surface_type", wall_label);
+          const float h1a = roof_height(v1, a), h1b = roof_height(v1, b);
+          const float h2a = roof_height(v2, a), h2b = roof_height(v2, b);
+          auto& mesh = multisolid[b->data().part_id];
+          if ((h1a < h1b && h2a > h2b) || (h1a > h1b && h2a < h2b)) {
+            const auto line_a =
+                EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1a),
+                              EPECK::Point_3(p2.x(), p2.y(), h2a));
+            const auto line_b =
+                EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1b),
+                              EPECK::Point_3(p2.x(), p2.y(), h2b));
+            const auto intersection = CGAL::intersection(line_a, line_b);
+            const auto* point =
+                intersection ? std::get_if<EPECK::Point_3>(&*intersection)
+                             : nullptr;
+            if (!point)
+              throw rooferException("Invalid intersection point in Extruder");
+            extra_wall_points[edge] = *point;
+            LinearRing first, second;
+            first.insert(first.end(), {v2p(v1, h1b), v2p(v1, h1a), p2p(point)});
+            second.insert(second.end(),
+                          {v2p(v2, h2a), v2p(v2, h2b), p2p(point)});
+            mesh.push_polygon(first, 3);
+            mesh.push_polygon(second, 3);
+          } else {
+            LinearRing wall;
+            for (auto point :
+                 {v2p(v1, h1b), v2p(v1, h1a), v2p(v2, h2a), v2p(v2, h2b)})
+              if (wall.empty() || wall.back() != point) wall.push_back(point);
+            if (wall.size() > 1 && wall.front() == wall.back()) wall.pop_back();
+            if (wall.size() > 2) mesh.push_polygon(wall, 3);
           }
         }
       }
@@ -426,8 +231,6 @@ namespace roofer::reconstruction {
             }
 
             if (roofpart.size() > 2) {
-              faces.push_back(roofpart);
-              labels.push_back(int(1));
               multisolid[face->data().part_id].push_polygon(roofpart, int(1));
               // mesh.push_attribute("surface_type", int(1));
             }
@@ -435,17 +238,12 @@ namespace roofer::reconstruction {
         }
       }
 
-      underside.emit(
-          arr, elevation_provider, cfg,
-          [&](Vertex_handle vertex, Face_handle face) {
-            for (auto [height, candidate] : vertex_columns.at(vertex))
-              if (candidate == face) return height;
-            throw rooferException("Missing roof vertex height");
-          },
-          multisolid);
+      underside.emit(arr, elevation_provider, cfg, roof_height, multisolid);
       detail::conform_vertical_edges(multisolid);
-      faces.clear();
-      labels.clear();
+      collect_outputs();
+    }
+
+    void collect_outputs() {
       for (auto& [part, mesh] : multisolid) {
         faces.insert(faces.end(), mesh.get_polygons().begin(),
                      mesh.get_polygons().end());

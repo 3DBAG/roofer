@@ -227,6 +227,9 @@ TEST_CASE("courtyard boundaries remain linked around a carved opening") {
       arr.non_const_handle(std::get<Arrangement_2::Face_const_handle>(object));
   hole->data().in_footprint = false;
   hole->data().is_footprint_hole = true;
+  auto baseline_arr = arr;
+  auto baseline = extrude(baseline_arr, {});
+  CHECK(volume(baseline->meshes.front()) == Catch::Approx(960));
   auto e = extrude(arr, {{rectangle(-1, 4, 5, 6), 4}});
   CHECK(volume(e->meshes.front()) == Catch::Approx(928));
 }
@@ -246,6 +249,14 @@ TEST_CASE("separate building parts retain their own floor and walls") {
   f->data().part_id = 1;
   f->data().segid = 2;
   f->data().plane = Plane(0, 0, 1, -10);
+  auto baseline_arr = arr;
+  auto baseline = createArrangementExtruder();
+  baseline->compute(baseline_arr, 0.0F, {});
+  REQUIRE(baseline->multisolid.size() == 2);
+  for (const auto& [part, mesh] : baseline->multisolid) {
+    check_closed(mesh);
+    CHECK(volume(mesh) == Catch::Approx(1000));
+  }
   auto e = createArrangementExtruder();
   std::vector<Underpass> passages{{rectangle(-1, 3, 31, 7), 4}};
   e->compute(arr, 0.0F, passages, {});
@@ -288,4 +299,110 @@ TEST_CASE(
       arr, {{rectangle(2, 2, 5, 8), 4}, {rectangle(5, 2, 8, 8), 4.00001}});
   CHECK(volume(e->meshes.front()) == Catch::Approx(856));
   CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
+}
+
+TEST_CASE("rejecting a narrow higher patch retains the broad underpass") {
+  std::vector<Underpass> input{{rectangle(1, 1, 9, 9), 4},
+                               {rectangle(4, 2, 4.0001F, 8), 5}};
+  for (int order = 0; order < 2; ++order) {
+    auto arr = roof();
+    auto e = extrude(arr, input);
+    CHECK(volume(e->meshes.front()) == Catch::Approx(744));
+    std::reverse(input.begin(), input.end());
+  }
+}
+
+TEST_CASE("rejecting a thin extension retains the shared ceiling") {
+  std::vector<Underpass> input{{rectangle(1, 1, 6, 9), 4},
+                               {rectangle(5, 4, 9, 4.0001F), 4}};
+  for (int order = 0; order < 2; ++order) {
+    auto arr = roof();
+    auto e = extrude(arr, input);
+    CHECK(volume(e->meshes.front()) == Catch::Approx(840));
+    std::reverse(input.begin(), input.end());
+  }
+}
+
+TEST_CASE("roof profile crossings remain closed after vertical conformance") {
+  auto arr = roof(true);
+  CGAL::Arr_naive_point_location<Arrangement_2> locate(arr);
+  auto object = locate.locate(Point_2(2, 5));
+  arr.non_const_handle(std::get<Arrangement_2::Face_const_handle>(object))
+      ->data()
+      .plane = Plane(0, -0.4, 1, -8);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(840));
+}
+
+TEST_CASE("walls at a junction include all incident roof heights") {
+  auto arr = roof(true, 8, 12);
+  CGAL::insert(arr, Segment_2(Point_2(0, 5), Point_2(10, 5)));
+  CGAL::Arr_naive_point_location<Arrangement_2> locate(arr);
+  for (auto [x, y, height] : {std::tuple(2, 2, 8), std::tuple(7, 2, 10),
+                              std::tuple(7, 7, 12), std::tuple(2, 7, 14)}) {
+    auto object = locate.locate(Point_2(x, y));
+    auto face = arr.non_const_handle(
+        std::get<Arrangement_2::Face_const_handle>(object));
+    face->data().in_footprint = true;
+    face->data().part_id = 0;
+    face->data().segid = 1;
+    face->data().plane = Plane(0, 0, 1, -height);
+  }
+  auto e = extrude(arr, {});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(1100));
+}
+
+namespace {
+  class CountingElevationProvider : public ElevationProvider {
+   public:
+    mutable int clearance_queries = 0;
+    float get(Point_2) const override { return 0; }
+    float get_percentile(float) const override { return 0; }
+    float get_max_elevation(
+        const CGAL::Polygon_with_holes_2<EPECK>&) const override {
+      ++clearance_queries;
+      return 0;
+    }
+    std::vector<Segment_2> get_intersections(
+        const Plane&, const CGAL::Polygon_with_holes_2<EPECK>&) const override {
+      return {};
+    }
+  };
+}  // namespace
+
+TEST_CASE("terrain clearance work is independent of roof partition count") {
+  int baseline_queries = 0;
+  for (bool split : {false, true}) {
+    auto arr = roof(split);
+    auto e = createArrangementExtruder();
+    CountingElevationProvider elevations;
+    const std::vector<Underpass> input{{rectangle(2, 2, 8, 8), 4}};
+    e->compute(arr, elevations, input, {});
+    REQUIRE(e->meshes.size() == 1);
+    check_closed(e->meshes.front());
+    CHECK(volume(e->meshes.front()) == Catch::Approx(856));
+    if (!split) baseline_queries = elevations.clearance_queries;
+    CHECK(elevations.clearance_queries == baseline_queries);
+  }
+  CHECK(baseline_queries > 0);
+}
+
+TEST_CASE("missing roof planes bypass underpass clearance") {
+  auto arr = roof();
+  for (auto face : arr.face_handles()) face->data().segid = 0;
+  CountingElevationProvider elevations;
+  auto e = createArrangementExtruder();
+  const std::vector<Underpass> input{{rectangle(-1, 3, 11, 7), 4}};
+  e->compute(arr, elevations, input, {});
+  CHECK(elevations.clearance_queries == 0);
+  REQUIRE(e->meshes.size() == 1);
+  REQUIRE(e->labels.size() == 1);
+  CHECK(e->labels.front() == 0);
+}
+
+TEST_CASE("discarded inputs leave no tiny splits on the footprint") {
+  auto arr = roof();
+  auto e = extrude(
+      arr, {{rectangle(1, 1, 9, 9), 4}, {rectangle(-1, 4, 5, 4.0001F), -1}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(744));
 }
