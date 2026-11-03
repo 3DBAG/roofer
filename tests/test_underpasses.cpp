@@ -1,10 +1,13 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <CGAL/Arr_naive_point_location.h>
+#include <CGAL/squared_distance_3.h>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 #include <roofer/reconstruction/MeshTriangulator.hpp>
 #include <algorithm>
 #include <map>
+#include <limits>
+#include "../src/core/reconstruction/WallAssembler.hpp"
 
 namespace {
   using namespace roofer;
@@ -405,4 +408,171 @@ TEST_CASE("discarded inputs leave no tiny splits on the footprint") {
   auto e = extrude(
       arr, {{rectangle(1, 1, 9, 9), 4}, {rectangle(-1, 4, 5, 4.0001F), -1}});
   CHECK(volume(e->meshes.front()) == Catch::Approx(744));
+}
+
+TEST_CASE("straight underpass sides form larger stepped polygons") {
+  auto arr = roof();
+  auto e =
+      extrude(arr, {{rectangle(2, 2, 5, 8), 4}, {rectangle(5, 2, 8, 8), 5}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(838));
+  // Four sides around the combined opening, plus the step between ceilings.
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 3) == 5);
+  bool ground_split = false, junction = false;
+  for (const auto& polygon : e->faces) {
+    auto visit = [&](const vec3f& ring) {
+      for (auto p : ring) {
+        ground_split |= p == arr3f{5, 2, 0};
+        junction |= p == arr3f{5, 2, 4};
+      }
+    };
+    visit(polygon);
+    for (const auto& hole : polygon.interior_rings()) visit(hole);
+  }
+  CHECK_FALSE(ground_split);
+  CHECK(junction);
+}
+
+TEST_CASE("straight roof steps merge across changing upper roofs") {
+  auto arr = roof(true);
+  CGAL::insert(arr, Segment_2(Point_2(0, 5), Point_2(10, 5)));
+  CGAL::Arr_naive_point_location<Arrangement_2> locate(arr);
+  for (auto [x, y, height] : {std::tuple(2, 2, 8), std::tuple(2, 7, 8),
+                              std::tuple(7, 2, 12), std::tuple(7, 7, 14)}) {
+    auto object = locate.locate(Point_2(x, y));
+    auto face = arr.non_const_handle(
+        std::get<Arrangement_2::Face_const_handle>(object));
+    face->data().in_footprint = true;
+    face->data().part_id = 0;
+    face->data().segid = 1;
+    face->data().plane = Plane(0, 0, 1, -height);
+  }
+  auto e = extrude(arr, {});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(1050));
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 3) == 2);
+}
+
+TEST_CASE("collinear mesh subdivisions disappear from all incident surfaces") {
+  auto arr = roof();
+  CGAL::insert_point(arr, Point_2(5, 0));
+  auto e = extrude(arr, {});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(1000));
+  REQUIRE(e->faces.size() == 6);
+  for (const auto& polygon : e->faces) CHECK(polygon.size() == 4);
+}
+
+TEST_CASE("wall spans join independently of insertion order") {
+  roofer::reconstruction::detail::WallAssembler walls;
+  walls.add(Point_2(2, 0), Point_2(3, 0), {2, 2}, {6, 6}, 0, 3);
+  walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+  walls.add(Point_2(1, 0), Point_2(2, 0), {1, 1}, {5, 5}, 0, 3);
+  std::unordered_map<int, Mesh> meshes;
+  walls.emit(meshes);
+  REQUIRE(meshes.size() == 1);
+  REQUIRE(meshes.at(0).get_polygons().size() == 1);
+  const auto& polygon = meshes.at(0).get_polygons().front();
+  CHECK(polygon.size() == 12);
+  CHECK(polygon.front() == arr3f{0, 0, 0});
+  CHECK(polygon.back() == arr3f{0, 0, 4});
+}
+
+TEST_CASE("wall merging preserves semantics, orientation and connectivity") {
+  roofer::reconstruction::detail::WallAssembler walls;
+  SECTION("different building parts") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+    walls.add(Point_2(1, 0), Point_2(2, 0), {0, 0}, {4, 4}, 1, 3);
+  }
+  SECTION("different surface labels") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 2);
+    walls.add(Point_2(1, 0), Point_2(2, 0), {0, 0}, {4, 4}, 0, 3);
+  }
+  SECTION("opposite facing walls") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+    walls.add(Point_2(1, 0), Point_2(0, 0), {1, 1}, {5, 5}, 0, 3);
+  }
+  SECTION("point-only contact") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+    walls.add(Point_2(1, 0), Point_2(2, 0), {4, 4}, {8, 8}, 0, 3);
+  }
+  SECTION("disconnected height intervals") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+    walls.add(Point_2(1, 0), Point_2(2, 0), {5, 5}, {8, 8}, 0, 3);
+  }
+  SECTION("turning a corner") {
+    walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+    walls.add(Point_2(1, 0), Point_2(1, 1), {0, 0}, {4, 4}, 0, 3);
+  }
+  std::unordered_map<int, Mesh> meshes;
+  walls.emit(meshes);
+  std::size_t polygons = 0;
+  for (const auto& [part, mesh] : meshes)
+    polygons += mesh.get_polygons().size();
+  CHECK(polygons == 2);
+}
+
+TEST_CASE("wall merging stops at ambiguous branches") {
+  roofer::reconstruction::detail::WallAssembler walls;
+  walls.add(Point_2(0, 0), Point_2(1, 0), {0, 0}, {4, 4}, 0, 3);
+  walls.add(Point_2(1, 0), Point_2(2, 0), {0, 0}, {4, 4}, 0, 3);
+  walls.add(Point_2(1, 0), Point_2(3, 0), {1, 1}, {5, 5}, 0, 3);
+  std::unordered_map<int, Mesh> meshes;
+  walls.emit(meshes);
+  REQUIRE(meshes.size() == 1);
+  CHECK(meshes.at(0).get_polygons().size() == 3);
+}
+
+TEST_CASE("mesh cleanup tolerates rounding on shared roof and wall edges") {
+  auto arr = roof();
+  auto e = extrude(arr, {});
+  const arr3f a{0, 0, 10}, b{10, 0, 10}, rounded{5, 0.00001F, 10};
+  auto& mesh = e->multisolid.at(0);
+  for (auto& polygon : mesh.get_polygons()) {
+    vec3f ring;
+    for (std::size_t i = 0; i < polygon.size(); ++i) {
+      const auto p = polygon[i], q = polygon[(i + 1) % polygon.size()];
+      ring.push_back(p);
+      if ((p == a && q == b) || (p == b && q == a)) ring.push_back(rounded);
+    }
+    polygon.assign(ring.begin(), ring.end());
+  }
+  check_closed(mesh);
+  auto has_rounded = [&] {
+    for (const auto& polygon : mesh.get_polygons())
+      if (std::find(polygon.begin(), polygon.end(), rounded) != polygon.end())
+        return true;
+    return false;
+  };
+  roofer::reconstruction::detail::remove_redundant_vertices(e->multisolid, 0);
+  CHECK(has_rounded());
+  roofer::reconstruction::detail::remove_redundant_vertices(e->multisolid,
+                                                            0.001F);
+  CHECK_FALSE(has_rounded());
+  check_closed(mesh);
+  CHECK(volume(mesh) == Catch::Approx(1000));
+}
+
+TEST_CASE("mesh cleanup bounds deviation across an entire degree-two chain") {
+  LinearRing wall;
+  wall.insert(wall.end(), {{0, 0, 0}, {10, 0, 0}});
+  for (int x = 10; x >= 0; --x)
+    wall.push_back({float(x), 0, 10 + 0.0008F * x * (10 - x)});
+  const auto original = wall;
+  std::unordered_map<int, Mesh> meshes;
+  meshes[0].push_polygon(wall, 3);
+  constexpr float tolerance = 0.001F;
+  roofer::reconstruction::detail::remove_redundant_vertices(meshes, tolerance);
+  const auto& result = meshes.at(0).get_polygons().front();
+  REQUIRE(result.size() < original.size());
+  CHECK(std::find(result.begin(), result.end(), arr3f{5, 0, 10.02F}) !=
+        result.end());
+  auto point = [](const arr3f& p) { return EPICK::Point_3(p[0], p[1], p[2]); };
+  for (const auto& p : original) {
+    double minimum = std::numeric_limits<double>::infinity();
+    for (std::size_t i = 0; i < result.size(); ++i)
+      minimum = std::min(
+          minimum, CGAL::squared_distance(
+                       point(p), EPICK::Segment_3(
+                                     point(result[i]),
+                                     point(result[(i + 1) % result.size()]))));
+    CHECK(minimum <= double(tolerance) * tolerance);
+  }
 }

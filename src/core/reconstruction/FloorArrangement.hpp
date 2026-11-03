@@ -3,6 +3,7 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 #include <functional>
+#include "WallAssembler.hpp"
 
 namespace roofer::reconstruction::detail {
   struct FloorRegion {
@@ -25,10 +26,7 @@ namespace roofer::reconstruction::detail {
         Arrangement_2& roof, const ElevationProvider& elevations,
         const ArrangementExtruderConfig& config,
         const std::function<float(Vertex_handle, Face_handle)>& roof_height,
-        std::unordered_map<int, Mesh>& meshes) const;
+        std::unordered_map<int, Mesh>& meshes, WallAssembler& walls) const;
   };
 
-  // Insert every height at a vertical vertex column into all incident walls.
-  // This preserves edge pairing after facade polygons have been assembled.
-  void conform_vertical_edges(std::unordered_map<int, Mesh>& meshes);
 }  // namespace roofer::reconstruction::detail

@@ -248,16 +248,6 @@ namespace roofer::reconstruction::detail {
       return next;
     }
 
-    // Check whether consecutive edges continue one facade within the same part.
-    bool straight(Halfedge_handle a, Halfedge_handle b) {
-      return a->face()->data().part_id == b->face()->data().part_id &&
-             CGAL::collinear(a->source()->point(), a->target()->point(),
-                             b->target()->point()) &&
-             CGAL::scalar_product(a->target()->point() - a->source()->point(),
-                                  b->target()->point() - b->source()->point()) >
-                 0;
-    }
-
     std::vector<std::vector<Halfedge_handle>> boundary_loops(
         Arrangement_2& arr) {
       std::set<Halfedge_handle> visited;
@@ -273,29 +263,6 @@ namespace roofer::reconstruction::detail {
         } while (e != edge);
       }
       return loops;
-    }
-
-    // Group exterior and courtyard boundaries into maximal straight facades.
-    std::vector<std::vector<Halfedge_handle>> boundary_chains(
-        Arrangement_2& arr) {
-      std::vector<std::vector<Halfedge_handle>> chains;
-      for (const auto& loop : boundary_loops(arr)) {
-        // Start at a corner so a facade is not split across the loop's start.
-        std::size_t start = 0;
-        while (start < loop.size() &&
-               straight(loop[(start + loop.size() - 1) % loop.size()],
-                        loop[start]))
-          ++start;
-        if (start == loop.size())
-          throw rooferException("Degenerate footprint loop");
-        for (std::size_t i = 0; i < loop.size(); ++i) {
-          auto e = loop[(start + i) % loop.size()];
-          if (i == 0 || !straight(chains.back().back(), e))
-            chains.emplace_back();
-          chains.back().push_back(e);
-        }
-      }
-      return chains;
     }
 
     // Lift exact XY coordinates into the mesh's float coordinate format.
@@ -719,12 +686,12 @@ namespace roofer::reconstruction::detail {
     for (const auto& point : points) CGAL::insert_point(roof, point);
   }
 
-  // Emit ground, ceilings, underside step walls, and complete facade polygons.
+  // Emit ground, ceilings, and wall spans for shared polygon assembly.
   void FloorArrangement::emit(
       Arrangement_2& roof, const ElevationProvider& elevations,
       const ArrangementExtruderConfig& cfg,
       const std::function<float(Vertex_handle, Face_handle)>& roof_height,
-      std::unordered_map<int, Mesh>& meshes) const {
+      std::unordered_map<int, Mesh>& meshes, WallAssembler& walls) const {
     // Reverse the arrangement winding so ground and ceiling normals point down.
     if (cfg.generate_floor && floor.is_empty())
       emit_ground(roof, elevations, meshes);
@@ -766,12 +733,9 @@ namespace roofer::reconstruction::detail {
         e = e->twin();
         std::swap(p, q);
       }
-      LinearRing wall;
-      append(wall, lifted(p, lower_z(a, elevations, p)));
-      append(wall, lifted(q, lower_z(a, elevations, q)));
-      append(wall, lifted(q, lower_z(b, elevations, q)));
-      append(wall, lifted(p, lower_z(b, elevations, p)));
-      meshes[a.part].push_polygon(wall, 3);
+      walls.add(p, q, {lower_z(a, elevations, p), lower_z(a, elevations, q)},
+                {lower_z(b, elevations, p), lower_z(b, elevations, q)}, a.part,
+                3);
     }
 
     // Both arrangements retain the same footprint splits. Match by oriented
@@ -780,64 +744,24 @@ namespace roofer::reconstruction::detail {
     for (auto e : floor.halfedge_handles())
       if (boundary(e))
         floor_edges[{e->source()->point(), e->target()->point()}] = e->face();
-    // Trace each facade's floor profile forward and its roof profile backward.
+    // Supply footprint spans to the same assembler as both kinds of steps.
     const FloorRegion ground;
-    for (const auto& chain : boundary_chains(roof)) {
-      vec3f bottom, top;
-      for (auto e : chain) {
-        auto p = e->source()->point(), q = e->target()->point();
-        const FloorRegion* region = &ground;
-        if (!floor.is_empty()) {
-          auto f = floor_edges.find({p, q});
-          if (f == floor_edges.end())
-            throw rooferException("Roof/floor footprint boundary mismatch");
-          region = &regions.at(f->second);
-        }
-        append(bottom, lifted(p, lower_z(*region, elevations, p)));
-        append(bottom, lifted(q, lower_z(*region, elevations, q)));
-        append(top, lifted(p, roof_height(e->source(), e->face())));
-        append(top, lifted(q, roof_height(e->target(), e->face())));
+    for (auto e : roof.halfedge_handles()) {
+      if (!boundary(e)) continue;
+      const auto p = e->source()->point(), q = e->target()->point();
+      const FloorRegion* region = &ground;
+      if (!floor.is_empty()) {
+        auto f = floor_edges.find({p, q});
+        if (f == floor_edges.end())
+          throw rooferException("Roof/floor footprint boundary mismatch");
+        region = &regions.at(f->second);
       }
-      LinearRing wall;
-      wall.insert(wall.end(), bottom.begin(), bottom.end());
-      for (auto it = top.rbegin(); it != top.rend(); ++it) append(wall, *it);
-      if (wall.size() > 1 && wall.front() == wall.back()) wall.pop_back();
-      if (wall.size() > 2)
-        meshes[chain.front()->face()->data().part_id].push_polygon(wall, 2);
-    }
-  }
-
-  // Split vertical edges at shared incident heights to remove T-junctions.
-  void conform_vertical_edges(std::unordered_map<int, Mesh>& meshes) {
-    for (auto& [part, mesh] : meshes) {
-      // Collect all heights at each XY column within this solid.
-      std::map<arr2f, std::set<float>> columns;
-      auto visit = [&](auto&& callback) {
-        for (auto& polygon : mesh.get_polygons()) {
-          callback(polygon);
-          for (auto& hole : polygon.interior_rings()) callback(hole);
-        }
-      };
-      visit([&](const vec3f& ring) {
-        for (const auto& p : ring) columns[{p[0], p[1]}].insert(p[2]);
-      });
-      // Insert intermediate heights in each vertical edge's traversal
-      // direction.
-      visit([&](vec3f& ring) {
-        vec3f result;
-        for (std::size_t i = 0; i < ring.size(); ++i) {
-          const auto p = ring[i], q = ring[(i + 1) % ring.size()];
-          append(result, p);
-          if (p[0] != q[0] || p[1] != q[1] || p[2] == q[2]) continue;
-          vec3f extra;
-          for (auto z : columns.at({p[0], p[1]}))
-            if (z > std::min(p[2], q[2]) && z < std::max(p[2], q[2]))
-              extra.push_back({p[0], p[1], z});
-          if (p[2] > q[2]) std::reverse(extra.begin(), extra.end());
-          result.insert(result.end(), extra.begin(), extra.end());
-        }
-        ring = std::move(result);
-      });
+      walls.add(
+          p, q,
+          {lower_z(*region, elevations, p), lower_z(*region, elevations, q)},
+          {roof_height(e->source(), e->face()),
+           roof_height(e->target(), e->face())},
+          e->face()->data().part_id, 2);
     }
   }
 }  // namespace roofer::reconstruction::detail
