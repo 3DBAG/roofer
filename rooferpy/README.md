@@ -6,6 +6,7 @@ With Conan:
 ```
 cd roofer-dev
 conan profile detect --force
+conan export conan/recipes/proj --version=9.8.1
 conan install . \
   --output-folder=build_python \
   --build=missing \

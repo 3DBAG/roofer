@@ -42,9 +42,11 @@ COPY --link ./CMakeLists.txt $ROOFER_ROOT/CMakeLists.txt
 COPY --link ./LICENSE $ROOFER_ROOT/LICENSE
 COPY --link ./README.md $ROOFER_ROOT/README.md
 COPY --link ./conanfile.py $ROOFER_ROOT/conanfile.py
+COPY --link ./conan/recipes/proj $ROOFER_ROOT/conan/recipes/proj
 
 RUN --mount=type=cache,target=/root/.conan2 \
     conan profile detect --force \
+    && conan export conan/recipes/proj --version=9.8.1 \
     && conan install . \
       --output-folder=$ROOFER_BUILD \
       --build=missing \

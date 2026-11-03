@@ -4,12 +4,17 @@
 
 Conan is the recommended way to build roofer from source.
 
+The application build uses GDAL 3.13.0 and pins PROJ to 9.8.1. Since
+ConanCenter does not yet provide PROJ 9.8.1, export the bundled recipe
+before installing dependencies, as shown below. CI does this automatically.
+
 Install Conan 2 and then configure and build the project like this:
 
 ```sh
 git clone https://github.com/3DBAG/roofer.git
 cd roofer
 conan profile detect --force
+conan export conan/recipes/proj --version=9.8.1
 conan install . \
   --output-folder=build \
   --build=missing \
@@ -70,6 +75,7 @@ To build the documentation locally, first build the documentation helper and Pyt
 
 ```sh
 conan profile detect --force
+conan export conan/recipes/proj --version=9.8.1
 conan install . \
   --output-folder=build \
   --build=missing \

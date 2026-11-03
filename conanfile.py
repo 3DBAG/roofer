@@ -33,7 +33,9 @@ class RooferRecipe(ConanFile):
 
         if self.options.build_apps:
             self.requires("geos/3.13.0", override=True)
-            self.requires("gdal/3.12.1")
+            self.requires("gdal/3.13.0")
+            # Export conan/recipes/proj first; 9.8.1 is not in ConanCenter yet.
+            self.requires("proj/9.8.1", override=True)
             self.requires("nlohmann_json/3.11.3")
             self.requires("laslib/2.0.2")
             # bshoshany-thread-pool is header-only, not yet in ConanCenter;

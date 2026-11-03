@@ -101,6 +101,9 @@ jobs:
       - name: Detect Conan profile
         run: conan profile detect --force
 
+      - name: Export local PROJ recipe
+        run: conan export conan/recipes/proj --version=9.8.1
+
       - name: Install dependencies
         run: >
           conan install .
