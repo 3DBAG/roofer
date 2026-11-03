@@ -95,6 +95,7 @@ namespace roofer::reconstruction {
           elevation_provider.get_percentile(0.97);
 
       detail::FloorArrangement underside;
+      detail::WallAssembler walls;
 
       // check for no detected planes (if one face inside fp has none then all
       // have none)
@@ -104,7 +105,9 @@ namespace roofer::reconstruction {
           floor_config.generate_walls = false;
           underside.emit(
               arr, elevation_provider, floor_config,
-              [](Vertex_handle, Face_handle) { return 0.0F; }, multisolid);
+              [](Vertex_handle, Face_handle) { return 0.0F; }, multisolid,
+              walls);
+          detail::remove_redundant_vertices(multisolid, cfg.snap_tolerance);
           collect_outputs();
           return;
         }
@@ -179,7 +182,16 @@ namespace roofer::reconstruction {
           if (CGAL::squared_distance(p1, p2) < snap_tolerance_sq) continue;
           const float h1a = roof_height(v1, a), h1b = roof_height(v1, b);
           const float h2a = roof_height(v2, a), h2b = roof_height(v2, b);
-          auto& mesh = multisolid[b->data().part_id];
+          auto add_step = [&](const Point_2& p, const Point_2& q,
+                              std::array<float, 2> ha,
+                              std::array<float, 2> hb) {
+            // A roof step has solid on the side with the higher roof.
+            if (ha[0] > hb[0] || ha[1] > hb[1])
+              walls.add(q, p, {hb[1], hb[0]}, {ha[1], ha[0]}, b->data().part_id,
+                        3);
+            else
+              walls.add(p, q, ha, hb, b->data().part_id, 3);
+          };
           if ((h1a < h1b && h2a > h2b) || (h1a > h1b && h2a < h2b)) {
             const auto line_a =
                 EPECK::Line_3(EPECK::Point_3(p1.x(), p1.y(), h1a),
@@ -194,19 +206,12 @@ namespace roofer::reconstruction {
             if (!point)
               throw rooferException("Invalid intersection point in Extruder");
             extra_wall_points[edge] = *point;
-            LinearRing first, second;
-            first.insert(first.end(), {v2p(v1, h1b), v2p(v1, h1a), p2p(point)});
-            second.insert(second.end(),
-                          {v2p(v2, h2a), v2p(v2, h2b), p2p(point)});
-            mesh.push_polygon(first, 3);
-            mesh.push_polygon(second, 3);
+            const Point_2 crossing(point->x(), point->y());
+            const float z = float(CGAL::to_double(point->z()));
+            add_step(p1, crossing, {h1a, z}, {h1b, z});
+            add_step(crossing, p2, {z, h2a}, {z, h2b});
           } else {
-            LinearRing wall;
-            for (auto point :
-                 {v2p(v1, h1b), v2p(v1, h1a), v2p(v2, h2a), v2p(v2, h2b)})
-              if (wall.empty() || wall.back() != point) wall.push_back(point);
-            if (wall.size() > 1 && wall.front() == wall.back()) wall.pop_back();
-            if (wall.size() > 2) mesh.push_polygon(wall, 3);
+            add_step(p1, p2, {h1a, h2a}, {h1b, h2b});
           }
         }
       }
@@ -238,8 +243,11 @@ namespace roofer::reconstruction {
         }
       }
 
-      underside.emit(arr, elevation_provider, cfg, roof_height, multisolid);
+      underside.emit(arr, elevation_provider, cfg, roof_height, multisolid,
+                     walls);
+      walls.emit(multisolid);
       detail::conform_vertical_edges(multisolid);
+      detail::remove_redundant_vertices(multisolid, cfg.snap_tolerance);
       collect_outputs();
     }
 
