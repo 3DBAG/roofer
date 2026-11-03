@@ -260,10 +260,14 @@
 <section id="compilation-with-conan">
 <h2>Compilation with Conan<a class="headerlink" href="#compilation-with-conan" title="Link to this heading">¶</a></h2>
 <p>Conan is the recommended way to build roofer from source.</p>
+<p>The application build uses GDAL 3.13.0 and pins PROJ to 9.8.1. Since
+ConanCenter does not yet provide PROJ 9.8.1, export the bundled recipe
+before installing dependencies, as shown below. CI does this automatically.</p>
 <p>Install Conan 2 and then configure and build the project like this:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3DBAG/roofer.git
 <span class="nb">cd</span><span class="w"> </span>roofer
 conan<span class="w"> </span>profile<span class="w"> </span>detect<span class="w"> </span>--force
+conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/proj<span class="w"> </span>--version<span class="o">=</span><span class="m">9</span>.8.1
 conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output-folder<span class="o">=</span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--build<span class="o">=</span>missing<span class="w"> </span><span class="se">\</span>
@@ -319,6 +323,7 @@ nix<span class="w"> </span>build<span class="w"> </span>.#rooferpy
 <section id="with-conan">
 <h3>With Conan<a class="headerlink" href="#with-conan" title="Link to this heading">¶</a></h3>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conan<span class="w"> </span>profile<span class="w"> </span>detect<span class="w"> </span>--force
+conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/proj<span class="w"> </span>--version<span class="o">=</span><span class="m">9</span>.8.1
 conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output-folder<span class="o">=</span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--build<span class="o">=</span>missing<span class="w"> </span><span class="se">\</span>
