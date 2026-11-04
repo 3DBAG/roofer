@@ -245,7 +245,10 @@ namespace roofer::io {
         fp_geometry["lod"] = "0";
         fp_geometry["type"] = "MultiSurface";
 
-        add_vertices_polygon(vertex_map, vertex_vec, vertex_set, footprint);
+        // the building's extent covers its footprint and every part at every
+        // LoD, so a building without parts still gets a valid extent
+        TBox<double> building_bbox =
+            add_vertices_polygon(vertex_map, vertex_vec, vertex_set, footprint);
         fp_geometry["boundaries"] = {
             LinearRing2jboundary(vertex_map, footprint)};
         building["geometry"].push_back(fp_geometry);
@@ -257,7 +260,6 @@ namespace roofer::io {
         if (export_lod13) has_solids = multisolid_lod13->size();
         if (export_lod22) has_solids = multisolid_lod22->size();
 
-        TBox<double> building_bbox;
         if (has_solids) {
           const MeshMap* meshmap;
           if (export_lod22) {
@@ -280,9 +282,9 @@ namespace roofer::io {
             // from poor dim pointcloud).
             if (export_lod12) {
               try {
-                building_bbox =
-                    add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
-                                      multisolid_lod12->at(sid));
+                building_bbox.add(add_vertices_mesh(vertex_map, vertex_vec,
+                                                    vertex_set,
+                                                    multisolid_lod12->at(sid)));
                 buildingPart["geometry"].push_back(
                     mesh2jSolid(multisolid_lod12->at(sid), "1.2", vertex_map));
               } catch (const std::exception& e) {
@@ -291,9 +293,9 @@ namespace roofer::io {
             }
             if (export_lod13) {
               try {
-                building_bbox =
-                    add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
-                                      multisolid_lod13->at(sid));
+                building_bbox.add(add_vertices_mesh(vertex_map, vertex_vec,
+                                                    vertex_set,
+                                                    multisolid_lod13->at(sid)));
                 buildingPart["geometry"].push_back(
                     mesh2jSolid(multisolid_lod13->at(sid), "1.3", vertex_map));
               } catch (const std::exception& e) {
@@ -301,9 +303,9 @@ namespace roofer::io {
               }
             }
             if (export_lod22) {
-              building_bbox =
-                  add_vertices_mesh(vertex_map, vertex_vec, vertex_set,
-                                    multisolid_lod22->at(sid));
+              building_bbox.add(add_vertices_mesh(vertex_map, vertex_vec,
+                                                  vertex_set,
+                                                  multisolid_lod22->at(sid)));
               buildingPart["geometry"].push_back(
                   mesh2jSolid(multisolid_lod22->at(sid), "2.2", vertex_map));
             }
