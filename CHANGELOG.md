@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
-- The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188.
+- The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188 via #189.
 
 ## [1.1.0-beta.1] - 2026-07-30
 
