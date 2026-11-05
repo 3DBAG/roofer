@@ -57,10 +57,10 @@ Underpass layer (default: first layer).
 Underpass building ID attribute (default: id-attribute).
 ```
 ```{option} --underpass-height-attribute <string> (default: <no value>)
-Numeric absolute ceiling elevation attribute. If omitted, use underpass-default-height above the building floor.
+Numeric absolute ceiling elevation attribute. If omitted or its value is null, use underpass-default-height above the building floor.
 ```
 ```{option} --underpass-default-height <float> (default: 4)
-Underpass clearance above the floor when no height attribute is specified, in metres.
+Underpass clearance above the floor when the height attribute is omitted or its value is null, in metres.
 ```
 ```{option} --filter <string> (default: <no value>)
 Specify WHERE clause in OGR SQL to select specfic features from `<polygon-source>`. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where
