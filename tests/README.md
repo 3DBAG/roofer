@@ -1,16 +1,23 @@
 # Test data description
 
-## underpasses-10-434-716
+## underpasses
 
-An Amsterdam tile with 583 building footprints, two original AHN5 COPC/LAZ files,
-and 94 underpass polygons, including pillar holes and one deliberately retained
-invalid source polygon. The archive is approximately 350 MiB.
+A small Amsterdam fixture with four complete building footprints (two with
+underpasses), a cropped AHN5 point cloud, and three underpass source polygons.
+Two polygons are valid and preserve five pillar holes; one invalid polygon is
+retained to exercise skipping. The archive is about 1.5 MiB and the CLI test
+takes about one second locally.
 
-CMake downloads [underpasses-10-434-716.zip](https://data.3dgi.xyz/roofer-test-data/underpasses-10-434-716.zip)
-to `tests/data/underpasses-10-434-716/` when testing is enabled and verifies
-MD5 `6a9b64f9f3b834ed52552976c6584542`. Run the `roofer-underpasses-10-434-716`
-CTest test, or use `config/roofer-underpasses-10-434-716.toml` from `tests/`.
+CMake downloads [underpasses.zip](https://data.3dgi.xyz/roofer-test-data/underpasses.zip)
+to `tests/data/underpasses/` when testing is enabled and verifies
+MD5 `612dd628d0026fadea7176096353d595`. Run the `roofer-underpasses`
+CTest test, or use `config/roofer-underpasses.toml` from `tests/`.
 The config assumes 4 metre underpass clearance above the floor.
+
+Footprints are selected within RD envelope `(122269, 486019, 122322, 486109)`.
+Point records are cropped with a 10 m buffer to
+`(122259, 486009, 122332, 486119)`, preserving all dimensions and classifications.
+The archive includes a standalone config, dataset README, and SHA-256 manifest.
 
 ## wateringen
 
