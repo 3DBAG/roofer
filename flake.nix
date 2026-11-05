@@ -160,6 +160,7 @@
               echo "Conan dev shell ready. Run 'conan profile detect' if you haven't set up a profile yet."
               echo ""
               echo "Conan build steps (replace Release with Debug for debug build):"
+              echo "  conan export conan/recipes/proj --version=9.8.1"
               echo "  conan install . --build=missing --output-folder=build-conan -s build_type=Release"
               echo "  cd build-conan"
               echo "  cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release"
