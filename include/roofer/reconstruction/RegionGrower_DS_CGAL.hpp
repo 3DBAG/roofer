@@ -90,8 +90,8 @@ namespace roofer {
         for (size_t i = 0; i < size; ++i) {
           seeds.push_back(i);
         }
-        std::random_device rd;
-        std::mt19937 g(rd());
+        // a fixed seed: the same input gives the same planes, run after run
+        std::mt19937 g(31415);
         std::shuffle(seeds.begin(), seeds.end(), g);
         return seeds;
       }

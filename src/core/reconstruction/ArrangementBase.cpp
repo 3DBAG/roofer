@@ -175,19 +175,27 @@ namespace roofer::reconstruction {
                        KeyHash, KeyEqual>
         step_boundaries;
 
+    // face pairs in the order the arrangement's edges first meet them: the hash
+    // map's own order follows memory addresses, and decides which of two equal
+    // steps is removed first
+    std::vector<FacePair> step_order;
+
     while (true) {
       double d_min = step_height_threshold;
       step_boundaries.clear();
+      step_order.clear();
       for (auto& edge : arr.edge_handles()) {
         auto f1 = edge->face();
         auto f2 = edge->twin()->face();
         if ((f1->data().in_footprint && f2->data().in_footprint) &&
             (f1->data().segid != 0 && f2->data().segid != 0)) {
-          step_boundaries[FacePair(f1, f2)].push_back(edge);
+          auto [it, inserted] = step_boundaries.try_emplace(FacePair(f1, f2));
+          if (inserted) step_order.push_back(it->first);
+          it->second.push_back(edge);
         }
       }
       FacePair facepair_min;
-      for (auto& [faces, edges] : step_boundaries) {
+      for (auto& faces : step_order) {
         double d = std::abs(faces.f_hi->data().elevation_50p -
                             faces.f_lo->data().elevation_50p);
         if (d < d_min) {
