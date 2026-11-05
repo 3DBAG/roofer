@@ -19,7 +19,8 @@ namespace roofer::io {
       std::unordered_map<std::string, std::vector<UnderpassFeature>>;
 
   // No spatial/centroid filter: building ID determines ownership across tiles.
-  // An empty height attribute selects the caller's default floor clearance.
+  // An empty height attribute or a null value selects the caller's default
+  // floor clearance.
   UnderpassIndex readUnderpasses(const std::string& source,
                                  const std::string& layer,
                                  const std::string& id_attribute,

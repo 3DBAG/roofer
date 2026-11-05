@@ -516,15 +516,16 @@ struct RooferConfigHandler {
     input.add("underpass-id-attribute",
               "Underpass building ID attribute (default: id-attribute).",
               cfg_.underpass_id_attribute);
-    input.add("underpass-height-attribute",
-              "Numeric absolute ceiling elevation attribute. If omitted, use "
-              "underpass-default-height above the building floor.",
-              cfg_.underpass_height_attribute);
-    input.add("underpass-default-height",
-              "Underpass clearance above the floor when no height attribute is "
-              "specified, in metres.",
-              cfg_.underpass_default_height,
-              {roofer::config::greater_than(0.0F)});
+    input.add(
+        "underpass-height-attribute",
+        "Numeric absolute ceiling elevation attribute. If omitted or its "
+        "value is null, use underpass-default-height above the building floor.",
+        cfg_.underpass_height_attribute);
+    input.add(
+        "underpass-default-height",
+        "Underpass clearance above the floor when the height attribute is "
+        "omitted or its value is null, in metres.",
+        cfg_.underpass_default_height, {roofer::config::greater_than(0.0F)});
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
               "`<polygon-source>`. See "

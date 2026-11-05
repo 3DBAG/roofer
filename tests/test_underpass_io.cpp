@@ -29,9 +29,7 @@ TEST_CASE(
     {"type":"Feature","properties":{"bid":"0123456789012345","z":123.456},"geometry":{
       "type":"MultiPolygon","coordinates":[[[[1000,2000],[1010,2000],[1010,2010],[1000,2010],[1000,2000]],
       [[1004,2004],[1004,2006],[1006,2006],[1006,2004],[1004,2004]]],
-      [[[1020,2000],[1025,2000],[1025,2005],[1020,2005],[1020,2000]]]]}},
-    {"type":"Feature","properties":{"bid":"invalid-height","z":null},"geometry":{
-      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}}
+      [[[1020,2000],[1025,2000],[1025,2005],[1020,2005],[1020,2000]]]]}}
   ]})");
   auto index =
       roofer::io::readUnderpasses(source.path.string(), "", "bid", "z");
@@ -51,6 +49,42 @@ TEST_CASE(
       roofer::io::readUnderpasses(source.path.string(), "", "bid", "missing"));
   CHECK_THROWS(roofer::io::readUnderpasses(source.path.string(), "", "bid", "z",
                                            "EPSG:28992"));
+}
+
+TEST_CASE(
+    "null and unset underpass heights use the configured floor clearance") {
+  Source source(R"({"type":"FeatureCollection","features":[
+    {"type":"Feature","properties":{"bid":"null","z":null},"geometry":{
+      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}},
+    {"type":"Feature","properties":{"bid":"unset"},"geometry":{
+      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}},
+    {"type":"Feature","properties":{"bid":"zero","z":0.0},"geometry":{
+      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}},
+    {"type":"Feature","properties":{"bid":"explicit","z":123.456},"geometry":{
+      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}}
+  ]})");
+  const auto index =
+      roofer::io::readUnderpasses(source.path.string(), "", "bid", "z");
+  REQUIRE(index.size() == 4);
+  for (const auto& id : {"null", "unset"}) {
+    const auto& input = index.at(id).at(0);
+    CHECK_FALSE(input.ceiling_elevation);
+    // The floor is already local: use floor + clearance without subtracting
+    // the coordinate offset again.
+    CHECK(input.localize({0, 0, 100}, -98.5F, 2.5F).ceiling_elevation ==
+          Catch::Approx(-96.0));
+    CHECK(input.localize({0, 0, 100}, -98.5F, 4.0F).ceiling_elevation ==
+          Catch::Approx(-94.5));
+  }
+  // Explicit values, including zero, remain absolute elevations.
+  CHECK(index.at("zero")
+            .at(0)
+            .localize({0, 0, 100}, -98.5F, 2.5F)
+            .ceiling_elevation == -100.0);
+  CHECK(index.at("explicit")
+            .at(0)
+            .localize({0, 0, 100}, -98.5F, 2.5F)
+            .ceiling_elevation == Catch::Approx(23.456));
 }
 
 TEST_CASE("four metre default underpass clearance uses the local floor") {

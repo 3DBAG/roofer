@@ -59,7 +59,7 @@ namespace roofer::io {
       std::optional<double> height;
       if (!height_attribute.empty()) {
         height = polygon.numeric_attributes.at(height_attribute);
-        if (!height || !std::isfinite(*height)) {
+        if (height && !std::isfinite(*height)) {
           log.warning(
               "Skipping underpass feature {} for {}: invalid ceiling elevation",
               polygon.fid, *id);
