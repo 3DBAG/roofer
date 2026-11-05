@@ -66,7 +66,7 @@ TEST_CASE("four metre default underpass clearance uses the local floor") {
         Catch::Approx(5 + 4 / 0.3048F));
 }
 
-TEST_CASE("database tile fixture loads polygons and preserves pillar holes") {
+TEST_CASE("underpass fixture loads polygons and preserves pillar holes") {
   const auto index = roofer::io::readUnderpasses(
       std::string(UNDERPASS_DATA_DIR) + "/underpasses.geojson", "",
       "identificatie", "", "EPSG:28992");
@@ -80,7 +80,7 @@ TEST_CASE("database tile fixture loads polygons and preserves pillar holes") {
     }
   }
   CHECK(polygons ==
-        93);  // One source polygon is self-intersecting and is skipped.
+        2);  // One source polygon is self-intersecting and is skipped.
   CHECK(holes > 0);
 }
 

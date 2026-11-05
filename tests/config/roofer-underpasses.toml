@@ -1,0 +1,22 @@
+# Run from tests/: roofer --config config/roofer-underpasses.toml
+[input]
+polygon-source = "data/underpasses/bag/panden.geojson"
+id-attribute = "identificatie"
+underpass-source = "data/underpasses/underpasses.geojson"
+underpass-default-height = 4.0
+
+[[input.pointclouds]]
+name = "AHN5"
+quality = 1
+source = ["data/underpasses/ahn5"]
+
+[output]
+output-directory = "output/underpasses"
+
+[reconstruction]
+lod12 = true
+lod13 = true
+lod22 = true
+
+[reconstruction.arrangement-extruder]
+underpass-roof-margin = 0.03
