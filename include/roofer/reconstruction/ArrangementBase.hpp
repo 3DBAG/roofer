@@ -22,10 +22,13 @@
 #pragma once
 
 #include <CGAL/Arr_default_overlay_traits.h>
+#include <CGAL/Arr_naive_point_location.h>
 #include <CGAL/Arr_observer.h>
 #include <CGAL/Arr_overlay_2.h>
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Polygon_2.h>
+#include <CGAL/Polygon_with_holes_2.h>
+#include <optional>
 
 #include <roofer/common/datastructures.hpp>
 #include <roofer/reconstruction/cgal_shared_definitions.hpp>
@@ -33,6 +36,7 @@
 namespace roofer::reconstruction {
 
   typedef CGAL::Polygon_2<EPECK> Polygon_2;
+  using Polygon_with_holes_2 = CGAL::Polygon_with_holes_2<EPECK>;
 
   // 2D arrangement
   // typedef CGAL::Cartesian<Number_type>           AK;
@@ -228,6 +232,26 @@ namespace roofer::reconstruction {
                                   roofer::LinearRing& polygons, double h = 0);
 
   Polygon_2 arr_cell2polygon(const Face_handle& fh);
+
+  // Extract a bounded face without converting its exact XY coordinates.
+  Polygon_with_holes_2 arr_face_polygon(Face_const_handle face);
+
+  // Find a strictly interior sample using exact offsets and point location.
+  // Returns nullopt for unbounded faces or if no sample is found.
+  std::optional<Point_2> arr_face_interior_point(
+      Face_const_handle face,
+      const CGAL::Arr_naive_point_location<Arrangement_2>& location);
+
+  enum class PolygonBoundaryPolicy { strict_interior, include_outer_boundary };
+
+  // Membership in a bounded polygon. Hole interiors and boundaries are always
+  // excluded; callers explicitly choose how to treat the exterior boundary.
+  bool polygon_contains(const Polygon_with_holes_2& polygon,
+                        const Point_2& point,
+                        PolygonBoundaryPolicy boundary_policy);
+
+  // Evaluate a non-vertical plane using double-precision XY coordinates.
+  double plane_height(const Plane& plane, const Point_2& point);
 
   void arr_dissolve_seg_edges(Arrangement_2& arr);
   void arr_remove_redundant_vertices(Arrangement_2& arr);

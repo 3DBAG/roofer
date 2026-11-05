@@ -83,6 +83,10 @@ target_link_libraries("test_arrangement_dissolver"
                       PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests("test_arrangement_dissolver")
 
+add_executable(test_arrangement_geometry test_arrangement_geometry.cpp)
+target_link_libraries(test_arrangement_geometry PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_arrangement_geometry)
+
 add_executable("test_arrangement_snapper"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_arrangement_snapper.cpp")
 target_link_libraries("test_arrangement_snapper"

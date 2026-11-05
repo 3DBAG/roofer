@@ -1,4 +1,5 @@
 #include "FloorArrangement.hpp"
+#include "ExtrusionUtils.hpp"
 
 #include <CGAL/Arr_naive_point_location.h>
 #include <algorithm>
@@ -10,8 +11,8 @@
 
 namespace roofer::reconstruction::detail {
   namespace {
-    using Polygon = CGAL::Polygon_2<EPECK>;
-    using Domain = CGAL::Polygon_with_holes_2<EPECK>;
+    using Polygon = Polygon_2;
+    using Domain = Polygon_with_holes_2;
     using Location = CGAL::Arr_naive_point_location<Arrangement_2>;
 
     // Clean duplicate vertices and validate a ring using XY coordinates only.
@@ -60,15 +61,6 @@ namespace roofer::reconstruction::detail {
         holes.push_back(std::move(hole));
       }
       return Domain(outer, holes.begin(), holes.end());
-    }
-
-    // Include the exterior boundary, but exclude holes and their boundaries.
-    bool contains(const Domain& polygon, const Point_2& p) {
-      if (polygon.outer_boundary().bounded_side(p) == CGAL::ON_UNBOUNDED_SIDE)
-        return false;
-      for (const auto& hole : polygon.holes())
-        if (hole.bounded_side(p) != CGAL::ON_UNBOUNDED_SIDE) return false;
-      return true;
     }
 
     // Align nearby underpass boundaries with the fixed footprint.
@@ -170,42 +162,6 @@ namespace roofer::reconstruction::detail {
         ring(hole);
     }
 
-    // Extract a face and its holes as a polygon for elevation queries.
-    Domain face_domain(Face_const_handle face) {
-      auto ring = [](auto first) {
-        Polygon p;
-        auto e = first;
-        do {
-          p.push_back(e->source()->point());
-        } while (++e != first);
-        return p;
-      };
-      auto outer = ring(face->outer_ccb());
-      std::vector<Polygon> holes;
-      for (auto hole :
-           CGAL::make_range(face->inner_ccbs_begin(), face->inner_ccbs_end()))
-        holes.push_back(ring(hole));
-      return Domain(outer, holes.begin(), holes.end());
-    }
-
-    // Find an exact sample strictly inside a bounded arrangement face.
-    Point_2 interior_point(Face_handle face, const Location& locate) {
-      // An exact inward offset avoids float triangulation of narrow cells.
-      auto e = face->outer_ccb();
-      auto a = e->source()->point(), b = e->target()->point();
-      auto middle = CGAL::midpoint(a, b);
-      auto dx = b.x() - a.x(), dy = b.y() - a.y();
-      EPECK::FT scale = 1;
-      for (int i = 0; i < 256; ++i, scale /= 2) {
-        Point_2 p(middle.x() - dy * scale, middle.y() + dx * scale);
-        auto object = locate.locate(p);
-        if (const auto* f = std::get_if<Face_const_handle>(&object);
-            f && *f == face)
-          return p;
-      }
-      throw rooferException("Unable to locate floor arrangement face interior");
-    }
-
     // Prefer an interior footprint face when a sample hits an edge or vertex.
     Face_const_handle located_face(const Location& locate, const Point_2& p) {
       auto object = locate.locate(p);
@@ -223,14 +179,6 @@ namespace roofer::reconstruction::detail {
         return edge->face();
       }
       throw rooferException("Floor sample lies on a roof constraint");
-    }
-
-    // Evaluate the roof plane for underpass clearance.
-    float roof_z(Face_const_handle face, const Point_2& p) {
-      const auto& plane = face->data().plane;
-      return float(-(plane.a() * CGAL::to_double(p.x()) +
-                     plane.b() * CGAL::to_double(p.y()) + plane.d()) /
-                   plane.c());
     }
 
     // Identify footprint halfedges with the building interior on their left.
@@ -264,20 +212,10 @@ namespace roofer::reconstruction::detail {
       return loops;
     }
 
-    // Lift exact XY coordinates into the mesh's float coordinate format.
-    arr3f lifted(const Point_2& p, float z) {
-      return {float(CGAL::to_double(p.x())), float(CGAL::to_double(p.y())), z};
-    }
-
     // Use the raised ceiling where present, otherwise the original floor.
     float lower_z(const FloorRegion& region,
                   const ElevationProvider& elevations, const Point_2& p) {
       return region.ceiling ? *region.ceiling : elevations.get(p);
-    }
-
-    // Avoid consecutive duplicate vertices while assembling a ring.
-    void append(vec3f& ring, arr3f p) {
-      if (ring.empty() || ring.back() != p) ring.push_back(p);
     }
 
     struct Candidate {
@@ -527,15 +465,20 @@ namespace roofer::reconstruction::detail {
       face->data().label = cells.size();
       auto& cell = cells.emplace_back();
       if (face->is_unbounded()) continue;
-      auto sample = interior_point(face, floor_location);
-      auto parent = located_face(roof_location, sample);
+      auto sample = arr_face_interior_point(face, floor_location);
+      if (!sample)
+        throw rooferException(
+            "Unable to locate floor arrangement face interior");
+      auto parent = located_face(roof_location, *sample);
       if (!parent->data().in_footprint) continue;
       cell.part = parent->data().part_id;
       for (std::size_t i = 0; i < candidates.size(); ++i)
-        if (contains(candidates[i].polygon, sample)) cell.covered.push_back(i);
+        if (polygon_contains(candidates[i].polygon, *sample,
+                             PolygonBoundaryPolicy::include_outer_boundary))
+          cell.covered.push_back(i);
       if (cell.covered.empty()) continue;
       // Terrain queries depend only on floor cells, not on roof subdivisions.
-      const auto max_z = elevations.get_max_elevation(face_domain(face));
+      const auto max_z = elevations.get_max_elevation(arr_face_polygon(face));
       for (auto i : cell.covered) maximum[i] = std::max(maximum[i], max_z);
     }
 
@@ -561,7 +504,7 @@ namespace roofer::reconstruction::detail {
       if (covered.empty()) continue;
       float min_z = std::numeric_limits<float>::infinity();
       visit_points(face, [&](const Point_2& p) {
-        min_z = std::min(min_z, roof_z(face, p));
+        min_z = std::min(min_z, float(plane_height(face->data().plane, p)));
       });
       for (auto i : covered) minimum[i] = std::min(minimum[i], min_z);
     }

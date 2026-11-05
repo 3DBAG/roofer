@@ -20,6 +20,7 @@
 // Ivan Paden, Ravi Peters
 
 #include <roofer/reconstruction/ElevationProvider.hpp>
+#include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/cdt_util.hpp>
 
 #include <optional>
@@ -28,23 +29,6 @@
 namespace roofer::reconstruction {
 
   namespace {
-    using Polygon_2 = CGAL::Polygon_2<EPECK>;
-    using Polygon_with_holes_2 = CGAL::Polygon_with_holes_2<EPECK>;
-
-    bool is_inside(const Point_2& point, const Polygon_with_holes_2& polygon) {
-      if (polygon.outer_boundary().bounded_side(point) !=
-          CGAL::ON_BOUNDED_SIDE) {
-        return false;
-      }
-      for (auto hole = polygon.holes_begin(); hole != polygon.holes_end();
-           ++hole) {
-        if (hole->bounded_side(point) != CGAL::ON_UNBOUNDED_SIDE) {
-          return false;
-        }
-      }
-      return true;
-    }
-
     template <typename Curve>
     void add_boundary_intersections(const Curve& curve,
                                     const Polygon_2& boundary,
@@ -88,8 +72,9 @@ namespace roofer::reconstruction {
       for (size_t i = 1; i < points.size(); ++i) {
         if (points[i - 1] == points[i]) continue;
         Segment_2 segment(points[i - 1], points[i]);
-        if (is_inside(CGAL::midpoint(segment.source(), segment.target()),
-                      polygon)) {
+        if (polygon_contains(polygon,
+                             CGAL::midpoint(segment.source(), segment.target()),
+                             PolygonBoundaryPolicy::strict_interior)) {
           result.push_back(segment);
         }
       }
@@ -110,8 +95,9 @@ namespace roofer::reconstruction {
       for (size_t i = 1; i < points.size(); ++i) {
         if (points[i - 1] == points[i]) continue;
         Segment_2 clipped(points[i - 1], points[i]);
-        if (is_inside(CGAL::midpoint(clipped.source(), clipped.target()),
-                      polygon)) {
+        if (polygon_contains(polygon,
+                             CGAL::midpoint(clipped.source(), clipped.target()),
+                             PolygonBoundaryPolicy::strict_interior)) {
           result.push_back(clipped);
         }
       }
@@ -185,7 +171,8 @@ namespace roofer::reconstruction {
       // included triangulation vertices, or domain/triangulation crossings.
       for (const auto& v : base_cdt_ptr_->finite_vertex_handles()) {
         Point_2 p(v->point().x(), v->point().y());
-        if (is_inside(p, bounds)) add(p);
+        if (polygon_contains(bounds, p, PolygonBoundaryPolicy::strict_interior))
+          add(p);
       }
       for (auto edge = base_cdt_ptr_->finite_edges_begin();
            edge != base_cdt_ptr_->finite_edges_end(); ++edge) {

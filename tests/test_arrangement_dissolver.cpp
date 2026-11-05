@@ -6,13 +6,14 @@
 #include <roofer/reconstruction/ElevationProvider.hpp>
 
 namespace {
-  roofer::Arrangement_2 square_arrangement() {
+  roofer::Arrangement_2 rectangle_arrangement(roofer::EPECK::FT x = 0,
+                                              roofer::EPECK::FT width = 10) {
     using roofer::Point_2;
     using roofer::Segment_2;
 
     roofer::Arrangement_2 arrangement;
-    std::array<Point_2, 4> points = {Point_2(0, 0), Point_2(10, 0),
-                                     Point_2(10, 10), Point_2(0, 10)};
+    std::array<Point_2, 4> points = {Point_2(x, 0), Point_2(x + width, 0),
+                                     Point_2(x + width, 10), Point_2(x, 10)};
     for (size_t i = 0; i < points.size(); ++i) {
       CGAL::insert(arrangement,
                    Segment_2(points[i], points[(i + 1) % points.size()]));
@@ -33,8 +34,30 @@ namespace {
   }
 }  // namespace
 
+TEST_CASE("terrain clipping classifies a face narrower than float precision") {
+  auto arrangement =
+      rectangle_arrangement(1000000, roofer::EPECK::FT(1) / 1000000000);
+  for (auto face : arrangement.face_handles()) {
+    if (!face->is_unbounded()) face->data().plane = roofer::Plane(0, 0, 1, 0);
+  }
+  auto dissolver = roofer::reconstruction::createArrangementDissolver();
+  dissolver->compute(
+      arrangement, empty_heightfield(), 5.0F,
+      {.dissolve_segment_edges = false, .dissolve_outside_footprint = false});
+
+  size_t ground_faces = 0;
+  for (auto face : arrangement.face_handles()) {
+    if (face->is_unbounded()) continue;
+    ++ground_faces;
+    CHECK(face->data().is_ground);
+    CHECK_FALSE(face->data().in_footprint);
+    CHECK_FALSE(face->data().is_footprint_hole);
+  }
+  CHECK(ground_faces == 1);
+}
+
 TEST_CASE("terrain clipping marks a boundary subface as ground") {
-  auto arrangement = square_arrangement();
+  auto arrangement = rectangle_arrangement();
   for (auto face : arrangement.face_handles()) {
     if (!face->is_unbounded()) face->data().plane = roofer::Plane(1, 0, -1, 0);
   }
@@ -63,7 +86,7 @@ TEST_CASE("terrain clipping marks a boundary subface as ground") {
 }
 
 TEST_CASE("terrain clipping marks an enclosed subface as a footprint hole") {
-  auto arrangement = square_arrangement();
+  auto arrangement = rectangle_arrangement();
   for (auto face : arrangement.face_handles()) {
     if (!face->is_unbounded()) face->data().plane = roofer::Plane(0, 0, 1, -5);
   }
