@@ -1,4 +1,5 @@
 #include "WallAssembler.hpp"
+#include "ExtrusionUtils.hpp"
 
 #include <CGAL/squared_distance_3.h>
 #include <algorithm>
@@ -7,14 +8,6 @@
 
 namespace roofer::reconstruction::detail {
   namespace {
-    arr3f lifted(const Point_2& p, float z) {
-      return {float(CGAL::to_double(p.x())), float(CGAL::to_double(p.y())), z};
-    }
-
-    void append(vec3f& ring, arr3f p) {
-      if (ring.empty() || ring.back() != p) ring.push_back(p);
-    }
-
     template <typename Callback>
     void visit_rings(Mesh& mesh, Callback&& visit) {
       for (auto& polygon : mesh.get_polygons()) {

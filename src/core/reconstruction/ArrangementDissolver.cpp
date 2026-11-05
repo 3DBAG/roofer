@@ -25,9 +25,6 @@
 namespace roofer::reconstruction {
 
   namespace {
-    using Polygon_2 = CGAL::Polygon_2<EPECK>;
-    using Polygon_with_holes_2 = CGAL::Polygon_with_holes_2<EPECK>;
-
     class Face_data_split_observer : public CGAL::Arr_observer<Arrangement_2> {
      public:
       explicit Face_data_split_observer(Arrangement_2& arrangement)
@@ -38,43 +35,6 @@ namespace roofer::reconstruction {
         new_face->set_data(old_face->data());
       }
     };
-
-    Polygon_with_holes_2 face_polygon(Face_handle face) {
-      Polygon_2 outer;
-      auto edge = face->outer_ccb();
-      auto first = edge;
-      do {
-        outer.push_back(edge->source()->point());
-        edge = edge->next();
-      } while (edge != first);
-
-      std::vector<Polygon_2> holes;
-      for (auto ccb = face->inner_ccbs_begin(); ccb != face->inner_ccbs_end();
-           ++ccb) {
-        Polygon_2 hole;
-        edge = *ccb;
-        first = edge;
-        do {
-          hole.push_back(edge->source()->point());
-          edge = edge->next();
-        } while (edge != first);
-        holes.push_back(std::move(hole));
-      }
-      return Polygon_with_holes_2(outer, holes.begin(), holes.end());
-    }
-
-    std::optional<Point_2> face_interior_point(Face_handle face) {
-      LinearRing polygon;
-      if (!arrangementface_to_polygon(face, polygon)) return std::nullopt;
-      auto triangulation = tri_util::create_from_polygon(polygon);
-      for (auto triangle = triangulation.finite_faces_begin();
-           triangle != triangulation.finite_faces_end(); ++triangle) {
-        if (!triangle->info().in_domain()) continue;
-        auto centroid = CGAL::centroid(triangulation.triangle(triangle));
-        return Point_2(centroid.x(), centroid.y());
-      }
-      return std::nullopt;
-    }
 
     bool touches_footprint_boundary(Face_handle face) {
       auto touches_boundary = [](Ccb_halfedge_circulator edge) {
@@ -112,12 +72,6 @@ namespace roofer::reconstruction {
       return false;
     }
 
-    double roof_height(const Plane& plane, const Point_2& point) {
-      return -(plane.a() * CGAL::to_double(point.x()) +
-               plane.b() * CGAL::to_double(point.y()) + plane.d()) /
-             plane.c();
-    }
-
     void clip_roof_faces_to_terrain(
         Arrangement_2& arrangement,
         const ElevationProvider& elevation_provider) {
@@ -128,7 +82,7 @@ namespace roofer::reconstruction {
           continue;
         }
         auto face_intersections = elevation_provider.get_intersections(
-            face->data().plane, face_polygon(face));
+            face->data().plane, arr_face_polygon(face));
         intersections.insert(intersections.end(), face_intersections.begin(),
                              face_intersections.end());
       }
@@ -138,6 +92,7 @@ namespace roofer::reconstruction {
         CGAL::insert(arrangement, intersection);
       }
 
+      CGAL::Arr_naive_point_location<Arrangement_2> location(arrangement);
       constexpr double elevation_tolerance = 1e-6;
       std::vector<std::pair<Face_handle, bool>> ground_faces;
       for (auto face : arrangement.face_handles()) {
@@ -145,9 +100,9 @@ namespace roofer::reconstruction {
             face->data().segid == 0) {
           continue;
         }
-        auto sample = face_interior_point(face);
+        auto sample = arr_face_interior_point(face, location);
         if (!sample) continue;
-        if (roof_height(face->data().plane, *sample) <
+        if (plane_height(face->data().plane, *sample) <
             elevation_provider.get(*sample) - elevation_tolerance) {
           ground_faces.emplace_back(face, touches_footprint_boundary(face));
         }

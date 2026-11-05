@@ -22,15 +22,12 @@
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 #include "FloorArrangement.hpp"
+#include "ExtrusionUtils.hpp"
 
 namespace roofer::reconstruction {
 
   // typedef CGAL::Cartesian<float>           AK;
 
-  inline arr3f v2p(Arrangement_2::Vertex_handle v, float h) {
-    return {float(CGAL::to_double(v->point().x())),
-            float(CGAL::to_double(v->point().y())), h};
-  }
   template <typename P>
   arr3f p2p(P p) {
     return {float(CGAL::to_double(p->x())), float(CGAL::to_double(p->y())),
@@ -49,7 +46,7 @@ namespace roofer::reconstruction {
       if (CGAL::squared_distance(v->point(), hedge->target()->point()) > 0) {
         for (auto& [h, f_h] : vertex_columns[v]) {
           if (f_h == hedge->face()) {
-            ring.push_back(v2p(v, h));
+            ring.push_back(detail::lifted(v->point(), h));
             break;
           }
         }
@@ -128,10 +125,7 @@ namespace roofer::reconstruction {
           float h;
           if (f->data().in_footprint && f->data().segid != 0) {
             if (cfg.lod2) {
-              auto& plane = f->data().plane;
-              h = (plane.a() * CGAL::to_double(p.x()) +
-                   plane.b() * CGAL::to_double(p.y()) + plane.d()) /
-                  (-plane.c());
+              h = plane_height(f->data().plane, p);
             } else {
               if (cfg.lod1_extrude_to_max)
                 h = f->data().elevation_97p;

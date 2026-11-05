@@ -70,6 +70,62 @@ namespace roofer::reconstruction {
     return true;
   }
 
+  Polygon_with_holes_2 arr_face_polygon(Face_const_handle face) {
+    CGAL_precondition(!face->is_unbounded());
+    auto ring = [](auto first) {
+      Polygon_2 polygon;
+      auto edge = first;
+      do {
+        polygon.push_back(edge->source()->point());
+      } while (++edge != first);
+      return polygon;
+    };
+    auto outer = ring(face->outer_ccb());
+    std::vector<Polygon_2> holes;
+    for (auto hole :
+         CGAL::make_range(face->inner_ccbs_begin(), face->inner_ccbs_end()))
+      holes.push_back(ring(hole));
+    return Polygon_with_holes_2(outer, holes.begin(), holes.end());
+  }
+
+  std::optional<Point_2> arr_face_interior_point(
+      Face_const_handle face,
+      const CGAL::Arr_naive_point_location<Arrangement_2>& location) {
+    if (face->is_unbounded()) return std::nullopt;
+    auto edge = face->outer_ccb();
+    const auto a = edge->source()->point(), b = edge->target()->point();
+    const auto middle = CGAL::midpoint(a, b);
+    const auto dx = b.x() - a.x(), dy = b.y() - a.y();
+    EPECK::FT scale = 1;
+    for (int i = 0; i < 256; ++i, scale /= 2) {
+      Point_2 point(middle.x() - dy * scale, middle.y() + dx * scale);
+      auto object = location.locate(point);
+      if (const auto* located = std::get_if<Face_const_handle>(&object);
+          located && *located == face)
+        return point;
+    }
+    return std::nullopt;
+  }
+
+  bool polygon_contains(const Polygon_with_holes_2& polygon,
+                        const Point_2& point,
+                        PolygonBoundaryPolicy boundary_policy) {
+    const auto side = polygon.outer_boundary().bounded_side(point);
+    if (side == CGAL::ON_UNBOUNDED_SIDE ||
+        (side == CGAL::ON_BOUNDARY &&
+         boundary_policy == PolygonBoundaryPolicy::strict_interior))
+      return false;
+    for (const auto& hole : polygon.holes())
+      if (hole.bounded_side(point) != CGAL::ON_UNBOUNDED_SIDE) return false;
+    return true;
+  }
+
+  double plane_height(const Plane& plane, const Point_2& point) {
+    return -(plane.a() * CGAL::to_double(point.x()) +
+             plane.b() * CGAL::to_double(point.y()) + plane.d()) /
+           plane.c();
+  }
+
   // helper functions
   void arr_dissolve_seg_edges(Arrangement_2& arr) {
     std::vector<Halfedge_handle> to_remove;
