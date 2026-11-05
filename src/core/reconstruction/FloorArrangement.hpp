@@ -20,7 +20,8 @@ namespace roofer::reconstruction::detail {
 
     void prepare(Arrangement_2& roof, const ElevationProvider& elevations,
                  std::span<const Underpass> underpasses,
-                 const ArrangementExtruderConfig& config);
+                 const ArrangementExtruderConfig& config,
+                 std::vector<UnderpassDiagnostic>& diagnostics);
 
     void emit(
         Arrangement_2& roof, const ElevationProvider& elevations,

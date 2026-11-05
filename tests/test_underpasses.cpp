@@ -7,11 +7,25 @@
 #include <algorithm>
 #include <map>
 #include <limits>
+#include <iostream>
+#include <sstream>
 #include "../src/core/reconstruction/WallAssembler.hpp"
 
 namespace {
   using namespace roofer;
   using namespace roofer::reconstruction;
+
+  class CaptureStream {
+    std::ostream& stream_;
+    std::ostringstream captured_;
+    std::streambuf* previous_;
+
+   public:
+    explicit CaptureStream(std::ostream& stream)
+        : stream_(stream), previous_(stream.rdbuf(captured_.rdbuf())) {}
+    ~CaptureStream() { stream_.rdbuf(previous_); }
+    std::string str() const { return captured_.str(); }
+  };
 
   LinearRing rectangle(float x0, float y0, float x1, float y1) {
     LinearRing p;
@@ -574,5 +588,87 @@ TEST_CASE("mesh cleanup bounds deviation across an entire degree-two chain") {
                                      point(result[i]),
                                      point(result[(i + 1) % result.size()]))));
     CHECK(minimum <= double(tolerance) * tolerance);
+  }
+}
+
+TEST_CASE(
+    "underpass diagnostics retain original input indices without console "
+    "output") {
+  auto arr = roof();
+  auto e = createArrangementExtruder();
+  const std::vector<Underpass> input{
+      {{}, 4, "invalid"},
+      {rectangle(20, 20, 30, 30), 4, "outside"},
+      {rectangle(2, 2, 8, 8), 20, "lowered"},
+      {rectangle(2, 2, 8, 8), -1, "below-ground"}};
+  std::string output, errors;
+  {
+    CaptureStream stdout_capture(std::cout), stderr_capture(std::cerr);
+    e->compute(arr, 0.0F, input, {});
+    output = stdout_capture.str();
+    errors = stderr_capture.str();
+  }
+  CHECK(output.empty());
+  CHECK(errors.empty());
+  REQUIRE(e->meshes.size() == 1);
+  check_closed(e->meshes.front());
+  REQUIRE(e->diagnostics.size() == 3);
+  const auto& invalid = e->diagnostics[0];
+  CHECK(invalid.input_index == 0);
+  CHECK(invalid.code == UnderpassDiagnosticCode::invalid_input);
+  CHECK_FALSE(invalid.reason.empty());
+  CHECK_FALSE(invalid.adjusted_ceiling_elevation.has_value());
+  const auto& lowered = e->diagnostics[1];
+  CHECK(lowered.input_index == 2);
+  CHECK(lowered.code == UnderpassDiagnosticCode::ceiling_lowered);
+  REQUIRE(lowered.adjusted_ceiling_elevation.has_value());
+  CHECK(*lowered.adjusted_ceiling_elevation < 10);
+  CHECK(*lowered.adjusted_ceiling_elevation > 0);
+  const auto& skipped = e->diagnostics[2];
+  CHECK(skipped.input_index == 3);
+  CHECK(skipped.code == UnderpassDiagnosticCode::insufficient_clearance);
+  CHECK_FALSE(skipped.reason.empty());
+  CHECK_FALSE(skipped.adjusted_ceiling_elevation.has_value());
+}
+
+TEST_CASE(
+    "topology diagnostics refer to original inputs after validation and "
+    "retries") {
+  auto arr = roof();
+  auto e = extrude(
+      arr,
+      {{{}, 4}, {rectangle(1, 1, 9, 9), 4}, {rectangle(4, 2, 4.0001F, 8), 5}});
+  REQUIRE(e->diagnostics.size() == 2);
+  CHECK(e->diagnostics[0].input_index == 0);
+  CHECK(e->diagnostics[0].code == UnderpassDiagnosticCode::invalid_input);
+  CHECK(e->diagnostics[1].input_index == 2);
+  CHECK(e->diagnostics[1].code ==
+        UnderpassDiagnosticCode::invalid_underside_geometry);
+  CHECK_FALSE(e->diagnostics[1].reason.empty());
+  CHECK(volume(e->meshes.front()) == Catch::Approx(744));
+}
+
+TEST_CASE(
+    "extruder diagnostics reset on reuse including bypasses and failures") {
+  auto e = createArrangementExtruder();
+  const std::vector<Underpass> input{{{}, 4}};
+  for (int bypass = 0; bypass < 4; ++bypass) {
+    auto arr = roof();
+    e->compute(arr, 0.0F, input, {});
+    REQUIRE(e->diagnostics.size() == 1);
+    auto next = roof();
+    if (bypass == 0) {
+      e->compute(next, 0.0F, {});
+    } else if (bypass == 1) {
+      e->compute(next, 0.0F, input, {.lod2 = false});
+    } else if (bypass == 2) {
+      for (auto face : next.face_handles()) face->data().segid = 0;
+      e->compute(next, 0.0F, input, {});
+    } else {
+      ArrangementExtruderConfig invalid;
+      invalid.underpass_roof_margin = 0;
+      CHECK_THROWS(e->compute(next, 0.0F, input, invalid));
+    }
+    CHECK(e->diagnostics.empty());
   }
 }

@@ -240,7 +240,21 @@ std::unordered_map<int, roofer::Mesh> extrude_lod22(
       lod == LOD22 ? std::span<const roofer::Underpass>(building.underpasses)
                    : std::span<const roofer::Underpass>{},
       extruder_config);
-  // logger.debug("Completed ArrangementExtruder");
+  for (const auto& diagnostic : ArrangementExtruder->diagnostics) {
+    const auto& input = building.underpasses.at(diagnostic.input_index);
+    const auto id =
+        input.source_id.empty()
+            ? fmt::format("{}/input {}", building.id, diagnostic.input_index)
+            : input.source_id;
+    if (diagnostic.code ==
+        roofer::reconstruction::UnderpassDiagnosticCode::ceiling_lowered)
+      logger.info("Lowering underpass {} ceiling from {} to {}", id,
+                  input.ceiling_elevation,
+                  *diagnostic.adjusted_ceiling_elevation);
+    else
+      logger.warning("Skipping underpass {}: {}", id, diagnostic.reason);
+  }
+
 #ifdef RF_USE_RERUN
   if (cfg->use_rerun) {
     rec.log(worldname + "ArrangementExtruder",
