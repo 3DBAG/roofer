@@ -1,7 +1,6 @@
 #include "FloorArrangement.hpp"
 
 #include <CGAL/Arr_naive_point_location.h>
-#include <roofer/logger/logger.h>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -283,7 +282,7 @@ namespace roofer::reconstruction::detail {
 
     struct Candidate {
       Domain polygon;
-      std::string input;
+      std::size_t input_index;
       float height;
       bool enabled = true;
     };
@@ -481,14 +480,14 @@ namespace roofer::reconstruction::detail {
   }  // namespace
 
   // Build the underside, resolve ceiling heights, and align it with the roof.
-  void FloorArrangement::prepare(Arrangement_2& roof,
-                                 const ElevationProvider& elevations,
-                                 std::span<const Underpass> underpasses,
-                                 const ArrangementExtruderConfig& cfg) {
+  void FloorArrangement::prepare(
+      Arrangement_2& roof, const ElevationProvider& elevations,
+      std::span<const Underpass> underpasses,
+      const ArrangementExtruderConfig& cfg,
+      std::vector<UnderpassDiagnostic>& diagnostics) {
     floor.clear();
     regions.clear();
     if (!cfg.lod2 || underpasses.empty()) return;
-    auto& log = logger::Logger::get_logger();
     std::vector<Segment_2> footprint;
     std::set<Point_2> footprint_vertices;
     for (auto e : roof.halfedge_handles())
@@ -499,18 +498,16 @@ namespace roofer::reconstruction::detail {
 
     std::vector<Candidate> candidates;
     for (std::size_t i = 0; i < underpasses.size(); ++i) {
-      const auto id = underpasses[i].source_id.empty()
-                          ? std::to_string(i)
-                          : underpasses[i].source_id;
       try {
         if (!std::isfinite(underpasses[i].ceiling_elevation))
           throw rooferException("non-finite ceiling elevation");
         candidates.push_back(
             {snap_to_footprint(input_polygon(underpasses[i].polygon), footprint,
                                cfg.snap_tolerance),
-             id, float(underpasses[i].ceiling_elevation)});
+             i, float(underpasses[i].ceiling_elevation)});
       } catch (const std::exception& ex) {
-        log.warning("Skipping underpass {}: {}", id, ex.what());
+        diagnostics.push_back({i, UnderpassDiagnosticCode::invalid_input,
+                               ex.what(), std::nullopt});
       }
     }
     if (candidates.empty()) return;
@@ -580,15 +577,18 @@ namespace roofer::reconstruction::detail {
       const float limit =
           minimum[i] - cfg.underpass_roof_margin - cfg.snap_tolerance;
       if (c.height > limit) {
-        log.info("Lowering underpass {} ceiling from {} to {}", c.input,
-                 c.height, limit);
+        diagnostics.push_back({c.input_index,
+                               UnderpassDiagnosticCode::ceiling_lowered,
+                               {},
+                               limit});
         c.height = limit;
       }
       if (!std::isfinite(c.height) ||
           c.height <= maximum[i] + cfg.snap_tolerance) {
         c.enabled = false;
-        log.warning("Skipping underpass {}: no floor clearance below the roof",
-                    c.input);
+        diagnostics.push_back(
+            {c.input_index, UnderpassDiagnosticCode::insufficient_clearance,
+             "no floor clearance below the roof", std::nullopt});
       }
     }
     // Equalise nearby ceiling heights downward to avoid tiny vertical walls
@@ -608,10 +608,9 @@ namespace roofer::reconstruction::detail {
         c.height = canonical.at(c.height);
         if (c.height <= maximum[i] + cfg.snap_tolerance) {
           c.enabled = false;
-          log.warning(
-              "Skipping underpass {}: no floor clearance after height "
-              "snapping",
-              c.input);
+          diagnostics.push_back(
+              {c.input_index, UnderpassDiagnosticCode::insufficient_clearance,
+               "no floor clearance after height snapping", std::nullopt});
         }
       }
     }
@@ -672,10 +671,10 @@ namespace roofer::reconstruction::detail {
       if (invalid.empty()) break;
       for (auto i : invalid) {
         candidates[i].enabled = false;
-        log.warning(
-            "Skipping underpass {}: non-manifold or sub-tolerance underside "
-            "geometry",
-            candidates[i].input);
+        diagnostics.push_back(
+            {candidates[i].input_index,
+             UnderpassDiagnosticCode::invalid_underside_geometry,
+             "non-manifold or sub-tolerance underside geometry", std::nullopt});
       }
     }
 

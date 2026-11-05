@@ -28,6 +28,9 @@
 #include <roofer/common/ConfigField.hpp>
 #include <vector>
 #include <span>
+#include <optional>
+#include <cstddef>
+#include <string>
 #include <roofer/reconstruction/Underpass.hpp>
 
 namespace roofer::reconstruction {
@@ -59,11 +62,31 @@ namespace roofer::reconstruction {
   };
 #undef ROOFER_ARRANGEMENT_EXTRUDER_FIELDS
 
+  enum class UnderpassDiagnosticCode {
+    invalid_input,
+    ceiling_lowered,
+    insufficient_clearance,
+    invalid_underside_geometry,
+  };
+
+  /** A recoverable underpass event, in compute order. Input indices refer to
+   * the original underpass span, including inputs rejected during validation.
+   * Ceiling elevations use the reconstruction's local coordinate frame.
+   */
+  struct UnderpassDiagnostic {
+    std::size_t input_index;
+    UnderpassDiagnosticCode code;
+    std::string reason;
+    std::optional<float> adjusted_ceiling_elevation;
+  };
+
   struct ArrangementExtruderInterface {
     vec1i labels;
     std::vector<LinearRing> faces;
     std::vector<Mesh> meshes;
     std::unordered_map<int, Mesh> multisolid;
+    // Cleared at the start of every compute(), together with the mesh outputs.
+    std::vector<UnderpassDiagnostic> diagnostics;
     // add_input("arrangement", typeid(Arrangement_2));
     // add_input("floor_elevation", typeid(float));
 

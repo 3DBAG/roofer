@@ -81,6 +81,7 @@ namespace roofer::reconstruction {
       labels.clear();
       meshes.clear();
       multisolid.clear();
+      diagnostics.clear();
       if (auto error = config::validate(cfg)) throw rooferException(*error);
       for (auto face : arr.face_handles())
         if (face->data().in_footprint && face->data().part_id < 0)
@@ -113,7 +114,7 @@ namespace roofer::reconstruction {
         }
       }
 
-      underside.prepare(arr, elevation_provider, underpasses, cfg);
+      underside.prepare(arr, elevation_provider, underpasses, cfg, diagnostics);
 
       // compute all heights for each vertex
       std::unordered_map<Vertex_handle, std::vector<hf_pair>> vertex_columns;
