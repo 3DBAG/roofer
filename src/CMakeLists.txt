@@ -1,4 +1,6 @@
 add_subdirectory(core)
-if(RF_BUILD_APPS)
+if(RF_BUILD_APPS OR RF_BUILD_TESTING)
   add_subdirectory(extra)
+elseif(RF_BUILD_DOC_HELPER)
+  add_subdirectory(extra/logger)
 endif()

@@ -67,7 +67,7 @@ target_include_directories(
 target_compile_definitions("test_app_reconstruction_config"
                            PRIVATE RF_GIT_HASH="test")
 target_link_libraries("test_app_reconstruction_config"
-                      PRIVATE Catch2::Catch2WithMain roofer-core fmt::fmt)
+                      PRIVATE Catch2::Catch2WithMain roofer-core logger fmt::fmt)
 catch_discover_tests("test_app_reconstruction_config")
 
 add_executable("test_arrangement_dissolver"

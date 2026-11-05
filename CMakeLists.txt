@@ -37,7 +37,9 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 # EXTERNAL LIBRARIES
 
-find_package(fmt REQUIRED)
+if(RF_BUILD_APPS OR RF_BUILD_DOC_HELPER OR RF_BUILD_TESTING)
+  find_package(fmt REQUIRED)
+endif()
 find_package(
   CGAL 6.0 QUIET
   COMPONENTS Core
@@ -51,14 +53,6 @@ add_compile_definitions("CGAL_HAS_THREADS=1")
 MESSAGE("CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
   add_compile_definitions("CGAL_ALWAYS_ROUND_TO_NEAREST=1")
-endif()
-
-if(RF_USE_LOGGER_SPDLOG)
-  message(STATUS "Logging backend: spdlog")
-  set(SPDLOG_FMT_EXTERNAL ON)
-  find_package(spdlog REQUIRED)
-else()
-  message(STATUS "Logging backend: internal")
 endif()
 
 # CPM can be used to get val3dity and rerun

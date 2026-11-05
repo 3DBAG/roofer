@@ -35,7 +35,7 @@ endif()
 
 add_library("io" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("io" PUBLIC ${LIBRARY_INCLUDES})
-target_link_libraries("io" PUBLIC GDAL::GDAL ${LASLIB_TARGET} nlohmann_json::nlohmann_json fmt::fmt)
+target_link_libraries("io" PUBLIC GDAL::GDAL ${LASLIB_TARGET} nlohmann_json::nlohmann_json fmt::fmt PRIVATE logger)
 
 if(DEFINED gdal_PACKAGE_FOLDER_RELEASE AND EXISTS "${gdal_PACKAGE_FOLDER_RELEASE}/res/gdal")
   install(
