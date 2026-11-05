@@ -47,6 +47,21 @@ Input attribute (float) containing fallback roof height for buildings in case no
 ```{option} --polygon-source-layer <string> (default: <no value>)
 Select this layer name from `<polygon-source>`. By default the first layer is used.
 ```
+```{option} --underpass-source <string> (default: <no value>)
+Optional OGR underpass polygon datasource.
+```
+```{option} --underpass-source-layer <string> (default: <no value>)
+Underpass layer (default: first layer).
+```
+```{option} --underpass-id-attribute <string> (default: <no value>)
+Underpass building ID attribute (default: id-attribute).
+```
+```{option} --underpass-height-attribute <string> (default: <no value>)
+Numeric absolute ceiling elevation attribute. If omitted, use underpass-default-height above the building floor.
+```
+```{option} --underpass-default-height <float> (default: 4)
+Underpass clearance above the floor when no height attribute is specified, in metres.
+```
 ```{option} --filter <string> (default: <no value>)
 Specify WHERE clause in OGR SQL to select specfic features from `<polygon-source>`. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where
 ```

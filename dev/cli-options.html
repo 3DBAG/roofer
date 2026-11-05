@@ -351,6 +351,36 @@
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-source">
+<span class="sig-name descname"><span class="pre">--underpass-source</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-source" title="Link to this definition">¶</a></dt>
+<dd><p>Optional OGR underpass polygon datasource.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-source-layer">
+<span class="sig-name descname"><span class="pre">--underpass-source-layer</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-source-layer" title="Link to this definition">¶</a></dt>
+<dd><p>Underpass layer (default: first layer).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-id-attribute">
+<span class="sig-name descname"><span class="pre">--underpass-id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-id-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Underpass building ID attribute (default: id-attribute).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-height-attribute">
+<span class="sig-name descname"><span class="pre">--underpass-height-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-height-attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Numeric absolute ceiling elevation attribute. If omitted, use underpass-default-height above the building floor.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-default-height">
+<span class="sig-name descname"><span class="pre">--underpass-default-height</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">4)</span></span><a class="headerlink" href="#cmdoption-underpass-default-height" title="Link to this definition">¶</a></dt>
+<dd><p>Underpass clearance above the floor when no height attribute is specified, in metres.</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-filter">
 <span class="sig-name descname"><span class="pre">--filter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-filter" title="Link to this definition">¶</a></dt>
 <dd><p>Specify WHERE clause in OGR SQL to select specfic features from <code class="docutils literal notranslate"><span class="pre">&lt;polygon-source&gt;</span></code>. See https://gdal.org/en/stable/user/ogr_sql_dialect.html#where</p>
