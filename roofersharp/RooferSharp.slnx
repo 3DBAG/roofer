@@ -1,0 +1,11 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="RooferSharp.Test/RooferSharp.Test.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="RooferSharp/RooferSharp.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>
