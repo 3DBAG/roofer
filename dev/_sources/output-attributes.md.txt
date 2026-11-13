@@ -28,6 +28,9 @@ The minimum roof elevation
 ```{option} h_roof_ridge (default name: rf_h_roof_ridge)
 The main ridge elevation
 ```
+```{option} has_underpass (default name: rf_has_underpass)
+Indicates if the reconstructed building contains at least one underpass
+```
 ```{option} is_glass_roof (default name: rf_is_glass_roof)
 Indicates if a glass roof was detected
 ```

@@ -416,6 +416,12 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-underpass-attributes">
+<span class="sig-name descname"><span class="pre">--underpass-attributes</span></span><span class="sig-prename descclassname"> <span class="pre">name[,name,...]</span> <span class="pre">(default:</span> <span class="pre">[])</span></span><a class="headerlink" href="#cmdoption-underpass-attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Copy selected source attributes to matching OuterCeilingSurface objects. All names must exist in underpass-source. CLI: comma-separated names; TOML: array of names.</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-underpass-id-attribute">
 <span class="sig-name descname"><span class="pre">--underpass-id-attribute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-id-attribute" title="Link to this definition">¶</a></dt>
 <dd><p>Underpass building ID attribute (default: id-attribute).</p>
@@ -690,7 +696,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-attribute-rename">
-<span class="sig-name descname"><span class="pre">--attribute-rename</span></span><span class="sig-prename descclassname"> <span class="pre">key=value[,...]</span> <span class="pre">(default:</span> <span class="pre">azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-attribute-rename" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">--attribute-rename</span></span><span class="sig-prename descclassname"> <span class="pre">key=value[,...]</span> <span class="pre">(default:</span> <span class="pre">azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,has_underpass=rf_has_underpass,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)</span></span><a class="headerlink" href="#cmdoption-attribute-rename" title="Link to this definition">¶</a></dt>
 <dd><p>Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with <code class="docutils literal notranslate"><span class="pre">--attributes</span></code>. By default attribute names are prefixed with <code class="docutils literal notranslate"><span class="pre">rf_</span></code>.</p>
 </dd></dl>
 
@@ -768,6 +774,12 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dt class="sig sig-object std" id="cmdoption-arg-h_roof_ridge">
 <span class="sig-name descname"><span class="pre">h_roof_ridge</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_h_roof_ridge)</span></span><a class="headerlink" href="#cmdoption-arg-h_roof_ridge" title="Link to this definition">¶</a></dt>
 <dd><p>The main ridge elevation</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-arg-has_underpass">
+<span class="sig-name descname"><span class="pre">has_underpass</span></span><span class="sig-prename descclassname"> <span class="pre">(default</span> <span class="pre">name:</span> <span class="pre">rf_has_underpass)</span></span><a class="headerlink" href="#cmdoption-arg-has_underpass" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates if the reconstructed building contains at least one underpass</p>
 </dd></dl>
 
 <dl class="std option">
@@ -915,6 +927,31 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </dd></dl>
 
 </section>
+<section id="underpass-attributes">
+<h3>Underpass attributes<a class="headerlink" href="#underpass-attributes" title="Link to this heading">¶</a></h3>
+<p>The building attribute <code class="docutils literal notranslate"><span class="pre">rf_has_underpass</span></code> is a boolean indicating whether the
+reconstructed building contains at least one underpass ceiling. It is false
+when all matching inputs are skipped or lie outside the reconstructed footprint,
+and for LoD 1 and fallback extrusions. Rename or omit it using
+<code class="docutils literal notranslate"><span class="pre">[output.attributes]</span> <span class="pre">has_underpass</span></code>, like the other output attributes.</p>
+<p>Select attributes from the underpass polygon source to copy onto the matching
+<code class="docutils literal notranslate"><span class="pre">OuterCeilingSurface</span></code> semantic objects:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[input]</span>
+<span class="n">underpass-source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;underpasses.gpkg&quot;</span>
+<span class="n">underpass-attributes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;underpass_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The CLI equivalent is <code class="docutils literal notranslate"><span class="pre">--underpass-attributes</span> <span class="pre">underpass_id,name</span></code> (a single name
+is also accepted). Every selected name must exist in the source layer; missing
+fields cause an error before reconstruction. Boolean, integer, real and string
+values retain their types, and null or unset values remain null. Other OGR
+field types use their text representation. Original attribute names are kept;
+the reserved CityJSON <code class="docutils literal notranslate"><span class="pre">type</span></code> field remains <code class="docutils literal notranslate"><span class="pre">OuterCeilingSurface</span></code>.</p>
+<p>Where polygons overlap, the input with the highest adjusted ceiling supplies
+the attributes. Equal adjusted heights use the first input in source order.
+Selecting attributes retains ceiling boundaries between different inputs,
+including ceilings at the same height.</p>
+</section>
 </section>
 <section id="config-file">
 <h2>Config file<a class="headerlink" href="#config-file" title="Link to this heading">¶</a></h2>
@@ -941,6 +978,8 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="c1"># underpass-source = </span>
 <span class="c1">## Underpass layer (default: first layer).</span>
 <span class="c1"># underpass-source-layer = </span>
+<span class="c1">## Copy selected source attributes to matching OuterCeilingSurface objects. All names must exist in underpass-source. CLI: comma-separated names; TOML: array of names.</span>
+<span class="n">underpass-attributes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
 <span class="c1">## Underpass building ID attribute (default: id-attribute).</span>
 <span class="c1"># underpass-id-attribute = </span>
 <span class="c1">## Numeric absolute ceiling elevation attribute. If omitted or its value is null, use underpass-default-height above the building floor.</span>
@@ -1187,6 +1226,8 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <span class="n">h_roof_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_min&quot;</span>
 <span class="c1">## The main ridge elevation</span>
 <span class="n">h_roof_ridge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_h_roof_ridge&quot;</span>
+<span class="c1">## Indicates if the reconstructed building contains at least one underpass</span>
+<span class="n">has_underpass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_has_underpass&quot;</span>
 <span class="c1">## Indicates if a glass roof was detected</span>
 <span class="n">is_glass_roof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rf_is_glass_roof&quot;</span>
 <span class="c1">## Indicates if the building was mutated between multiple input pointclouds (if multiple input pointclouds were provided)</span>
@@ -1315,6 +1356,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </li>
 <li><a class="reference internal" href="#output-format">Output format</a><ul>
 <li><a class="reference internal" href="#output-attributes">Output attributes</a></li>
+<li><a class="reference internal" href="#underpass-attributes">Underpass attributes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#config-file">Config file</a></li>

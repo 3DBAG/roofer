@@ -64,6 +64,35 @@ For terrain output, `--terrain-nodata-mode` controls whether only complete grid 
 ```{include} output-attributes.md
 ```
 
+### Underpass attributes
+
+The building attribute `rf_has_underpass` is a boolean indicating whether the
+reconstructed building contains at least one underpass ceiling. It is false
+when all matching inputs are skipped or lie outside the reconstructed footprint,
+and for LoD 1 and fallback extrusions. Rename or omit it using
+`[output.attributes] has_underpass`, like the other output attributes.
+
+Select attributes from the underpass polygon source to copy onto the matching
+`OuterCeilingSurface` semantic objects:
+
+```toml
+[input]
+underpass-source = "underpasses.gpkg"
+underpass-attributes = ["underpass_id", "name"]
+```
+
+The CLI equivalent is `--underpass-attributes underpass_id,name` (a single name
+is also accepted). Every selected name must exist in the source layer; missing
+fields cause an error before reconstruction. Boolean, integer, real and string
+values retain their types, and null or unset values remain null. Other OGR
+field types use their text representation. Original attribute names are kept;
+the reserved CityJSON `type` field remains `OuterCeilingSurface`.
+
+Where polygons overlap, the input with the highest adjusted ceiling supplies
+the attributes. Equal adjusted heights use the first input in source order.
+Selecting attributes retains ceiling boundaries between different inputs,
+including ceilings at the same height.
+
 ## Config file
 Below is an example of a [TOML](https://toml.io/en/) configuration file for the {program}`roofer` CLI application. It shows all the available options. Some of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
 

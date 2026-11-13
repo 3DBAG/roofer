@@ -53,6 +53,9 @@ Optional OGR underpass polygon datasource.
 ```{option} --underpass-source-layer <string> (default: <no value>)
 Underpass layer (default: first layer).
 ```
+```{option} --underpass-attributes name[,name,...] (default: [])
+Copy selected source attributes to matching OuterCeilingSurface objects. All names must exist in underpass-source. CLI: comma-separated names; TOML: array of names.
+```
 ```{option} --underpass-id-attribute <string> (default: <no value>)
 Underpass building ID attribute (default: id-attribute).
 ```
@@ -191,6 +194,6 @@ CityJSON output vertex precision, in input map units.
 ```{option} --cj-translate (x y z) (default: <no value>)
 Translation applied to CityJSON output vertices, in input coordinate units. Uses dataset center by default.
 ```
-```{option} --attribute-rename key=value[,...] (default: azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)
+```{option} --attribute-rename key=value[,...] (default: azimuth=rf_azimuth,extrusion_mode=rf_extrusion_mode,force_lod11=rf_force_lod11,h_ground=rf_h_ground,h_pc_98p=rf_h_pc_98p,h_roof_50p=rf_h_roof_50p,h_roof_70p=rf_h_roof_70p,h_roof_max=rf_h_roof_max,h_roof_min=rf_h_roof_min,h_roof_ridge=rf_h_roof_ridge,has_underpass=rf_has_underpass,is_glass_roof=rf_is_glass_roof,is_mutated=rf_is_mutated,nodata_frac=rf_nodata_frac,nodata_r=rf_nodata_r,pc_select=rf_pc_select,pc_source=rf_pc_source,pc_year=rf_pc_year,pointcloud_unusable=rf_pointcloud_unusable,pt_density=rf_pt_density,reconstruction_time=rf_t_run,rmse_lod12=rf_rmse_lod12,rmse_lod13=rf_rmse_lod13,rmse_lod22=rf_rmse_lod22,roof_n_planes=rf_roof_planes,roof_n_ridgelines=rf_ridgelines,roof_type=rf_roof_type,slope=rf_slope,success=rf_success,val3dity_lod12=rf_val3dity_lod12,val3dity_lod13=rf_val3dity_lod13,val3dity_lod22=rf_val3dity_lod22,volume_lod12=rf_volume_lod12,volume_lod13=rf_volume_lod13,volume_lod22=rf_volume_lod22)
 Rename output attributes. If no value is provided, the attribute will not be written. See the list of available attributes with `--attributes`. By default attribute names are prefixed with `rf_`.
 ```
