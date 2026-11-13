@@ -27,6 +27,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -36,6 +37,28 @@
 // #include <ogr_spatialref.h>
 namespace roofer {
   namespace RasterTools {
+    inline constexpr size_t invalid_index = std::numeric_limits<size_t>::max();
+
+    // Cell coverage is [origin, origin + dimension * cellsize). Check in
+    // floating point before casting: negative/non-finite values cannot safely
+    // be converted to size_t. Return dimension for an out-of-range coordinate.
+    inline size_t coordinate_index(double value, double origin, double cellsize,
+                                   size_t dimension) {
+      if (!std::isfinite(cellsize) || cellsize <= 0) return dimension;
+      const double index = (value - origin) / cellsize;
+      if (!std::isfinite(index) || index < 0 ||
+          index >= static_cast<double>(dimension))
+        return dimension;
+      return std::min(static_cast<size_t>(index), dimension);
+    }
+
+    inline size_t linear_index(size_t row, size_t col, size_t width,
+                               size_t height) {
+      if (row >= height || col >= width || row > (invalid_index - col) / width)
+        return invalid_index;
+      return row * width + col;
+    }
+
     enum alg { MIN, MAX, ZERO };
     class Raster {
      public:
@@ -59,8 +82,8 @@ namespace roofer {
        * @param[in] x x coordinate of the point
        * @param[in] y y coordinate of the point
        * @param[in] val value to be added
-       * @return True if the value was added, false if the point is outside the
-       * raster.
+       * @return True if this was the first value in the cell, false otherwise
+       * or if the point is outside the raster.
        */
       bool add_value(double x, double y, double val);
       /**
@@ -77,16 +100,17 @@ namespace roofer {
        * Gets the row number for the given x and y coordinates.
        * @param[in] x x coordinate of the point
        * @param[in] y y coordinate of the point
-       * @return The row number.
+       * @return The row number, or dimy_ if outside the raster's row range.
        */
       size_t getRow(double x, double y) const;
       /**
        * Gets the col number for the given x and y coordinates.
        * @param[in] x x coordinate of the point
        * @param[in] y y coordinate of the point
-       * @return The col number.
+       * @return The col number, or dimx_ if outside the raster's column range.
        */
       size_t getCol(double x, double y) const;
+      // Return invalid_index for coordinates outside the allocated cells.
       size_t getLinearCoord(double x, double y) const;
       size_t getLinearCoord(size_t r, size_t c) const;
       std::array<double, 2> getColRowCoord(double x, double y) const;
@@ -99,6 +123,7 @@ namespace roofer {
        */
       point3d getPointFromRasterCoords(size_t col, size_t row) const;
       double getNoDataVal() { return noDataVal_; };
+      // Out-of-range reads return nodata; out-of-range writes are ignored.
       double sample(double &x, double &y);
       void set_val(size_t col, size_t row, double val);
       double get_val(size_t col, size_t row);
@@ -203,24 +228,9 @@ namespace roofer {
 
       double cellSize_, minx_, miny_, maxx_, maxy_;
       size_t dimx_, dimy_;
-      double noDataVal_;
+      double noDataVal_ = 0;
       // std::unique_ptr<std::vector<int16_t>> counts_;
       std::unique_ptr<std::vector<float>> vals_;
-
-     private:
-      void avg(double &x, double &y, double &val);
-      void min(double &x, double &y, double &val);
-      void max(double &x, double &y, double &val);
-      /**
-       * Adds the input value to the value at the given coordinate of the
-       * raster.
-       * @param[in] val value to be added
-       * @param[in] x x coordinate
-       * @param[in] y y coordinate
-       */
-      void add(double &x, double &y, double &val);
-      // void cnt(double &x, double &y);
-      // OGRSpatialReference oSRS;
     };
   }  // namespace RasterTools
 }  // namespace roofer

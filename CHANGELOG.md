@@ -13,8 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Avoid a logging shutdown crash when using val3dity by letting Roofer's loggers release their own resources without clearing spdlog's global registry.
+- Improve reconstruction determinism for repeated runs on identical inputs by fixing the region-grower seed, removing address-dependent processing orders, and correcting uninitialized reads. See #181.
+- Reject out-of-raster points before converting coordinates to cell indices, preventing undefined conversions, row aliasing, and out-of-bounds access during rasterization and point-cloud thinning.
 - Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
 - The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188 via #189.
+
+### Changed
+
+- Build AMD64 and ARM64 Docker images from the default Nix flake package.
+- Reuse package dependencies in the Nix development shell, make Python setup explicit with `roofer-python-setup`, and provide the documentation helper separately through the `docs` flake package.
 
 ## [1.1.0-beta.1] - 2026-07-30
 

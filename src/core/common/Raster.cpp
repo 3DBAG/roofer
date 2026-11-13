@@ -78,27 +78,28 @@ namespace roofer {
     }
 
     bool Raster::add_point(double x, double y, double z, alg a) {
-      bool first = (*vals_)[getLinearCoord(x, y)] == noDataVal_;
+      const auto index = getLinearCoord(x, y);
+      if (index >= vals_->size()) return false;
+      auto &value = (*vals_)[index];
+      bool first = value == noDataVal_;
       if (a == MIN) {
-        min(x, y, z);
+        if (value > z) value = z;
       } else if (a == MAX) {
-        max(x, y, z);
+        if (value < z) value = z;
       }
       return first;
     }
 
     bool Raster::add_value(double x, double y, double val) {
-      bool first = (*vals_)[getLinearCoord(x, y)] == noDataVal_;
-      add(x, y, val);
+      const auto index = getLinearCoord(x, y);
+      if (index >= vals_->size()) return false;
+      auto &value = (*vals_)[index];
+      bool first = value == noDataVal_;
+      value += val;
       return first;
     }
     bool Raster::check_point(double x, double y) {
-      auto col = getCol(x, y);
-      if (col >= dimx_ || col < 0) return false;
-      auto row = getRow(x, y);
-      if (row >= dimy_ || row < 0) return false;
-
-      return true;
+      return getLinearCoord(x, y) < vals_->size();
     }
 
     // inline void Raster::avg(double &x, double &y, double &val)
@@ -107,21 +108,6 @@ namespace roofer {
     //   (*vals_)[c]= ((*vals_)[c]*(*counts_)[c]+val)/((*counts_)[c]+1);
     //   ++(*counts_)[c];
     // }
-
-    inline void Raster::min(double &x, double &y, double &val) {
-      size_t c = getLinearCoord(x, y);
-      if ((*vals_)[c] > val) (*vals_)[c] = val;
-    }
-
-    inline void Raster::max(double &x, double &y, double &val) {
-      size_t c = getLinearCoord(x, y);
-      if ((*vals_)[c] < val) (*vals_)[c] = val;
-    }
-
-    inline void Raster::add(double &x, double &y, double &val) {
-      size_t c = getLinearCoord(x, y);
-      (*vals_)[c] = (*vals_)[c] + val;
-    }
 
     // inline void Raster::cnt(double &x, double &y)
     // {
@@ -137,21 +123,18 @@ namespace roofer {
     }
 
     size_t Raster::getRow(double x, double y) const {
-      return static_cast<size_t>(floor((y - miny_) / cellSize_));
+      return coordinate_index(y, miny_, cellSize_, dimy_);
     }
     size_t Raster::getCol(double x, double y) const {
-      return static_cast<size_t>(floor((x - minx_) / cellSize_));
+      return coordinate_index(x, minx_, cellSize_, dimx_);
     }
 
     size_t Raster::getLinearCoord(double x, double y) const {
-      size_t r = static_cast<size_t>(floor((y - miny_) / cellSize_));
-      size_t c = static_cast<size_t>(floor((x - minx_) / cellSize_));
-
-      return r * dimx_ + c;
+      return getLinearCoord(getRow(x, y), getCol(x, y));
     }
 
     size_t Raster::getLinearCoord(size_t r, size_t c) const {
-      return r * dimx_ + c;
+      return linear_index(r, c, dimx_, dimy_);
     }
 
     std::array<float, 3> Raster::getPointFromRasterCoords(size_t col,
@@ -161,31 +144,35 @@ namespace roofer {
       p[1] = miny_ + row * cellSize_ + cellSize_ / 2;
 
       // Bounds check to prevent buffer overflow
-      if (col >= dimx_ || row >= dimy_) {
+      const auto index = getLinearCoord(row, col);
+      if (index >= vals_->size()) {
         p[2] = noDataVal_;
       } else {
-        p[2] = (*vals_)[col + row * dimx_];
+        p[2] = (*vals_)[index];
       }
       return p;
     }
 
     double Raster::sample(double &x, double &y) {
-      return (*vals_)[getLinearCoord(x, y)];
+      const auto index = getLinearCoord(x, y);
+      return index < vals_->size() ? (*vals_)[index] : noDataVal_;
     }
 
     void Raster::set_val(size_t col, size_t row, double val) {
-      (*vals_)[col + row * dimx_] = val;
+      const auto index = getLinearCoord(row, col);
+      if (index < vals_->size()) (*vals_)[index] = val;
     }
 
     double Raster::get_val(size_t col, size_t row) {
-      return (*vals_)[col + row * dimx_];
+      const auto index = getLinearCoord(row, col);
+      return index < vals_->size() ? (*vals_)[index] : noDataVal_;
     }
 
     bool Raster::isNoData(size_t col, size_t row) {
       return get_val(col, row) == noDataVal_;
     }
     bool Raster::isNoData(double &x, double &y) {
-      return (*vals_)[getLinearCoord(x, y)] == noDataVal_;
+      return sample(x, y) == noDataVal_;
     }
 
     void Raster::set_nodata(double new_nodata_val) {

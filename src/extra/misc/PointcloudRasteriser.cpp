@@ -161,10 +161,11 @@ namespace roofer::misc {
   }
 
   size_t getLinearCoord(const Image& im, double x, double y) {
-    size_t r = static_cast<size_t>(floor((y - im.min_y) / im.cellsize));
-    size_t c = static_cast<size_t>(floor((x - im.min_x) / im.cellsize));
-
-    return r * im.dim_x + c;
+    const auto r =
+        RasterTools::coordinate_index(y, im.min_y, im.cellsize, im.dim_y);
+    const auto c =
+        RasterTools::coordinate_index(x, im.min_x, im.cellsize, im.dim_x);
+    return RasterTools::linear_index(r, c, im.dim_x, im.dim_y);
   }
   void gridthinPointcloud(PointCollection& pointcloud, const Image& cnt_image,
                           float max_density) {
@@ -185,7 +186,7 @@ namespace roofer::misc {
       auto& p = pointcloud[pi];
       auto& c = (*classification)[pi];
       auto i = getLinearCoord(cnt_image, p[0], p[1]);
-      if (i < 0 || i >= cnt_image.array.size()) continue;
+      if (i >= cnt_image.array.size()) continue;
 
       // check if we have too many points in this cell
       if (cnt_image.array[i] > max_cnt_per_cell) {

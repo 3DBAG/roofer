@@ -378,7 +378,7 @@ namespace roofer::io {
       min_ground_elevation = std::min(min_ground_elevation, point[2]);
 
       size_t lincoord = pindex.getLinearCoord(point[0], point[1]);
-      if (lincoord >= pindex_vals.size() || lincoord < 0) {
+      if (lincoord >= pindex_vals.size()) {
         // std::cout << "Point (" << point[0] << ", " <<point[1] << ", "  <<
         // point[2] << ") is not in the polygon bbox.\n";
         return;

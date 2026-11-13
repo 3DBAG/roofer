@@ -55,6 +55,10 @@ FetchContent_MakeAvailable(underpasses)
 # --- Library testing
 include(Catch)
 
+add_executable(test_raster test_raster.cpp)
+target_link_libraries(test_raster PRIVATE Catch2::Catch2WithMain roofer-extra)
+catch_discover_tests(test_raster)
+
 add_executable("test_logger" "${CMAKE_CURRENT_SOURCE_DIR}/test_logger.cpp")
 target_link_libraries("test_logger" PUBLIC logger)
 target_link_libraries("test_logger" PRIVATE Catch2::Catch2WithMain)
