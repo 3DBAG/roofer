@@ -22,6 +22,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <unordered_map>
@@ -135,10 +136,10 @@ namespace roofer {
   };
 
   struct AttributeMapRow {
-    using amrmap =
-        std::unordered_map<std::string,
-                           std::variant<std::monostate, bool, int, std::string,
-                                        float, arr3f, Date, Time, DateTime>>;
+    using amrmap = std::unordered_map<
+        std::string,
+        std::variant<std::monostate, bool, int, std::string, float, arr3f, Date,
+                     Time, DateTime, std::int64_t, double>>;
     amrmap _attributes;
 
     AttributeMapRow(){};

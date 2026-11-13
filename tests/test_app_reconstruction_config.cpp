@@ -104,6 +104,53 @@ TEST_CASE("global unit-scale is accepted as a CLI parameter") {
   CHECK(arguments.args.empty());
 }
 
+TEST_CASE("underpass attribute selection accepts TOML arrays and CLI names") {
+  TemporaryConfig file(R"(
+[input]
+underpass-source = "underpasses.gpkg"
+underpass-attributes = ["name", "height"]
+[output.attributes]
+has_underpass = "contains_passage"
+)");
+  RooferConfigHandler handler;
+  handler._config_path = file.string();
+  handler.parse_config_file();
+  CHECK(handler.cfg_.underpass_attributes ==
+        std::vector<std::string>{"name", "height"});
+  CHECK(handler.cfg_.a_has_underpass == "contains_passage");
+  handler.cfg_.id_attribute = "id";
+  handler.cfg_.source_footprints = "footprints.gpkg";
+  handler.cfg_.output_path = "output";
+  handler.input_pointclouds_.emplace_back();
+  const char* argv[] = {"roofer", "--underpass-attributes", "name,count,open"};
+  CLIArgs arguments(static_cast<int>(std::size(argv)), argv);
+  handler.parse_cli_second_pass(arguments);
+  CHECK(handler.cfg_.underpass_attributes ==
+        std::vector<std::string>{"name", "count", "open"});
+  CHECK(arguments.args.empty());
+}
+
+TEST_CASE("invalid underpass attribute options fail with actionable errors") {
+  for (const auto* value : {"42", "[\"name\", 42]"}) {
+    TemporaryConfig file(std::string("[input]\nunderpass-attributes = ") +
+                         value);
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        handler.parse_config_file(),
+        Catch::Matchers::ContainsSubstring("input.underpass-attributes"));
+  }
+  RooferConfigHandler handler;
+  handler.cfg_.underpass_attributes = {"name"};
+  CHECK_THROWS_WITH(handler.validate(), Catch::Matchers::ContainsSubstring(
+                                            "requires underpass-source"));
+  handler.cfg_.underpass_source = "source.gpkg";
+  handler.cfg_.id_attribute = "id";
+  handler.cfg_.underpass_attributes = {""};
+  CHECK_THROWS_WITH(handler.validate(), Catch::Matchers::ContainsSubstring(
+                                            "nonempty attribute names"));
+}
+
 TEST_CASE("sectioned app configuration overrides deprecated root keys") {
   TemporaryConfig file(R"(
 polygon-source = "legacy.gpkg"

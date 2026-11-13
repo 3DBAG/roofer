@@ -8,6 +8,7 @@ namespace roofer::io {
                                        float default_clearance) const {
     Underpass result;
     result.source_id = source_id;
+    result.attributes = attributes;
     auto ring = [&](const auto& points) {
       vec3f local;
       for (const auto& p : points)
@@ -28,7 +29,8 @@ namespace roofer::io {
                                  const std::string& layer_name,
                                  const std::string& id_attribute,
                                  const std::string& height_attribute,
-                                 const std::string& expected_crs) {
+                                 const std::string& expected_crs,
+                                 const std::vector<std::string>& attributes) {
     auto coordinates = misc::createProjHelper();
     auto reader = createVectorReaderOGR(*coordinates);
     reader->layer_name = layer_name;
@@ -41,7 +43,8 @@ namespace roofer::io {
     reader->readPolygons(polygons, {id_attribute},
                          height_attribute.empty()
                              ? std::vector<std::string>{}
-                             : std::vector<std::string>{height_attribute});
+                             : std::vector<std::string>{height_attribute},
+                         attributes);
     auto ring = [](const std::vector<arr3d>& input) {
       std::vector<arr2d> result;
       for (const auto& p : input) result.push_back({p[0], p[1]});
@@ -71,6 +74,7 @@ namespace roofer::io {
       for (const auto& hole : polygon.holes) value.holes.push_back(ring(hole));
       value.ceiling_elevation = height;
       value.source_id = *id + "/FID " + std::to_string(polygon.fid);
+      value.attributes = polygon.attributes;
       result[*id].push_back(std::move(value));
     }
     return result;

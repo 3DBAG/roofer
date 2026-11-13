@@ -343,9 +343,11 @@ namespace roofer::io {
     }
 
    public:
-    void readPolygons(std::vector<PolygonFeature>& polygons,
-                      const std::vector<std::string>& text_fields,
-                      const std::vector<std::string>& numeric_fields) override {
+    void readPolygons(
+        std::vector<PolygonFeature>& polygons,
+        const std::vector<std::string>& text_fields,
+        const std::vector<std::string>& numeric_fields,
+        const std::vector<std::string>& attribute_fields) override {
       if (!poLayer)
         throw rooferException("[VectorReaderOGR] Layer is not open");
       auto* definition = poLayer->GetLayerDefn();
@@ -366,7 +368,8 @@ namespace roofer::io {
         return indices;
       };
       auto text_indices = fields(text_fields, false),
-           numeric_indices = fields(numeric_fields, true);
+           numeric_indices = fields(numeric_fields, true),
+           attribute_indices = fields(attribute_fields, false);
       for_each_polygon([&](const OGRFeature& feature, OGRPolygon* polygon) {
         PolygonFeature result;
         result.fid = feature.GetFID();
@@ -386,6 +389,35 @@ namespace roofer::io {
           auto& value = result.numeric_attributes[numeric_fields[i]];
           if (feature.IsFieldSetAndNotNull(numeric_indices[i]))
             value = feature.GetFieldAsDouble(numeric_indices[i]);
+        }
+        for (size_t i = 0; i < attribute_fields.size(); ++i) {
+          const auto& name = attribute_fields[i];
+          const auto index = attribute_indices[i];
+          if (!feature.IsFieldSetAndNotNull(index)) {
+            result.attributes.set_null(name);
+            continue;
+          }
+          const auto* field = definition->GetFieldDefn(index);
+          switch (field->GetType()) {
+            case OFTInteger:
+              if (field->GetSubType() == OFSTBoolean)
+                result.attributes.insert(
+                    name, bool(feature.GetFieldAsInteger(index)));
+              else
+                result.attributes.insert(name,
+                                         feature.GetFieldAsInteger(index));
+              break;
+            case OFTInteger64:
+              result.attributes.insert(
+                  name, std::int64_t(feature.GetFieldAsInteger64(index)));
+              break;
+            case OFTReal:
+              result.attributes.insert(name, feature.GetFieldAsDouble(index));
+              break;
+            default:
+              result.attributes.insert(
+                  name, std::string(feature.GetFieldAsString(index)));
+          }
         }
         polygons.push_back(std::move(result));
       });

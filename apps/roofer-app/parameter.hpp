@@ -24,6 +24,7 @@
 #include <roofer/common/formatters.hpp>
 #include <cmath>
 #include <format>
+#include <sstream>
 #include <string>
 
 struct DocAttrib {
@@ -303,22 +304,34 @@ struct ConfigParameterByReference : public ConfigParameter {
     return std::nullopt;
   }
 
-  std::string to_string() override { return std::format("{}", value_); }
+  std::string format_value(const T& value) const {
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+      toml::array names;
+      for (const auto& name : value) names.push_back(name);
+      std::ostringstream stream;
+      stream << names;
+      return stream.str();
+    } else {
+      return std::format("{}", value);
+    }
+  }
+
+  std::string to_string() override { return format_value(value_); }
 
   std::string to_toml() override {
     if constexpr (std::is_same_v<T, DocAttribMap>) {
       return std::format("{:t}", value_);
     } else {
-      return std::format("{}", value_);
+      return format_value(value_);
     }
   }
 
   std::string default_to_string() override {
-    std::string s = std::format("{}", default_value_);
+    std::string s = format_value(default_value_);
     if (s.size() == 0) {
       return "<no value>";
     } else {
-      return std::format("{}", default_value_);
+      return s;
     }
   }
 
@@ -369,6 +382,9 @@ struct ConfigParameterByReference : public ConfigParameter {
         return args.erase(it);
       } else if constexpr (std::is_same_v<T, std::string>) {
         value_ = *it;
+        return args.erase(it);
+      } else if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+        value_ = roofer::split_string(*it, ",");
         return args.erase(it);
       } else if constexpr (std::is_same_v<
                                T, std::optional<roofer::TBox<double>>> ||
@@ -470,7 +486,17 @@ struct ConfigParameterByReference : public ConfigParameter {
                                " from config file.");
     };
 
-    if constexpr (std::is_same_v<T, std::array<float, 2>>) {
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+      const auto* values = table[name].as_array();
+      if (!values) fail();
+      std::vector<std::string> names;
+      for (const auto& node : *values) {
+        const auto name = node.value<std::string>();
+        if (!name) fail();
+        names.push_back(*name);
+      }
+      value_ = std::move(names);
+    } else if constexpr (std::is_same_v<T, std::array<float, 2>>) {
       const auto* values = table[name].as_array();
       roofer::arr2f value;
       if (!values || values->size() != value.size() ||
@@ -580,6 +606,8 @@ struct ConfigParameterByReference : public ConfigParameter {
       return "<double>";
     } else if constexpr (std::is_same_v<T, std::string>) {
       return "<string>";
+    } else if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+      return "name[,name,...]";
     } else if constexpr (std::is_same_v<T,
                                         std::optional<roofer::TBox<double>>> ||
                          std::is_same_v<T, roofer::TBox<double>>) {

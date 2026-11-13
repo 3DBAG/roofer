@@ -137,8 +137,10 @@ namespace roofer::io {
         } else if (label == 3) {  // WallSurface not on footprint edge
           sem_values.push_back(2);
         } else if (label == 4) {  // OuterCeilingSurface
-          auto semantic_object =
-              nlohmann::json::object({{"type", "OuterCeilingSurface"}});
+          nlohmann::json::object_t semantic_object;
+          if (!mesh.get_attributes().empty())
+            semantic_object = attributes2json(mesh.get_attributes().at(i));
+          semantic_object["type"] = "OuterCeilingSurface";
           semantic_objects.push_back(semantic_object);
           sem_values.push_back(wallSurface_cntr++);
         } else {
@@ -186,6 +188,10 @@ namespace roofer::io {
         } else if (auto val = attributes.get_if<float>(name)) {
           jattributes[name] = *val;
         } else if (auto val = attributes.get_if<int>(name)) {
+          jattributes[name] = *val;
+        } else if (auto val = attributes.get_if<std::int64_t>(name)) {
+          jattributes[name] = *val;
+        } else if (auto val = attributes.get_if<double>(name)) {
           jattributes[name] = *val;
         } else if (auto val = attributes.get_if<std::string>(name)) {
           jattributes[name] = *val;

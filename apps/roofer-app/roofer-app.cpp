@@ -498,7 +498,8 @@ int main(int argc, const char* argv[]) {
           cfg.underpass_id_attribute.empty() ? cfg.id_attribute
                                              : cfg.underpass_id_attribute,
           cfg.underpass_height_attribute,
-          project_srs->is_valid() ? project_srs->export_wkt() : std::string{});
+          project_srs->is_valid() ? project_srs->export_wkt() : std::string{},
+          cfg.underpass_attributes);
       logger.info("Loaded underpasses for {} building IDs",
                   underpass_index.size());
     } catch (const std::exception& ex) {
@@ -1018,6 +1019,17 @@ int main(int argc, const char* argv[]) {
               if (!handler.cfg_.a_is_glass_roof.empty())
                 attrow.insert(handler.cfg_.a_is_glass_roof,
                               building.is_glass_roof);
+              if (!handler.cfg_.a_has_underpass.empty()) {
+                bool has_underpass = false;
+                for (const auto& [part, mesh] : building.multisolids_lod22)
+                  if (std::find(mesh.get_labels().begin(),
+                                mesh.get_labels().end(),
+                                4) != mesh.get_labels().end()) {
+                    has_underpass = true;
+                    break;
+                  }
+                attrow.insert(handler.cfg_.a_has_underpass, has_underpass);
+              }
               if (!handler.cfg_.a_pointcloud_unusable.empty())
                 attrow.insert(handler.cfg_.a_pointcloud_unusable,
                               building.pointcloud_insufficient);
