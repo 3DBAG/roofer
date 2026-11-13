@@ -272,6 +272,9 @@ namespace roofer::io {
     std::vector<std::vector<size_t>> pindex_vals;
     std::vector<std::unique_ptr<GridPIPTester>> poly_grids, buf_poly_grids;
     std::vector<vec1f> z_ground;
+    // When handle_overlap_points is enabled, address-dependent iteration order
+    // can break determinism: assignment updates polygon point counts as it goes
+    // and determines the order of points appended to each output cloud.
     std::unordered_map<std::unique_ptr<arr3f>, std::vector<size_t>>
         points_overlap;  // point, [poly id's], these are points that intersect
                          // with multiple polygons
