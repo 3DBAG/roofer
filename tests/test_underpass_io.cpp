@@ -100,6 +100,44 @@ TEST_CASE("four metre default underpass clearance uses the local floor") {
         Catch::Approx(5 + 4 / 0.3048F));
 }
 
+TEST_CASE(
+    "selected underpass attributes retain types, nulls and multipart "
+    "ownership") {
+  Source source(R"({"type":"FeatureCollection","features":[
+    {"type":"Feature","properties":{"bid":"test","name":"passage","open":true,
+      "count":3,"large_id":9007199254740993,"height":4.123456789,"unknown":null,
+      "ignored":"omit"},"geometry":{"type":"MultiPolygon","coordinates":[
+      [[[0,0],[4,0],[4,4],[0,4],[0,0]]],
+      [[[6,0],[10,0],[10,4],[6,4],[6,0]]]]}},
+    {"type":"Feature","properties":{"bid":"unset"},"geometry":{
+      "type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}}
+  ]})");
+  const std::vector<std::string> names{"name",     "open",   "count",
+                                       "large_id", "height", "unknown"};
+  const auto index = roofer::io::readUnderpasses(source.path.string(), "",
+                                                 "bid", "", "", names);
+  REQUIRE(index.at("test").size() == 2);
+  for (const auto& feature : index.at("test")) {
+    const auto local = feature.localize({0, 0, 0}, 0, 4);
+    const auto& attributes = local.attributes;
+    CHECK(attributes._attributes.size() == names.size());
+    CHECK(*attributes.get_if<std::string>("name") == "passage");
+    CHECK(*attributes.get_if<bool>("open"));
+    CHECK(*attributes.get_if<int>("count") == 3);
+    CHECK(*attributes.get_if<std::int64_t>("large_id") == 9007199254740993LL);
+    CHECK(*attributes.get_if<double>("height") == 4.123456789);
+    CHECK(attributes.is_null("unknown"));
+    CHECK_FALSE(attributes.has_name("ignored"));
+  }
+  for (const auto& name : names)
+    CHECK(index.at("unset")[0].attributes.is_null(name));
+  CHECK_THROWS(roofer::io::readUnderpasses(source.path.string(), "", "bid", "",
+                                           "", {"missing"}));
+  const auto defaults =
+      roofer::io::readUnderpasses(source.path.string(), "", "bid", "");
+  CHECK(defaults.at("test")[0].attributes._attributes.empty());
+}
+
 TEST_CASE("underpass fixture loads polygons and preserves pillar holes") {
   const auto index = roofer::io::readUnderpasses(
       std::string(UNDERPASS_DATA_DIR) + "/underpasses.geojson", "",
@@ -127,6 +165,16 @@ TEST_CASE(
   auto roof = ceiling;
   roof.set_z(10);
   mesh.push_polygon(roof, 1);
+  mesh.get_attributes().resize(2);
+  auto& ceiling_attributes = mesh.get_attributes()[0];
+  ceiling_attributes.insert("name", std::string("passage"));
+  ceiling_attributes.insert("open", true);
+  ceiling_attributes.insert("count", 3);
+  ceiling_attributes.insert("large_id", std::int64_t(9007199254740993LL));
+  ceiling_attributes.insert("height", 4.123456789);
+  ceiling_attributes.set_null("unknown");
+  // Source fields cannot replace the CityJSON semantic type.
+  ceiling_attributes.insert("type", std::string("input type"));
   std::unordered_map<int, roofer::Mesh> geometry{{0, mesh}};
   auto helper = roofer::misc::createProjHelper();
   auto writer = roofer::io::createCityJsonWriter(*helper);
@@ -144,4 +192,15 @@ TEST_CASE(
         "OuterCeilingSurface");
   CHECK(semantics["surfaces"][semantics["values"][0][1].get<int>()]["type"] ==
         "RoofSurface");
+  const auto& ceiling_semantic =
+      semantics["surfaces"][semantics["values"][0][0].get<int>()];
+  CHECK(ceiling_semantic["name"] == "passage");
+  CHECK(ceiling_semantic["open"] == true);
+  CHECK(ceiling_semantic["count"] == 3);
+  CHECK(ceiling_semantic["large_id"] == 9007199254740993LL);
+  CHECK(ceiling_semantic["height"] == 4.123456789);
+  CHECK(ceiling_semantic["unknown"].is_null());
+  CHECK_FALSE(
+      semantics["surfaces"][semantics["values"][0][1].get<int>()].contains(
+          "name"));
 }

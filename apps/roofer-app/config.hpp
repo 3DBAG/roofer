@@ -151,6 +151,7 @@ struct RooferConfig {
   std::string underpass_layer;
   std::string underpass_id_attribute;
   std::string underpass_height_attribute;
+  std::vector<std::string> underpass_attributes;
   float underpass_default_height = 4.0F;
 
   int bld_class = 6;
@@ -216,6 +217,7 @@ struct RooferConfig {
   std::string a_val3dity_lod13 = "rf_val3dity_lod13";
   std::string a_val3dity_lod22 = "rf_val3dity_lod22";
   std::string a_is_glass_roof = "rf_is_glass_roof";
+  std::string a_has_underpass = "rf_has_underpass";
   std::string a_nodata_frac = "rf_nodata_frac";
   std::string a_nodata_r = "rf_nodata_r";
   std::string a_pt_density = "rf_pt_density";
@@ -513,6 +515,11 @@ struct RooferConfigHandler {
               cfg_.underpass_source);
     input.add("underpass-source-layer",
               "Underpass layer (default: first layer).", cfg_.underpass_layer);
+    input.add("underpass-attributes",
+              "Copy selected source attributes to matching OuterCeilingSurface "
+              "objects. All names must exist in underpass-source. CLI: "
+              "comma-separated names; TOML: array of names.",
+              cfg_.underpass_attributes);
     input.add("underpass-id-attribute",
               "Underpass building ID attribute (default: id-attribute).",
               cfg_.underpass_id_attribute);
@@ -742,6 +749,10 @@ struct RooferConfigHandler {
     output_attr_.emplace("is_glass_roof",
                          DocAttrib(&cfg_.a_is_glass_roof,
                                    "Indicates if a glass roof was detected"));
+    output_attr_.emplace("has_underpass",
+                         DocAttrib(&cfg_.a_has_underpass,
+                                   "Indicates if the reconstructed building "
+                                   "contains at least one underpass"));
     output_attr_.emplace(
         "nodata_frac", DocAttrib(&cfg_.a_nodata_frac,
                                  "Indicates fraction (in the range [0,1]) "
@@ -915,6 +926,14 @@ struct RooferConfigHandler {
       throw std::runtime_error(
           "underpass-source requires a footprint id-attribute");
     }
+    if (!cfg_.underpass_attributes.empty() && cfg_.underpass_source.empty()) {
+      throw std::runtime_error(
+          "underpass-attributes requires underpass-source");
+    }
+    for (const auto& name : cfg_.underpass_attributes)
+      if (name.empty())
+        throw std::runtime_error(
+            "underpass-attributes must contain nonempty attribute names");
 
     if (input_pointclouds_.empty()) {
       throw std::runtime_error("No input pointclouds specified.");

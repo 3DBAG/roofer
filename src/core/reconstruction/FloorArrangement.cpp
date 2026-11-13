@@ -573,11 +573,18 @@ namespace roofer::reconstruction::detail {
         const auto& cell = cells[face->data().label];
         FloorRegion region;
         region.part = cell.part;
-        for (auto i : cell.covered)
-          if (candidates[i].enabled)
-            region.ceiling =
-                std::max(region.ceiling.value_or(candidates[i].height),
-                         candidates[i].height);
+        // Highest adjusted ceiling wins; ties retain the first input.
+        for (auto i : cell.covered) {
+          const auto& candidate = candidates[i];
+          if (candidate.enabled &&
+              (!region.ceiling || candidate.height > *region.ceiling)) {
+            region.ceiling = candidate.height;
+            const auto& attributes =
+                underpasses[candidate.input_index].attributes;
+            region.attributes =
+                attributes._attributes.empty() ? nullptr : &attributes;
+          }
+        }
         face->data().in_footprint = region.part >= 0;
         face->data().part_id = region.part;
         regions.emplace(face, region);
@@ -589,7 +596,8 @@ namespace roofer::reconstruction::detail {
         ++it;
         auto a = edge->face(), b = edge->twin()->face();
         const auto ra = regions.at(a), rb = regions.at(b);
-        if (ra.part == rb.part && ra.ceiling == rb.ceiling) {
+        if (ra.part == rb.part && ra.ceiling == rb.ceiling &&
+            ra.attributes == rb.attributes) {
           auto merged = floor.remove_edge(edge);
           regions.erase(a);
           regions.erase(b);
@@ -657,7 +665,12 @@ namespace roofer::reconstruction::detail {
         for (auto hole :
              CGAL::make_range(face->inner_ccbs_begin(), face->inner_ccbs_end()))
           polygon.interior_rings().push_back(ring(hole));
-        meshes[region.part].push_polygon(polygon, region.ceiling ? 4 : 0);
+        auto& mesh = meshes[region.part];
+        mesh.push_polygon(polygon, region.ceiling ? 4 : 0);
+        if (region.attributes) {
+          mesh.get_attributes().resize(mesh.get_polygons().size());
+          mesh.get_attributes().back() = *region.attributes;
+        }
       }
     }
     if (!cfg.generate_walls) return;

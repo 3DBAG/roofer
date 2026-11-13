@@ -10,6 +10,7 @@ namespace roofer {
   struct Underpass {
     LinearRing polygon;
     double ceiling_elevation = 0;
-    std::string source_id;  // Optional identifier for diagnostics.
+    std::string source_id;       // Optional identifier for diagnostics.
+    AttributeMapRow attributes;  // Copied to this input's outer ceilings.
   };
 }  // namespace roofer

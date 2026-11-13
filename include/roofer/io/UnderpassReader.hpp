@@ -11,6 +11,7 @@ namespace roofer::io {
     std::vector<std::vector<arr2d>> holes;
     std::optional<double> ceiling_elevation;
     std::string source_id;
+    AttributeMapRow attributes;
 
     Underpass localize(const arr3d& offset, float local_floor_elevation,
                        float default_clearance) const;
@@ -20,10 +21,11 @@ namespace roofer::io {
 
   // No spatial/centroid filter: building ID determines ownership across tiles.
   // An empty height attribute or a null value selects the caller's default
-  // floor clearance.
-  UnderpassIndex readUnderpasses(const std::string& source,
-                                 const std::string& layer,
-                                 const std::string& id_attribute,
-                                 const std::string& height_attribute,
-                                 const std::string& expected_crs = {});
+  // floor clearance. Selected attributes must exist in the source layer and
+  // are passed through unchanged to the localized underpass.
+  UnderpassIndex readUnderpasses(
+      const std::string& source, const std::string& layer,
+      const std::string& id_attribute, const std::string& height_attribute,
+      const std::string& expected_crs = {},
+      const std::vector<std::string>& attributes = {});
 }  // namespace roofer::io

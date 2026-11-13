@@ -173,8 +173,11 @@ if(RF_BUILD_APPS)
 
   add_test(
     NAME "roofer-underpasses"
-    COMMAND $<TARGET_FILE:roofer> --config
-            "${CONFIG_DIR}/roofer-underpasses.toml" --jobs 4
+    COMMAND "${CMAKE_COMMAND}"
+            "-DROOFER_EXE=$<TARGET_FILE:roofer>"
+            "-DCONFIG_FILE=${CONFIG_DIR}/roofer-underpasses.toml"
+            "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/underpasses-output"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/check_underpass_output.cmake"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   set(tests_built "roofer-wippolder;issue-64;issue-71-v2;roofer-underpasses")

@@ -309,6 +309,58 @@ TEST_CASE(
   CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
 }
 
+TEST_CASE("outer ceilings retain the attributes of their winning underpass") {
+  auto arr = roof();
+  std::vector<Underpass> input{{rectangle(-1, 2, 6, 8), 4},
+                               {rectangle(4, 2, 11, 8), 6}};
+  input[0].attributes.insert("name", std::string("left"));
+  input[1].attributes.insert("name", std::string("right"));
+  const auto e = extrude(arr, input);
+  const auto& mesh = e->meshes.front();
+  REQUIRE(mesh.get_attributes().size() == mesh.get_polygons().size());
+  int ceilings = 0;
+  for (std::size_t i = 0; i < mesh.get_polygons().size(); ++i) {
+    const auto& attributes = mesh.get_attributes()[i];
+    if (mesh.get_labels()[i] != 4) {
+      CHECK(attributes._attributes.empty());
+      continue;
+    }
+    ++ceilings;
+    REQUIRE(attributes.has_name("name"));
+    const auto& polygon = mesh.get_polygons()[i];
+    const auto& name = *attributes.get_if<std::string>("name");
+    for (const auto& p : polygon) {
+      CHECK(p[2] == (name == "left" ? 4 : 6));
+      CHECK((name == "left" ? p[0] <= 4 : p[0] >= 4));
+    }
+  }
+  CHECK(ceilings == 2);
+  CHECK(volume(mesh) == Catch::Approx(688));
+}
+
+TEST_CASE(
+    "equal-height ceilings preserve attribute boundaries and first-input "
+    "ties") {
+  auto arr = roof();
+  std::vector<Underpass> input{{rectangle(1, 1, 6, 9), 4},
+                               {rectangle(4, 1, 9, 9), 4}};
+  input[0].attributes.insert("name", std::string("first"));
+  input[1].attributes.insert("name", std::string("second"));
+  const auto e = extrude(arr, input);
+  const auto& mesh = e->meshes.front();
+  REQUIRE(mesh.get_attributes().size() == mesh.get_polygons().size());
+  int ceilings = 0;
+  for (std::size_t i = 0; i < mesh.get_polygons().size(); ++i) {
+    if (mesh.get_labels()[i] != 4) continue;
+    ++ceilings;
+    const auto& name = *mesh.get_attributes()[i].get_if<std::string>("name");
+    for (const auto& p : mesh.get_polygons()[i])
+      CHECK((name == "first" ? p[0] <= 6 : p[0] >= 6));
+  }
+  CHECK(ceilings == 2);
+  CHECK(volume(mesh) == Catch::Approx(744));
+}
+
 TEST_CASE(
     "practically equal ceilings do not create sub-tolerance vertical walls") {
   auto arr = roof();

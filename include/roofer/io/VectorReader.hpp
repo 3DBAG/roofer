@@ -38,6 +38,7 @@ namespace roofer::io {
     std::vector<std::vector<arr3d>> holes;
     std::unordered_map<std::string, std::optional<std::string>> text_attributes;
     std::unordered_map<std::string, std::optional<double>> numeric_attributes;
+    AttributeMapRow attributes;
   };
 
   struct VectorReaderInterface {
@@ -69,11 +70,13 @@ namespace roofer::io {
 
     // Original-coordinate alternative to the local float LinearRing output.
     // Text fields also accept numeric source fields without narrowing their
-    // IDs.
+    // IDs. Attribute fields retain scalar types and nulls; other OGR types
+    // use their text representation. All requested fields must exist.
     virtual void readPolygons(
         std::vector<PolygonFeature>& polygons,
         const std::vector<std::string>& text_fields = {},
-        const std::vector<std::string>& numeric_fields = {}) = 0;
+        const std::vector<std::string>& numeric_fields = {},
+        const std::vector<std::string>& attribute_fields = {}) = 0;
   };
 
   std::unique_ptr<VectorReaderInterface> createVectorReaderOGR(

@@ -243,6 +243,9 @@ namespace roofer::reconstruction {
       walls.emit(multisolid);
       detail::conform_vertical_edges(multisolid);
       detail::remove_redundant_vertices(multisolid, cfg.snap_tolerance);
+      for (auto& [part, mesh] : multisolid)
+        if (!mesh.get_attributes().empty())
+          mesh.get_attributes().resize(mesh.get_polygons().size());
       collect_outputs();
     }
 

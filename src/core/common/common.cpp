@@ -318,6 +318,10 @@ namespace roofer {
       const std::string& name) const;
   template bool AttributeMapRow::holds_alternative<float>(
       const std::string& name) const;
+  template bool AttributeMapRow::holds_alternative<std::int64_t>(
+      const std::string& name) const;
+  template bool AttributeMapRow::holds_alternative<double>(
+      const std::string& name) const;
   template bool AttributeMapRow::holds_alternative<std::string>(
       const std::string& name) const;
   template bool AttributeMapRow::holds_alternative<arr3f>(
@@ -339,6 +343,10 @@ namespace roofer {
       const std::string& name) const;
   template const float* AttributeMapRow::get_if<float>(
       const std::string& name) const;
+  template const std::int64_t* AttributeMapRow::get_if<std::int64_t>(
+      const std::string& name) const;
+  template const double* AttributeMapRow::get_if<double>(
+      const std::string& name) const;
   template const std::string* AttributeMapRow::get_if<std::string>(
       const std::string& name) const;
   template const arr3f* AttributeMapRow::get_if<arr3f>(
@@ -357,6 +365,9 @@ namespace roofer {
   template bool* AttributeMapRow::get_if<bool>(const std::string& name);
   template int* AttributeMapRow::get_if<int>(const std::string& name);
   template float* AttributeMapRow::get_if<float>(const std::string& name);
+  template std::int64_t* AttributeMapRow::get_if<std::int64_t>(
+      const std::string& name);
+  template double* AttributeMapRow::get_if<double>(const std::string& name);
   template std::string* AttributeMapRow::get_if<std::string>(
       const std::string& name);
   template arr3f* AttributeMapRow::get_if<arr3f>(const std::string& name);

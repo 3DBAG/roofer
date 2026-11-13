@@ -9,6 +9,8 @@ namespace roofer::reconstruction::detail {
   struct FloorRegion {
     int part = -1;
     std::optional<float> ceiling;
+    // Borrows the winning input's attributes during extrusion.
+    const AttributeMapRow* attributes = nullptr;
   };
 
   // Built only after roof snapping. All underpass interior constraints stay
