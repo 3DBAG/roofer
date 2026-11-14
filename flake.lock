@@ -2,11 +2,11 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1765934234,
-        "narHash": "sha256-pJjWUzNnjbIAMIc5gRFUuKCDQ9S1cuh3b2hKgA7Mc4A=",
-        "owner": "nixos",
+        "lastModified": 1794165970,
+        "narHash": "sha256-XuAV2cUwaod3Bt4XFVqiXz3v1w2ex16W6Sv4S7EWres=",
+        "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "af84f9d270d404c17699522fab95bbf928a2d92f",
+        "rev": "ac588ef1c914865dad517b337ea0eb9694a4021c",
         "type": "github"
       },
       "original": {
@@ -19,23 +19,27 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "val3dity-src": "val3dity-src"
+        "val3dity": "val3dity"
       }
     },
-    "val3dity-src": {
-      "flake": false,
+    "val3dity": {
       "locked": {
-        "lastModified": 1757079329,
-        "narHash": "sha256-ovrJ6Oqx3F8QECoWJJLHRaOczfqZ0jNV0TP99BL93M4=",
-        "owner": "ylannl",
+        "lastModified": 1787722591,
+        "narHash": "sha256-fgx+sm+4FdyVc1E2R0W3BVVlfwOQfvPyZ62N86UqKhI=",
+        "owner": "tudelft3d",
         "repo": "val3dity",
-        "rev": "54f7350a31ce30e0801b64bef5e9efdda1f358c3",
+        "rev": "5edc12efd1021927469c0fb98fd0e63e9bacde0d",
         "type": "github"
       },
       "original": {
-        "owner": "ylannl",
+        "owner": "tudelft3d",
         "repo": "val3dity",
         "type": "github"
+      },
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
       }
     }
   },

@@ -50,7 +50,7 @@ search = "version = \"{current_version}\""
 replace = "version = \"{new_version}\""
 
 [[tool.bumpversion.files]]
-filename = "flake.nix"
+filename = "nix/package.nix"
 search = "version = \"{current_version}\""
 replace = "version = \"{new_version}\""
 

@@ -92,7 +92,9 @@ namespace roofer::logger {
       // logger_stdout.log(cast_level(level), "Finished.");
       file_sink->set_pattern("]\n}");
       // logger_stdout.log(cast_level(level), "");
-      spdlog::drop_all();
+      // Our loggers are owned directly by this object, not by the registry.
+      // A library can initialize the global registry later than this logger,
+      // in which case it has already been destroyed when we reach this point.
     }
 
     void set_level(LogLevel new_level) {

@@ -1,4 +1,4 @@
-name: Docker Builder Image
+name: Docker Image (Nix)
 
 on:
   push:
@@ -41,10 +41,10 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-24.04
-            platform: linux/amd64
+            system: x86_64-linux
             arch: amd64
           - runner: ubuntu-24.04-arm
-            platform: linux/arm64
+            system: aarch64-linux
             arch: arm64
     runs-on: ${{ matrix.runner }}
     permissions:
@@ -60,48 +60,43 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build
-        if: github.event_name == 'pull_request'
-        uses: docker/build-push-action@v6
+      - uses: cachix/install-nix-action@v31
         with:
-          context: ./
-          file: ./docker/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          build-args: |
-            JOBS=2
-            GIT_HASH=${{ github.sha }}
-          platforms: ${{ matrix.platform }}
-          push: false
-          tags: ${{ needs.prepare.outputs.tags }}
-          cache-from: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }}
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push by digest
-        id: build
-        if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v6
+      - uses: nix-community/cache-nix-action@v7
         with:
-          context: ./
-          file: ./docker/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          build-args: |
-            JOBS=2
-            GIT_HASH=${{ github.sha }}
-          platforms: ${{ matrix.platform }}
-          outputs: type=image,name=3dgi/roofer,push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=3dgi/roofer:buildcache-${{ matrix.arch }},mode=max
+          primary-key: nix-docker-${{ matrix.system }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/**') }}
+          restore-prefixes-first-match: nix-docker-${{ matrix.system }}-
+          gc-max-store-size-linux: 3000000000
 
-      - name: Export image digest
+      - name: Build flake package, GDAL checks, and image
+        env:
+          NIX_SYSTEM: ${{ matrix.system }}
+        run: |
+          nix build ".#checks.${NIX_SYSTEM}.gdal" --no-link --max-jobs 2 --cores 2
+          nix build ".#dockerImage.${NIX_SYSTEM}.roofer" --out-link image --max-jobs 2 --cores 2
+          nix path-info --closure-size --human-readable .#default
+          du -hL image
+          echo "ROOFER_IMAGE=roofer:$(nix eval --raw .#default.version)" >> "$GITHUB_ENV"
+
+      - name: Load and smoke test image
+        run: |
+          docker load --input image
+          docker run --rm "$ROOFER_IMAGE" --version | grep -F "$GITHUB_SHA"
+          docker run --rm "$ROOFER_IMAGE" --help
+          docker image inspect "$ROOFER_IMAGE" --format 'Uncompressed image size: {{.Size}} bytes'
+
+      - name: Push architecture image and export digest
         if: github.event_name != 'pull_request'
         env:
-          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          IMAGE_TAG: ${{ needs.prepare.outputs.tags }}-${{ matrix.arch }}
         run: |
+          docker tag "$ROOFER_IMAGE" "$IMAGE_TAG"
+          docker push "$IMAGE_TAG"
+          image_digest=$(docker image inspect "$IMAGE_TAG" --format '{{index .RepoDigests 0}}')
           mkdir -p /tmp/digests
-          touch "/tmp/digests/${IMAGE_DIGEST#sha256:}"
+          touch "/tmp/digests/${image_digest##*@sha256:}"
 
       - name: Upload image digest
         if: github.event_name != 'pull_request'
