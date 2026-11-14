@@ -1,6 +1,26 @@
 # Developing roofer
 
+## Nix development shell
+
+`nix develop` uses the standard Nix build environment, loads the dependencies
+shared with the flake packages, and adds test, formatting, and documentation tools.
+Shell startup does not sync Python packages
+or modify `LD_LIBRARY_PATH`. To set up and activate the Python environment, run:
+
+```shell
+nix develop
+roofer-python-setup
+```
+
+The helper uses the Nix Python interpreter and `uv sync --frozen`. Use
+`nix develop .#conan` for the Conan tooling shell. Nix executables require their
+runtime closure at its original `/nix/store` paths; changing only the ELF
+interpreter does not make them portable.
+
 ## Formatting and static analysis with Clang Tools
+
+The default `nix develop` shell includes `clang-format` and `clang-tidy`; builds
+use the compiler supplied by the standard Nix build environment.
 
 clang-tidy is part of the Extra Clang Tools, clang-format is part of the Core Clang Tools, see [link](https://clang.llvm.org/docs/ClangTools.html).
 
@@ -141,6 +161,7 @@ If you prefer Nix, you can do the same with the `nix develop` shell:
 
 ```shell
 nix develop
+roofer-python-setup
 cmake -S . -B build \
   -G Ninja \
   -DRF_BUILD_APPS=OFF \
@@ -159,9 +180,12 @@ make html
 If you want the packaged Nix outputs instead of a local build tree, use:
 
 ```shell
-nix build .#default
-nix build .#rooferpy
+nix build .#default   # CLI, also used by the Docker image
+nix build .#rooferpy  # Python extension
+nix build .#docs      # Python extension and doc-helper
 ```
+
+The Docker image uses the same default flake package; see [docker/README.md](docker/README.md) for building and loading it.
 
 The rendered documentation is in the `docs/html` directory, and the main page is `docs/html/index.html`.
 

@@ -1,240 +1,182 @@
 {
-  description = "Development environment for Roofer";
+  description = "Roofer packages, development shells, and container images";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-  # inputs.nixpkgs.url = "github:ylannl/nixpkgs/gdalMinimal";
-  inputs.val3dity-src.url = "github:ylannl/val3dity";
-  inputs.val3dity-src.flake = false;
+  inputs.val3dity.url = "github:tudelft3d/val3dity";
+  inputs.val3dity.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, val3dity-src, ... }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      val3dity,
+    }:
     let
-      supportedSystems = [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-    in {
-      packages = forAllSystems (system:
+      inherit (nixpkgs) lib;
+      supportedSystems = [
+        "x86_64-darwin"
+        "aarch64-darwin"
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+      forAllSystems = lib.genAttrs supportedSystems;
+      linuxSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+      overlay = import ./nix/overlay.nix;
+      pkgsFor = forAllSystems (
+        system:
+        import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [ overlay ];
+        }
+      );
+      gitRev = self.rev or self.dirtyRev or "unknown";
+      src = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.unions [
+          ./CMakeLists.txt
+          ./apps
+          ./cmake
+          ./include
+          ./src
+          ./rooferpy
+          ./LICENSE
+          ./README.md
+        ];
+      };
+    in
+    {
+      overlays.default = overlay;
+
+      packages = forAllSystems (
+        system:
         let
-          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
-          apple_sdk = pkgs.apple-sdk_15;
-          py = pkgs.python313;
-          shortRev = self.shortRev or self.dirtyShortRev or "unknown";
-
-          val3dity = pkgs.stdenv.mkDerivation {
-            pname = "val3dity";
-            version = "2.5.3";
-            src = val3dity-src;
-
-            nativeBuildInputs = with pkgs; [ cmake ninja ];
-            buildInputs = with pkgs; [
-              cgal gmp mpfr eigen
-              geos
-              spdlog
-              pugixml
-              tclap
-              boost
-              nlohmann_json
-            ];
-
-            cmakeFlags = [ "-DVAL3DITY_LIBRARY=ON" "-DVAL3DITY_USE_INTERNAL_DEPS=OFF" "-G Ninja" ];
+          pkgs = pkgsFor.${system};
+          roofer = pkgs.callPackage ./nix/package.nix {
+            inherit src gitRev;
+            val3dity = import ./nix/val3dity-library.nix val3dity.packages.${system}.default;
+            rerun-sdk = pkgs.callPackage ./nix/rerun-sdk.nix { };
           };
-
-          rerun-sdk = pkgs.stdenv.mkDerivation {
-            pname = "rerun-sdk";
-            version = "0.27.3";
-            src = pkgs.fetchurl {
-              url = "https://github.com/rerun-io/rerun/releases/download/0.27.3/rerun_cpp_sdk.zip";
-              sha256 = "1aysn1jsl58vxaakv8j9awnnxll06ay4pwczfs8gi63w3w4yj920";
-            };
-            nativeBuildInputs = [ pkgs.unzip pkgs.cmake ];
-            buildInputs = [ pkgs.arrow-cpp ];
-            cmakeFlags = [
-              "-DRERUN_DOWNLOAD_AND_BUILD_ARROW=OFF"
-            ];
+        in
+        {
+          default = roofer;
+          roofer-val3dity = roofer.override { withVal3dity = true; };
+          rooferpy = roofer.override {
+            withApps = false;
+            withBindings = true;
           };
+          docs = roofer.override {
+            withApps = false;
+            withBindings = true;
+            withDocHelper = true;
+          };
+          roofer-rerun = roofer.override { withRerun = true; };
+        }
+      );
 
-          rooferDerivation = { withBindings ? false, withApps ? true, withRerun ? false }:
-            pkgs.stdenv.mkDerivation ({
-              pname = "roofer" + pkgs.lib.optionalString withBindings "py";
-              version = "1.1.0-beta.1";
-
-              src = ./.;
-
-              nativeBuildInputs = with pkgs; [
-                cmake
-                ninja
-              ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-                ++ lib.optionals withBindings [ python313Packages.pybind11 ];
-
-              buildInputs = with pkgs; [
-                # core roofer deps
-                cgal gmp mpfr boost eigen
-                fmt
-              ] ++ lib.optionals stdenv.isDarwin [ apple_sdk ]
-                ++ lib.optionals withBindings [
-                  py
-                ]
-                ++ lib.optionals withApps [
-                  val3dity
-                  spdlog
-                  mimalloc
-                  nlohmann_json
-                  LAStools
-                  geos
-                  gdal
-                  proj
-                  sqlite
-                ]
-                ++ lib.optionals withRerun [
-                  rerun
-                  rerun-sdk
+      checks = forAllSystems (
+        system:
+        let
+          pkgs = pkgsFor.${system};
+        in
+        {
+          gdal =
+            pkgs.runCommand "roofer-gdal-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.stdenv.cc
+                  pkgs.pkg-config
                 ];
-
-              cmakeFlags = [
-                "-DCMAKE_BUILD_TYPE=Release"
-                "-DRF_BUILD_APPS=${if withApps then "ON" else "OFF"}"
-                "-DRF_BUILD_BINDINGS=${if withBindings then "ON" else "OFF"}"
-                "-DRF_USE_VAL3DITY=${if withApps then "ON" else "OFF"}"
-                "-DRF_BUILD_TESTING=OFF"
-                "-DRF_GIT_HASH=${shortRev}"
-                "-DRF_USE_CPM=OFF"
-                "-DRF_USE_LOGGER_SPDLOG=${if withBindings then "OFF" else "ON"}"
-                # there is no nix package for rerun_cpp atm
-                "-DRF_USE_RERUN=${if withRerun then "ON" else "OFF"}"
-                "-G Ninja"
-                "-DRF_BUILD_DOC_HELPER=ON"
-              ];
-
-              preConfigure = pkgs.lib.optionalString withBindings ''
-                export pybind11_DIR="$(${py}/bin/python -c "import pybind11; print(pybind11.get_cmake_dir())")"
+                buildInputs = [ pkgs.gdal ];
+              }
+              ''
+                $CXX ${./nix/check-gdal.cpp} $(pkg-config --cflags --libs gdal) -o check-gdal
+                ./check-gdal
+                touch $out
               '';
+        }
+      );
 
-              meta = with pkgs.lib; {
-                description = "3D building reconstruction from point clouds";
-                homepage = "https://github.com/3DBAG/roofer";
-                license = licenses.lgpl3;
-                platforms = platforms.unix;
-                mainProgram = "roofer";
-              };
-            });
-        in {
-          default = rooferDerivation { withApps = true; withBindings = false; };
-          rooferpy = rooferDerivation { withApps = false; withBindings = true; };
-          roofer-rerun = rooferDerivation { withApps = true; withRerun = true; };
-        });
-
-      dockerImage = forAllSystems (system:
+      dockerImage = lib.genAttrs linuxSystems (
+        system:
         let
-          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
-        in {
-          roofer = pkgs.dockerTools.buildImage {
+          pkgs = pkgsFor.${system};
+          roofer = self.packages.${system}.default;
+        in
+        {
+          roofer = pkgs.dockerTools.buildLayeredImage {
             name = "roofer";
-            tag = self.packages.${system}.default.version;
-            copyToRoot = pkgs.buildEnv {
-                name = "image-root";
-                paths = [ self.packages.${system}.default ];
-                pathsToLink = [ "/bin" ];
-              };
+            tag = roofer.version;
+            contents = [
+              roofer
+              pkgs.cacert
+              pkgs.dockerTools.fakeNss
+            ];
+            extraCommands = "mkdir -m 1777 tmp";
             config = {
-              Entrypoint = [ "roofer" ];
+              Entrypoint = [ "${roofer}/bin/roofer" ];
+              WorkingDir = "/data";
+              Env = [ "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
             };
           };
-        });
+        }
+      );
 
-      devShells = forAllSystems (system:
+      devShells = forAllSystems (
+        system:
         let
-          pkgs = import nixpkgs { system = system; config.allowUnfree = true; };
-          apple_sdk = pkgs.apple-sdk_15;
-          py = pkgs.python313;
-        in {
+          pkgs = pkgsFor.${system};
+        in
+        {
           conan = pkgs.mkShell {
-            buildInputs = with pkgs; [
-              cmakeCurses
-              ninja
-              conan
-            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ]
-              ++ lib.optionals stdenv.isLinux [ patchelf ];
-
+            packages =
+              with pkgs;
+              [
+                cmakeCurses
+                ninja
+                conan
+              ]
+              ++ lib.optionals stdenv.isDarwin [
+                darwin.DarwinTools
+                apple-sdk_15
+              ];
             shellHook = ''
-              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              ${lib.optionalString pkgs.stdenv.isLinux ''
                 export CMAKE_LIBRARY_PATH="${pkgs.glibc.out}/lib''${CMAKE_LIBRARY_PATH:+:$CMAKE_LIBRARY_PATH}"
               ''}
-              echo "Conan dev shell ready. Run 'conan profile detect' if you haven't set up a profile yet."
-              echo ""
-              echo "Conan build steps (replace Release with Debug for debug build):"
-              echo "  conan export conan/recipes/proj --version=9.8.1"
-              echo "  conan install . --build=missing --output-folder=build-conan -s build_type=Release"
-              echo "  cd build-conan"
-              echo "  cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release"
-              echo "  cmake --build ."
-              echo ""
-              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-                roofer-patch() {
-                  patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$1"
-                  echo "Patched interpreter on $1"
-                }
-                echo "Tip: run 'roofer-patch <binary>' to fix the ELF interpreter for deployment on regular linux systems"
-              ''}
+              echo "Conan dev shell ready. See README-dev.md for build instructions."
             '';
           };
 
-          default = pkgs.mkShell.override {
-            # Use stdenvNoCC to avoid compiler contamination
-            # stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
-          } {
-            buildInputs = with pkgs; [
+          default = pkgs.mkShell {
+            inputsFrom = [
+              self.packages.${system}.default
+              self.packages.${system}.rooferpy
+            ];
+            packages = with pkgs; [
               cmakeCurses
               gnumake
-              ninja
-
-              # roofer core deps
-              cgal
-              gmp
-              mpfr
-              pkgsStatic.boost # need static for val3dity
-              eigen
-              fmt
               catch2_3
-
-              # val3dity
-              pugixml
-              tclap
-
-              # apps
-              spdlog
-              mimalloc
-              gdal
-              proj
-              sqlite
-              nlohmann_json
-              LAStools
-              geos
-
-              # python tools
-              py
               uv
-
-              # linting
-              llvmPackages_18.clang
               llvmPackages_18.clang-tools
-
-              # docs
               doxygen
-            ] ++ lib.optionals stdenv.isDarwin [ darwin.DarwinTools apple_sdk ];
-
+            ];
             UV_NO_BINARY = 1;
-            # VCPKG_FORCE_SYSTEM_BINARIES = 1;
-            scm_version = "unknown";
-
             shellHook = ''
-              echo "Updating and activating python environment..."
-              uv sync
-              source .venv/bin/activate
-              export pybind11_DIR="$(python -m pybind11 --cmakedir)"
-              ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-                export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-              ''}
-              echo "Roofer dev shell with Nix is ready"
+              roofer-python-setup() {
+                uv sync --frozen --python ${pkgs.python313}/bin/python || return
+                source .venv/bin/activate || return
+                local pybind11_dir
+                pybind11_dir="$(python -m pybind11 --cmakedir)" || return
+                export pybind11_DIR="$pybind11_dir"
+              }
+              echo "Roofer dev shell ready. Run roofer-python-setup to sync and activate Python dependencies."
             '';
           };
-        });
+        }
+      );
     };
 }
