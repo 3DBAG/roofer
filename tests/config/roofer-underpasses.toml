@@ -20,3 +20,4 @@ lod22 = true
 
 [reconstruction.arrangement-extruder]
 underpass-roof-margin = 0.03
+underpass-min-height = 2.0

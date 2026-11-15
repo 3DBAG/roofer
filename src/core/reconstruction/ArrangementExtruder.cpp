@@ -21,7 +21,7 @@
 
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
-#include "FloorArrangement.hpp"
+#include "ExtrusionArrangement.hpp"
 #include "ExtrusionUtils.hpp"
 
 namespace roofer::reconstruction {
@@ -92,7 +92,7 @@ namespace roofer::reconstruction {
       unbounded_face->data().elevation_97p =
           elevation_provider.get_percentile(0.97);
 
-      detail::FloorArrangement underside;
+      detail::ExtrusionArrangement underside;
       detail::WallAssembler walls;
 
       // check for no detected planes (if one face inside fp has none then all
@@ -101,7 +101,7 @@ namespace roofer::reconstruction {
         if (f->data().in_footprint && f->data().segid == 0) {
           auto floor_config = cfg;
           floor_config.generate_walls = false;
-          underside.emit(
+          underside.emit_ground_and_facades(
               arr, elevation_provider, floor_config,
               [](Vertex_handle, Face_handle) { return 0.0F; }, multisolid,
               walls);
@@ -111,7 +111,18 @@ namespace roofer::reconstruction {
         }
       }
 
-      underside.prepare(arr, elevation_provider, underpasses, cfg, diagnostics);
+      if (cfg.lod2 && !underpasses.empty()) {
+        underside.compute(arr, elevation_provider, underpasses, cfg,
+                          diagnostics, multisolid, walls);
+        walls.emit(multisolid);
+        detail::conform_vertical_edges(multisolid);
+        detail::remove_redundant_vertices(multisolid, cfg.snap_tolerance);
+        for (auto& [part, mesh] : multisolid)
+          if (!mesh.get_attributes().empty())
+            mesh.get_attributes().resize(mesh.get_polygons().size());
+        collect_outputs();
+        return;
+      }
 
       // compute all heights for each vertex
       std::unordered_map<Vertex_handle, std::vector<hf_pair>> vertex_columns;
@@ -238,8 +249,8 @@ namespace roofer::reconstruction {
         }
       }
 
-      underside.emit(arr, elevation_provider, cfg, roof_height, multisolid,
-                     walls);
+      underside.emit_ground_and_facades(arr, elevation_provider, cfg,
+                                        roof_height, multisolid, walls);
       walls.emit(multisolid);
       detail::conform_vertical_edges(multisolid);
       detail::remove_redundant_vertices(multisolid, cfg.snap_tolerance);

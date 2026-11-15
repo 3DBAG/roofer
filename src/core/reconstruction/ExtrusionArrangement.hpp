@@ -6,30 +6,22 @@
 #include "WallAssembler.hpp"
 
 namespace roofer::reconstruction::detail {
-  struct FloorRegion {
-    int part = -1;
-    std::optional<float> ceiling;
-    // Borrows the winning input's attributes during extrusion.
-    const AttributeMapRow* attributes = nullptr;
-  };
-
-  // Built only after roof snapping. All underpass interior constraints stay
-  // here; only footprint boundary vertices are synchronised with the roof.
-  class FloorArrangement {
+  // One XY subdivision for roofs, ground and underpass ceilings. Original roof
+  // identities and input coverage survive every computational face split.
+  class ExtrusionArrangement {
    public:
-    Arrangement_2 floor;
-    std::unordered_map<Face_const_handle, FloorRegion> regions;
-
-    void prepare(Arrangement_2& roof, const ElevationProvider& elevations,
+    void compute(Arrangement_2& arrangement,
+                 const ElevationProvider& elevations,
                  std::span<const Underpass> underpasses,
                  const ArrangementExtruderConfig& config,
-                 std::vector<UnderpassDiagnostic>& diagnostics);
+                 std::vector<UnderpassDiagnostic>& diagnostics,
+                 std::unordered_map<int, Mesh>& meshes, WallAssembler& walls);
 
-    void emit(
+    // Ordinary extrusion needs no underpass subdivision.
+    void emit_ground_and_facades(
         Arrangement_2& roof, const ElevationProvider& elevations,
         const ArrangementExtruderConfig& config,
         const std::function<float(Vertex_handle, Face_handle)>& roof_height,
         std::unordered_map<int, Mesh>& meshes, WallAssembler& walls) const;
   };
-
 }  // namespace roofer::reconstruction::detail
