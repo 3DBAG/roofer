@@ -28,6 +28,7 @@ TEST_CASE("reconstruction descriptor defaults are canonical") {
   CHECK(cfg.arrangement_snapper.distance_threshold == Catch::Approx(0.021F));
   CHECK(cfg.arrangement_builder.snap_tolerance == Catch::Approx(0.01F));
   CHECK(cfg.arrangement_extruder.snap_tolerance == Catch::Approx(0.001258925F));
+  CHECK(cfg.arrangement_extruder.underpass_min_height == Catch::Approx(2.0F));
   CHECK(cfg.arrangement_extruder.underpass_roof_margin == Catch::Approx(0.03F));
   CHECK(cfg.mesh_triangulator.duplicate_tolerance == Catch::Approx(0.0001F));
   CHECK_FALSE(cfg.validate().has_value());
@@ -71,6 +72,8 @@ TEST_CASE("unit scale converts metre distances to input coordinate units") {
   const auto scaled = cfg.scaled_to_input_units();
 
   CHECK(scaled.unit_scale == Catch::Approx(1.0F));
+  CHECK(scaled.arrangement_extruder.underpass_min_height ==
+        Catch::Approx(2.0F / 0.3048F));
   CHECK(scaled.arrangement_extruder.underpass_roof_margin ==
         Catch::Approx(0.03F / 0.3048F));
   CHECK(scaled.plane_detector.plane_epsilon == Catch::Approx(0.984252F));
@@ -207,5 +210,18 @@ TEST_CASE("reconstruction API forwards optional underpasses only to LoD22") {
       ceilings +=
           std::count(mesh.get_labels().begin(), mesh.get_labels().end(), 4);
     CHECK((ceilings > 0) == (lod == 22));
+  }
+}
+
+TEST_CASE("underpass minimum height is finite and nonnegative") {
+  ReconstructionConfig cfg;
+  cfg.arrangement_extruder.underpass_min_height = 0;
+  CHECK_FALSE(cfg.validate());
+  for (float value : {-1.0F, std::numeric_limits<float>::infinity(),
+                      std::numeric_limits<float>::quiet_NaN()}) {
+    cfg.arrangement_extruder.underpass_min_height = value;
+    REQUIRE(cfg.validate());
+    CHECK(cfg.validate()->starts_with(
+        "arrangement-extruder.underpass-min-height"));
   }
 }

@@ -487,10 +487,13 @@ underpass-height-attribute = "ceiling"
 underpass-default-height = 4.0
 [reconstruction.arrangement-extruder]
 underpass-roof-margin = 0.05
+underpass-min-height = 2.5
 )");
   RooferConfigHandler handler;
   handler._config_path = file.string();
   handler.parse_config_file();
+  CHECK(handler.cfg_.reconstruction.arrangement_extruder.underpass_min_height ==
+        Catch::Approx(2.5F));
   CHECK(handler.cfg_.underpass_source == "passages.gpkg");
   CHECK(handler.cfg_.underpass_layer == "passages");
   CHECK(handler.cfg_.underpass_id_attribute == "bid");

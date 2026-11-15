@@ -4,7 +4,7 @@ set(LIBRARY_SOURCES
     "ArrangementBuilder.cpp"
     "ArrangementDissolver.cpp"
     "ArrangementExtruder.cpp"
-    "FloorArrangement.cpp"
+    "ExtrusionArrangement.cpp"
     "WallAssembler.cpp"
     "ArrangementOptimiser.cpp"
     "ArrangementSnapper.cpp"

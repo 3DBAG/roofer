@@ -6,6 +6,7 @@
 #include <roofer/reconstruction/MeshTriangulator.hpp>
 #include <algorithm>
 #include <map>
+#include <set>
 #include <limits>
 #include <iostream>
 #include <sstream>
@@ -99,11 +100,10 @@ namespace {
   }
 }  // namespace
 
-TEST_CASE(
-    "underpass crosses the footprint without splitting the roof interior") {
+TEST_CASE("underpass subdivisions preserve a single exported roof") {
   auto arr = roof();
   auto e = extrude(arr, {{rectangle(-2, 3, 12, 7), 4}});
-  CHECK(arr.number_of_faces() == 2);
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 1) == 1);
   CHECK(volume(e->meshes.front()) == Catch::Approx(840));
   CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
   CHECK(std::count(e->labels.begin(), e->labels.end(), 2) == 4);
@@ -139,7 +139,7 @@ TEST_CASE("ceiling is lowered below every overlapping roof part") {
   for (std::size_t i = 0; i < e->labels.size(); ++i)
     if (e->labels[i] == 4)
       for (auto p : e->faces[i]) CHECK(p[2] <= 5.0F - 0.03F);
-  CHECK(arr.number_of_faces() == 3);
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 1) == 2);
 }
 
 TEST_CASE("a sloped roof clamps against a minimum inside the underpass") {
@@ -723,4 +723,239 @@ TEST_CASE(
     }
     CHECK(e->diagnostics.empty());
   }
+}
+
+TEST_CASE("minimum height carves through low roofs into separate solids") {
+  auto arr = roof(false, 1);
+  auto e = createArrangementExtruder();
+  std::vector<Underpass> input{{rectangle(-1, 3, 11, 7), 4}};
+  e->compute(arr, 0.0F, input, {});
+  REQUIRE(e->meshes.size() == 2);
+  for (const auto& mesh : e->meshes) {
+    check_closed(mesh);
+    CHECK(volume(mesh) == Catch::Approx(30));
+  }
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 0);
+  REQUIRE(e->diagnostics.size() == 1);
+  CHECK(e->diagnostics.front().adjusted_ceiling_elevation == 2.0F);
+}
+
+TEST_CASE("cut-through clips ceilings at a roof step") {
+  auto arr = roof(true, 1, 5);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(240));
+  for (std::size_t i = 0; i < e->labels.size(); ++i)
+    if (e->labels[i] == 4)
+      for (auto p : e->faces[i]) {
+        CHECK(p[2] == 2);
+        CHECK(p[0] >= 5);
+      }
+}
+
+TEST_CASE("sloped roof and ceiling meet at shared contact vertices") {
+  auto arr = roof();
+  for (auto f : arr.face_handles())
+    if (f->data().in_footprint) f->data().plane = Plane(-0.5, 0, 1, -0.5);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(229));
+  for (std::size_t i = 0; i < e->labels.size(); ++i)
+    if (e->labels[i] == 4)
+      for (auto p : e->faces[i]) {
+        CHECK(p[2] == 2);
+        CHECK(p[0] >= 3);
+      }
+}
+
+TEST_CASE(
+    "low supplied ceilings remain allowed and minimum zero restores lowering") {
+  auto arr = roof();
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 1.5}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(940));
+  auto low = roof(false, 1);
+  ArrangementExtruderConfig cfg;
+  cfg.underpass_min_height = 0;
+  auto lowered = extrude(low, {{rectangle(-1, 3, 11, 7), 4}}, cfg);
+  CHECK(volume(lowered->meshes.front()) ==
+        Catch::Approx(
+            100 - 40 * (1 - cfg.underpass_roof_margin - cfg.snap_tolerance)));
+}
+
+TEST_CASE(
+    "minimum height is relative to local ground and allows complete removal") {
+  auto arr = roof(false, 11);
+  auto e = createArrangementExtruder();
+  std::vector<Underpass> input{{rectangle(-1, 3, 11, 7), 14}};
+  e->compute(arr, 10.0F, input, {});
+  REQUIRE(e->meshes.size() == 2);
+  for (const auto& mesh : e->meshes) {
+    check_closed(mesh);
+    CHECK(volume(mesh) == Catch::Approx(30));
+  }
+  REQUIRE(e->diagnostics.size() == 1);
+  CHECK(e->diagnostics.front().adjusted_ceiling_elevation == 12.0F);
+  auto whole = roof(false, 2);
+  input = {{rectangle(-1, -1, 11, 11), 4}};
+  e->compute(whole, 0.0F, input, {});
+  CHECK(e->meshes.empty());
+  CHECK(e->faces.empty());
+}
+
+TEST_CASE("custom minimum and ceiling equalization preserve lowering bounds") {
+  auto arr = roof(true, 1, 5);
+  ArrangementExtruderConfig cfg;
+  cfg.underpass_min_height = 3;
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}}, cfg);
+  CHECK(volume(e->meshes.front()) == Catch::Approx(220));
+  auto other = roof(true, 10, 2.0312F);
+  auto adjacent = extrude(
+      other, {{rectangle(2, 2, 5, 8), 1.9999}, {rectangle(5, 2, 8, 8), 20}});
+  std::set<float> heights;
+  for (std::size_t i = 0; i < adjacent->labels.size(); ++i)
+    if (adjacent->labels[i] == 4)
+      for (auto p : adjacent->faces[i]) heights.insert(p[2]);
+  CHECK(heights == std::set<float>{1.9999F, 2.0F});
+}
+
+TEST_CASE(
+    "cut-through preserves pillar solids and surviving ceiling attributes") {
+  auto arr = roof(true, 1, 5);
+  auto polygon = rectangle(-1, 3, 11, 7);
+  polygon.interior_rings().push_back(rectangle(1, 4, 2, 6));
+  Underpass passage{polygon, 4};
+  passage.attributes.insert("name", std::string("passage"));
+  auto e = createArrangementExtruder();
+  std::vector<Underpass> input{passage};
+  e->compute(arr, 0.0F, input, {});
+  REQUIRE(e->meshes.size() == 2);
+  double total = 0;
+  for (const auto& mesh : e->meshes) {
+    check_closed(mesh);
+    total += volume(mesh);
+    for (std::size_t i = 0; i < mesh.get_polygons().size(); ++i)
+      if (mesh.get_labels()[i] == 4) {
+        REQUIRE(mesh.get_attributes()[i].has_name("name"));
+        CHECK(*mesh.get_attributes()[i].get_if<std::string>("name") ==
+              "passage");
+      }
+  }
+  CHECK(total == Catch::Approx(242));
+}
+
+TEST_CASE("oblique roof contacts close consistently with overlapping cutouts") {
+  for (bool reverse : {false, true}) {
+    auto arr = roof(true);
+    for (auto f : arr.face_handles())
+      if (f->data().in_footprint)
+        f->data().plane = f->data().segid == 1 ? Plane(-0.31, -0.17, 1, -0.4)
+                                               : Plane(0.13, -0.41, 1, -1.8);
+    std::vector<Underpass> input{{rectangle(-1, 2, 7, 6), 4},
+                                 {rectangle(3, 4, 11, 8), 5}};
+    if (reverse) std::reverse(input.begin(), input.end());
+    auto e = createArrangementExtruder();
+    e->compute(arr, 0.0F, input, {});
+    REQUIRE_FALSE(e->meshes.empty());
+    for (const auto& mesh : e->meshes) {
+      check_closed(mesh);
+      CHECK(volume(mesh) > 0);
+    }
+  }
+}
+
+TEST_CASE("minimum clearance includes terrain peaks inside the passage") {
+  auto terrain = rectangle(0, 0, 10, 10);
+  terrain.push_back({5, 5, 6});
+  auto elevations =
+      createElevationProvider(proj_tri_util::cdt_from_linearing(terrain));
+  auto arr = roof(false, 7);
+  auto e = createArrangementExtruder();
+  std::vector<Underpass> input{{rectangle(2, 2, 8, 8), 20}};
+  e->compute(arr, *elevations, input, {});
+  REQUIRE(e->meshes.size() == 1);
+  check_closed(e->meshes.front());
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 0);
+  REQUIRE(e->diagnostics.size() == 1);
+  CHECK(e->diagnostics.front().adjusted_ceiling_elevation == 8.0F);
+}
+
+TEST_CASE("a roof valley touching the ceiling is rejected as a pinched solid") {
+  auto arr = roof(true);
+  for (auto f : arr.face_handles())
+    if (f->data().in_footprint)
+      f->data().plane =
+          f->data().segid == 1 ? Plane(1, 0, 1, -7) : Plane(-1, 0, 1, 3);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(450));
+  CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 0);
+  REQUIRE(e->diagnostics.size() == 2);
+  CHECK(e->diagnostics.back().code ==
+        UnderpassDiagnosticCode::invalid_underside_geometry);
+}
+
+TEST_CASE("underpass attributes do not change geometry rejection") {
+  for (bool higher : {false, true}) {
+    std::vector<Underpass> input{
+        {rectangle(4, 2, 4.0001F, 8), higher ? 5.0 : 4.0},
+        {rectangle(1, 1, 9, 9), 4}};
+    auto baseline_arr = roof();
+    auto baseline = extrude(baseline_arr, input);
+    for (std::size_t i = 0; i < input.size(); ++i)
+      input[i].attributes.insert("underpass_id", int(i));
+    auto attributed_arr = roof();
+    auto attributed = extrude(attributed_arr, input);
+    CHECK(volume(attributed->meshes.front()) == Catch::Approx(744));
+    REQUIRE(attributed->diagnostics.size() == baseline->diagnostics.size());
+    for (std::size_t i = 0; i < baseline->diagnostics.size(); ++i) {
+      CHECK(attributed->diagnostics[i].input_index ==
+            baseline->diagnostics[i].input_index);
+      CHECK(attributed->diagnostics[i].code == baseline->diagnostics[i].code);
+      CHECK(attributed->diagnostics[i].reason ==
+            baseline->diagnostics[i].reason);
+      CHECK(attributed->diagnostics[i].adjusted_ceiling_elevation ==
+            baseline->diagnostics[i].adjusted_ceiling_elevation);
+    }
+    if (!higher) {
+      CHECK(attributed->diagnostics.empty());
+      CHECK(std::count(attributed->labels.begin(), attributed->labels.end(),
+                       4) == 2);
+    }
+  }
+}
+
+TEST_CASE("separate ceilings may meet at a footprint corner") {
+  // The courtyard occupies the NE sector at (5,5). Cutouts occupy NW and SE,
+  // leaving a single SW solid sector below the shared ceiling. This is a valid
+  // junction, unlike two cutouts touching diagonally inside a solid footprint.
+  for (bool attributes : {false, true}) {
+    auto arr = roof();
+    auto courtyard = rectangle(5, 5, 8, 8);
+    for (std::size_t i = 0; i < courtyard.size(); ++i) {
+      auto p = courtyard[i], q = courtyard[(i + 1) % courtyard.size()];
+      CGAL::insert(arr, Segment_2(Point_2(p[0], p[1]), Point_2(q[0], q[1])));
+    }
+    CGAL::Arr_naive_point_location<Arrangement_2> locate(arr);
+    auto object = locate.locate(Point_2(6, 6));
+    auto hole = arr.non_const_handle(
+        std::get<Arrangement_2::Face_const_handle>(object));
+    hole->data().in_footprint = false;
+    hole->data().is_footprint_hole = true;
+    std::vector<Underpass> input{{rectangle(2, 5, 5, 8), 4},
+                                 {rectangle(5, 2, 8, 5), 4}};
+    if (attributes)
+      for (std::size_t i = 0; i < input.size(); ++i)
+        input[i].attributes.insert("underpass_id", int(i));
+    auto e = extrude(arr, input);
+    CHECK(e->diagnostics.empty());
+    CHECK(volume(e->meshes.front()) == Catch::Approx(838));
+    CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 2);
+  }
+}
+
+TEST_CASE("underpasses retain consistent nearly equal incident roof heights") {
+  auto arr = roof(true, 10, 10.00001F);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  CHECK(volume(e->meshes.front()) == Catch::Approx(840).margin(0.001));
+  for (std::size_t i = 0; i < e->labels.size(); ++i)
+    if (e->labels[i] == 1)
+      for (auto p : e->faces[i])
+        if (p[0] == 5) CHECK(p[2] == 10.0F);
 }
