@@ -47,6 +47,9 @@ Input attribute (float) containing fallback roof height for buildings in case no
 ```{option} --polygon-source-layer <string> (default: <no value>)
 Select this layer name from `<polygon-source>`. By default the first layer is used.
 ```
+```{option} --polygon-snap-threshold <float> (default: 0)
+Snap all input footprint and underpass polygons before validation, in metres. Zero disables input snapping.
+```
 ```{option} --underpass-source <string> (default: <no value>)
 Optional OGR underpass polygon datasource.
 ```

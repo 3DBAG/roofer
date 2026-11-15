@@ -404,6 +404,12 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </dd></dl>
 
 <dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-polygon-snap-threshold">
+<span class="sig-name descname"><span class="pre">--polygon-snap-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;float&gt;</span> <span class="pre">(default:</span> <span class="pre">0)</span></span><a class="headerlink" href="#cmdoption-polygon-snap-threshold" title="Link to this definition">¶</a></dt>
+<dd><p>Snap all input footprint and underpass polygons before validation, in metres. Zero disables input snapping.</p>
+</dd></dl>
+
+<dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-underpass-source">
 <span class="sig-name descname"><span class="pre">--underpass-source</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;string&gt;</span> <span class="pre">(default:</span> <span class="pre">&lt;no</span> <span class="pre">value&gt;)</span></span><a class="headerlink" href="#cmdoption-underpass-source" title="Link to this definition">¶</a></dt>
 <dd><p>Optional OGR underpass polygon datasource.</p>
@@ -974,6 +980,8 @@ including ceilings at the same height.</p>
 <span class="c1"># h-roof-attribute = </span>
 <span class="c1">## Select this layer name from `&lt;polygon-source&gt;`. By default the first layer is used.</span>
 <span class="c1"># polygon-source-layer = </span>
+<span class="c1">## Snap all input footprint and underpass polygons before validation, in metres. Zero disables input snapping.</span>
+<span class="n">polygon-snap-threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
 <span class="c1">## Optional OGR underpass polygon datasource.</span>
 <span class="c1"># underpass-source = </span>
 <span class="c1">## Underpass layer (default: first layer).</span>
@@ -1178,6 +1186,8 @@ including ceilings at the same height.</p>
 <span class="n">generate-roofs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="c1">## Generate floors.</span>
 <span class="n">generate-floor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1">## Minimum clearance when lowering underpasses, in metres.</span>
+<span class="n">underpass-min-height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
 <span class="c1">## Minimum vertical gap between underpass ceilings and roofs, in metres.</span>
 <span class="n">underpass-roof-margin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03</span>
 <span class="c1">## Extrude LoD 1 to maximum roof height instead of 70th percentile.</span>
