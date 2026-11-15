@@ -20,6 +20,9 @@
 // Ravi Peters
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include "TriangulationSnapper.hpp"
+#include "TriangulationBoundary.hpp"
+#include "PolygonSnapping.hpp"
 
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementSnapper.hpp>
@@ -1146,7 +1149,8 @@ namespace roofer::reconstruction {
     class ArrangementSnapper : public ArrangementSnapperInterface {
       void compute_with_exterior_height(
           Arrangement_2& arr, ArrangementSnapperConfig cfg,
-          const ExteriorHeightProvider& exterior_height_provider) {
+          const ExteriorHeightProvider& exterior_height_provider,
+          const std::function<void(T&)>& consume = {}) {
         typedef CGAL::Arr_walk_along_line_point_location<Arrangement_2> Walk_pl;
 
         T tri;
@@ -1195,229 +1199,32 @@ namespace roofer::reconstruction {
         // matching constraint in cdt, and kick off face labeling from there.
         seed_region_labels_from_source(tri, walk_pl, arr, source_face_ids);
 
-        // Detect triangles with 3 short edges => collapse triangle to point
-        // (remove 2 vertices)
-        bool found_small_face;
-        do {
-          found_small_face = false;
-          for (Finite_faces_iterator fit = tri.finite_faces_begin();
-               fit != tri.finite_faces_end(); ++fit) {
-            auto v0 = fit->vertex(0);
-            auto v1 = fit->vertex(1);
-            auto v2 = fit->vertex(2);
-            auto& p0 = v0->point();
-            auto& p1 = v1->point();
-            auto& p2 = v2->point();
-            // auto e0 = std::make_pair(fit, 0);
-            // auto e1 = std::make_pair(fit, 1);
-            // auto e2 = std::make_pair(fit, 2);
-            // do not collapse if all vertices are on footprint boundary
-            // if (
-            //   v1->info() && v2->info() && v0->info()
-            // )
-            // continue;
-            if ((CGAL::squared_distance(p0, p1) < sq_dist_thres &&
-                 CGAL::squared_distance(p1, p2) < sq_dist_thres &&
-                 CGAL::squared_distance(p2, p0) < sq_dist_thres)  //&& (
-                //   tri.is_constrained( e0 ) &&
-                //   tri.is_constrained( e1 ) &&
-                //   tri.is_constrained( e2 )
-                // )
-            ) {
-              // std::cout << "small triangle between " << p0 << " and " << p1
-              // << "  and  " << p2 << std::endl;
-              ConstraintsToRestore constraints_to_restore;
-
-              // collect incident constraint edges
-              for (size_t i = 0; i < 3; ++i) {
-                auto vthis = fit->vertex(i);
-                auto vexcept1 = fit->vertex(tri.cw(i));
-                auto vexcept2 = fit->vertex(tri.ccw(i));
-                get_incident_constraints(tri, vthis, vexcept1, vexcept2,
-                                         constraints_to_restore);
+        detail::snap_triangulation(
+            tri, sq_dist_thres,
+            [&](const std::vector<Vertex_handle>& vertices,
+                const T::Point_2& point, bool boundary) {
+              ConstraintsToRestore constraints;
+              for (auto vertex : vertices) {
+                ConstraintsToRestore incident;
+                get_incident_constraints(tri, vertex, vertex, vertex, incident);
+                for (const auto& constraint : incident)
+                  if (std::find(vertices.begin(), vertices.end(),
+                                constraint.other) == vertices.end())
+                    constraints.push_back(constraint);
               }
-
-              // but first check points for being on the footprint boundary
-              T::Point_2 pnew;
-              bool boundary_vertex = false;
-              if (v0->info()) {
-                pnew = p0;
-                boundary_vertex = true;
-              } else if (v1->info()) {
-                pnew = p1;
-                boundary_vertex = true;
-              } else if (v2->info()) {
-                pnew = p2;
-                boundary_vertex = true;
-              } else {
-                pnew = CGAL::centroid(p0, p1, p2);
+              for (auto vertex : vertices) {
+                tri.remove_incident_constraints(vertex);
+                tri.remove(vertex);
               }
-              // collapse the triangle to centroid
-              tri.remove_incident_constraints(v0);
-              tri.remove(v0);
-              tri.remove_incident_constraints(v1);
-              tri.remove(v1);
-              tri.remove_incident_constraints(v2);
-              tri.remove(v2);
-
-              restore_constraints(tri, pnew, boundary_vertex,
-                                  constraints_to_restore, source_face_ids,
-                                  unbounded_label);
-
-              found_small_face = true;
-              break;  // we need to restart the loop because we may have
-                      // invalidated the finite faces iterator by modifying the
-                      // faces of the triangulation
-            }
-          }
-
-        } while (found_small_face);
-
-        // Detect triangles with 1 short edge  => collapse the short edge to
-        // point (remove one vertex)
-        bool found_short_edge;
-        do {
-          found_short_edge = false;
-          // collapse the shortest short edge, ties broken by its endpoints:
-          // CGAL's edge iterator reports each edge from whichever of its two
-          // faces sits lower in memory, so "the first short edge" used to
-          // depend on the heap layout
-          auto lex_less = [](const T::Point_2& a, const T::Point_2& b) {
-            return a.x() < b.x() || (a.x() == b.x() && a.y() < b.y());
-          };
-          bool have_shortest = false;
-          Vertex_handle shortest1, shortest2;
-          double shortest_d = 0;
-          for (Finite_edges_iterator ceit = tri.finite_edges_begin();
-               ceit != tri.finite_edges_end(); ++ceit) {
-            auto a = ceit->first->vertex(tri.cw(ceit->second));
-            auto b = ceit->first->vertex(tri.ccw(ceit->second));
-            if (lex_less(b->point(), a->point())) std::swap(a, b);
-            double d = CGAL::squared_distance(a->point(), b->point());
-            if (d >= sq_dist_thres) continue;
-            if (!have_shortest || d < shortest_d ||
-                (d == shortest_d &&
-                 (lex_less(a->point(), shortest1->point()) ||
-                  (a->point() == shortest1->point() &&
-                   lex_less(b->point(), shortest2->point()))))) {
-              have_shortest = true;
-              shortest_d = d;
-              shortest1 = a;
-              shortest2 = b;
-            }
-          }
-          if (have_shortest) {
-            auto v1 = shortest1;
-            auto v2 = shortest2;
-            auto& p1 = v1->point();
-            auto& p2 = v2->point();
-
-            // do not collapse if this edge is on the footprint boundary
-            // if (v1->info() && v2->info()) continue;
-
-            {
-              // std::cout << "short edge between " << p1 << "  and  " << p2
-              // << std::endl;
-
-              // auto vi = ceit->second;
-              ConstraintsToRestore constraints_to_restore;
-              get_incident_constraints(tri, v1, v1, v2, constraints_to_restore);
-              get_incident_constraints(tri, v2, v1, v2, constraints_to_restore);
-
-              // insert midpoint and restore constraints
-              // first check points for being on the footprint boundary
-              T::Point_2 pnew;
-              bool boundary_vertex = false;
-              if (v1->info()) {
-                pnew = p1;
-                boundary_vertex = true;
-              } else if (v2->info()) {
-                pnew = p2;
-                boundary_vertex = true;
-              } else {
-                pnew = CGAL::midpoint(p1, p2);
-              }
-
-              // remove edge
-              tri.remove_incident_constraints(v1);
-              tri.remove(v1);
-              tri.remove_incident_constraints(v2);
-              tri.remove(v2);
-
-              restore_constraints(tri, pnew, boundary_vertex,
-                                  constraints_to_restore, source_face_ids,
-                                  unbounded_label);
-
-              found_short_edge = true;
-            }
-          }
-        } while (found_short_edge);
-
-        // Detect triangles with 1 vertex close to opposing (longest) edge  =>
-        // remove long edge as constraint and ensure both short ones are
-        // constrained
-        // TODO: move the vertex opposed to long edge to be on the long edge ??
-        // TODO: detect if an edge of the triangle is on the footprint boundary
-
-        for (Finite_faces_iterator fit = tri.finite_faces_begin();
-             fit != tri.finite_faces_end(); ++fit) {
-          auto v0 = fit->vertex(0);
-          auto v1 = fit->vertex(1);
-          auto v2 = fit->vertex(2);
-          auto& p0 = v0->point();
-          auto& p1 = v1->point();
-          auto& p2 = v2->point();
-          auto e0 = std::make_pair(fit, 0);
-          auto e1 = std::make_pair(fit, 1);
-          auto e2 = std::make_pair(fit, 2);
-          auto s0 = tri.segment(e0);
-          auto s1 = tri.segment(e1);
-          auto s2 = tri.segment(e2);
-          if ((CGAL::squared_distance(s0, p0) < sq_dist_thres) &&
-              tri.is_constrained(e0)) {
-            if (tri.is_constrained(e1) || tri.is_constrained(e2)) {
-              // std::cout << "flat triangle between " << s0 << " and " << p0 <<
-              // std::endl;
-              tri.remove_constrained_edge(fit, 0);
-              if (!tri.is_constrained(e2))
-                insert_constraint_if_distinct(tri, v0, v1);
-              if (!tri.is_constrained(e1))
-                insert_constraint_if_distinct(tri, v0, v2);
+              restore_constraints(tri, point, boundary, constraints,
+                                  source_face_ids, unbounded_label);
+            },
+            insert_constraint_if_distinct,
+            [&] {
               relabel_from_existing_region_labels(tri, source_face_ids,
                                                   unbounded_label);
-            }
-          } else if ((CGAL::squared_distance(s1, p1) < sq_dist_thres) &&
-                     tri.is_constrained(e1)) {
-            if (tri.is_constrained(e0) || tri.is_constrained(e2)) {
-              // std::cout << "flat triangle between " << s1 << " and " << p1 <<
-              // std::endl;
-              tri.remove_constrained_edge(fit, 1);
-              if (!tri.is_constrained(e2))
-                insert_constraint_if_distinct(tri, v1, v0);
-              if (!tri.is_constrained(e0))
-                insert_constraint_if_distinct(tri, v1, v2);
-              relabel_from_existing_region_labels(tri, source_face_ids,
-                                                  unbounded_label);
-            }
-          } else if ((CGAL::squared_distance(s2, p2) < sq_dist_thres) &&
-                     tri.is_constrained(e2)) {
-            if (tri.is_constrained(e0) || tri.is_constrained(e1)) {
-              // std::cout << "flat triangle between " << s2 << " and " << p2 <<
-              // std::endl;
-              tri.remove_constrained_edge(fit, 2);
-              if (!tri.is_constrained(e1))
-                insert_constraint_if_distinct(tri, v2, v0);
-              if (!tri.is_constrained(e0))
-                insert_constraint_if_distinct(tri, v2, v1);
-              relabel_from_existing_region_labels(tri, source_face_ids,
-                                                  unbounded_label);
-            }
-          }
-        }
-
-        // Remove dangling constraint trees and the unconstrained vertices left
-        // behind by snapping.
-        remove_dangling_constraints_and_vertices(tri);
+            },
+            [&] { remove_dangling_constraints_and_vertices(tri); });
 
         // Detect and repair non-manifold vertices (ie. leading to a
         // non-manifold edge during extrusion) and self-intersecting faces.
@@ -1438,6 +1245,11 @@ namespace roofer::reconstruction {
           forced_region_labels.push_back(repair_vertex(
               tri, *candidate, source_face_ids, unbounded_label,
               cfg.manifold_repair_radius, cfg.manifold_height_tolerance));
+        }
+
+        if (consume) {
+          consume(tri);
+          return;
         }
 
         // convert back from triangulation to arrangement
@@ -1607,6 +1419,35 @@ namespace roofer::reconstruction {
         arr = arr_snap;
       }
 
+     public:
+      std::vector<PolygonRings> polygon_boundaries(
+          Arrangement_2& arr, double threshold,
+          const std::function<arr3d(const Point_2&)>& lift) {
+        ArrangementSnapperConfig cfg;
+        cfg.distance_threshold = float(threshold);
+        cfg.repair_non_manifold_vertices = false;
+        std::vector<PolygonRings> result;
+        compute_with_exterior_height(
+            arr, cfg, [](const T::Point_2&) { return 0.0; },
+            [&](T& tri) {
+              auto polygons = detail::triangulation_polygons(
+                  tri,
+                  [](Face_handle face) {
+                    auto* label = face->info().label;
+                    return label && label->in_footprint ? 0 : -1;
+                  },
+                  [&](Vertex_handle vertex) {
+                    return lift(
+                        Point_2(vertex->point().x(), vertex->point().y()));
+                  },
+                  true);
+              for (auto& polygon : polygons)
+                result.push_back(
+                    {std::move(polygon.exterior), std::move(polygon.holes)});
+            });
+        return result;
+      }
+
       void compute(Arrangement_2& arr, ArrangementSnapperConfig cfg) override {
         compute(arr, 0.0F, cfg);
       }
@@ -1629,6 +1470,13 @@ namespace roofer::reconstruction {
     };
 
   }  // namespace arragementsnapper
+
+  std::vector<PolygonRings> detail::snapped_polygon_boundaries(
+      Arrangement_2& source, double threshold,
+      const std::function<arr3d(const Point_2&)>& lift) {
+    return arragementsnapper::ArrangementSnapper{}.polygon_boundaries(
+        source, threshold, lift);
+  }
 
   std::unique_ptr<ArrangementSnapperInterface> createArrangementSnapper() {
     return std::make_unique<arragementsnapper::ArrangementSnapper>();

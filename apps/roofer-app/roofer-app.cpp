@@ -499,7 +499,8 @@ int main(int argc, const char* argv[]) {
                                              : cfg.underpass_id_attribute,
           cfg.underpass_height_attribute,
           project_srs->is_valid() ? project_srs->export_wkt() : std::string{},
-          cfg.underpass_attributes);
+          cfg.underpass_attributes,
+          cfg.metres_to_input_units(cfg.polygon_snap_threshold));
       logger.info("Loaded underpasses for {} building IDs",
                   underpass_index.size());
     } catch (const std::exception& ex) {

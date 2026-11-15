@@ -117,13 +117,21 @@ else()
 endif()
 catch_discover_tests("test_terrain")
 
+add_executable(test_triangulation_boundary test_triangulation_boundary.cpp)
+target_link_libraries(test_triangulation_boundary PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_triangulation_boundary)
+
+add_executable(test_polygon_snapper test_polygon_snapper.cpp)
+target_link_libraries(test_polygon_snapper PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_polygon_snapper)
+
 add_executable(test_underpasses test_underpasses.cpp)
 target_link_libraries(test_underpasses PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests(test_underpasses)
 
 add_executable(test_underpass_io test_underpass_io.cpp)
 target_link_libraries(test_underpass_io PRIVATE Catch2::Catch2WithMain roofer-extra)
-target_compile_definitions(test_underpass_io PRIVATE UNDERPASS_DATA_DIR="${DATA_DIR}/underpasses")
+target_compile_definitions(test_underpass_io PRIVATE UNDERPASS_DATA_DIR="${DATA_DIR}/underpasses" POLYGON_SNAP_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/polygon-snap-precision.geojson")
 catch_discover_tests(test_underpass_io)
 
 # --- API testing

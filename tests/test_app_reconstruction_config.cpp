@@ -503,3 +503,40 @@ underpass-min-height = 2.5
       handler.cfg_.reconstruction.arrangement_extruder.underpass_roof_margin ==
       Catch::Approx(0.05F));
 }
+
+TEST_CASE(
+    "input polygon snapping is disabled by default and configurable in "
+    "metres") {
+  RooferConfigHandler handler;
+  CHECK(handler.cfg_.polygon_snap_threshold == 0);
+  TemporaryConfig file(
+      "[input]\npolygon-snap-threshold = 0.001\nunit-scale = 0.3048\n");
+  handler._config_path = file.string();
+  handler.parse_config_file();
+  CHECK(handler.cfg_.polygon_snap_threshold == Catch::Approx(0.001));
+  CHECK(
+      handler.cfg_.metres_to_input_units(handler.cfg_.polygon_snap_threshold) ==
+      Catch::Approx(0.001 / 0.3048));
+  handler.cfg_.source_footprints = "footprints.gpkg";
+  handler.cfg_.output_path = "output";
+  handler.input_pointclouds_.emplace_back();
+  const char* argv[] = {"roofer", "--polygon-snap-threshold", "0"};
+  CLIArgs args(static_cast<int>(std::size(argv)), argv);
+  handler.parse_cli_second_pass(args);
+  CHECK(handler.cfg_.polygon_snap_threshold == 0);
+  CHECK(args.args.empty());
+}
+TEST_CASE("invalid input polygon snap thresholds report the input key") {
+  for (const char* value : {"-0.001", "inf", "nan"}) {
+    TemporaryConfig file(std::string("[input]\npolygon-snap-threshold = ") +
+                         value + "\n");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        ([&] {
+          handler.parse_config_file();
+          handler.validate();
+        }()),
+        Catch::Matchers::ContainsSubstring("polygon-snap-threshold"));
+  }
+}

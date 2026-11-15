@@ -30,12 +30,14 @@ namespace roofer::io {
                                  const std::string& id_attribute,
                                  const std::string& height_attribute,
                                  const std::string& expected_crs,
-                                 const std::vector<std::string>& attributes) {
+                                 const std::vector<std::string>& attributes,
+                                 double polygon_snap_threshold) {
     auto coordinates = misc::createProjHelper();
     auto reader = createVectorReaderOGR(*coordinates);
     reader->layer_name = layer_name;
     reader->strict_layer_name = true;
     reader->skip_invalid_polygons = true;
+    reader->polygon_snap_threshold = polygon_snap_threshold;
     reader->skip_unsupported_geometries = true;
     reader->expected_crs = expected_crs;
     reader->open(source);

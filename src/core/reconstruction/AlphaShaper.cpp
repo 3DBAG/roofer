@@ -20,6 +20,8 @@
 // Ravi Peters
 
 #include <roofer/reconstruction/AlphaShaper.hpp>
+#include "TriangulationBoundary.hpp"
+#include <algorithm>
 
 // 2D alpha shapes
 #include <CGAL/Alpha_shape_2.h>
@@ -39,7 +41,6 @@ namespace roofer::reconstruction {
   typedef CGAL::Alpha_shape_vertex_base_2<Gt> Vb;
   struct FaceInfo {
     int label = NEVER_VISITED;
-    bool incident_ring_is_extracted = false;
   };
   typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo, K> Fbb;
   typedef CGAL::Alpha_shape_face_base_2<Gt, Fbb> Fb;
@@ -66,121 +67,9 @@ namespace roofer::reconstruction {
     int hole_cnt = HOLE;
 
    public:
-    std::unordered_map<int, LinearRing> region_map;  // label: (boundary vertex)
     AlphaShapeRegionGrower(Alpha_shape_2& as) : A(as){};
 
-    template <typename RingType>
-    void extract_ring(Vertex_handle v_start, int label_region, int label_other,
-                      RingType& ring) {
-      // TODO: fix infinite loop that may occur when alpha is not computed with
-      // optimal alpha (ie it is to small, probably causing many singular edges
-      // etc) find edges of outer boundary in order keeping the interior of the
-      // polygon in the left side (thus CCW for exterior ring, CW for holes) als
-      // label the adjacent interior faces (in case they had not been visited
-      // yet) while we are walking around them anyways.. (also ensure we are
-      // only extracting this ring once) NB: assumes we have no singular edges
-      // in the a-shape!
-
-      // std::cout << "extracting ring withe label_other=" << label_other <<
-      // std::endl;
-
-      ring.push_back({float(v_start->point().x()), float(v_start->point().y()),
-                      float(v_start->point().z())});
-      // secondly, walk along the entire boundary starting from v_start
-      Vertex_handle v_next, v_prev = v_start, v_cur = v_start;
-      // size_t extract_cnt=0;
-      bool firstv = true;
-      Face_handle f_prev;
-      do {
-        Edge_circulator ec, done;
-        if (firstv) {
-          ec = A.incident_edges(v_cur);
-          firstv = false;
-        } else {
-          ec = A.incident_edges(v_cur, f_prev);
-        }
-        done = ec;
-        do {
-          // very rare case (kadaster tile 6711 fid 411) ec does not point to a
-          // face. Not sure how this is possible.
-          if (ec->first == nullptr) break;
-
-          // if(A.classify(*ec)==Alpha_shape_2::SINGULAR)
-          // std::cout << "consider ec, singular?=" <<
-          // (A.classify(*ec)==Alpha_shape_2::SINGULAR? "yes":"no") <<
-          // std::endl; find the vertex on the other side of the incident edge
-          // ec
-          auto v = ec->first->vertex(A.cw(ec->second));
-          if (v_cur == v) v = ec->first->vertex(A.ccw(ec->second));
-          // find labels of two adjacent faces
-          auto face1 = ec->first;
-          auto vertex1 = face1->vertex(ec->second);
-          auto face2 = ec->first->neighbor(ec->second);
-          auto vertex2 = A.mirror_vertex(face1, ec->second);
-          auto label1 = face1->info().label;
-          auto label2 = face2->info().label;
-          bool extract_edge = false;
-          // check if the edge is on the boundary of the region and if we are
-          // keeping the label_region on the left
-          if (label1 == label_region || label1 == NEVER_VISITED) {
-            if (label2 == label_other) {
-              auto p_cur = v_cur->point();
-              auto p = v->point();
-              auto p1 = vertex1->point();
-              if (CGAL::LEFT_TURN ==
-                  CGAL::orientation(K::Point_2(p_cur.x(), p_cur.y()),
-                                    K::Point_2(p.x(), p.y()),
-                                    K::Point_2(p1.x(), p1.y()))) {
-                extract_edge = true;
-                face2->info().incident_ring_is_extracted = true;
-                f_prev = face1;
-              }
-            }
-          } else if (label2 == label_region || label2 == NEVER_VISITED) {
-            if (label1 == label_other) {
-              auto p_cur = v_cur->point();
-              auto p = v->point();
-              auto p2 = vertex2->point();
-              if (CGAL::LEFT_TURN ==
-                  CGAL::orientation(K::Point_2(p_cur.x(), p_cur.y()),
-                                    K::Point_2(p.x(), p.y()),
-                                    K::Point_2(p2.x(), p2.y()))) {
-                extract_edge = true;
-                face1->info().incident_ring_is_extracted = true;
-                f_prev = face2;
-              }
-            }
-          }
-          if (extract_edge && (v != v_prev)) {
-            v_next = v;
-            ring.push_back({float(v_next->point().x()),
-                            float(v_next->point().y()),
-                            float(v_next->point().z())});
-            if (ring.size() > 1) {
-              auto last = ring.rbegin();
-              auto p = *last;
-              ++last;
-              auto p_prev = *last;
-              // std::cout << "POINT(" << p[0] << " " <<  p[1] << "); " <<
-              // ++extract_cnt << "\n"; std::cout << "LINESTRING(" << p_prev[0]
-              // << " " << p_prev[1] << ", "; std::cout << p[0] << " " << p[1]
-              // << ")\n"; if(++extract_cnt>2000) exit(1);
-            }
-            // std::cout << "ring size = " << ring.size() << std::endl;
-            break;
-          }
-        } while (++ec != done);
-
-        // break in case we are not finding next edges to walk to
-        if (v_cur == v_next) break;
-
-        v_prev = v_cur;
-        v_cur = v_next;
-
-      } while (v_next != v_start);
-    }
-
-    void grow(bool extract_polygons) {
+    void grow() {
       std::stack<Face_handle> interior_seeds, hole_seeds;
       // label triangles reachable from inf face as -1; ie exterior
       auto inf_face = A.infinite_face();
@@ -214,14 +103,13 @@ namespace roofer::reconstruction {
         interior_seeds.pop();
         if (fh->info().label == NEVER_VISITED) {
           fh->info().label = label_cnt;
-          grow_region(fh, LABEL_INTERIOR_FACE, extract_polygons);
+          grow_region(fh, LABEL_INTERIOR_FACE);
           ++label_cnt;
         }
       }
     }
 
-    void grow_region(Face_handle face_handle, Mode mode,
-                     bool extract_polygons = false) {
+    void grow_region(Face_handle face_handle, Mode mode) {
       std::stack<Face_handle> candidates;
       candidates.push(face_handle);
 
@@ -264,32 +152,6 @@ namespace roofer::reconstruction {
             if (neighbor->info().label == NEVER_VISITED) {
               neighbor->info().label = label_cnt;
               candidates.push(neighbor);
-              // if it is exterior/hole, we find extract a ring
-            } else if (extract_polygons &&
-                       (neighbor->info().label == EXTERIOR ||
-                        neighbor->info().label <= HOLE)) {
-              if (region_map.find(label_cnt) == region_map.end()) {
-                region_map[label_cnt] = LinearRing();
-              }
-              auto ring_vertex = fh->vertex(A.cw(i));
-              if (neighbor->info().label == EXTERIOR &&
-                  !neighbor->info()
-                       .incident_ring_is_extracted) {  // if it is exterior, we
-                                                       // find extract the
-                                                       // exterior ring
-                extract_ring(ring_vertex, label_cnt, EXTERIOR,
-                             region_map[label_cnt]);
-              } else if (neighbor->info().label <= HOLE &&
-                         !neighbor->info()
-                              .incident_ring_is_extracted) {  // if it is a
-                                                              // hole, we
-                                                              // extract the
-                                                              // interior ring
-                vec3f interior_ring;
-                extract_ring(ring_vertex, label_cnt, neighbor->info().label,
-                             interior_ring);
-                region_map[label_cnt].interior_rings().push_back(interior_ring);
-              }
             }
           }
         }
@@ -300,7 +162,9 @@ namespace roofer::reconstruction {
   class AlphaShaper : public AlphaShaperInterface {
     void compute(const IndexedPlanesWithPoints& pts_per_roofplane,
                  AlphaShaperConfig cfg) override {
-      std::cout << std::fixed << std::setprecision(4);
+      alpha_rings.clear();
+      alpha_triangles.clear();
+      roofplane_ids.clear();
 
       PointCollection edge_points;
       LineStringCollection alpha_edges;
@@ -315,6 +179,7 @@ namespace roofer::reconstruction {
         if (points.size() < 3) continue;
         Triangulation_2 T;
         T.insert(points.begin(), points.end());
+        if (T.dimension() < 2) continue;
         Alpha_shape_2 A(T, FT(cfg.alpha), Alpha_shape_2::GENERAL);
 
         double alpha = cfg.alpha;
@@ -342,7 +207,7 @@ namespace roofer::reconstruction {
 
         // flood filling
         auto grower = AlphaShapeRegionGrower(A);
-        grower.grow(cfg.extract_polygons);
+        grower.grow();
 
         // collect triangles
         for (auto fh = A.finite_faces_begin(); fh != A.finite_faces_end();
@@ -366,13 +231,41 @@ namespace roofer::reconstruction {
           }
         }
 
-        for (auto& kv : grower.region_map) {
-          // finally, store the ring
-          if (kv.second.size() > 2) {
-            alpha_rings.push_back(kv.second);
+        if (cfg.extract_polygons) {
+          auto polygons = detail::triangulation_polygons(
+              A, [](Face_handle face) { return face->info().label; },
+              [](Vertex_handle vertex) {
+                const auto& p = vertex->point();
+                return arr3f{float(p.x()), float(p.y()), float(p.z())};
+              });
+          // Canonicalize each ring in linear time, preserving winding.
+          // Coordinate ordering also makes holes and components independent of
+          // boundary seeds and triangulation handle order within this roof
+          // plane.
+          auto canonicalize = [](vec3f& ring) {
+            std::rotate(ring.begin(),
+                        std::min_element(ring.begin(), ring.end()), ring.end());
+          };
+          for (auto& polygon : polygons) {
+            canonicalize(polygon.exterior);
+            for (auto& hole : polygon.holes) canonicalize(hole);
+            std::sort(polygon.holes.begin(), polygon.holes.end());
+          }
+          std::sort(polygons.begin(), polygons.end(),
+                    [](const auto& a, const auto& b) {
+                      return a.exterior < b.exterior;
+                    });
+          for (auto& polygon : polygons) {
+            LinearRing ring;
+            ring.insert(ring.end(), polygon.exterior.begin(),
+                        polygon.exterior.end());
+            ring.interior_rings() = std::move(polygon.holes);
+            ring.push_back(ring.front());
+            for (auto& hole : ring.interior_rings())
+              hole.push_back(hole.front());
+            alpha_rings.push_back(std::move(ring));
             roofplane_ids.push_back(it.first);
           }
-          // alpha_dts.push_back(T);
         }
       }
 

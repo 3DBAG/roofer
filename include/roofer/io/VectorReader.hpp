@@ -50,6 +50,8 @@ namespace roofer::io {
     std::string layer_name = "";
     std::string attribute_filter = "";
     bool skip_invalid_polygons = false;
+    // Input coordinate units; zero preserves the original input path.
+    double polygon_snap_threshold = 0;
     bool skip_unsupported_geometries = false;
     bool strict_layer_name = false;
     // Optional horizontal CRS check; compound vertical components are ignored.
