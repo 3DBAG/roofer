@@ -4,6 +4,8 @@
 #include <roofer/io/CityJsonWriter.hpp>
 #include <roofer/misc/projHelper.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
+#include <roofer/reconstruction/ArrangementBase.hpp>
+#include <map>
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
@@ -203,4 +205,33 @@ TEST_CASE(
   CHECK_FALSE(
       semantics["surfaces"][semantics["values"][0][1].get<int>()].contains(
           "name"));
+}
+
+TEST_CASE(
+    "opt-in polygon snapping repairs source and precision spike fixtures") {
+  const auto baseline =
+      roofer::io::readUnderpasses(POLYGON_SNAP_FIXTURE, "", "identificatie", "",
+                                  "EPSG:28992", {"source_fid"});
+  CHECK(baseline.size() == 2);
+  const auto repaired =
+      roofer::io::readUnderpasses(POLYGON_SNAP_FIXTURE, "", "identificatie", "",
+                                  "EPSG:28992", {"source_fid"}, 0.001);
+  REQUIRE(repaired.size() == 3);
+  std::map<int, std::size_t> hole_counts;
+  for (const auto& [id, parts] : repaired) {
+    REQUIRE(parts.size() == 1);
+    const auto& p = parts.front();
+    REQUIRE(p.attributes.has_name("source_fid"));
+    int fid = *p.attributes.get_if<int>("source_fid");
+    hole_counts[fid] = p.holes.size();
+    auto local = p.localize({122579.784, 485879.419, 0}, 0, 4);
+    roofer::reconstruction::Polygon_2 polygon;
+    for (auto point : local.polygon)
+      polygon.push_back(roofer::Point_2(point[0], point[1]));
+    CHECK(polygon.is_simple());
+    CHECK(local.ceiling_elevation == 4);
+  }
+  CHECK(hole_counts.at(16) == 9);
+  CHECK(hole_counts.at(23) == 0);
+  CHECK(hole_counts.at(71) == 0);
 }

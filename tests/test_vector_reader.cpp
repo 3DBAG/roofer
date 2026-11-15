@@ -110,3 +110,47 @@ TEST_CASE("VectorReaderOGR applies the optional centroid filter consistently") {
   reader->readPolygons(local);
   CHECK(local.size() == 1);
 }
+
+TEST_CASE(
+    "input snapping preserves feature attribute alignment and rejects bow "
+    "ties") {
+  TemporaryVectorSource input("roofer-vector-snap.geojson",
+                              R"({"type":"FeatureCollection","features":[
+    {"type":"Feature","properties":{"id":"spike","value":7},"geometry":{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,5],[-0.05,5],[0,5.000000001],[0,0]]]}},
+    {"type":"Feature","properties":{"id":"bowtie","value":8},"geometry":{"type":"Polygon","coordinates":[[[20,0],[30,10],[20,10],[30,0],[20,0]]]}},
+    {"type":"Feature","properties":{"id":"valid","value":9},"geometry":{"type":"Polygon","coordinates":[[[40,0],[50,0],[50,10],[40,10],[40,0]]]}},
+    {"type":"Feature","properties":{"id":"split","value":10},"geometry":{"type":"Polygon","coordinates":[[[60,0],[64,0],[64,2],[66,2],[66,0],[70,0],[70,4],[66,4],[66,2.0001],[64,2.0001],[64,4],[60,4],[60,0]]]}}
+  ]})");
+  auto pj = roofer::misc::createProjHelper();
+  auto reader = roofer::io::createVectorReaderOGR(*pj);
+  CHECK(reader->polygon_snap_threshold == 0);
+  reader->polygon_snap_threshold = 0.001;
+  reader->skip_invalid_polygons = true;
+  reader->open(input.path.string());
+  std::vector<roofer::io::PolygonFeature> original;
+  reader->readPolygons(original, {"id"}, {"value"});
+  REQUIRE(original.size() == 4);
+  CHECK(original[0].fid == 0);
+  CHECK(original[0].text_attributes.at("id") == "spike");
+  CHECK(original[0].numeric_attributes.at("value") == 7);
+  CHECK(original[1].fid == 2);
+  CHECK(original[1].text_attributes.at("id") == "valid");
+  for (std::size_t i = 2; i < 4; ++i) {
+    CHECK(original[i].fid == 3);
+    CHECK(original[i].text_attributes.at("id") == "split");
+    CHECK(original[i].numeric_attributes.at("value") == 10);
+  }
+  std::vector<roofer::LinearRing> polygons;
+  roofer::AttributeVecMap attrs;
+  reader->readPolygons(polygons, &attrs);
+  REQUIRE(polygons.size() == 4);
+  auto ids = attrs.get_if<std::string>("id");
+  REQUIRE(ids);
+  REQUIRE(ids->size() == 4);
+  CHECK(ids->at(0) == "spike");
+  CHECK(ids->at(1) == "valid");
+  CHECK(ids->at(2) == "split");
+  CHECK(ids->at(3) == "split");
+  reader->polygon_snap_threshold = -1;
+  CHECK_THROWS(reader->readPolygons(original));
+}

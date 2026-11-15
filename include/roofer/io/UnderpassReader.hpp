@@ -22,10 +22,12 @@ namespace roofer::io {
   // No spatial/centroid filter: building ID determines ownership across tiles.
   // An empty height attribute or a null value selects the caller's default
   // floor clearance. Selected attributes must exist in the source layer and
-  // are passed through unchanged to the localized underpass.
+  // are passed through unchanged to the localized underpass. Input snapping
+  // is disabled by default; its threshold uses source coordinate units.
   UnderpassIndex readUnderpasses(
       const std::string& source, const std::string& layer,
       const std::string& id_attribute, const std::string& height_attribute,
       const std::string& expected_crs = {},
-      const std::vector<std::string>& attributes = {});
+      const std::vector<std::string>& attributes = {},
+      double polygon_snap_threshold = 0);
 }  // namespace roofer::io

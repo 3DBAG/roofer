@@ -147,6 +147,7 @@ struct RooferConfig {
   std::string layer_name;
   int layer_id = 0;
   std::string attribute_filter;
+  float polygon_snap_threshold = 0.0F;
   std::string underpass_source;
   std::string underpass_layer;
   std::string underpass_id_attribute;
@@ -511,6 +512,10 @@ struct RooferConfigHandler {
               "Select this layer name from `<polygon-source>`. By default the "
               "first layer is used.",
               cfg_.layer_name);
+    input.add("polygon-snap-threshold",
+              "Snap all input footprint and underpass polygons before "
+              "validation, in metres. Zero disables input snapping.",
+              cfg_.polygon_snap_threshold, {roofer::config::at_least(0.0F)});
     input.add("underpass-source", "Optional OGR underpass polygon datasource.",
               cfg_.underpass_source);
     input.add("underpass-source-layer",

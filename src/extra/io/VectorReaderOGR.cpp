@@ -29,6 +29,8 @@
 #include <functional>
 #include <iostream>
 #include <roofer/io/VectorReader.hpp>
+#include <roofer/reconstruction/PolygonSnapper.hpp>
+#include <cmath>
 #include <sstream>
 #include <unordered_map>
 #include <variant>
@@ -302,6 +304,9 @@ namespace roofer::io {
         const std::function<void(const OGRFeature&, OGRPolygon*)>& visit) {
       if (!poLayer)
         throw rooferException("[VectorReaderOGR] Layer is not open");
+      if (!std::isfinite(polygon_snap_threshold) || polygon_snap_threshold < 0)
+        throw rooferException(
+            "polygon snap threshold must be finite and nonnegative");
       poLayer->ResetReading();
       if (region_of_interest) {
         const auto& roi = *region_of_interest;
@@ -322,9 +327,56 @@ namespace roofer::io {
         }
         auto add = [&](OGRPolygon* polygon,
                        std::optional<size_t> part = std::nullopt) {
-          if (!polygon->IsEmpty() &&
-              !should_skip_polygon(polygon, *feature, part))
-            visit(*feature, polygon);
+          if (polygon->IsEmpty()) return;
+          if (polygon_snap_threshold == 0) {
+            if (!should_skip_polygon(polygon, *feature, part))
+              visit(*feature, polygon);
+            return;
+          }
+          auto read = [](const OGRLinearRing* ring) {
+            std::vector<arr3d> points;
+            if (ring)
+              for (int i = 0; i < ring->getNumPoints(); ++i)
+                points.push_back({ring->getX(i), ring->getY(i), ring->getZ(i)});
+            return points;
+          };
+          reconstruction::PolygonRings input{read(polygon->getExteriorRing()),
+                                             {}};
+          for (int i = 0; i < polygon->getNumInteriorRings(); ++i)
+            input.holes.push_back(read(polygon->getInteriorRing(i)));
+          auto snapped =
+              reconstruction::snap_polygon(input, polygon_snap_threshold);
+          auto& logger = logger::Logger::get_logger();
+          if (snapped.error) {
+            logger.warning(
+                "[VectorReaderOGR] Skipping polygon after snapping. FID: {}, "
+                "part: {}, reason: {}",
+                feature->GetFID(), part.value_or(0), *snapped.error);
+            return;
+          }
+          // Keep output records and attributes aligned, including when snapping
+          // splits a source polygon into multiple valid parts.
+          std::vector<std::unique_ptr<OGRPolygon>> output;
+          for (const auto& value : snapped.polygons) {
+            auto result = std::make_unique<OGRPolygon>();
+            auto add_ring = [&](const std::vector<arr3d>& points) {
+              OGRLinearRing ring;
+              for (const auto& p : points) ring.addPoint(p[0], p[1], p[2]);
+              ring.closeRings();
+              result->addRing(&ring);
+            };
+            add_ring(value.exterior);
+            for (const auto& hole : value.holes) add_ring(hole);
+            if (!result->IsValid()) {
+              logger.warning(
+                  "[VectorReaderOGR] Skipping polygon after snapping. FID: {}, "
+                  "part: {}, reason: invalid repaired polygon",
+                  feature->GetFID(), part.value_or(0));
+              return;
+            }
+            output.push_back(std::move(result));
+          }
+          for (const auto& result : output) visit(*feature, result.get());
         };
         const auto type = wkbFlatten(geometry->getGeometryType());
         if (type == wkbPolygon)
