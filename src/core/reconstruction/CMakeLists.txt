@@ -51,5 +51,5 @@ add_library("reconstruction" OBJECT ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
 target_include_directories("reconstruction" PUBLIC ${LIBRARY_INCLUDES})
 
 target_link_libraries(
-  "reconstruction" PUBLIC CGAL::CGAL
+  "reconstruction" PUBLIC CGAL::CGAL CGAL::Eigen3_support
 )
