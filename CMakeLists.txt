@@ -44,6 +44,8 @@ find_package(
   CGAL 6.0 QUIET
   COMPONENTS Core
   REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+include(CGAL_Eigen3_support)
 
 # Make sure CGAL is thread-safe
 add_compile_definitions("CGAL_HAS_THREADS=1")
