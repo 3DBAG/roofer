@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject out-of-raster points before converting coordinates to cell indices, preventing undefined conversions, row aliasing, and out-of-bounds access during rasterization and point-cloud thinning.
 - Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
 - The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188 via #189.
+- `line-detector.snap-threshold` now acts as a distance in metres, as documented. It was compared with a squared distance, so results change for configs with a non-default `snap-threshold` or `unit-scale`.
 
 ### Changed
 

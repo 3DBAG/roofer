@@ -97,6 +97,10 @@ target_link_libraries("test_arrangement_snapper"
                       PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests("test_arrangement_snapper")
 
+add_executable(test_line_chain test_line_chain.cpp)
+target_link_libraries(test_line_chain PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_line_chain)
+
 add_executable("test_vector_reader"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
 target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)

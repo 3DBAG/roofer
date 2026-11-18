@@ -271,7 +271,7 @@ namespace roofer::linereg {
     auto result = CGAL::intersection(l_a, l_b);
     if (result) {
       if (auto p = std::get_if<Point_2>(&*result)) {
-        if (CGAL::squared_distance(*p, s) < snap_threshold) {
+        if (CGAL::squared_distance(*p, s) < snap_threshold * snap_threshold) {
           double z = -plane.a() / plane.c() * p->x() -
                      plane.b() / plane.c() * p->y() - plane.d() / plane.c();
           ring_pts.push_back(Point_3(p->x(), p->y(), z));
