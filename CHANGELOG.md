@@ -21,14 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Build AMD64 and ARM64 Docker images from the default Nix flake package.
+- Build AMD64 and ARM64 Docker images from the default Nix flake package. This changes the image file structure, but usage stays the same.
 - Reuse package dependencies in the Nix development shell, make Python setup explicit with `roofer-python-setup`, and provide the documentation helper separately through the `docs` flake package.
 
 ## [1.1.0-beta.1] - 2026-07-30
 
 This releases contains several bugfixes, stability improvements, and new functionalities. Some highlights include:
 
-1. significantly improved geometric validity of the generated building models; in the order of 10x less errors with val3dity. This was achieved by detecting and fixing locally 2D arrangement configurations that led to e.g. non-manifold edges after extrusion and self intersecting faces. Likewise it is now detected if a slanted roofplane would be extruded to under the floor elevation, the below the floor part is now cut off from the footprint. This work was sponsored via the project ["Innovatieve algoritmes voor betrouwbare, stedelijke 3D-modellen"](https://zichtopnl.nl/datafundament/actueel-overzicht/nieuws/3144867.aspx?t=3DBAG+breidt+uit+).
+1. significantly improved geometric validity of the generated building models; in the order of 10x less errors with val3dity. This was achieved by detecting and fixing locally 2D arrangement configurations that led to e.g. non-manifold edges after extrusion and self intersecting faces. Likewise it is detected if a slanted roofplane would be extruded to under the floor elevation, the below the floor part is now cut off from the footprint. This work was sponsored via the project ["Innovatieve algoritmes voor betrouwbare, stedelijke 3D-modellen"](https://zichtopnl.nl/datafundament/actueel-overzicht/nieuws/3144867.aspx?t=3DBAG+breidt+uit+).
 2. Reorganised configuration file. Parameters are now divided into Input, Crop, Reconstruction, and Output sections. Old parameters locations will give a deprecation warning, and be removed in v2.0.
 3. All reconstruction parameters are now configurable via the configuration file.
 4. A new `unit-scale` parameter that scales parameter values that are defined in metres. For example if you data is in feet, this can be used to get good results with the default parameter values. One user also reported that a scale of 0.55 can help with getting better results on low density point clouds.
