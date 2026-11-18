@@ -233,3 +233,7 @@ if(RF_BUILD_BINDINGS)
                             "PYTHONPATH=${CMAKE_BINARY_DIR}/rooferpy")
   endif()
 endif()
+
+add_executable(test_line_angle_clustering test_line_angle_clustering.cpp)
+target_link_libraries(test_line_angle_clustering PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_line_angle_clustering)
