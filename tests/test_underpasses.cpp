@@ -212,6 +212,26 @@ TEST_CASE("LoD1 extrusion ignores underpass inputs") {
   CHECK(volume(e->meshes.front()) == Catch::Approx(1000));
 }
 
+TEST_CASE("LoD1 uses P97 when P70 would put the roof below the floor") {
+  auto arr = roof();
+  for (auto face : arr.face_handles()) {
+    if (face->is_unbounded()) continue;
+    face->data().elevation_70p = 4;
+    face->data().elevation_97p = 8;
+  }
+  auto extruder = createArrangementExtruder();
+  const ArrangementExtruderConfig config{.lod2 = false};
+
+  extruder->compute(arr, 5.0F, config);
+  REQUIRE(extruder->meshes.size() == 1);
+  check_closed(extruder->meshes.front());
+  CHECK(volume(extruder->meshes.front()) == Catch::Approx(300));
+
+  extruder->compute(arr, 3.0F, config);
+  REQUIRE(extruder->meshes.size() == 1);
+  CHECK(volume(extruder->meshes.front()) == Catch::Approx(100));
+}
+
 TEST_CASE("floor maximum includes interpolated vertices inside the domain") {
   auto input = rectangle(0, 0, 10, 10);
   input.push_back({5, 5, 6});

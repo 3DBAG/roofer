@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Use the 97th-percentile roof height in LoD 1.2 and 1.3 when the 70th percentile lacks ground clearance and the 97th percentile has enough clearance.
 - Preserve roof holes when snapping collapses a narrow gap, preventing self-intersecting roof rings (val3dity error 104).
 - Line regularisation now treats line directions near 0 and near 180 degrees as parallel, so nearly north-south lines are clustered together instead of producing duplicate parallel lines.
 - Avoid a logging shutdown crash when using val3dity by letting Roofer's loggers release their own resources without clearing spdlog's global registry.

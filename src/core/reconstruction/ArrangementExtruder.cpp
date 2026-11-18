@@ -19,6 +19,9 @@
 // Author(s):
 // Ravi Peters
 
+#include <cmath>
+#include <unordered_set>
+
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 #include "ExtrusionArrangement.hpp"
@@ -124,6 +127,25 @@ namespace roofer::reconstruction {
         return;
       }
 
+      // Choose one height for the whole flat roof, including over uneven
+      // terrain.
+      std::unordered_set<Face_handle> use_p97;
+      if (!cfg.lod2 && !cfg.lod1_extrude_to_max) {
+        for (auto face : arr.face_handles()) {
+          const auto& data = face->data();
+          if (!data.in_footprint || !data.segid || face->is_unbounded() ||
+              !std::isfinite(data.elevation_97p) ||
+              !(data.elevation_97p > data.elevation_70p))
+            continue;
+          const float floor =
+              elevation_provider.get_max_elevation(arr_face_polygon(face));
+          const float minimum_roof_height = floor + snap_tolerance;
+          if (data.elevation_70p <= minimum_roof_height &&
+              data.elevation_97p > minimum_roof_height)
+            use_p97.insert(face);
+        }
+      }
+
       // compute all heights for each vertex
       std::unordered_map<Vertex_handle, std::vector<hf_pair>> vertex_columns;
       for (auto& v : arr.vertex_handles()) {
@@ -138,7 +160,7 @@ namespace roofer::reconstruction {
             if (cfg.lod2) {
               h = plane_height(f->data().plane, p);
             } else {
-              if (cfg.lod1_extrude_to_max)
+              if (cfg.lod1_extrude_to_max || use_p97.contains(f))
                 h = f->data().elevation_97p;
               else
                 h = f->data().elevation_70p;
