@@ -66,6 +66,15 @@ For terrain output, `--terrain-nodata-mode` controls whether only complete grid 
 
 ### Underpass attributes
 
+An explicit `underpass-height-attribute` value is used as an absolute ceiling
+elevation. If the attribute is omitted from the configuration or its value is
+null or unset, Roofer uses the building floor elevation plus
+`underpass-default-height` (4 m by default). Only these fallback ceilings can
+be lowered to fit below the roof. Lowering uses `underpass-roof-margin` and
+stops at `underpass-min-height` above the highest ground in the passage. Where
+the roof is at or below the resulting ceiling, the opening cuts through the
+roof.
+
 The building attribute `rf_has_underpass` is a boolean indicating whether the
 reconstructed building contains at least one underpass ceiling. It is false
 when all matching inputs are skipped or lie outside the reconstructed footprint,

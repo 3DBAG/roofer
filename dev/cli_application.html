@@ -935,6 +935,14 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </section>
 <section id="underpass-attributes">
 <h3>Underpass attributes<a class="headerlink" href="#underpass-attributes" title="Link to this heading">¶</a></h3>
+<p>An explicit <code class="docutils literal notranslate"><span class="pre">underpass-height-attribute</span></code> value is used as an absolute ceiling
+elevation. If the attribute is omitted from the configuration or its value is
+null or unset, Roofer uses the building floor elevation plus
+<code class="docutils literal notranslate"><span class="pre">underpass-default-height</span></code> (4 m by default). Only these fallback ceilings can
+be lowered to fit below the roof. Lowering uses <code class="docutils literal notranslate"><span class="pre">underpass-roof-margin</span></code> and
+stops at <code class="docutils literal notranslate"><span class="pre">underpass-min-height</span></code> above the highest ground in the passage. Where
+the roof is at or below the resulting ceiling, the opening cuts through the
+roof.</p>
 <p>The building attribute <code class="docutils literal notranslate"><span class="pre">rf_has_underpass</span></code> is a boolean indicating whether the
 reconstructed building contains at least one underpass ceiling. It is false
 when all matching inputs are skipped or lie outside the reconstructed footprint,
@@ -1186,9 +1194,9 @@ including ceilings at the same height.</p>
 <span class="n">generate-roofs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="c1">## Generate floors.</span>
 <span class="n">generate-floor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1">## Minimum clearance when lowering underpasses, in metres.</span>
+<span class="c1">## Minimum clearance when lowering fallback underpass ceilings, in metres.</span>
 <span class="n">underpass-min-height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
-<span class="c1">## Minimum vertical gap between underpass ceilings and roofs, in metres.</span>
+<span class="c1">## Vertical roof gap when lowering fallback underpass ceilings, in metres.</span>
 <span class="n">underpass-roof-margin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03</span>
 <span class="c1">## Extrude LoD 1 to maximum roof height instead of 70th percentile.</span>
 <span class="n">lod1-extrude-to-max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
