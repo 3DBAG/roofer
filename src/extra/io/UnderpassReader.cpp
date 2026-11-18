@@ -9,6 +9,7 @@ namespace roofer::io {
     Underpass result;
     result.source_id = source_id;
     result.attributes = attributes;
+    result.uses_default_clearance = !ceiling_elevation.has_value();
     auto ring = [&](const auto& points) {
       vec3f local;
       for (const auto& p : points)

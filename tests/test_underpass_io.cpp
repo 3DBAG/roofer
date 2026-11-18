@@ -40,6 +40,7 @@ TEST_CASE(
   REQUIRE(values.size() == 2);
   auto local = values[0].localize({1000, 2000, 100}, 1, 4);
   CHECK(local.ceiling_elevation == Catch::Approx(23.456));
+  CHECK_FALSE(local.uses_default_clearance);
   CHECK(local.polygon.front() == roofer::arr3f{0, 0, 0});
   REQUIRE(local.polygon.interior_rings().size() == 1);
   CHECK(local.polygon.interior_rings()[0].front() == roofer::arr3f{4, 4, 0});
@@ -73,16 +74,16 @@ TEST_CASE(
     CHECK_FALSE(input.ceiling_elevation);
     // The floor is already local: use floor + clearance without subtracting
     // the coordinate offset again.
-    CHECK(input.localize({0, 0, 100}, -98.5F, 2.5F).ceiling_elevation ==
-          Catch::Approx(-96.0));
+    const auto local = input.localize({0, 0, 100}, -98.5F, 2.5F);
+    CHECK(local.ceiling_elevation == Catch::Approx(-96.0));
+    CHECK(local.uses_default_clearance);
     CHECK(input.localize({0, 0, 100}, -98.5F, 4.0F).ceiling_elevation ==
           Catch::Approx(-94.5));
   }
   // Explicit values, including zero, remain absolute elevations.
-  CHECK(index.at("zero")
-            .at(0)
-            .localize({0, 0, 100}, -98.5F, 2.5F)
-            .ceiling_elevation == -100.0);
+  const auto zero = index.at("zero").at(0).localize({0, 0, 100}, -98.5F, 2.5F);
+  CHECK(zero.ceiling_elevation == -100.0);
+  CHECK_FALSE(zero.uses_default_clearance);
   CHECK(index.at("explicit")
             .at(0)
             .localize({0, 0, 100}, -98.5F, 2.5F)
@@ -95,6 +96,7 @@ TEST_CASE("four metre default underpass clearance uses the local floor") {
       {122000.123456, 485000.123456}, {122010, 485000}, {122010, 485010}};
   auto local = input.localize({122000, 485000, 50}, -48.5F, 4.0F);
   CHECK(local.ceiling_elevation == Catch::Approx(-44.5));
+  CHECK(local.uses_default_clearance);
   CHECK(local.polygon[0][0] == Catch::Approx(0.123456));
   CHECK(local.polygon[0][1] == Catch::Approx(0.123456));
   // A caller using feet converts the metre-based clearance, not absolute Z.

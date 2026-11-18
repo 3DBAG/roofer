@@ -453,10 +453,14 @@ namespace roofer::reconstruction::detail {
         c.enabled = false;
         continue;
       }
-      c.bound = std::min(c.height, maximum[i] + cfg.underpass_min_height);
-      c.height = std::min(
-          c.height, std::max(c.bound, minimum[i] - cfg.underpass_roof_margin -
-                                          cfg.snap_tolerance));
+      // The bound also prevents alignment from lowering a supplied elevation.
+      c.bound = c.height;
+      if (underpasses[c.input_index].uses_default_clearance) {
+        c.bound = std::min(c.height, maximum[i] + cfg.underpass_min_height);
+        c.height = std::min(
+            c.height, std::max(c.bound, minimum[i] - cfg.underpass_roof_margin -
+                                            cfg.snap_tolerance));
+      }
       if (c.height <= maximum[i] + cfg.snap_tolerance) {
         c.enabled = false;
       }

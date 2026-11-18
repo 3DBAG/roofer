@@ -34,6 +34,12 @@ namespace {
     return p;
   }
 
+  Underpass default_underpass(LinearRing polygon, double ceiling_elevation) {
+    return {.polygon = std::move(polygon),
+            .ceiling_elevation = ceiling_elevation,
+            .uses_default_clearance = true};
+  }
+
   Arrangement_2 roof(bool split = false, float left = 10, float right = 10) {
     Arrangement_2 arr;
     auto p = rectangle(0, 0, 10, 10);
@@ -133,13 +139,29 @@ TEST_CASE("overlapping underpasses carve the union of their volumes") {
   CHECK(volume(reversed->meshes.front()) == Catch::Approx(820));
 }
 
-TEST_CASE("ceiling is lowered below every overlapping roof part") {
+TEST_CASE("fallback ceiling is lowered below every overlapping roof part") {
   auto arr = roof(true, 5, 9);
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 8}});
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 8)});
+  REQUIRE(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
   for (std::size_t i = 0; i < e->labels.size(); ++i)
     if (e->labels[i] == 4)
       for (auto p : e->faces[i]) CHECK(p[2] <= 5.0F - 0.03F);
   CHECK(std::count(e->labels.begin(), e->labels.end(), 1) == 2);
+}
+
+TEST_CASE(
+    "supplied ceiling keeps its elevation and cuts through a lower roof") {
+  auto arr = roof(true, 5, 9);
+  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 8}});
+  CHECK(e->diagnostics.empty());
+  CHECK(volume(e->meshes.front()) == Catch::Approx(440));
+  REQUIRE(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
+  for (std::size_t i = 0; i < e->labels.size(); ++i)
+    if (e->labels[i] == 4)
+      for (auto p : e->faces[i]) {
+        CHECK(p[0] >= 5);
+        CHECK(p[2] == 8);
+      }
 }
 
 TEST_CASE("a sloped roof clamps against a minimum inside the underpass") {
@@ -151,7 +173,7 @@ TEST_CASE("a sloped roof clamps against a minimum inside the underpass") {
         ->data()
         .plane = Plane(a, 0, 1, d);
   }
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 12}});
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 12)});
   for (std::size_t i = 0; i < e->labels.size(); ++i)
     if (e->labels[i] == 4)
       for (auto p : e->faces[i]) CHECK(p[2] <= 5.0F - 0.03F);
@@ -361,13 +383,25 @@ TEST_CASE(
   CHECK(volume(mesh) == Catch::Approx(744));
 }
 
-TEST_CASE(
-    "practically equal ceilings do not create sub-tolerance vertical walls") {
+TEST_CASE("nearby fallback ceilings can align to a supplied ceiling") {
   auto arr = roof();
-  auto e = extrude(
-      arr, {{rectangle(2, 2, 5, 8), 4}, {rectangle(5, 2, 8, 8), 4.00001}});
+  auto e = extrude(arr, {{rectangle(2, 2, 5, 8), 4},
+                         default_underpass(rectangle(5, 2, 8, 8), 4.00001)});
   CHECK(volume(e->meshes.front()) == Catch::Approx(856));
   CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 1);
+}
+
+TEST_CASE(
+    "a supplied ceiling is kept when a lower fallback ceiling is nearby") {
+  auto arr = roof();
+  auto e = extrude(arr, {default_underpass(rectangle(2, 2, 4, 8), 4),
+                         {rectangle(6, 2, 8, 8), 4.00001}});
+  CHECK(e->diagnostics.empty());
+  std::set<float> heights;
+  for (std::size_t i = 0; i < e->labels.size(); ++i)
+    if (e->labels[i] == 4)
+      for (auto p : e->faces[i]) heights.insert(p[2]);
+  CHECK(heights == std::set<float>{4.0F, 4.00001F});
 }
 
 TEST_CASE("rejecting a narrow higher patch retains the broad underpass") {
@@ -651,7 +685,7 @@ TEST_CASE(
   const std::vector<Underpass> input{
       {{}, 4, "invalid"},
       {rectangle(20, 20, 30, 30), 4, "outside"},
-      {rectangle(2, 2, 8, 8), 20, "lowered"},
+      {rectangle(2, 2, 8, 8), 20, "lowered", {}, true},
       {rectangle(2, 2, 8, 8), -1, "below-ground"}};
   std::string output, errors;
   {
@@ -728,7 +762,7 @@ TEST_CASE(
 TEST_CASE("minimum height carves through low roofs into separate solids") {
   auto arr = roof(false, 1);
   auto e = createArrangementExtruder();
-  std::vector<Underpass> input{{rectangle(-1, 3, 11, 7), 4}};
+  std::vector<Underpass> input{default_underpass(rectangle(-1, 3, 11, 7), 4)};
   e->compute(arr, 0.0F, input, {});
   REQUIRE(e->meshes.size() == 2);
   for (const auto& mesh : e->meshes) {
@@ -742,7 +776,7 @@ TEST_CASE("minimum height carves through low roofs into separate solids") {
 
 TEST_CASE("cut-through clips ceilings at a roof step") {
   auto arr = roof(true, 1, 5);
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 4)});
   CHECK(volume(e->meshes.front()) == Catch::Approx(240));
   for (std::size_t i = 0; i < e->labels.size(); ++i)
     if (e->labels[i] == 4)
@@ -756,7 +790,7 @@ TEST_CASE("sloped roof and ceiling meet at shared contact vertices") {
   auto arr = roof();
   for (auto f : arr.face_handles())
     if (f->data().in_footprint) f->data().plane = Plane(-0.5, 0, 1, -0.5);
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 4)});
   CHECK(volume(e->meshes.front()) == Catch::Approx(229));
   for (std::size_t i = 0; i < e->labels.size(); ++i)
     if (e->labels[i] == 4)
@@ -774,7 +808,8 @@ TEST_CASE(
   auto low = roof(false, 1);
   ArrangementExtruderConfig cfg;
   cfg.underpass_min_height = 0;
-  auto lowered = extrude(low, {{rectangle(-1, 3, 11, 7), 4}}, cfg);
+  auto lowered =
+      extrude(low, {default_underpass(rectangle(-1, 3, 11, 7), 4)}, cfg);
   CHECK(volume(lowered->meshes.front()) ==
         Catch::Approx(
             100 - 40 * (1 - cfg.underpass_roof_margin - cfg.snap_tolerance)));
@@ -784,7 +819,7 @@ TEST_CASE(
     "minimum height is relative to local ground and allows complete removal") {
   auto arr = roof(false, 11);
   auto e = createArrangementExtruder();
-  std::vector<Underpass> input{{rectangle(-1, 3, 11, 7), 14}};
+  std::vector<Underpass> input{default_underpass(rectangle(-1, 3, 11, 7), 14)};
   e->compute(arr, 10.0F, input, {});
   REQUIRE(e->meshes.size() == 2);
   for (const auto& mesh : e->meshes) {
@@ -794,7 +829,7 @@ TEST_CASE(
   REQUIRE(e->diagnostics.size() == 1);
   CHECK(e->diagnostics.front().adjusted_ceiling_elevation == 12.0F);
   auto whole = roof(false, 2);
-  input = {{rectangle(-1, -1, 11, 11), 4}};
+  input = {default_underpass(rectangle(-1, -1, 11, 11), 4)};
   e->compute(whole, 0.0F, input, {});
   CHECK(e->meshes.empty());
   CHECK(e->faces.empty());
@@ -804,11 +839,12 @@ TEST_CASE("custom minimum and ceiling equalization preserve lowering bounds") {
   auto arr = roof(true, 1, 5);
   ArrangementExtruderConfig cfg;
   cfg.underpass_min_height = 3;
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}}, cfg);
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 4)}, cfg);
   CHECK(volume(e->meshes.front()) == Catch::Approx(220));
   auto other = roof(true, 10, 2.0312F);
-  auto adjacent = extrude(
-      other, {{rectangle(2, 2, 5, 8), 1.9999}, {rectangle(5, 2, 8, 8), 20}});
+  auto adjacent =
+      extrude(other, {{rectangle(2, 2, 5, 8), 1.9999},
+                      default_underpass(rectangle(5, 2, 8, 8), 20)});
   std::set<float> heights;
   for (std::size_t i = 0; i < adjacent->labels.size(); ++i)
     if (adjacent->labels[i] == 4)
@@ -821,7 +857,7 @@ TEST_CASE(
   auto arr = roof(true, 1, 5);
   auto polygon = rectangle(-1, 3, 11, 7);
   polygon.interior_rings().push_back(rectangle(1, 4, 2, 6));
-  Underpass passage{polygon, 4};
+  auto passage = default_underpass(polygon, 4);
   passage.attributes.insert("name", std::string("passage"));
   auto e = createArrangementExtruder();
   std::vector<Underpass> input{passage};
@@ -868,7 +904,7 @@ TEST_CASE("minimum clearance includes terrain peaks inside the passage") {
       createElevationProvider(proj_tri_util::cdt_from_linearing(terrain));
   auto arr = roof(false, 7);
   auto e = createArrangementExtruder();
-  std::vector<Underpass> input{{rectangle(2, 2, 8, 8), 20}};
+  std::vector<Underpass> input{default_underpass(rectangle(2, 2, 8, 8), 20)};
   e->compute(arr, *elevations, input, {});
   REQUIRE(e->meshes.size() == 1);
   check_closed(e->meshes.front());
@@ -883,7 +919,7 @@ TEST_CASE("a roof valley touching the ceiling is rejected as a pinched solid") {
     if (f->data().in_footprint)
       f->data().plane =
           f->data().segid == 1 ? Plane(1, 0, 1, -7) : Plane(-1, 0, 1, 3);
-  auto e = extrude(arr, {{rectangle(-1, 3, 11, 7), 4}});
+  auto e = extrude(arr, {default_underpass(rectangle(-1, 3, 11, 7), 4)});
   CHECK(volume(e->meshes.front()) == Catch::Approx(450));
   CHECK(std::count(e->labels.begin(), e->labels.end(), 4) == 0);
   REQUIRE(e->diagnostics.size() == 2);

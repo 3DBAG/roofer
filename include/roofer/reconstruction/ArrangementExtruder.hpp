@@ -43,10 +43,10 @@ namespace roofer::reconstruction {
   X(bool, generate_floor, true, "Generate floors.",                            \
     config::no_validation<bool>(), public_)                                    \
   X(float, underpass_min_height, 2.0F,                                         \
-    "Minimum clearance when lowering underpasses, in metres.",                 \
+    "Minimum clearance when lowering fallback underpass ceilings, in metres.", \
     config::at_least(0.0F), public_)                                           \
   X(float, underpass_roof_margin, 0.03F,                                       \
-    "Minimum vertical gap between underpass ceilings and roofs, in metres.",   \
+    "Vertical roof gap when lowering fallback underpass ceilings, in metres.", \
     config::greater_than(0.0F), public_)                                       \
   X(bool, lod1_extrude_to_max, false,                                          \
     "Extrude LoD 1 to maximum roof height"                                     \
