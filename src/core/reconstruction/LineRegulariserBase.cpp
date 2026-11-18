@@ -19,21 +19,25 @@
 // Author(s):
 // Ravi Peters
 
+#include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <roofer/reconstruction/LineRegulariserBase.hpp>
 
 namespace roofer::linereg {
 
   double calc_mean_angle(const std::vector<linetype*>& lines) {
-    // length-weighted mean angle
-    double angle_sum = 0, sqlenth_sum = 0;
+    // length-weighted mean of line directions. Angles are in [0, pi] and a
+    // line at 0 has the same direction as one at pi, so average the doubled
+    // angles on the unit circle instead of the raw values.
+    double sin_sum = 0, cos_sum = 0;
     for (auto& line : lines) {
-      sqlenth_sum += line->sqlength;
+      sin_sum += std::sin(2 * line->angle) * line->sqlength;
+      cos_sum += std::cos(2 * line->angle) * line->sqlength;
     }
-    for (auto& line : lines) {
-      angle_sum += line->angle * line->sqlength;
-    }
-    return angle_sum / sqlenth_sum;
+    double mean = 0.5 * std::atan2(sin_sum, cos_sum);
+    if (mean < 0) mean += pi;
+    return mean;
   }
 
   Point_2 calc_centroid(const std::vector<linetype*>& lines) {
@@ -96,7 +100,9 @@ namespace roofer::linereg {
   }
 
   double AngleCluster::distance(Cluster<double>* other_cluster) {
-    return std::fabs(value - other_cluster->value);
+    // line directions wrap around at pi
+    double d = std::fabs(value - other_cluster->value);
+    return std::min(d, pi - d);
   }
   void AngleCluster::calc_mean_value() { value = calc_mean_angle(lines); }
 
