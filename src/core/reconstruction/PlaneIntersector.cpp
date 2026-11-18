@@ -19,6 +19,7 @@
 // Author(s):
 // Ravi Peters
 
+#include <algorithm>
 #include <map>
 #include <roofer/reconstruction/PlaneIntersector.hpp>
 
@@ -96,7 +97,11 @@ namespace roofer::reconstruction {
                                    pmax_lo, min_dist_to_line_sq))
                 continue;
 
-              // take the overlap between the two extends
+              // Reject gaps before measuring the overlap length.
+              if (std::max(dmin_lo, dmin_hi) >= std::min(dmax_lo, dmax_hi))
+                continue;
+
+              // Take the overlap of the two inlier ranges.
               Point ppmin, ppmax;
               if (dmin_lo > dmin_hi)
                 ppmin = l->projection(pmin_lo);
