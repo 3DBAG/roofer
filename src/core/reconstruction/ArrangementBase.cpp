@@ -140,6 +140,15 @@ namespace roofer::reconstruction {
       arr.remove_edge(he);
     }
   }
+
+  void arr_remove_dangling_edges(Arrangement_2& arr) {
+    std::vector<Halfedge_handle> to_remove;
+    for (auto edge : arr.edge_handles()) {
+      if (edge->face() == edge->twin()->face()) to_remove.push_back(edge);
+    }
+    for (auto edge : to_remove) arr.remove_edge(edge);
+  }
+
   void arr_remove_redundant_vertices(Arrangement_2& arr) {
     // cleanup vertices with degree==2
     std::vector<Arrangement_2::Vertex_handle> to_remove;

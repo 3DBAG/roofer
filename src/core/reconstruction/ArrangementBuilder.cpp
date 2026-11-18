@@ -385,16 +385,7 @@ namespace roofer::reconstruction {
       //   }
       // }
 
-      // remove dangling edges
-      {
-        std::vector<Arrangement_2::Halfedge_handle> to_remove;
-        for (auto he : arrangement.edge_handles()) {
-          if (he->face() == he->twin()->face()) to_remove.push_back(he);
-        }
-        for (auto he : to_remove) {
-          arrangement.remove_edge(he);
-        }
-      }
+      arr_remove_dangling_edges(arrangement);
 
       // if (snap_clean) arr_snapclean(arrangement, snap_dist,
       // snap_detect_only);

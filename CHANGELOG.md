@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve roof holes when snapping collapses a narrow gap, preventing self-intersecting roof rings (val3dity error 104).
 - Line regularisation now treats line directions near 0 and near 180 degrees as parallel, so nearly north-south lines are clustered together instead of producing duplicate parallel lines.
 - Avoid a logging shutdown crash when using val3dity by letting Roofer's loggers release their own resources without clearing spdlog's global registry.
 - Improve reconstruction determinism for repeated runs on identical inputs by fixing the region-grower seed, removing address-dependent processing orders, and correcting uninitialized reads. See #181.

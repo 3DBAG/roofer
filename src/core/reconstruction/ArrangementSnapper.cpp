@@ -1401,21 +1401,9 @@ namespace roofer::reconstruction {
           output_face->data() = *best->first;
         }
 
-        // This should not be necessary, unless there is the above code still
-        // produces dangling edges (which it shoudldnt)
-        // // remove dangling edges if any, eg holes that collapse to a single
-        // edge
-        // // after snapping
-        // {
-        //   std::vector<Arrangement_2::Halfedge_handle> to_remove;
-        //   for (auto he : arr_snap.edge_handles()) {
-        //     if (he->face() == he->twin()->face()) to_remove.push_back(he);
-        //   }
-        //   for (auto he : to_remove) {
-        //     arr_snap.remove_edge(he);
-        //   }
-        // }
-
+        // A collapsed gap can leave a bridge between two rings. Removing it
+        // keeps the face boundary from traversing the same edge twice.
+        arr_remove_dangling_edges(arr_snap);
         arr = arr_snap;
       }
 

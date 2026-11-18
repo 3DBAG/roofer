@@ -8,6 +8,7 @@
 
 #include <CGAL/Arr_walk_along_line_point_location.h>
 
+#include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementSnapper.hpp>
 #include <roofer/reconstruction/ArrangementExtruder.hpp>
 
@@ -304,6 +305,36 @@ TEST_CASE("snapper removes dangling constraint chains before repair") {
     CHECK(vertex_at(expected, vertex->point()) !=
           Arrangement_2::Vertex_handle());
   }
+}
+
+TEST_CASE("snapper preserves a courtyard when its narrow entrance collapses") {
+  // The 1 cm entrance collapses to a bridge with a ring at each end.
+  Arrangement_2 arrangement;
+  const std::array boundary = {
+      Point_2(0, 0),    Point_2(10, 0),   Point_2(10, 10), Point_2(0, 10),
+      Point_2(0, 5.01), Point_2(3, 5.01), Point_2(3, 6),   Point_2(5, 6),
+      Point_2(5, 4),    Point_2(3, 4),    Point_2(3, 5),   Point_2(0, 5)};
+  for (std::size_t i = 0; i < boundary.size(); ++i) {
+    CGAL::insert(arrangement,
+                 Segment_2(boundary[i], boundary[(i + 1) % boundary.size()]));
+  }
+  auto roof = face_at(arrangement, Point_2(8, 5));
+  roof->data().in_footprint = true;
+  roof->data().segid = 1;
+  roof->data().plane = roofer::Plane(0, 0, 1, -5);
+
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.distance_threshold = 0.02F});
+
+  auto snapped_roof = face_at(arrangement, Point_2(8, 5));
+  CHECK(snapped_roof->data().in_footprint);
+  CHECK_FALSE(face_at(arrangement, Point_2(4, 5))->data().in_footprint);
+  const auto polygon = roofer::reconstruction::arr_face_polygon(snapped_roof);
+  CHECK(polygon.outer_boundary().is_simple());
+  CHECK(polygon.outer_boundary().area() == 100);
+  REQUIRE(polygon.number_of_holes() == 1);
+  CHECK(polygon.holes_begin()->is_simple());
+  CHECK(polygon.holes_begin()->area() == -4);
 }
 
 TEST_CASE("snapper ignores non-constrained triangulation edges for clearance") {

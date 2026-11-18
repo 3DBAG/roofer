@@ -181,16 +181,7 @@ namespace roofer::reconstruction {
         arr_dissolve_step_edges(arr, cfg.step_height_threshold);
       }
 
-      // remove any dangling edges
-      {
-        std::vector<Arrangement_2::Halfedge_handle> to_remove;
-        for (auto he : arr.edge_handles()) {
-          if (he->face() == he->twin()->face()) to_remove.push_back(he);
-        }
-        for (auto he : to_remove) {
-          arr.remove_edge(he);
-        }
-      }
+      arr_remove_dangling_edges(arr);
 
       // remove all lines not inside footprint
       if (cfg.dissolve_outside_footprint) {
