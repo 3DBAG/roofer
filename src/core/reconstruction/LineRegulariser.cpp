@@ -84,22 +84,20 @@ namespace roofer::reconstruction {
         // if(max_priority==1 && (dclust_size == prio_lines.size())) continue;
         if (!cfg.merge_intersection_lines &&
             (max_priority == 2 && (prio_lines.size() > 1))) {
-          std::vector<linereg::linetype*> other_lines;
+          std::vector<linereg::linetype*> bounding_lines;
           for (auto line : dclust->lines) {
             if (line->priority != 2) {
-              other_lines.push_back(line);
+              bounding_lines.push_back(line);
             }
           }
           for (auto line : prio_lines) {
             double mean_angle = line->angle;
             auto centroid = line->midpoint;
-            // a cluster of intersection lines only has no other line to bound
-            // them: calc_segment would then read its uninitialised extremes, so
-            // the intersection line bounds itself
-            std::vector<linereg::linetype*> own_line{line};
-            segment = linereg::calc_segment(
-                centroid, mean_angle,
-                other_lines.empty() ? own_line : other_lines, cfg.extension);
+            // Include this intersection line's endpoints when bounding it.
+            bounding_lines.push_back(line);
+            segment = linereg::calc_segment(centroid, mean_angle,
+                                            bounding_lines, cfg.extension);
+            bounding_lines.pop_back();
             auto new_seg = Segment();
             new_seg[0] = {float(CGAL::to_double(segment.source().x())),
                           float(CGAL::to_double(segment.source().y())), 0};
