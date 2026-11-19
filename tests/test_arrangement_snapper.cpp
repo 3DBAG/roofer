@@ -193,6 +193,39 @@ namespace {
     return arrangement;
   }
 
+  Arrangement_2 sliver_hole_arrangement() {
+    Arrangement_2 arrangement;
+    // the hole is inserted first so that its face precedes the roof face
+    const std::array<Point_2, 3> hole_corners = {Point_2(3, 5), Point_2(7, 5),
+                                                 Point_2(7, 5.01)};
+    for (std::size_t i = 0; i < hole_corners.size(); ++i) {
+      CGAL::insert(arrangement,
+                   Segment_2(hole_corners[i],
+                             hole_corners[(i + 1) % hole_corners.size()]));
+    }
+    const std::array<Point_2, 4> corners = {Point_2(0, 0), Point_2(10, 0),
+                                            Point_2(10, 10), Point_2(0, 10)};
+    for (std::size_t i = 0; i < corners.size(); ++i) {
+      CGAL::insert(arrangement,
+                   Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+    }
+
+    auto roof = face_at(arrangement, Point_2(1, 1));
+    roof->data().in_footprint = true;
+    roof->data().segid = 1;
+    roof->data().plane = roofer::Plane(0, 0, 1, -1);
+
+    auto hole = face_at(arrangement, Point_2(6.9, 5.005));
+    hole->data().in_footprint = true;
+    hole->data().segid = 2;
+    hole->data().plane = roofer::Plane(0, 0, 1, -2);
+
+    arrangement.unbounded_face()->data().in_footprint = false;
+    arrangement.unbounded_face()->data().segid = 0;
+    arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 0);
+    return arrangement;
+  }
+
   Arrangement_2::Vertex_handle vertex_at(Arrangement_2& arrangement,
                                          const Point_2& point) {
     for (auto vertex : arrangement.vertex_handles()) {
@@ -405,6 +438,16 @@ TEST_CASE("snapper collapses unconstrained short triangulation edges") {
   CHECK_FALSE(has_vertex_near(arrangement, Point_2(5.01, 5), 1e-9));
   CHECK(has_vertex_near(arrangement, Point_2(5.005, 5), 1e-9));
   CHECK(face_at(arrangement, Point_2(5, 7.5))->data().segid == 1);
+}
+
+TEST_CASE("snapper keeps the roof label when a hole in it collapses") {
+  auto arrangement = sliver_hole_arrangement();
+  auto snapper = roofer::reconstruction::createArrangementSnapper();
+  snapper->compute(arrangement, {.distance_threshold = 0.1F,
+                                 .repair_non_manifold_vertices = false});
+
+  CHECK(face_at(arrangement, Point_2(1, 1))->data().segid == 1);
+  CHECK(face_at(arrangement, Point_2(5, 5.001))->data().segid == 1);
 }
 
 TEST_CASE("snapper preserves a manifold four-way roof junction") {

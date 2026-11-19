@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve reconstruction determinism for repeated runs on identical inputs by fixing the region-grower seed, removing address-dependent processing orders, and correcting uninitialized reads. See #181.
 - Reject out-of-raster points before converting coordinates to cell indices, preventing undefined conversions, row aliasing, and out-of-bounds access during rasterization and point-cloud thinning.
 - Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
+- Arrangement snapping no longer gives a roof face the label of a sliver hole that collapses inside it: a region whose label seeds disagree takes the label covering most of its area.
 - The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188 via #189.
 - `line-detector.snap-threshold` now acts as a distance in metres, as documented. It was compared with a squared distance, so results change for configs with a non-default `snap-threshold` or `unit-scale`.
 

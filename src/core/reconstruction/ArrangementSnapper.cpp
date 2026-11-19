@@ -266,19 +266,20 @@ namespace roofer::reconstruction {
       return nullptr;
     }
 
+    // Seeds that disagree come from a constraint with the same region on both
+    // sides, e.g. a collapsed hole, and say nothing about the region's label.
     FaceInfo* seeded_label_for_region(
         const std::vector<Face_handle>& region,
-        const std::vector<FaceLabelSeed>& label_seeds,
-        const SourceFaceIds& source_ids) {
-      std::unordered_map<FaceInfo*, double> seed_votes;
+        const std::vector<FaceLabelSeed>& label_seeds) {
+      FaceInfo* seeded = nullptr;
       for (const auto& seed : label_seeds) {
         if (seed.label == nullptr) continue;
-        if (std::find(region.begin(), region.end(), seed.face) !=
-            region.end()) {
-          seed_votes[seed.label] += 1;
-        }
+        if (std::find(region.begin(), region.end(), seed.face) == region.end())
+          continue;
+        if (seeded != nullptr && seeded != seed.label) return nullptr;
+        seeded = seed.label;
       }
-      return select_label_by_weight(seed_votes, source_ids);
+      return seeded;
     }
 
     FaceInfo* existing_label_for_region(T& tri,
@@ -309,7 +310,7 @@ namespace roofer::reconstruction {
       for (const auto& region : regions) {
         auto* label = forced_label_for_region(region, forced_face_labels);
         if (label == nullptr) {
-          label = seeded_label_for_region(region, label_seeds, source_ids);
+          label = seeded_label_for_region(region, label_seeds);
         }
         if (label == nullptr) {
           label = existing_label_for_region(tri, region, source_ids);
