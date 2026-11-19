@@ -10,6 +10,36 @@
 #include <set>
 
 namespace roofer::reconstruction::detail {
+  void VertexColumn::snap(float tolerance) {
+    if (heights.empty()) return;
+    std::sort(heights.begin(), heights.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
+    float reference = heights.front().first;
+    for (auto& [height, face] : heights) {
+      if (height - reference < tolerance) height = reference;
+      reference = height;
+    }
+  }
+
+  float VertexColumn::height(Face_const_handle face) const {
+    for (const auto& [height, incident] : heights)
+      if (incident == face) return height;
+    throw rooferException("Missing roof vertex height");
+  }
+
+  std::optional<EPECK::Point_3> profile_crossing(const Point_2& p,
+                                                 const Point_2& q,
+                                                 const HeightProfile& a,
+                                                 const HeightProfile& b) {
+    if (!((a.source < b.source && a.target > b.target) ||
+          (a.source > b.source && a.target < b.target)))
+      return std::nullopt;
+    const auto dp = a.source - b.source, dq = a.target - b.target;
+    const auto t = dp / (dp - dq);
+    const auto xy = p + (q - p) * t;
+    return EPECK::Point_3(xy.x(), xy.y(), a.source + (a.target - a.source) * t);
+  }
+
   namespace {
     using Polygon = Polygon_2;
     using Domain = Polygon_with_holes_2;
@@ -361,30 +391,50 @@ namespace roofer::reconstruction::detail {
                   const Point_2& p) {
       return r.winner < 0 ? elevations.get(p) : r.ceiling;
     }
-    // All profile crossings must be actual graph vertices, including crossings
-    // between profiles belonging to opposite sides of a roof/underpass step.
-    void split_profiles(Arrangement_2& arr, const Regions& regions,
-                        const ElevationProvider& elevations) {
+    // Establish ground and ceiling contacts before snapping incident roofs.
+    void split_lower_profiles(Arrangement_2& arr, const Regions& regions,
+                              const ElevationProvider& elevations) {
       std::vector<Point_2> points;
       for (auto e : arr.edge_handles()) {
         auto p = e->source()->point(), q = e->target()->point();
-        std::vector<std::pair<EPECK::FT, EPECK::FT>> profiles;
+        std::vector<HeightProfile> roofs, lower;
         for (auto f : {e->face(), e->twin()->face()}) {
           if (!f->data().in_footprint) continue;
           const auto& r = regions.at(f);
-          profiles.emplace_back(exact_roof_z(f, p), exact_roof_z(f, q));
-          profiles.emplace_back(lower_z(r, elevations, p),
-                                lower_z(r, elevations, q));
+          roofs.push_back({exact_roof_z(f, p), exact_roof_z(f, q)});
+          lower.push_back(
+              {lower_z(r, elevations, p), lower_z(r, elevations, q)});
         }
-        for (std::size_t i = 0; i < profiles.size(); ++i)
-          for (std::size_t j = i + 1; j < profiles.size(); ++j) {
-            EPECK::FT a = EPECK::FT(profiles[i].first) - profiles[j].first;
-            EPECK::FT b = EPECK::FT(profiles[i].second) - profiles[j].second;
-            if ((a < 0 && b > 0) || (a > 0 && b < 0))
-              points.push_back(p + (q - p) * (a / (a - b)));
-          }
+        auto split = [&](const HeightProfile& a, const HeightProfile& b) {
+          if (auto point = profile_crossing(p, q, a, b))
+            points.emplace_back(point->x(), point->y());
+        };
+        for (const auto& floor : lower)
+          for (const auto& roof : roofs) split(floor, roof);
+        if (lower.size() == 2) split(lower[0], lower[1]);
       }
       for (const auto& p : points) CGAL::insert_point(arr, p);
+    }
+
+    void split_roof_profiles(Arrangement_2& arr, const Regions& regions,
+                             VertexColumns& columns) {
+      std::vector<std::pair<Halfedge_handle, EPECK::Point_3>> crossings;
+      for (auto e : arr.edge_handles()) {
+        auto f = e->face(), n = e->twin()->face();
+        if (regions.at(f).part < 0 || regions.at(n).part < 0) continue;
+        const auto& source = columns.at(e->source());
+        const auto& target = columns.at(e->target());
+        if (auto point =
+                profile_crossing(e->source()->point(), e->target()->point(),
+                                 {source.height(f), target.height(f)},
+                                 {source.height(n), target.height(n)}))
+          crossings.emplace_back(e, *point);
+      }
+      for (const auto& [e, point] : crossings) {
+        auto v = CGAL::insert_point(arr, Point_2(point.x(), point.y()));
+        const float z = float(CGAL::to_double(point.z()));
+        columns[v].heights = {{z, e->face()}, {z, e->twin()->face()}};
+      }
     }
   }  // namespace
 
@@ -746,16 +796,16 @@ namespace roofer::reconstruction::detail {
              "non-manifold or sub-tolerance underside geometry", std::nullopt});
       }
     }
-    split_profiles(arr, regions, elevations);
+    split_lower_profiles(arr, regions, elevations);
     // Edge splitting does not introduce faces, so region handles remain valid.
 
     // Match ordinary extrusion's roof-height equalization where there is
     // ample clearance. Exact ceiling contacts stay fixed; otherwise nearly
     // equal incident roof planes can produce zero-length exported step edges.
-    std::map<std::pair<Point_2, std::size_t>, float> emitted_roof_heights;
+    VertexColumns columns;
     for (auto v : arr.vertex_handles()) {
       if (v->is_isolated()) continue;
-      std::map<std::size_t, float> heights;
+      auto& column = columns[v];
       float maximum_lower = -std::numeric_limits<float>::infinity();
       float minimum_upper = std::numeric_limits<float>::infinity();
       auto first = v->incident_halfedges(), e = first;
@@ -764,30 +814,16 @@ namespace roofer::reconstruction::detail {
         const auto& r = regions.at(f);
         if (r.part >= 0) {
           float h = roof_z(f, v->point());
-          heights[cells.at(f).roof] = h;
+          column.heights.emplace_back(h, f);
           minimum_upper = std::min(minimum_upper, h);
           maximum_lower =
               std::max(maximum_lower, lower_z(r, elevations, v->point()));
         }
       } while (++e != first);
-      if (minimum_upper > maximum_lower + cfg.snap_tolerance) {
-        std::vector<std::pair<float, std::size_t>> ordered;
-        for (const auto& [roof, height] : heights)
-          ordered.emplace_back(height, roof);
-        std::sort(ordered.begin(), ordered.end());
-        std::optional<float> reference;
-        for (const auto& [height, roof] : ordered) {
-          if (!reference || height - *reference >= cfg.snap_tolerance)
-            reference = height;
-          heights[roof] = *reference;
-        }
-      }
-      for (const auto& [roof, height] : heights)
-        emitted_roof_heights.emplace(std::make_pair(v->point(), roof), height);
+      if (minimum_upper > maximum_lower + cfg.snap_tolerance)
+        column.snap(cfg.snap_tolerance);
     }
-    auto emitted_roof_z = [&](Face_const_handle f, const Point_2& p) {
-      return emitted_roof_heights.at({p, cells.at(f).roof});
-    };
+    split_roof_profiles(arr, regions, columns);
 
     // Assign connected positive-volume components deterministic part IDs.
     int next_part = 0;
@@ -878,9 +914,7 @@ namespace roofer::reconstruction::detail {
         for (const auto& s : surfaces(boundaries))
           emit_surface(
               s, regions.at(s.exterior.front()->face()).part, 1,
-              [&](auto e) {
-                return emitted_roof_z(e->face(), e->source()->point());
-              },
+              [&](auto e) { return columns.at(e->source()).height(e->face()); },
               nullptr);
     }
     if (cfg.generate_floor) {
@@ -909,15 +943,16 @@ namespace roofer::reconstruction::detail {
       const auto& other = regions.at(n);
       if (r.part < 0) continue;
       const auto p = e->source()->point(), q = e->target()->point();
-      auto at = [&](const Point_2& point) {
-        const float lo = lower_z(r, elevations, point),
-                    hi = emitted_roof_z(f, point);
+      auto at = [&](Vertex_const_handle v) {
+        const auto& column = columns.at(v);
+        const float lo = lower_z(r, elevations, v->point()),
+                    hi = column.height(f);
         const float nl =
-            other.part < 0 ? hi : lower_z(other, elevations, point);
-        const float nh = other.part < 0 ? hi : emitted_roof_z(n, point);
+            other.part < 0 ? hi : lower_z(other, elevations, v->point());
+        const float nh = other.part < 0 ? hi : column.height(n);
         return std::array<float, 4>{lo, std::min(hi, nl), std::max(lo, nh), hi};
       };
-      auto a = at(p), b = at(q);
+      auto a = at(e->source()), b = at(e->target());
       const int label = n->data().in_footprint ? 3 : 2;
       if (a[1] > a[0] || b[1] > b[0])
         walls.add(p, q, {a[0], b[0]}, {a[1], b[1]}, r.part, label);

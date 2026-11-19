@@ -457,6 +457,69 @@ TEST_CASE("roof profile crossings remain closed after vertical conformance") {
   CHECK(volume(e->meshes.front()) == Catch::Approx(840));
 }
 
+TEST_CASE("roof steps use the same seam vertices with and without a passage") {
+  double left_height = 10;
+  float meeting_y = 0;
+  std::set<float> seam_y{0, 10};
+  SECTION("a crossing next to a snapped endpoint uses that endpoint") {
+    left_height += 0.00003;
+  }
+  SECTION("a crossing in the interior splits both roofs and the step") {
+    left_height = 12.5;
+    meeting_y = 5;
+    seam_y.insert(meeting_y);
+  }
+  for (bool passage : {false, true}) {
+    CAPTURE(passage);
+    auto arr = roof(true);
+    for (auto f : arr.face_handles())
+      if (f->data().segid == 1)
+        f->data().plane = Plane(0, 0.5, 1, -left_height);
+    std::vector<Underpass> input;
+    if (passage) input.push_back({rectangle(-1, 2, 2, 8), 4});
+    auto e = extrude(arr, input);
+    REQUIRE(std::count(e->labels.begin(), e->labels.end(), 4) == int(passage));
+    std::set<float> wall_y;
+    for (std::size_t i = 0; i < e->faces.size(); ++i) {
+      const auto label = e->labels[i];
+      if (label != 1 && label != 3) continue;
+      std::set<float> roof_y;
+      for (const auto& p : e->faces[i]) {
+        if (p[0] != 5) continue;
+        if (label == 1) roof_y.insert(p[1]);
+        if (label == 3) wall_y.insert(p[1]);
+        if (p[1] == meeting_y) CHECK(p[2] == 10);
+      }
+      if (label == 1) CHECK(roof_y == seam_y);
+    }
+    CHECK(wall_y == seam_y);
+  }
+}
+
+TEST_CASE("a roof meeting a ceiling keeps its crossing with a nearby roof") {
+  const float right_height = 4 + 1.0F / 1024;
+  auto arr = roof(true, 10, right_height);
+  for (auto f : arr.face_handles())
+    if (f->data().segid == 1) f->data().plane = Plane(0, -0.125, 1, -3.375);
+  auto e = extrude(arr, {{rectangle(-1, 2, 5, 8), 4}});
+  // At y=5 the sloped roof touches the ceiling. It meets the other roof
+  // slightly farther along the same edge.
+  const arr3f contact{5, 5, 4};
+  const arr3f crossing{5, 5 + 1.0F / 128, right_height};
+  int roofs_with_crossing = 0, ceilings_with_contact = 0;
+  for (std::size_t i = 0; i < e->faces.size(); ++i) {
+    const auto& ring = e->faces[i];
+    if (e->labels[i] == 1 &&
+        std::find(ring.begin(), ring.end(), crossing) != ring.end())
+      ++roofs_with_crossing;
+    if (e->labels[i] == 4 &&
+        std::find(ring.begin(), ring.end(), contact) != ring.end())
+      ++ceilings_with_contact;
+  }
+  CHECK(roofs_with_crossing == 2);
+  CHECK(ceilings_with_contact == 1);
+}
+
 TEST_CASE("walls at a junction include all incident roof heights") {
   auto arr = roof(true, 8, 12);
   CGAL::insert(arr, Segment_2(Point_2(0, 5), Point_2(10, 5)));

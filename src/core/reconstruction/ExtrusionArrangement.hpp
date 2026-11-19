@@ -6,6 +6,21 @@
 #include "WallAssembler.hpp"
 
 namespace roofer::reconstruction::detail {
+  struct VertexColumn {
+    std::vector<std::pair<float, Face_const_handle>> heights;
+    void snap(float tolerance);
+    float height(Face_const_handle face) const;
+  };
+  using VertexColumns = std::unordered_map<Vertex_const_handle, VertexColumn>;
+
+  struct HeightProfile {
+    EPECK::FT source, target;
+  };
+  std::optional<EPECK::Point_3> profile_crossing(const Point_2& p,
+                                                 const Point_2& q,
+                                                 const HeightProfile& a,
+                                                 const HeightProfile& b);
+
   // One XY subdivision for roofs, ground and underpass ceilings. Original roof
   // identities and input coverage survive every computational face split.
   class ExtrusionArrangement {
