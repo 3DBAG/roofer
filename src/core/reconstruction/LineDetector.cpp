@@ -39,7 +39,6 @@ namespace roofer::reconstruction {
       SegmentCollection& segments_out,
       roofer::reconstruction::LineDetectorConfig& cfg) {
     LD.dist_thres = cfg.distance_threshold * cfg.distance_threshold;
-    LD.N = cfg.neighbour_count;
     auto& c_upper = cfg.min_point_count_range.second;
     auto& c_lower = cfg.min_point_count_range.first;
     for (size_t i = c_upper; i >= c_lower; --i) {
@@ -191,8 +190,6 @@ namespace roofer::reconstruction {
       vec1i ring_order, ring_id, is_start;
       std::unordered_map<size_t, std::vector<size_t>> ring_idx;
 
-      int n = cfg.neighbour_count;
-
       size_t seg_cntr = 0, plane_id;
       for (size_t i = 0; i < edge_points.size(); ++i) {
         auto& ring = edge_points[i];
@@ -202,7 +199,7 @@ namespace roofer::reconstruction {
           cgal_pts.push_back(linedect::Point(p[0], p[1], p[2]));
         }
 
-        linedect::LineDetector LD(cgal_pts);
+        linedect::LineDetector LD(cgal_pts, cfg.neighbour_count);
         // SegmentCollection ring_edges;
         auto n_detected = detect_lines_ring(
             LD, pts_per_roofplane.at(plane_id).first, edge_segments, cfg);
@@ -226,7 +223,7 @@ namespace roofer::reconstruction {
             cgal_pts.push_back(linedect::Point(p[0], p[1], p[2]));
           }
 
-          linedect::LineDetector LD(cgal_pts);
+          linedect::LineDetector LD(cgal_pts, cfg.neighbour_count);
           // SegmentCollection ring_edges;
           auto n_detected = detect_lines_ring(
               LD, pts_per_roofplane.at(plane_id).first, edge_segments, cfg);
