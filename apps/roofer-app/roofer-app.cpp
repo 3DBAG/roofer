@@ -646,7 +646,10 @@ int main(int argc, const char* argv[]) {
       }
       initial_tiles.pop_front();
     }
-    crop_running.store(false);
+    {
+      std::scoped_lock lock{cropped_tiles_mutex};
+      crop_running.store(false);
+    }
     logger.debug("[cropper] Finished cropper");
     cropped_pending.notify_one();
   });
@@ -798,7 +801,10 @@ int main(int argc, const char* argv[]) {
           "[reconstructor] Finished reconstruction: processed {} of {} "
           "submitted buildings",
           reconstructed_buildings_cnt.load(), reconstructed_started_cnt.load());
-      reconstruction_running.store(false);
+      {
+        std::scoped_lock lock{reconstructed_buildings_mutex};
+        reconstruction_running.store(false);
+      }
       reconstructed_pending.notify_one();
     });
 
@@ -883,7 +889,10 @@ int main(int argc, const char* argv[]) {
           pending_sorted.pop_front();
         }
       }
-      sorting_running.store(false);
+      {
+        std::scoped_lock lock{sorted_tiles_mutex};
+        sorting_running.store(false);
+      }
       sorted_pending.notify_one();
       logger.debug("[sorter] Finished sorter");
     });

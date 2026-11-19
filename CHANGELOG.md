@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevent segmentation faults when arrangement snapping collapses a triangulation below two dimensions. Fixes #183 via #185.
 - The CityJSON writer's building `geographicalExtent` now covers its footprint and every part, instead of zeros for a footprint that isn't reconstructed and only the last part otherwise. Fixes #188 via #189.
 - `line-detector.snap-threshold` now acts as a distance in metres, as documented. It was compared with a squared distance, so results change for configs with a non-default `snap-threshold` or `unit-scale`.
+- The roofer app no longer hangs at the end of a run once in a while. The cropper, reconstructor and sorter set their "finished" flags without holding the mutex the next stage waits on, so the wake-up could be lost and that stage waited forever, after all output was written.
 
 ### Changed
 
