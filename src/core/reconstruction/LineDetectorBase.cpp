@@ -26,7 +26,7 @@
 namespace roofer::linedect {
   using namespace std;
 
-  LineDetector::LineDetector(vector<Point>& points) {
+  LineDetector::LineDetector(vector<Point>& points, int N) : N(N) {
     auto size = points.size();
     indexed_points.reserve(size);
     size_t i = 0;
