@@ -45,6 +45,7 @@ struct BuildingObject {
   roofer::LinearRing footprint;
   std::string id;
   std::vector<roofer::Underpass> underpasses;
+  roofer::SegmentCollection external_lines;
   float z_offset = 0;
 
   std::unordered_map<int, roofer::Mesh> multisolids_lod12;

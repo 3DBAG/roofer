@@ -154,6 +154,8 @@ struct RooferConfig {
   std::string underpass_height_attribute;
   std::vector<std::string> underpass_attributes;
   float underpass_default_height = 4.0F;
+  std::string line_source;
+  std::string line_layer;
 
   int bld_class = 6;
   int grnd_class = 2;
@@ -540,6 +542,14 @@ struct RooferConfigHandler {
         "Underpass clearance above the floor when the height attribute is "
         "omitted or its value is null, in metres.",
         cfg_.underpass_default_height, {roofer::config::greater_than(0.0F)});
+    input.add("line-source",
+              "Optional OGR source of 2D roof lines (LineString or "
+              "MultiLineString) in the footprint CRS. The lines inside a "
+              "footprint join its detected lines before the roof partition, "
+              "see reconstruction.line-regulariser.external-line-priority.",
+              cfg_.line_source);
+    input.add("line-source-layer", "Roof line layer (default: first layer).",
+              cfg_.line_layer);
     input.add("filter",
               "Specify WHERE clause in OGR SQL to select specfic features from "
               "`<polygon-source>`. See "

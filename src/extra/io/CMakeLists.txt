@@ -6,6 +6,7 @@ set(LIBRARY_SOURCES
     "StreamCropper.cpp"
     "VectorReaderOGR.cpp"
     "UnderpassReader.cpp"
+    "LineIndex.cpp"
     "VectorWriterOGR.cpp"
     SpatialReferenceSystemOGR.cpp)
 set(LIBRARY_HEADERS
@@ -16,6 +17,7 @@ set(LIBRARY_HEADERS
     "${ROOFER_INCLUDE_DIR}/roofer/io/StreamCropper.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/VectorReader.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/UnderpassReader.hpp"
+    "${ROOFER_INCLUDE_DIR}/roofer/io/LineIndex.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/VectorWriter.hpp"
     "${ROOFER_INCLUDE_DIR}/roofer/io/SpatialReferenceSystem.hpp")
 set(LIBRARY_INCLUDES

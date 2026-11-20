@@ -48,6 +48,7 @@ namespace fs = std::filesystem;
 #include <roofer/io/StreamCropper.hpp>
 #include <roofer/io/VectorReader.hpp>
 #include <roofer/io/UnderpassReader.hpp>
+#include <roofer/io/LineIndex.hpp>
 #include <roofer/io/VectorWriter.hpp>
 #include <roofer/misc/NodataCircleComputer.hpp>
 #include <roofer/misc/PointcloudRasteriser.hpp>
@@ -397,6 +398,19 @@ int main(int argc, const char* argv[]) {
     }
   }
 
+  std::optional<roofer::io::LineIndex> line_index;
+  if (!handler.cfg_.line_source.empty()) {
+    try {
+      line_index.emplace(
+          handler.cfg_.line_source, handler.cfg_.line_layer,
+          project_srs->is_valid() ? project_srs->export_wkt() : std::string{});
+      logger.info("Loaded {} roof line segments", line_index->size());
+    } catch (const std::exception& ex) {
+      logger.error("Failed to load roof lines: {}", ex.what());
+      return EXIT_FAILURE;
+    }
+  }
+
   // Multithreading setup. The -j/--jobs value is the user-facing worker budget.
   // The cropper, sorter, serializer, logger, and optional tracer use additional
   // mostly-blocking pipeline threads, so keep one job aside for that overhead
@@ -490,6 +504,9 @@ int main(int argc, const char* argv[]) {
                       building_tile.id);
         } else {
           for (auto& building : building_tile.buildings) {
+            if (line_index)
+              building.external_lines = line_index->clip(
+                  building.footprint, *building_tile.proj_helper->data_offset);
             auto input = underpass_index.find(building.id);
             if (input == underpass_index.end() || !building.h_ground) continue;
             for (const auto& feature : input->second) {
