@@ -252,7 +252,7 @@ namespace roofer {
         // size_t slant_roofplane_cnt=0;
         // size_t horiz_pt_cnt=0, total_pt_cnt=0, wall_pt_cnt=0,
         // unsegmented_pt_cnt=0, total_plane_cnt=0;
-        vec1f roof_elevations;
+        vec1f roof_elevations, small_plane_elevations;
 
         std::vector<Plane> planes;
 
@@ -308,11 +308,10 @@ namespace roofer {
               std::vector<Point> segpts;
               for (auto& i : region.inliers) {
                 segpts.push_back(boost::get<0>(pnl_points[i]));
-                if (region.inliers.size() > cfg.min_plane_points * 4 ||
-                    total_pt_cnt <= cfg.min_plane_points * 4) {
-                  roof_elevations.push_back(
-                      float(boost::get<0>(pnl_points[i]).z()));
-                }
+                (region.inliers.size() > cfg.min_plane_points * 4
+                     ? roof_elevations
+                     : small_plane_elevations)
+                    .push_back(float(boost::get<0>(pnl_points[i]).z()));
                 boost::get<2>(pnl_points[i]) = shape_id;
                 boost::get<3>(pnl_points[i]) = is_wall;
                 boost::get<9>(pnl_points[i]) = is_horizontal;
@@ -489,6 +488,7 @@ namespace roofer {
           roof_type = "slanted";
         }
 
+        if (roof_elevations.empty()) roof_elevations = small_plane_elevations;
         if (roof_elevations.size()) {
           roof_elevation_70p = compute_percentile(roof_elevations, 0.7);
           roof_elevation_50p = compute_percentile(roof_elevations, 0.5);
