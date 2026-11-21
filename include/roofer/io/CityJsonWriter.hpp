@@ -39,6 +39,7 @@ namespace roofer::io {
     std::string title;
     std::string identifier;
     std::string referenceDate;
+    bool include_geographical_extent = true;
   };
 
   struct CityJsonWriterInterface {

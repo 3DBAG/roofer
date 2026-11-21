@@ -152,6 +152,23 @@ set_tests_properties("vector-reader-skip-invalid-polygons"
 # --- Integration tests that are run on the built executables, before
 # installation.
 if(RF_BUILD_APPS)
+  find_package(Python3 QUIET COMPONENTS Interpreter)
+  if(Python3_Interpreter_FOUND)
+    add_executable(stream_completion_fixture stream_completion_fixture.cpp)
+    target_include_directories(stream_completion_fixture PRIVATE
+                               "${PROJECT_SOURCE_DIR}/apps/roofer-app")
+    target_compile_definitions(stream_completion_fixture PRIVATE RF_GIT_HASH="test")
+    target_link_libraries(stream_completion_fixture PRIVATE roofer-extra fmt::fmt)
+    add_test(NAME roofer-cityjson-stream
+             COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_cityjson_stream.py"
+                     $<TARGET_FILE:roofer> $<TARGET_FILE:stream_completion_fixture>
+                     "${DATA_DIR}/underpasses")
+    set_tests_properties(roofer-cityjson-stream PROPERTIES TIMEOUT 90
+                         ENVIRONMENT "${TEST_ENVIRONMENT}")
+  else()
+    message(STATUS "Skipping roofer-cityjson-stream (Python 3 interpreter unavailable)")
+  endif()
+
   # add_test(
   #   NAME "crop-wippolder"
   #   COMMAND $<TARGET_FILE:crop> --config "${CONFIG_DIR}/crop-wippolder.toml"

@@ -288,7 +288,7 @@ namespace roofer::reconstruction {
             (target->degree() == 2 && source->degree() > 2))
           to_remove.push_back(he);
         else
-          std::cout << "skipping and edge in duplicate snapping. Degrees are "
+          std::cerr << "skipping and edge in duplicate snapping. Degrees are "
                     << target->degree() << " and " << source->degree() << "\n";
       }
     }

@@ -411,7 +411,7 @@ namespace roofer {
         // START Regularize detected planes.
         if (cfg.regularise_parallelism || cfg.regularise_orthogonality ||
             cfg.regularise_coplanarity || cfg.regularise_axis_symmetry) {
-          std::cout << "\nN planes before: " << pts_per_roofplane.size()
+          std::cerr << "\nN planes before: " << pts_per_roofplane.size()
                     << std::endl;
           CGAL::Shape_regularization::Planes::regularize_planes(
               planes, pnl_points,
@@ -441,7 +441,7 @@ namespace roofer {
             }
             ++pt_i;
           }
-          std::cout << "plane_merge_map.size=" << plane_merge_map.size()
+          std::cerr << "plane_merge_map.size=" << plane_merge_map.size()
                     << std::endl;
           pts_per_roofplane.clear();
 
@@ -463,7 +463,7 @@ namespace roofer {
               ++plane_cnt;
             }
           }
-          std::cout << "N planes after: " << plane_cnt - 1 << std::endl;
+          std::cerr << "N planes after: " << plane_cnt - 1 << std::endl;
         }
 
         // END Regularize detected planes.

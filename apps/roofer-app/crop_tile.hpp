@@ -520,10 +520,12 @@ bool crop_tile(const roofer::TBox<double>& tile,
         force_lod11_vec[i] = true;
       }
 
-      building.jsonl_path = fmt::format(
-          fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
-          fmt::arg("pc_name", input_pointclouds[selected->index].name),
-          fmt::arg("path", cfg.output_path));
+      if (!cfg.stream_to_stdout()) {
+        building.jsonl_path = fmt::format(
+            fmt::runtime(cfg.building_jsonl_file_spec), fmt::arg("bid", bid),
+            fmt::arg("pc_name", input_pointclouds[selected->index].name),
+            fmt::arg("path", cfg.output_path));
+      }
     }
 
     // update tile attributes
