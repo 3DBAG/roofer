@@ -169,6 +169,14 @@ if(RF_BUILD_APPS)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_test(
+    NAME "roofer-crop-only-trace"
+    COMMAND $<TARGET_FILE:roofer> --crop-only --trace-interval 1
+            "${DATA_DIR}/underpasses/ahn5/points.laz"
+            "${DATA_DIR}/underpasses/bag/panden.geojson"
+            "${CMAKE_CURRENT_BINARY_DIR}/crop-only-trace-output")
+  set_tests_properties("roofer-crop-only-trace" PROPERTIES TIMEOUT 30)
+
+  add_test(
     NAME "issue-64"
     COMMAND $<TARGET_FILE:roofer> --config "${CONFIG_DIR}/issue-64.toml" --filter identificatie='NL.IMBAG.Pand.0603100000011074'
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -187,7 +195,7 @@ if(RF_BUILD_APPS)
             -P "${CMAKE_CURRENT_SOURCE_DIR}/check_underpass_output.cmake"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "roofer-wippolder;issue-64;issue-71-v2;roofer-underpasses")
+  set(tests_built "roofer-wippolder;roofer-crop-only-trace;issue-64;issue-71-v2;roofer-underpasses")
   set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
                                                  "${TEST_ENVIRONMENT}")
 
@@ -236,6 +244,10 @@ catch_discover_tests(test_line_angle_clustering)
 add_executable(test_plane_intersector test_plane_intersector.cpp)
 target_link_libraries(test_plane_intersector PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests(test_plane_intersector)
+
+add_executable(test_line_detector test_line_detector.cpp)
+target_link_libraries(test_line_detector PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_line_detector)
 
 add_executable(test_plane_detector test_plane_detector.cpp)
 target_link_libraries(test_plane_detector PRIVATE Catch2::Catch2WithMain roofer-core)

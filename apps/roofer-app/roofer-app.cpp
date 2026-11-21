@@ -522,12 +522,13 @@ int main(int argc, const char* argv[]) {
       "offers {})",
       nthreads_reconstructor_pool, requested_jobs, system_threads);
 
+  const bool run_reconstruction = !handler._crop_only;
   std::atomic crop_running{true};
   std::deque<BuildingTile> cropped_tiles;
   std::mutex cropped_tiles_mutex;
   std::condition_variable cropped_pending;
 
-  std::atomic reconstruction_running{true};
+  std::atomic reconstruction_running{run_reconstruction};
   std::deque<BuildingObjectRef> cropped_buildings;
   std::deque<BuildingObjectRef> reconstructed_buildings;
   std::mutex reconstructed_buildings_mutex;
@@ -535,12 +536,12 @@ int main(int argc, const char* argv[]) {
   std::mutex reconstructed_tiles_mutex;
   std::condition_variable reconstructed_pending;
 
-  std::atomic sorting_running{true};
+  std::atomic sorting_running{run_reconstruction};
   std::deque<BuildingTile> sorted_tiles;
   std::mutex sorted_tiles_mutex;
   std::condition_variable sorted_pending;
 
-  std::atomic serialization_running{true};
+  std::atomic serialization_running{run_reconstruction};
 
   // Counters for tracing
   std::atomic<size_t> cropped_tiles_cnt = 0;
@@ -646,12 +647,15 @@ int main(int argc, const char* argv[]) {
       }
       initial_tiles.pop_front();
     }
-    crop_running.store(false);
+    {
+      std::scoped_lock lock{cropped_tiles_mutex};
+      crop_running.store(false);
+    }
     logger.debug("[cropper] Finished cropper");
     cropped_pending.notify_one();
   });
 
-  if (!handler._crop_only) {
+  if (run_reconstruction) {
     BS::thread_pool reconstructor_pool(nthreads_reconstructor_pool);
     reconstructor_thread = std::thread([&]() {
       logger.info(
@@ -798,7 +802,10 @@ int main(int argc, const char* argv[]) {
           "[reconstructor] Finished reconstruction: processed {} of {} "
           "submitted buildings",
           reconstructed_buildings_cnt.load(), reconstructed_started_cnt.load());
-      reconstruction_running.store(false);
+      {
+        std::scoped_lock lock{reconstructed_buildings_mutex};
+        reconstruction_running.store(false);
+      }
       reconstructed_pending.notify_one();
     });
 
@@ -883,7 +890,10 @@ int main(int argc, const char* argv[]) {
           pending_sorted.pop_front();
         }
       }
-      sorting_running.store(false);
+      {
+        std::scoped_lock lock{sorted_tiles_mutex};
+        sorting_running.store(false);
+      }
       sorted_pending.notify_one();
       logger.debug("[sorter] Finished sorter");
     });
@@ -1168,13 +1178,13 @@ int main(int argc, const char* argv[]) {
     tracer_thread->join();
   }
 
-  if (!cropped_tiles.empty() && !handler._crop_only) {
+  if (run_reconstruction && !cropped_tiles.empty()) {
     logger.error(
         "all threads have been joined, but cropped_tiles is "
         "not empty, it still contains {} items",
         cropped_tiles.size());
   }
-  if (!reconstructed_buildings.empty() && !handler._crop_only) {
+  if (run_reconstruction && !reconstructed_buildings.empty()) {
     logger.error(
         "all threads have been joined, but reconstructed_buildings is "
         "not empty, it still contains {} items",
