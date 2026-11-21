@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <CGAL/Arr_walk_along_line_point_location.h>
+#include <CGAL/centroid.h>
 
 #include <roofer/reconstruction/ArrangementBase.hpp>
 #include <roofer/reconstruction/ArrangementSnapper.hpp>
@@ -193,21 +194,24 @@ namespace {
     return arrangement;
   }
 
-  Arrangement_2 sliver_hole_arrangement() {
+  Arrangement_2 sliver_hole_arrangement(
+      const std::array<Point_2, 3>& hole_corners, const Point_2& inside_hole,
+      bool roof_first) {
     Arrangement_2 arrangement;
-    // the hole is inserted first so that its face precedes the roof face
-    const std::array<Point_2, 3> hole_corners = {Point_2(3, 5), Point_2(7, 5),
-                                                 Point_2(7, 5.01)};
-    for (std::size_t i = 0; i < hole_corners.size(); ++i) {
-      CGAL::insert(arrangement,
-                   Segment_2(hole_corners[i],
-                             hole_corners[(i + 1) % hole_corners.size()]));
-    }
     const std::array<Point_2, 4> corners = {Point_2(0, 0), Point_2(10, 0),
                                             Point_2(10, 10), Point_2(0, 10)};
-    for (std::size_t i = 0; i < corners.size(); ++i) {
-      CGAL::insert(arrangement,
-                   Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+    auto insert_ring = [&](const auto& points) {
+      for (std::size_t i = 0; i < points.size(); ++i) {
+        CGAL::insert(arrangement,
+                     Segment_2(points[i], points[(i + 1) % points.size()]));
+      }
+    };
+    if (roof_first) {
+      insert_ring(corners);
+      insert_ring(hole_corners);
+    } else {
+      insert_ring(hole_corners);
+      insert_ring(corners);
     }
 
     auto roof = face_at(arrangement, Point_2(1, 1));
@@ -215,7 +219,7 @@ namespace {
     roof->data().segid = 1;
     roof->data().plane = roofer::Plane(0, 0, 1, -1);
 
-    auto hole = face_at(arrangement, Point_2(6.9, 5.005));
+    auto hole = face_at(arrangement, inside_hole);
     hole->data().in_footprint = true;
     hole->data().segid = 2;
     hole->data().plane = roofer::Plane(0, 0, 1, -2);
@@ -441,13 +445,24 @@ TEST_CASE("snapper collapses unconstrained short triangulation edges") {
 }
 
 TEST_CASE("snapper keeps the roof label when a hole in it collapses") {
-  auto arrangement = sliver_hole_arrangement();
-  auto snapper = roofer::reconstruction::createArrangementSnapper();
-  snapper->compute(arrangement, {.distance_threshold = 0.1F,
-                                 .repair_non_manifold_vertices = false});
+  const std::array central = {Point_2(3, 5), Point_2(7, 5), Point_2(7, 5.01)};
+  const std::array near_edge = {Point_2(0.2, 9.75), Point_2(7, 9.75),
+                                Point_2(7, 9.76)};
+  for (const auto& corners : {central, near_edge}) {
+    const auto inside_hole = CGAL::centroid(corners[0], corners[1], corners[2]);
+    for (bool roof_first : {false, true}) {
+      CAPTURE(inside_hole, roof_first);
+      auto arrangement =
+          sliver_hole_arrangement(corners, inside_hole, roof_first);
+      auto snapper = roofer::reconstruction::createArrangementSnapper();
+      snapper->compute(arrangement, {.distance_threshold = 0.1F,
+                                     .repair_non_manifold_vertices = false});
 
-  CHECK(face_at(arrangement, Point_2(1, 1))->data().segid == 1);
-  CHECK(face_at(arrangement, Point_2(5, 5.001))->data().segid == 1);
+      CHECK(arrangement.number_of_faces() == 2);
+      CHECK(face_at(arrangement, Point_2(1, 1))->data().segid == 1);
+      CHECK(face_at(arrangement, inside_hole)->data().segid == 1);
+    }
+  }
 }
 
 TEST_CASE("snapper preserves a manifold four-way roof junction") {

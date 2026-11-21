@@ -266,8 +266,7 @@ namespace roofer::reconstruction {
       return nullptr;
     }
 
-    // Seeds that disagree come from a constraint with the same region on both
-    // sides, e.g. a collapsed hole, and say nothing about the region's label.
+    // Both sides of a collapsed hole can seed the same region.
     FaceInfo* seeded_label_for_region(
         const std::vector<Face_handle>& region,
         const std::vector<FaceLabelSeed>& label_seeds) {
@@ -1034,7 +1033,7 @@ namespace roofer::reconstruction {
       auto* label = *face_side ? left_label : right_label;
       if (label == nullptr) return;
 
-      face->info().label = label;
+      // Keep the existing triangle labels for the area vote if seeds disagree.
       seeds.push_back({face, label});
     }
 
