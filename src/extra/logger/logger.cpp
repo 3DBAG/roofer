@@ -64,42 +64,44 @@ namespace roofer::logger {
     LogLevel level = LogLevel::default_level;
 
     std::mutex messages_mutex;  // protects the messages queue
-    std::queue<std::string> messages;
+    struct Message {
+      std::string text;
+      bool to_stderr;
+    };
+    std::queue<Message> messages;
 
-    std::thread writer_thread;
-    std::atomic<bool> active = true;
+    std::atomic<bool> stderr_only{false};
+    bool active = true;
     std::condition_variable message_pending;
+    std::thread writer_thread;
 
-    logger_impl()
-        : writer_thread([this]() {
-            while (active.load(std::memory_order_relaxed)) {
-              write_pending_message();
-            }
-          }) {}
+    logger_impl() : writer_thread([this]() { write_messages(); }) {}
 
     ~logger_impl() {
-      active.store(false, std::memory_order_relaxed);
+      {
+        std::lock_guard lock{messages_mutex};
+        active = false;
+      }
       message_pending.notify_one();
       writer_thread.join();
     }
 
-    void write_pending_message() {
+    void write_messages() {
       std::unique_lock lock{messages_mutex};
-      message_pending.wait(lock);
-
-      if (messages.empty()) return;
-
-      // Temporary queue so that we can quickly move the pending messages off
-      // main queue and release the lock on the main queue.
-      std::queue<std::string> pending_messages{std::move(messages)};
-      lock.unlock();
-
-      while (!pending_messages.empty()) {
-        std::string m{std::move(pending_messages.front())};
-        pending_messages.pop();
-
-        std::cout << m << '\n';
-        // Writing to any other stream eg. file can happen here.
+      for (;;) {
+        message_pending.wait(lock,
+                             [&] { return !messages.empty() || !active; });
+        if (messages.empty()) return;
+        std::queue<Message> pending;
+        pending.swap(messages);
+        lock.unlock();
+        while (!pending.empty()) {
+          const auto& message = pending.front();
+          auto& output = message.to_stderr ? std::cerr : std::cout;
+          output << message.text << '\n';
+          pending.pop();
+        }
+        lock.lock();
       }
     }
 
@@ -110,18 +112,22 @@ namespace roofer::logger {
 
       {
         std::scoped_lock lock{messages_mutex};
-        messages.push(stream.str());
+        messages.push({stream.str(), stderr_only.load()});
       }
       message_pending.notify_one();
     }
   };
+
+  void Logger::set_console_to_stderr(bool enabled) {
+    impl_->stderr_only = enabled;
+  }
 
   void Logger::set_level(LogLevel level) {
     assert(impl_);
     impl_->level = level;
   }
 
-  Logger &Logger::get_logger() {
+  Logger& Logger::get_logger() {
     static Logger singleton;
     if (!singleton.impl_) {
       auto impl = std::make_shared<Logger::logger_impl>();

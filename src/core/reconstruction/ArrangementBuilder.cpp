@@ -35,7 +35,7 @@ namespace roofer::reconstruction {
       auto& e_source = edge->source()->point();
       auto& e_target = edge->target()->point();
 #ifdef DEBUGGIE
-      std::cout << "#arr_cross_edge\n";
+      std::cerr << "#arr_cross_edge\n";
 #endif
       // std::cout << "\te source " << e_source << std::endl;
       // std::cout << "\te target " << e_target << std::endl;
@@ -59,7 +59,7 @@ namespace roofer::reconstruction {
           } else {
 // std::cout << "\tsplitting the edge at " << *p << std::endl;
 #ifdef DEBUGGIE
-            std::cout << "POINT(" << CGAL::to_double(p->x()) << " "
+            std::cerr << "POINT(" << CGAL::to_double(p->x()) << " "
                       << CGAL::to_double(p->y()) << ")\n";
 #endif
             auto e = arr.split_edge(edge, Segment_2(e_source, *p),
@@ -69,7 +69,7 @@ namespace roofer::reconstruction {
         }
       } else {
 #ifdef DEBUGGIE
-        std::cout << "#ERROR arr_cross_edge: no intersection!!!!!!"
+        std::cerr << "#ERROR arr_cross_edge: no intersection!!!!!!"
                   << std::endl;
 #endif
       }
@@ -100,7 +100,7 @@ namespace roofer::reconstruction {
       Arrangement_2::Face_handle face;
       CGAL::zone(arr, segment, std::back_inserter(zone_elems));
 #ifdef DEBUGGIE
-      std::cout << "#\n#Zone has " << zone_elems.size() << " elems\n";
+      std::cerr << "#\n#Zone has " << zone_elems.size() << " elems\n";
 #endif
       // std::cout << "segment vector: " << segment.to_vector() << "\n";
 
@@ -125,11 +125,11 @@ namespace roofer::reconstruction {
             auto t_x = CGAL::to_double(p_target.x());
             auto t_y = CGAL::to_double(p_target.y());
 
-            std::cout << "#insert_in_face_interior...\n";
-            std::cout << "POINT(" << s_x << " " << s_y << ")\n";
-            std::cout << "POINT(" << t_x << " " << t_y << ")\n";
-            std::cout << "LINESTRING(" << s_x << " " << s_y << ", ";
-            std::cout << t_x << " " << t_y << ")\n";
+            std::cerr << "#insert_in_face_interior...\n";
+            std::cerr << "POINT(" << s_x << " " << s_y << ")\n";
+            std::cerr << "POINT(" << t_x << " " << t_y << ")\n";
+            std::cerr << "LINESTRING(" << s_x << " " << s_y << ", ";
+            std::cerr << t_x << " " << t_y << ")\n";
 #endif
             arr.insert_in_face_interior(segment, face);
             zone_elems.pop_front();
@@ -142,12 +142,12 @@ namespace roofer::reconstruction {
               assign(vertex, zone_elems.front());
             }
 #ifdef DEBUGGIE
-            std::cout << "insert_from_right_vertex..." << std::endl;
-            std::cout << "POINT(" << CGAL::to_double(p_source.x()) << " "
+            std::cerr << "insert_from_right_vertex..." << std::endl;
+            std::cerr << "POINT(" << CGAL::to_double(p_source.x()) << " "
                       << CGAL::to_double(p_source.y()) << ")\n";
-            std::cout << "LINESTRING(" << CGAL::to_double(p_source.x()) << " "
+            std::cerr << "LINESTRING(" << CGAL::to_double(p_source.x()) << " "
                       << CGAL::to_double(p_source.y()) << ", ";
-            std::cout << CGAL::to_double(vertex->point().x()) << " "
+            std::cerr << CGAL::to_double(vertex->point().x()) << " "
                       << CGAL::to_double(vertex->point().y()) << ")\n";
 #endif
             arr.insert_from_right_vertex(Segment_2(p_source, vertex->point()),
@@ -164,14 +164,14 @@ namespace roofer::reconstruction {
             auto& v = vertices.front();
 
 #ifdef DEBUGGIE
-            std::cout << "#inserting last edge in face vertices.size()=="
+            std::cerr << "#inserting last edge in face vertices.size()=="
                       << vertices.size() << "\n";
-            std::cout << "#insert_from_left_vertex..." << std::endl;
-            std::cout << "POINT(" << CGAL::to_double(p_target.x()) << " "
+            std::cerr << "#insert_from_left_vertex..." << std::endl;
+            std::cerr << "POINT(" << CGAL::to_double(p_target.x()) << " "
                       << CGAL::to_double(p_target.y()) << ")\n";
-            std::cout << "LINESTRING(" << CGAL::to_double(vertex->point().x())
+            std::cerr << "LINESTRING(" << CGAL::to_double(vertex->point().x())
                       << " " << CGAL::to_double(vertex->point().y()) << ", ";
-            std::cout << CGAL::to_double(p_target.x()) << " "
+            std::cerr << CGAL::to_double(p_target.x()) << " "
                       << CGAL::to_double(p_target.y()) << ")\n";
 #endif
             arr.insert_from_left_vertex(Segment_2(v->point(), p_target), v);
@@ -180,7 +180,7 @@ namespace roofer::reconstruction {
             // compute intersection and split edge
           } else if (assign(edge, zone_elems.front())) {
 #ifdef DEBUGGIE
-            std::cout << "#crossing edge...\n";
+            std::cerr << "#crossing edge...\n";
 #endif
             // std::cout << "edge source: " << edge->source()->point() << "\n";
             // std::cout << "edge target: " << edge->target()->point() << "\n";
@@ -191,19 +191,19 @@ namespace roofer::reconstruction {
             // vertex is easiest
           } else if (assign(vertex, zone_elems.front())) {
 #ifdef DEBUGGIE
-            std::cout << "#crossing vertex...\n";
+            std::cerr << "#crossing vertex...\n";
 #endif
             vertices.push_back(vertex);
           } else {
 #ifdef DEBUGGIE
-            std::cout << "#ERROR unknown element in zone!!!\n";
+            std::cerr << "#ERROR unknown element in zone!!!\n";
 #endif
           }
 
           zone_elems.pop_front();
 
 #ifdef DEBUGGIE
-          std::cout << "#checking..vertices.size()==" << vertices.size()
+          std::cerr << "#checking..vertices.size()==" << vertices.size()
                     << "\n";
 #endif
           if (vertices.size() == 2) {
@@ -223,22 +223,22 @@ namespace roofer::reconstruction {
             // common_face, dist_threshold);
             if (s == t) {
 #ifdef DEBUGGIE
-              std::cout << "#same vertex" << std::endl;
+              std::cerr << "#same vertex" << std::endl;
 #endif
             } else if (arr_edge_exists(arr, s, t)) {
 #ifdef DEBUGGIE
-              std::cout << "#edge already exists" << std::endl;
+              std::cerr << "#edge already exists" << std::endl;
 #endif
             } else {
 #ifdef DEBUGGIE
-              std::cout << "#insert_at_vertices..." << std::endl;
+              std::cerr << "#insert_at_vertices..." << std::endl;
 #endif
 // std::cout << "s degree=" << s->degree() << ", t degree=" << t->degree() <<
 // "\n" << std::endl;
 #ifdef DEBUGGIE
-              std::cout << "LINESTRING(" << CGAL::to_double(s->point().x())
+              std::cerr << "LINESTRING(" << CGAL::to_double(s->point().x())
                         << " " << CGAL::to_double(s->point().y()) << ", ";
-              std::cout << CGAL::to_double(t->point().x()) << " "
+              std::cerr << CGAL::to_double(t->point().x()) << " "
                         << CGAL::to_double(t->point().y()) << ")\n";
 #endif
 
@@ -270,12 +270,12 @@ namespace roofer::reconstruction {
       auto lv = segment.to_vector();
       lv = lv / CGAL::sqrt(CGAL::to_double(lv.squared_length()));
 #ifdef DEBUGGIE
-      std::cout << "LINESTRING("
+      std::cerr << "LINESTRING("
                 << CGAL::to_double((segment.source() - lv * extension).x())
                 << " "
                 << CGAL::to_double((segment.source() - lv * extension).y())
                 << ", ";
-      std::cout << CGAL::to_double((segment.target() + lv * extension).x())
+      std::cerr << CGAL::to_double((segment.target() + lv * extension).x())
                 << " "
                 << CGAL::to_double((segment.target() + lv * extension).y())
                 << ")\n";
@@ -294,7 +294,7 @@ namespace roofer::reconstruction {
 
 // prepare footprint segments
 #ifdef DEBUGGIE
-      std::cout << std::fixed << std::setprecision(4);
+      std::cerr << std::fixed << std::setprecision(4);
 #endif
       Polygon_with_holes_2 footprint;
 

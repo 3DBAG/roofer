@@ -30,6 +30,7 @@ roofer pointcloud.laz footprints.gpkg output-dir
 roofer --lod12 --lod22 pointcloud.laz footprints.gpkg output-dir
 roofer --filter 'identificatie=1980100000265200' pointcloud.laz footprints.gpkg output-dir
 roofer -c config.toml output-dir
+roofer --tiling pointcloud.laz footprints.gpkg - | cjseq collect > buildings.city.json
 ```
 
 ### Positional arguments
@@ -43,14 +44,14 @@ Path to roofprint polygon source. Can be an OGR supported file (eg. GPKG) or dat
 ```
 
 ```{option} <output-directory>
-Output directory. The building models will be written to a CityJSONSequence file in this directory.
+Supply a directory for file output, or `-` to stream CityJSONSeq to stdout. The same value can be set with `output-directory = "-"` under `[output]` in TOML.
 ```
 
 ```{include} cli-options.md
 ```
 
 ## Output format
-The output of the {program}`roofer` CLI application are [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) files. These are JSON Lines files that contain a sequence of CityJSON features. Each feature represents one building, with an optional per-tile `TINRelief` terrain feature when `--terrain` is enabled.
+Roofer writes [CityJSONSequence](https://www.cityjson.org/cityjsonseq/) as newline-delimited JSON. Each feature represents one building, with an optional per-tile `TINRelief` terrain feature when `--terrain` is enabled.
 
 > [!WARNING]
 > Terrain output is experimental. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.
@@ -59,6 +60,24 @@ For terrain output, `--terrain-nodata-mode` controls whether only complete grid 
 
 > [!TIP]
 >  In the near future we expect to introduce a converter program to convert the CityJSONSequence files to other formats like GPKG, OBJ and others.
+
+### Streaming to stdout
+
+With `-` as the destination, Roofer writes one CityJSON header and flushes each
+building feature as its reconstruction finishes. A reader can process the first
+building while its neighbors are still running. Console diagnostics go to stderr.
+For example, this validates the features as they arrive.
+
+```shell
+roofer -c config.toml - | cjval
+```
+
+With `--tiling`, buildings from different tiles can arrive in any order. Every
+tile uses the scale and translation in the single stream header. By default the
+translation is the center of the processing region in XY and zero in Z. Use
+`--cj-translate` to supply an explicit origin. An empty selection produces just the
+header.
+
 
 ### Output attributes
 ```{include} output-attributes.md

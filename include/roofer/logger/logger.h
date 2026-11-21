@@ -80,6 +80,9 @@ namespace roofer::logger {
      */
     void set_level(LogLevel level);
 
+    /** Route all console diagnostics to stderr, reserving stdout for data. */
+    void set_console_to_stderr(bool enabled);
+
     /** @brief Returns a reference to the single logger instance. */
     static Logger &get_logger();
 

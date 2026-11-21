@@ -58,7 +58,7 @@ namespace roofer::reconstruction {
                           vec1i& labels, float probability, int min_points,
                           float epsilon, float cluster_epsilon,
                           float normal_angle_threshold) override {
-      std::cout << "Efficient RANSAC" << std::endl;
+      std::cerr << "Efficient RANSAC" << std::endl;
 
       // Points with normals.
       Pwn_vector points;
@@ -105,7 +105,7 @@ namespace roofer::reconstruction {
       // Detect shapes.
       ransac.detect(parameters);
       // Print number of detected shapes.
-      std::cout << ransac.shapes().end() - ransac.shapes().begin()
+      std::cerr << ransac.shapes().end() - ransac.shapes().begin()
                 << " shapes detected." << std::endl;
 
       labels.resize(point_collection.size());

@@ -112,8 +112,9 @@ void print_params_as_toml(
       std::cout << "[crop]\n";
     } else if (group_name == "Output") {
       std::cout << "[output]\n";
-      std::cout << "## Output directory. The building models will be written "
-                   "to a CityJSONSequence file in this directory.\n";
+      std::cout
+          << "## Output directory. The building models will be written "
+             "to this directory. Use - to stream CityJSONSeq to stdout.\n";
       std::cout << "# output-directory = \"\"\n";
     }
     for (const auto& param : param_list) {

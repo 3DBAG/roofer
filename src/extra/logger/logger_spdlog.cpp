@@ -32,6 +32,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <atomic>
 #include <cassert>
 
 namespace roofer::logger {
@@ -56,45 +57,32 @@ namespace roofer::logger {
   }
 
   struct Logger::logger_impl {
+    std::atomic<bool> stderr_only{false};
     LogLevel level = LogLevel::default_level;
 
     std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> stdout_sink =
         std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     std::shared_ptr<spdlog::sinks::stderr_color_sink_mt> stderr_sink =
         std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-    std::shared_ptr<spdlog::sinks::basic_file_sink<std::mutex>> file_sink =
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile_path_,
-                                                            true);
-
-    spdlog::logger logger_stdout =
-        spdlog::logger("stdout", {stdout_sink, file_sink});
-    spdlog::logger logger_stderr =
-        spdlog::logger("stderr", {stderr_sink, file_sink});
+    std::shared_ptr<spdlog::sinks::basic_file_sink_mt> file_sink;
+    spdlog::logger logger_stdout{"stdout", stdout_sink};
+    spdlog::logger logger_stderr{"stderr", stderr_sink};
 
     logger_impl() {
-      auto spdlog_level = cast_level(level);
-      stdout_sink->set_level(spdlog_level);
-      stderr_sink->set_level(spdlog_level);
-      file_sink->set_level(spdlog_level);
-      // Set up json logging in the logfile.
-      file_sink->set_pattern("{\n \"log\": [");
-      // logger_stdout.log(spdlog_level, "");
-      std::string jsonpattern = {
-          R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"},)"};
-      file_sink->set_pattern(jsonpattern);
-    }
-
-    ~logger_impl() {
-      // Finalize the json logfile.
-      std::string jsonlastlogpattern = {
-          R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"})"};
-      file_sink->set_pattern(jsonlastlogpattern);
-      // logger_stdout.log(cast_level(level), "Finished.");
-      file_sink->set_pattern("]\n}");
-      // logger_stdout.log(cast_level(level), "");
-      // Our loggers are owned directly by this object, not by the registry.
-      // A library can initialize the global registry later than this logger,
-      // in which case it has already been destroyed when we reach this point.
+      // Stdout and its pipe can be writable even in a read-only directory.
+      try {
+        file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+            logfile_path_, true);
+      } catch (const spdlog::spdlog_ex& e) {
+        logger_stderr.warn("File logging unavailable: {}", e.what());
+      }
+      if (file_sink) {
+        file_sink->set_pattern(
+            R"({"time": "%Y-%m-%dT%H:%M:%S.%f%z", "name": "%n", "level": "%^%l%$", "process": %P, "thread": %t, "message": "%v"},)");
+        logger_stdout.sinks().push_back(file_sink);
+        logger_stderr.sinks().push_back(file_sink);
+      }
+      set_level(level);
     }
 
     void set_level(LogLevel new_level) {
@@ -104,18 +92,22 @@ namespace roofer::logger {
       auto spdlog_level = cast_level(new_level);
       stdout_sink->set_level(spdlog_level);
       stderr_sink->set_level(spdlog_level);
-      file_sink->set_level(spdlog_level);
+      if (file_sink) file_sink->set_level(spdlog_level);
       logger_stdout.set_level(spdlog_level);
       logger_stderr.set_level(spdlog_level);
     }
   };
+
+  void Logger::set_console_to_stderr(bool enabled) {
+    impl_->stderr_only = enabled;
+  }
 
   void Logger::set_level(LogLevel level) {
     assert(impl_);
     impl_->set_level(level);
   }
 
-  Logger &Logger::get_logger() {
+  Logger& Logger::get_logger() {
     static Logger singleton;
     if (!singleton.impl_) {
       auto impl = std::make_shared<Logger::logger_impl>();
@@ -126,28 +118,11 @@ namespace roofer::logger {
 
   void Logger::log(LogLevel level, std::string_view message) {
     assert(impl_);
-    switch (level) {
-      case LogLevel::off:
-        return;
-      case LogLevel::trace:
-        impl_->logger_stdout.trace(message);
-        return;
-      case LogLevel::debug:
-        impl_->logger_stdout.debug(message);
-        return;
-      case LogLevel::info:
-        impl_->logger_stdout.info(message);
-        return;
-      case LogLevel::warning:
-        impl_->logger_stdout.warn(message);
-        return;
-      case LogLevel::error:
-        impl_->logger_stderr.error(message);
-        return;
-      case LogLevel::critical:
-        impl_->logger_stderr.critical(message);
-        return;
-    }
+    if (level == LogLevel::off) return;
+    auto& logger = impl_->stderr_only || level >= LogLevel::error
+                       ? impl_->logger_stderr
+                       : impl_->logger_stdout;
+    logger.log(cast_level(level), message);
   }
 
 }  // namespace roofer::logger

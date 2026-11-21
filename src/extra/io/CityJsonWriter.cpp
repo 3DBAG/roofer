@@ -20,6 +20,7 @@
 // Ravi Peters
 // Balazs Dukai
 
+#include <cstdint>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -154,17 +155,31 @@ namespace roofer::io {
 
     void write_to_stream(const nlohmann::json& outputJSON,
                          std::ostream& output_stream, bool prettyPrint_) {
-      output_stream << std::fixed << std::setprecision(2);
-      try {
-        if (prettyPrint_)
-          output_stream << outputJSON.dump(2);
-        else
-          output_stream << outputJSON;
+      // Build the whole record before exposing any bytes to a line reader.
+      output_stream << outputJSON.dump(prettyPrint_ ? 2 : -1) << std::endl;
+      if (!output_stream)
+        throw rooferException("Failed to write CityJSON output");
+    }
 
-        output_stream << std::endl;
-      } catch (const std::exception& e) {
-        throw(rooferException(e.what()));
+    std::vector<std::array<std::int64_t, 3>> quantize_vertices(
+        const std::vector<arr3d>& vertices) const {
+      const arr3d translate{translate_x_, translate_y_, translate_z_};
+      const arr3d scale{scale_x_, scale_y_, scale_z_};
+      // The positive endpoint is exclusive (INT64_MAX rounds up as a double).
+      constexpr double limit = 0x1p63;
+      std::vector<std::array<std::int64_t, 3>> result;
+      result.reserve(vertices.size());
+      for (const auto& vertex : vertices) {
+        auto& point = result.emplace_back();
+        for (size_t axis = 0; axis < 3; ++axis) {
+          const double value = (vertex[axis] - translate[axis]) / scale[axis];
+          if (!(value >= -limit && value < limit))
+            throw rooferException(
+                "CityJSON vertex is outside the 64-bit integer range");
+          point[axis] = static_cast<std::int64_t>(value);
+        }
       }
+      return result;
     }
 
     // Computes the geographicalExtent array from a geoflow::Box and the
@@ -376,7 +391,8 @@ namespace roofer::io {
           {"translate", {translate_x_, translate_y_, translate_z_}}};
 
       auto metadata = nlohmann::json::object();
-      metadata["geographicalExtent"] = compute_geographical_extent(extent);
+      if (props.include_geographical_extent)
+        metadata["geographicalExtent"] = compute_geographical_extent(extent);
 
       if (props.identifier.size()) metadata["identifier"] = props.identifier;
 
@@ -455,13 +471,7 @@ namespace roofer::io {
         }
       };
 
-      std::vector<std::array<int, 3>> vertices_int;
-      for (auto& vertex : vertex_vec) {
-        vertices_int.push_back({int((vertex[0] - translate_x_) / scale_x_),
-                                int((vertex[1] - translate_y_) / scale_y_),
-                                int((vertex[2] - translate_z_) / scale_z_)});
-      }
-      outputJSON["vertices"] = vertices_int;
+      outputJSON["vertices"] = quantize_vertices(vertex_vec);
 
       write_to_stream(outputJSON, output_stream, prettyPrint_);
     }
@@ -503,14 +513,7 @@ namespace roofer::io {
       terrain["geometry"] = std::move(geometries);
       outputJSON["CityObjects"][id] = terrain;
 
-      std::vector<std::array<int, 3>> vertices_int;
-      vertices_int.reserve(vertex_vec.size());
-      for (const auto& vertex : vertex_vec) {
-        vertices_int.push_back({int((vertex[0] - translate_x_) / scale_x_),
-                                int((vertex[1] - translate_y_) / scale_y_),
-                                int((vertex[2] - translate_z_) / scale_z_)});
-      }
-      outputJSON["vertices"] = vertices_int;
+      outputJSON["vertices"] = quantize_vertices(vertex_vec);
       write_to_stream(outputJSON, output_stream, prettyPrint_);
     }
   };

@@ -306,7 +306,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
 
 #ifdef RF_USE_RERUN
   // const auto& rec = rerun::RecordingStream::current();
-  const auto rec = rerun::RecordingStream(building.jsonl_path.string());
+  const auto rec = rerun::RecordingStream(building.output_label());
   // rec.save(building.jsonl_path.string() + ".rrd");
   if (cfg->use_rerun) {
     rec.spawn().exit_on_failure();
@@ -395,7 +395,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
       // the building outright.
       extrude_lod11(building, building.h_pc_roof_70p, cfg);
       logger.warning("[reconstructor] {}, LoD1.1 fallback: {}",
-                     building.jsonl_path.string(), e.what());
+                     building.output_label(), e.what());
       return;
     }
     // #ifdef RF_USE_RERUN
@@ -577,7 +577,7 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     timings["extrude"] = std::chrono::high_resolution_clock::now() - t0;
 
     std::string timings_str =
-        fmt::format("[reconstructor t] {} (", building.jsonl_path.string());
+        fmt::format("[reconstructor t] {} (", building.output_label());
     for (const auto& [key, value] : timings) {
       auto ms = static_cast<int>(
           std::chrono::duration_cast<std::chrono::milliseconds>(value).count());

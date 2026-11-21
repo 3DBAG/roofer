@@ -207,6 +207,8 @@ struct RooferConfig {
   std::string metadata_json_file_spec = "{path}/metadata.json";
   std::string output_path;
 
+  bool stream_to_stdout() const { return output_path == "-"; }
+
   // reconstruct: defaults and low-level options are owned by the shared
   // descriptor-backed aggregate.
   roofer::reconstruction::ReconstructionConfig reconstruction;
@@ -955,7 +957,17 @@ struct RooferConfigHandler {
     //   throw std::runtime_error(std::format(
     //       "Footprint source does not exist: {}.", cfg_.source_footprints));
     // }
-    if (auto error_msg = check::DirIsWritable(cfg_.output_path)) {
+    if (cfg_.stream_to_stdout()) {
+      if (std::ranges::find(cfg_.cj_scale, 0.) != cfg_.cj_scale.end()) {
+        throw std::runtime_error("Each cj-scale component must be nonzero.");
+      }
+      if (_crop_only || cfg_.write_crop_outputs || cfg_.output_all ||
+          cfg_.write_rasters || cfg_.write_index || cfg_.split_cjseq) {
+        throw std::runtime_error(
+            "Crop-only, crop outputs, index and split-cjseq require an output "
+            "directory.");
+      }
+    } else if (auto error_msg = check::DirIsWritable(cfg_.output_path)) {
       throw std::runtime_error(
           std::format("Can't write to output directory: {}", *error_msg));
     }
@@ -1089,7 +1101,8 @@ struct RooferConfigHandler {
                    "an OGR supported file (eg. GPKG) or database connection "
                    "string.\n";
     }
-    std::cout << "  <output-directory>           Output directory.\n";
+    std::cout << "  <output-directory>           Directory, or - to stream "
+                 "CityJSONSeq to stdout.\n";
   }
 
   void print_help(std::string program_name) {
@@ -1105,6 +1118,7 @@ struct RooferConfigHandler {
     std::cout << "         pointcloud.laz roofprints.gpkg output-dir\n";
     std::cout << "  " << program_name;
     std::cout << " -c config.toml output-dir\n";
+    std::cout << "  " << program_name << " -c config.toml - | cjseq collect\n";
     std::cout << "\n";
     print_positional_arguments(true);
     std::cout << "\n";
@@ -1279,7 +1293,7 @@ struct RooferConfigHandler {
         } else {
           ++it;
         }
-      } else if (arg.starts_with("-")) {
+      } else if (arg != "-" && arg.starts_with("-")) {
         argname = arg.substr(1);
         if (auto p = app_param_index_.find(argname);
             p != app_param_index_.end()) {
@@ -1354,7 +1368,7 @@ struct RooferConfigHandler {
           } else {
             throw std::runtime_error(std::format("Unknown argument: {}.", arg));
           }
-        } else if (arg.starts_with("-")) {
+        } else if (arg != "-" && arg.starts_with("-")) {
           auto argname = arg.substr(1);
           if (auto p = param_index_.find(argname); p != param_index_.end()) {
             it = c.args.erase(it);
@@ -1371,7 +1385,12 @@ struct RooferConfigHandler {
       }
     }
 
-    // now c.arg shoulg only contain positional arguments
+    const auto dash = std::ranges::find(c.args, "-");
+    if (dash != c.args.end() && std::next(dash) != c.args.end()) {
+      throw std::runtime_error(
+          "'-' is supported only as the output destination.");
+    }
+    // Only positional arguments remain.
     // we assume either only the output path given on CLI or also fp and pc
     // inputs
     bool fp_set = cfg_.source_footprints.size() > 0;

@@ -227,6 +227,8 @@ namespace roofer::io {
               "--filter string. GDAL error: " +
               std::string(gdal_error));
         }
+        if (!extent.IsInit())
+          extent.MinX = extent.MaxX = extent.MinY = extent.MaxY = 0;
         layer_extent = {extent.MinX, extent.MinY, 0,
                         extent.MaxX, extent.MaxY, 0};
       } else {
