@@ -34,7 +34,7 @@ namespace roofer::reconstruction {
     public_)                                                                 \
   X(PointCountRange, min_point_count_range, (PointCountRange{5, 10}),        \
     "Minimum point-count range.", config::ordered_range(1), public_)         \
-  X(int, neighbour_count, 10, "Neighbours used for line detection.",         \
+  X(int, neighbour_count, 5, "Neighbours used for line detection.",          \
     config::greater_than(0), public_)                                        \
   X(float, snap_threshold, 1.0F,                                             \
     "Line endpoint snapping distance, in metres.", config::at_least(0.0F),   \

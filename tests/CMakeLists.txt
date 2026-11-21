@@ -236,3 +236,7 @@ catch_discover_tests(test_line_angle_clustering)
 add_executable(test_plane_intersector test_plane_intersector.cpp)
 target_link_libraries(test_plane_intersector PRIVATE Catch2::Catch2WithMain roofer-core)
 catch_discover_tests(test_plane_intersector)
+
+add_executable(test_line_detector test_line_detector.cpp)
+target_link_libraries(test_line_detector PRIVATE Catch2::Catch2WithMain roofer-core)
+catch_discover_tests(test_line_detector)

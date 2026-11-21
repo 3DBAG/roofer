@@ -70,7 +70,7 @@ namespace roofer::linedect {
     double dist_thres = 0.2 * 0.2;
     size_t min_segment_count = 4;
 
-    LineDetector(vector<Point> &points);
+    LineDetector(vector<Point> &points, int N);
     LineDetector(vector<Point> &points, vector<vector<size_t>> neighbours);
     vector<size_t> get_point_indices(size_t shape_id);
     roofer::Segment project(const size_t i1, const size_t i2);
