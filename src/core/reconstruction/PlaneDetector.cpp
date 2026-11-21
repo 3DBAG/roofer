@@ -488,7 +488,9 @@ namespace roofer {
           roof_type = "slanted";
         }
 
-        if (roof_elevations.empty()) roof_elevations = small_plane_elevations;
+        if (roof_elevations.empty()) {
+          roof_elevations = std::move(small_plane_elevations);
+        }
         if (roof_elevations.size()) {
           roof_elevation_70p = compute_percentile(roof_elevations, 0.7);
           roof_elevation_50p = compute_percentile(roof_elevations, 0.5);

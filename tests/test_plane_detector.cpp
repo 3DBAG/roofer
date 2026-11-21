@@ -20,9 +20,8 @@ TEST_CASE("roof elevations come from small planes when there are no large ones",
   auto detector = createPlaneDetector();
   detector->detect(points);
   REQUIRE(detector->roof_type == "slanted");
-  for (float z : {detector->roof_elevation_min, detector->roof_elevation_50p,
-                  detector->roof_elevation_70p, detector->roof_elevation_max}) {
-    CHECK(z >= 2);
-    CHECK(z <= 4);
-  }
+  CHECK(detector->roof_elevation_min == 2.25f);
+  CHECK(detector->roof_elevation_50p == 2.75f);
+  CHECK(detector->roof_elevation_70p == 3.25f);
+  CHECK(detector->roof_elevation_max == 3.75f);
 }
