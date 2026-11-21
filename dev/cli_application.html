@@ -284,6 +284,7 @@ Usage:
 roofer<span class="w"> </span>--lod12<span class="w"> </span>--lod22<span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>output-dir
 roofer<span class="w"> </span>--filter<span class="w"> </span><span class="s1">&#39;identificatie=1980100000265200&#39;</span><span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>output-dir
 roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="w"> </span>output-dir
+roofer<span class="w"> </span>--tiling<span class="w"> </span>pointcloud.laz<span class="w"> </span>footprints.gpkg<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>cjseq<span class="w"> </span>collect<span class="w"> </span>&gt;<span class="w"> </span>buildings.city.json
 </pre></div>
 </div>
 </section>
@@ -304,7 +305,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-arg-output-directory">
 <span class="sig-name descname"><span class="pre">&lt;output-directory&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-arg-output-directory" title="Link to this definition">¶</a></dt>
-<dd><p>Output directory. The building models will be written to a CityJSONSequence file in this directory.</p>
+<dd><p>Supply a directory for file output, or <code class="docutils literal notranslate"><span class="pre">-</span></code> to stream CityJSONSeq to stdout. The same value can be set with <code class="docutils literal notranslate"><span class="pre">output-directory</span> <span class="pre">=</span> <span class="pre">&quot;-&quot;</span></code> under <code class="docutils literal notranslate"><span class="pre">[output]</span></code> in TOML.</p>
 </dd></dl>
 
 </section>
@@ -710,7 +711,7 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 </section>
 <section id="output-format">
 <h2>Output format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h2>
-<p>The output of the <strong class="program">roofer</strong> CLI application are <a class="reference external" href="https://www.cityjson.org/cityjsonseq/">CityJSONSequence</a> files. These are JSON Lines files that contain a sequence of CityJSON features. Each feature represents one building, with an optional per-tile <code class="docutils literal notranslate"><span class="pre">TINRelief</span></code> terrain feature when <code class="docutils literal notranslate"><span class="pre">--terrain</span></code> is enabled.</p>
+<p>Roofer writes <a class="reference external" href="https://www.cityjson.org/cityjsonseq/">CityJSONSequence</a> as newline-delimited JSON. Each feature represents one building, with an optional per-tile <code class="docutils literal notranslate"><span class="pre">TINRelief</span></code> terrain feature when <code class="docutils literal notranslate"><span class="pre">--terrain</span></code> is enabled.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Terrain output is experimental. Its geometry, attributes, file naming, and configuration may change, and the feature may be removed in a future release.</p>
@@ -720,6 +721,21 @@ roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="
 <p class="admonition-title">Tip</p>
 <p>In the near future we expect to introduce a converter program to convert the CityJSONSequence files to other formats like GPKG, OBJ and others.</p>
 </div>
+<section id="streaming-to-stdout">
+<h3>Streaming to stdout<a class="headerlink" href="#streaming-to-stdout" title="Link to this heading">¶</a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">-</span></code> as the destination, Roofer writes one CityJSON header and flushes each
+building feature as its reconstruction finishes. A reader can process the first
+building while its neighbors are still running. Console diagnostics go to stderr.
+For example, this validates the features as they arrive.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>roofer<span class="w"> </span>-c<span class="w"> </span>config.toml<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>cjval
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">--tiling</span></code>, buildings from different tiles can arrive in any order. Every
+tile uses the scale and translation in the single stream header. By default the
+translation is the center of the processing region in XY and zero in Z. Use
+<code class="docutils literal notranslate"><span class="pre">--cj-translate</span></code> to supply an explicit origin. An empty selection produces just the
+header.</p>
+</section>
 <section id="output-attributes">
 <h3>Output attributes<a class="headerlink" href="#output-attributes" title="Link to this heading">¶</a></h3>
 <dl class="std option">
@@ -1205,7 +1221,7 @@ including ceilings at the same height.</p>
 
 <span class="c1">### Output options</span>
 <span class="k">[output]</span>
-<span class="c1">## Output directory. The building models will be written to a CityJSONSequence file in this directory.</span>
+<span class="c1">## Output directory. The building models will be written to this directory. Use - to stream CityJSONSeq to stdout.</span>
 <span class="c1"># output-directory = &quot;&quot;</span>
 <span class="c1">## Enable or disable output tiling.</span>
 <span class="n">tiling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
@@ -1373,6 +1389,7 @@ including ceilings at the same height.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#output-format">Output format</a><ul>
+<li><a class="reference internal" href="#streaming-to-stdout">Streaming to stdout</a></li>
 <li><a class="reference internal" href="#output-attributes">Output attributes</a></li>
 <li><a class="reference internal" href="#underpass-attributes">Underpass attributes</a></li>
 </ul>
