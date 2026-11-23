@@ -1,0 +1,16 @@
+--- a/include/CGAL/Surface_mesh_segmentation/internal/auxiliary/graph.h
++++ b/include/CGAL/Surface_mesh_segmentation/internal/auxiliary/graph.h
+@@ -722,8 +722,12 @@
+     delete[] arc_rev_block_first -> start;
+     arc_rev_block_first = next;
+   }
++
++  flow = 0;
+ }
+-
++
++#define ROOFER_CGAL_MAXFLOW_CLEAR_RESETS_FLOW 1
++
+ inline Graph::~Graph()
+ {
+   clear();

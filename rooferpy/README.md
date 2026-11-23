@@ -7,6 +7,7 @@ With Conan:
 cd roofer-dev
 conan profile detect --force
 conan export conan/recipes/proj --version=9.8.1
+conan export conan/recipes/cgal --version=6.1.1 --user=roofer --channel=stable
 conan install . \
   --output-folder=build_python \
   --build=missing \

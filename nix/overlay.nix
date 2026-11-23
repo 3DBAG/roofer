@@ -2,11 +2,7 @@
 final: prev: {
   cgal = prev.cgal.overrideAttrs (old: {
     # https://github.com/CGAL/cgal/issues/9898
-    postPatch = (old.postPatch or "") + ''
-      substituteInPlace include/CGAL/Surface_mesh_segmentation/internal/auxiliary/graph.h \
-        --replace-fail $'    arc_rev_block_first = next;\n  }\n}' \
-                       $'    arc_rev_block_first = next;\n  }\n\n  flow = 0;\n}\n\n#define ROOFER_CGAL_MAXFLOW_CLEAR_RESETS_FLOW 1'
-    '';
+    patches = (old.patches or [ ]) ++ [ ../conan/recipes/cgal/patches/reset-maxflow-on-clear.patch ];
   });
 
   libtiff = (prev.libtiff.override { withLerc = false; }).overrideAttrs (old: {

@@ -24,7 +24,7 @@ class RooferRecipe(ConanFile):
 
     def requirements(self):
         # Core deps (always required)
-        self.requires("cgal/6.1.1")
+        self.requires("cgal/6.1.1@roofer/stable")
         self.requires("eigen/3.4.0")
         self.requires("fmt/11.1.3")
 

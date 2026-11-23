@@ -318,7 +318,7 @@ namespace roofer::reconstruction {
 
       // boost::adjacency_list<> g(N);
 
-      // CGAL #9898 affects MaxFlow across expansion moves. The Nix patch
+      // CGAL #9898 affects MaxFlow across expansion moves. The package patch
       // advertises that Graph::clear() resets the flow.
 #ifdef ROOFER_CGAL_MAXFLOW_CLEAR_RESETS_FLOW
       constexpr int default_graph_cut_impl = 2;

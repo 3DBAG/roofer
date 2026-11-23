@@ -1,0 +1,10 @@
+sources:
+  "6.1.1":
+    sha256: 37e9fffe48a83209b070e1914c6aa0a7bae8076749712ab78b53245e176e0e0e
+    url: https://github.com/CGAL/cgal/releases/download/v6.1.1/CGAL-6.1.1-library.tar.xz
+patches:
+  "6.1.1":
+    - patch_file: patches/reset-maxflow-on-clear.patch
+      patch_description: Reset the accumulated flow between alpha-expansion moves
+      patch_source: https://github.com/CGAL/cgal/issues/9898
+      patch_type: bugfix
