@@ -15,6 +15,7 @@ git clone https://github.com/3DBAG/roofer.git
 cd roofer
 conan profile detect --force
 conan export conan/recipes/proj --version=9.8.1
+conan export conan/recipes/cgal --version=6.1.1 --user=roofer --channel=stable
 conan install . \
   --output-folder=build \
   --build=missing \
@@ -76,6 +77,7 @@ To build the documentation locally, first build the documentation helper and Pyt
 ```sh
 conan profile detect --force
 conan export conan/recipes/proj --version=9.8.1
+conan export conan/recipes/cgal --version=6.1.1 --user=roofer --channel=stable
 conan install . \
   --output-folder=build \
   --build=missing \

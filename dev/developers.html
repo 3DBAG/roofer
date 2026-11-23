@@ -268,6 +268,7 @@ before installing dependencies, as shown below. CI does this automatically.</p>
 <span class="nb">cd</span><span class="w"> </span>roofer
 conan<span class="w"> </span>profile<span class="w"> </span>detect<span class="w"> </span>--force
 conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/proj<span class="w"> </span>--version<span class="o">=</span><span class="m">9</span>.8.1
+conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/cgal<span class="w"> </span>--version<span class="o">=</span><span class="m">6</span>.1.1<span class="w"> </span>--user<span class="o">=</span>roofer<span class="w"> </span>--channel<span class="o">=</span>stable
 conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output-folder<span class="o">=</span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--build<span class="o">=</span>missing<span class="w"> </span><span class="se">\</span>
@@ -324,6 +325,7 @@ nix<span class="w"> </span>build<span class="w"> </span>.#rooferpy
 <h3>With Conan<a class="headerlink" href="#with-conan" title="Link to this heading">¶</a></h3>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conan<span class="w"> </span>profile<span class="w"> </span>detect<span class="w"> </span>--force
 conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/proj<span class="w"> </span>--version<span class="o">=</span><span class="m">9</span>.8.1
+conan<span class="w"> </span><span class="nb">export</span><span class="w"> </span>conan/recipes/cgal<span class="w"> </span>--version<span class="o">=</span><span class="m">6</span>.1.1<span class="w"> </span>--user<span class="o">=</span>roofer<span class="w"> </span>--channel<span class="o">=</span>stable
 conan<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output-folder<span class="o">=</span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--build<span class="o">=</span>missing<span class="w"> </span><span class="se">\</span>
