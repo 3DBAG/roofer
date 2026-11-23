@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Build AMD64 and ARM64 Docker images from the default Nix flake package. This changes the image file structure, but usage stays the same.
 - Reuse package dependencies in the Nix development shell, make Python setup explicit with `roofer-python-setup`, and provide the documentation helper separately through the `docs` flake package.
+- The roof graph cut gets each edge between two faces once, at twice the weight, instead of once per direction. The energy is the same (output identical on 7147 test buildings) and the graph half the size: about 30 % faster on buildings with hundreds of roof planes, where the graph cut takes most of the time.
 
 ## [1.1.0-beta.1] - 2026-07-30
 
