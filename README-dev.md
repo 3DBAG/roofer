@@ -64,6 +64,11 @@ See the CMake presets for the available test configurations.
 
     ```ctest --preset test-installed```
 
+CTest inherits `PROJ_DATA` and `GDAL_DATA` from the shell. For a local Conan
+installation, point them at `share/proj` and `share/gdal` under the install
+directory, as the Conan CI workflow does. Nix builds can use the libraries'
+default data paths.
+
 ### Test data
 
 Various test cases are available at https://data.3dgi.xyz/roofer-test-data.

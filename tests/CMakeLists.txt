@@ -6,9 +6,6 @@ include(FetchContent)
 set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
 set(DATA_URL_ROOT "https://data.3dgi.xyz/roofer-test-data")
 set(DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
-set(TEST_ENVIRONMENT
-    "PROJ_DATA=${CMAKE_INSTALL_PREFIX}/share/proj;GDAL_DATA=${CMAKE_INSTALL_PREFIX}/share/gdal"
-)
 
 FetchContent_Declare(
   wippolder
@@ -143,15 +140,11 @@ add_test(
   NAME "reconstruct-api-wippolder"
   COMMAND $<TARGET_FILE:reconstruct_api>
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-set(tests_api "reconstruct-api-wippolder")
-set_tests_properties(${tests_api} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
 add_test(
   NAME "vector-reader-skip-invalid-polygons"
   COMMAND $<TARGET_FILE:test_vector_reader>
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-set_tests_properties("vector-reader-skip-invalid-polygons"
-                     PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
 
 # --- Integration tests that are run on the built executables, before
 # installation.
@@ -167,8 +160,7 @@ if(RF_BUILD_APPS)
              COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_cityjson_stream.py"
                      $<TARGET_FILE:roofer> $<TARGET_FILE:stream_completion_fixture>
                      "${DATA_DIR}/underpasses")
-    set_tests_properties(roofer-cityjson-stream PROPERTIES TIMEOUT 90
-                         ENVIRONMENT "${TEST_ENVIRONMENT}")
+    set_tests_properties(roofer-cityjson-stream PROPERTIES TIMEOUT 90)
   else()
     message(STATUS "Skipping roofer-cityjson-stream (Python 3 interpreter unavailable)")
   endif()
@@ -216,10 +208,6 @@ if(RF_BUILD_APPS)
             -P "${CMAKE_CURRENT_SOURCE_DIR}/check_underpass_output.cmake"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  set(tests_built "roofer-wippolder;roofer-crop-only-trace;issue-64;issue-71-v2;roofer-underpasses")
-  set_tests_properties(${tests_built} PROPERTIES ENVIRONMENT
-                                                 "${TEST_ENVIRONMENT}")
-
   # Integration tests that are run on the installed artifacts must be prefixed
   # with "installed-". Note that these tests must be invoked *after* the
   # artifacts were installed.
@@ -233,12 +221,6 @@ if(RF_BUILD_APPS)
       NAME "installed-roofer-wippolder"
       COMMAND roofer --config "${CONFIG_DIR}/roofer-wippolder.toml"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-
-    set(tests_installed
-        "installed-roofer-version;installed-roofer-wippolder"
-    )
-    set_tests_properties(
-      ${tests_installed} PROPERTIES ENVIRONMENT "${TEST_ENVIRONMENT}")
   endif()
 endif()
 
