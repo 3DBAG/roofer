@@ -36,8 +36,9 @@ namespace roofer::reconstruction {
     config::no_validation<bool>(), internal)                              \
   X(bool, normalise, false, "Normalise graph-cut costs.",                 \
     config::no_validation<bool>(), internal)                              \
-  X(int, graph_cut_impl, 0, "Graph-cut implementation selector.",         \
-    config::at_least(0), internal)                                        \
+  X(int, graph_cut_impl, automatic_graph_cut_impl,                        \
+    "Graph-cut implementation selector (-1 uses the build default).",     \
+    config::at_least(automatic_graph_cut_impl), internal)                 \
   X(bool, label_ground_outside_footprint, true,                           \
     "Label ground outside the footprint.", config::no_validation<bool>(), \
     internal)                                                             \
@@ -45,6 +46,7 @@ namespace roofer::reconstruction {
     config::no_validation<bool>(), internal)
   struct ArrangementOptimiserConfig {
     using Self = ArrangementOptimiserConfig;
+    static constexpr int automatic_graph_cut_impl = -1;
     ROOFER_CONFIG_MEMBERS(ROOFER_ARRANGEMENT_OPTIMISER_FIELDS)
 
     [[nodiscard]] constexpr float data_weight() const {
