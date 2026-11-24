@@ -556,3 +556,68 @@ TEST_CASE("snapper rejects a non-finite exterior height") {
                                  .manifold_repair_radius = 0.5F,
                                  .manifold_height_tolerance = 1e-4F}));
 }
+
+TEST_CASE("snapper keeps the outer labels of the edges a collapse merges") {
+  // Collapsing v1-v2 (or v1-v3-v2) merges the edges to p, which removes the
+  // slivers between them. With q, it also rebuilds the triangle v1-q-p from
+  // new faces only.
+  for (bool mirrored : {false, true}) {
+    for (bool with_q : {true, false}) {
+      for (bool with_v3 : {false, true}) {
+        CAPTURE(mirrored, with_q, with_v3);
+        auto at = [&](double x, double y) {
+          return Point_2(mirrored ? 10 - x : x, y);
+        };
+        const Point_2 v1 = at(5, 5), v2 = at(5.01, 5), v3 = at(5.005, 5.008),
+                      p = at(5, 10), q = at(3, 8);
+        Arrangement_2 arrangement;
+        const std::array<Point_2, 4> corners = {
+            Point_2(0, 0), Point_2(10, 0), Point_2(10, 10), Point_2(0, 10)};
+        for (std::size_t i = 0; i < corners.size(); ++i) {
+          CGAL::insert(
+              arrangement,
+              Segment_2(corners[i], corners[(i + 1) % corners.size()]));
+        }
+        for (const auto& segment :
+             {Segment_2(v1, v2), Segment_2(v1, p), Segment_2(v2, p)}) {
+          CGAL::insert(arrangement, segment);
+        }
+        if (with_v3) {
+          CGAL::insert(arrangement, Segment_2(v1, v3));
+          CGAL::insert(arrangement, Segment_2(v3, v2));
+          CGAL::insert(arrangement, Segment_2(v3, p));
+        }
+        if (with_q) {
+          CGAL::insert(arrangement, Segment_2(v1, q));
+          CGAL::insert(arrangement, Segment_2(q, p));
+        }
+        const Point_2 inside_small = CGAL::centroid(v1, q, p);
+        auto set_roof = [&](const Point_2& sample, int segid) {
+          auto face = face_at(arrangement, sample);
+          face->data().in_footprint = true;
+          face->data().segid = segid;
+          face->data().plane = roofer::Plane(0, 0, 1, -segid);
+        };
+        set_roof(Point_2(1, 1), 1);
+        if (with_q) set_roof(inside_small, 2);
+        set_roof(CGAL::centroid(v3, v2, p), 3);
+        if (with_v3) {
+          set_roof(CGAL::centroid(v1, v3, p), 4);
+          set_roof(CGAL::centroid(v1, v2, v3), 5);
+        }
+        arrangement.unbounded_face()->data().in_footprint = false;
+        arrangement.unbounded_face()->data().segid = 0;
+        arrangement.unbounded_face()->data().plane = roofer::Plane(0, 0, 1, 0);
+
+        auto snapper = roofer::reconstruction::createArrangementSnapper();
+        snapper->compute(arrangement, {.distance_threshold = 0.02F,
+                                       .repair_non_manifold_vertices = false});
+
+        CHECK_FALSE(has_vertex_near(arrangement, v1, 1e-9));
+        CHECK(arrangement.number_of_faces() == (with_q ? 3 : 2));
+        CHECK(face_at(arrangement, inside_small)->data().segid ==
+              (with_q ? 2 : 1));
+      }
+    }
+  }
+}
