@@ -48,6 +48,27 @@ TEST_CASE("polygon snapping rejects unresolved large crossings") {
   CHECK(result.error.has_value());
   CHECK(result.polygons.empty());
 }
+
+TEST_CASE(
+    "successive reroutes preserve a footprint wider than the snap distance") {
+  // The arc reaches 0.35 m from its closing chord. Each local reroute can
+  // move less than 0.021 m and still erase the footprint over many steps.
+  PolygonRings polygon;
+  for (int i = 0; i <= 100; ++i) {
+    const double x = i / 10.0;
+    polygon.exterior.push_back({x, 0.014 * x * (x - 10), 0});
+  }
+
+  auto result = snap_polygon(polygon, 0.021);
+  INFO(result.error.value_or(""));
+  REQUIRE_FALSE(result.error);
+  REQUIRE(result.polygons.size() == 1);
+  Polygon_2 exterior;
+  for (const auto& point : result.polygons.front().exterior)
+    exterior.push_back(Point_2(point[0], point[1]));
+  CHECK(exterior.has_on_bounded_side(Point_2(5, -0.175)));
+}
+
 TEST_CASE("polygon snapping validates thresholds and coordinates") {
   for (double t : {-1.0, std::numeric_limits<double>::infinity(),
                    std::numeric_limits<double>::quiet_NaN()})

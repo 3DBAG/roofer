@@ -3,15 +3,16 @@
 #include <CGAL/centroid.h>
 #include <CGAL/squared_distance_2.h>
 #include <algorithm>
+#include <map>
 #include <vector>
 
 namespace roofer::reconstruction::detail {
-  // Geometry-only operations. Adapters retain their own labels, restore
-  // constraints after collapse, and relabel after constraint rewiring.
-  template <typename Tri, typename Collapse, typename Insert, typename Relabel,
-            typename Cleanup>
+  // Finds what to snap. Adapters retain their own labels: collapse restores
+  // constraints, reroute replaces a constrained edge by the two sides through
+  // the opposite vertex.
+  template <typename Tri, typename Collapse, typename Reroute, typename Cleanup>
   void snap_triangulation(Tri& tri, double squared_threshold, Collapse collapse,
-                          Insert insert, Relabel relabel, Cleanup cleanup) {
+                          Reroute reroute, Cleanup cleanup) {
     using Vertex = typename Tri::Vertex_handle;
     using Point = typename Tri::Point_2;
     bool changed;
@@ -74,24 +75,47 @@ namespace roofer::reconstruction::detail {
         changed = true;
       }
     } while (changed);
-    for (auto f = tri.finite_faces_begin(); f != tri.finite_faces_end(); ++f) {
-      for (int i = 0; i < 3; ++i) {
-        auto a = f->vertex(tri.cw(i)), b = f->vertex(tri.ccw(i)),
-             opposite = f->vertex(i);
-        if (CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
-                squared_threshold &&
-            tri.is_constrained({f, i})) {
-          if (tri.is_constrained({f, tri.cw(i)}) ||
-              tri.is_constrained({f, tri.ccw(i)})) {
-            tri.remove_constrained_edge(f, i);
-            if (!tri.is_constrained({f, tri.cw(i)})) insert(tri, opposite, b);
-            if (!tri.is_constrained({f, tri.ccw(i)})) insert(tri, opposite, a);
-            relabel();
+    // Faces go stale after a change, so rescan. New constraints are shorter
+    // than the removed one, so this ends. A new edge keeps the segment it was
+    // rerouted from, and a vertex must lie near both that segment and the
+    // current edge, so successive reroutes cannot wear away a wide face.
+    using Segment = typename Tri::Segment;
+    std::map<std::pair<Vertex, Vertex>, Segment> origins;
+    auto key = [](Vertex a, Vertex b) {
+      return a < b ? std::pair(a, b) : std::pair(b, a);
+    };
+    do {
+      changed = false;
+      for (auto f = tri.finite_faces_begin(); f != tri.finite_faces_end();
+           ++f) {
+        for (int i = 0; i < 3; ++i) {
+          auto a = f->vertex(tri.cw(i)), b = f->vertex(tri.ccw(i)),
+               opposite = f->vertex(i);
+          if (!tri.is_constrained({f, i})) continue;
+          auto origin = origins.find(key(a, b));
+          Segment segment =
+              origin != origins.end() ? origin->second : tri.segment({f, i});
+          auto length = CGAL::squared_distance(a->point(), b->point());
+          bool a_side = tri.is_constrained({f, tri.ccw(i)}),
+               b_side = tri.is_constrained({f, tri.cw(i)});
+          if (CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
+                  squared_threshold &&
+              CGAL::squared_distance(segment, opposite->point()) <
+                  squared_threshold &&
+              CGAL::squared_distance(a->point(), opposite->point()) < length &&
+              CGAL::squared_distance(b->point(), opposite->point()) < length &&
+              (a_side || b_side)) {
+            reroute(typename Tri::Edge(f, i), opposite);
+            origins.erase(key(a, b));
+            if (!a_side) origins.insert_or_assign(key(a, opposite), segment);
+            if (!b_side) origins.insert_or_assign(key(opposite, b), segment);
+            changed = true;
+            break;
           }
-          break;
         }
+        if (changed) break;
       }
-    }
+    } while (changed);
     cleanup();
   }
 }  // namespace roofer::reconstruction::detail
