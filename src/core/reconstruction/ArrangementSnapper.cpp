@@ -331,12 +331,6 @@ namespace roofer::reconstruction {
       return labelling;
     }
 
-    void relabel_from_existing_region_labels(T& tri,
-                                             const SourceFaceIds& source_ids,
-                                             FaceInfo* unbounded_label) {
-      compute_region_labelling(tri, source_ids, {}, unbounded_label);
-    }
-
     double squared_distance_to_face(T& tri, Face_handle face,
                                     const T::Point_2& point) {
       auto triangle = tri.triangle(face);
@@ -1238,10 +1232,26 @@ namespace roofer::reconstruction {
               restore_constraints(tri, point, boundary, constraints,
                                   source_face_ids, unbounded_label);
             },
-            insert_constraint_if_distinct,
-            [&] {
-              relabel_from_existing_region_labels(tri, source_face_ids,
-                                                  unbounded_label);
+            [&](const Edge& edge, Vertex_handle opposite) {
+              auto a = edge.first->vertex(tri.cw(edge.second)),
+                   b = edge.first->vertex(tri.ccw(edge.second));
+              // The sides keep a->b's labels. The face, and so opposite, is
+              // right of a->b; a side that is already constrained keeps its
+              // outer (right) region, so only seed its inner side.
+              auto labels = get_labelled_constraint(tri, edge, a, b);
+              auto side = [&](Vertex_handle from, Vertex_handle to, int index) {
+                return LabelledConstraint{
+                    from, to, labels.left_label,
+                    tri.is_constrained({edge.first, index})
+                        ? nullptr
+                        : labels.right_label};
+              };
+              std::vector<LabelledConstraint> sides{
+                  side(a, opposite, tri.ccw(edge.second)),
+                  side(opposite, b, tri.cw(edge.second))};
+              tri.remove_constrained_edge(edge.first, edge.second);
+              insert_labelled_constraints_and_relabel(
+                  tri, sides, source_face_ids, unbounded_label);
             },
             [&] { remove_dangling_constraints_and_vertices(tri); });
 

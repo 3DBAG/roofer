@@ -1,7 +1,10 @@
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <limits>
 #include <map>
+#include <sstream>
+#include <string>
 #include <variant>
 
 #include <catch2/catch_test_macros.hpp>
@@ -283,6 +286,46 @@ namespace {
       CAPTURE(edge.first, edge.second);
       CHECK(incidence == 2);
     }
+  }
+
+  struct FaceSample {
+    Point_2 point;
+    int segid;
+  };
+
+  // Reads tests/fixtures/<name>: "edge x1 y1 x2 y2" and "face x y segid a b c
+  // d" lines, where x y is a point inside the face.
+  Arrangement_2 fixture_arrangement(const std::string& name,
+                                    std::vector<FaceSample>& samples) {
+    std::ifstream in(std::string(SNAPPER_FIXTURES) + "/" + name);
+    REQUIRE(in);
+    Arrangement_2 arrangement;
+    std::vector<std::pair<FaceSample, roofer::Plane>> faces;
+    for (std::string line; std::getline(in, line);) {
+      std::istringstream fields(line);
+      std::string tag;
+      double x1, y1, x2, y2;
+      fields >> tag >> x1 >> y1;
+      if (tag == "edge") {
+        fields >> x2 >> y2;
+        CGAL::insert(arrangement, Segment_2(Point_2(x1, y1), Point_2(x2, y2)));
+      } else if (tag == "face") {
+        int segid;
+        double a, b, c, d;
+        fields >> segid >> a >> b >> c >> d;
+        faces.push_back({{Point_2(x1, y1), segid}, roofer::Plane(a, b, c, d)});
+      }
+    }
+    for (const auto& [sample, plane] : faces) {
+      auto face = face_at(arrangement, sample.point);
+      face->data().in_footprint = true;
+      face->data().segid = sample.segid;
+      face->data().plane = plane;
+      samples.push_back(sample);
+    }
+    arrangement.unbounded_face()->data().in_footprint = false;
+    arrangement.unbounded_face()->data().segid = 0;
+    return arrangement;
   }
 }  // namespace
 
@@ -618,6 +661,24 @@ TEST_CASE("snapper keeps the outer labels of the edges a collapse merges") {
         CHECK(face_at(arrangement, inside_small)->data().segid ==
               (with_q ? 2 : 1));
       }
+    }
+  }
+}
+
+TEST_CASE("snapper keeps every face's label when it reroutes edges") {
+  for (const char* name :
+       {"snap-reroute-large-roof.txt", "snap-reroute-exterior-sliver.txt"}) {
+    CAPTURE(name);
+    std::vector<FaceSample> samples;
+    auto arrangement = fixture_arrangement(name, samples);
+    auto snapper = roofer::reconstruction::createArrangementSnapper();
+    snapper->compute(arrangement);
+
+    for (const auto& [point, segid] : samples) {
+      CAPTURE(point);
+      auto face = face_at(arrangement, point);
+      CHECK(face->data().in_footprint);
+      CHECK(face->data().segid == segid);
     }
   }
 }
