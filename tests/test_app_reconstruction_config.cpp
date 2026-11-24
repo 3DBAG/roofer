@@ -46,6 +46,7 @@ normal-angle-threshold = 30
 
 [reconstruction.arrangement-optimiser]
 complexity-factor = 0.7
+graph-cut-impl = 2
 
 [reconstruction.arrangement-extruder]
 snap-tolerance = 0.002
@@ -59,6 +60,7 @@ snap-tolerance = 0.002
   CHECK(handler.cfg_.reconstruction.plane_detector.plane_neighbour_count == 23);
   CHECK(handler.cfg_.reconstruction.arrangement_optimiser.complexity_factor ==
         0.7F);
+  CHECK(handler.cfg_.reconstruction.arrangement_optimiser.graph_cut_impl == 2);
   CHECK(handler.cfg_.unit_scale == Catch::Approx(0.3048F));
   CHECK(handler.cfg_.reconstruction.plane_detector.normal_angle_threshold ==
         30.0F);
@@ -307,6 +309,19 @@ plane-neighbour-count = 2147483648
         handler.parse_config_file(),
         Catch::Matchers::ContainsSubstring(
             "reconstruction.plane-detector.plane-neighbour-count"));
+  }
+
+  SECTION("unsupported graph-cut backend") {
+    TemporaryConfig file(R"(
+[reconstruction.arrangement-optimiser]
+graph-cut-impl = 3
+)");
+    RooferConfigHandler handler;
+    handler._config_path = file.string();
+    CHECK_THROWS_WITH(
+        handler.parse_config_file(),
+        Catch::Matchers::ContainsSubstring(
+            "reconstruction.arrangement-optimiser.graph-cut-impl"));
   }
 
   SECTION("out-of-range integer in pair") {

@@ -318,34 +318,21 @@ namespace roofer::reconstruction {
 
       // boost::adjacency_list<> g(N);
 
-      // CGAL #9898 affects MaxFlow across expansion moves. The package patch
-      // advertises that Graph::clear() resets the flow.
-#ifdef ROOFER_CGAL_MAXFLOW_CLEAR_RESETS_FLOW
-      constexpr int default_graph_cut_impl = 2;
-#else
-      constexpr int default_graph_cut_impl = 0;
-#endif
-      const int graph_cut_impl =
-          cfg.graph_cut_impl ==
-                  ArrangementOptimiserConfig::automatic_graph_cut_impl
-              ? default_graph_cut_impl
-              : cfg.graph_cut_impl;
-
-      if (graph_cut_impl == 0) {
+      if (cfg.graph_cut_impl == 0) {
         CGAL::alpha_expansion_graphcut(
             graph, Edge_weight_property_map(), Vertex_label_cost_property_map(),
             Vertex_label_property_map(),
             CGAL::parameters::vertex_index_map(Vertex_index_map())
                 .implementation_tag(
                     CGAL::Alpha_expansion_boost_adjacency_list_tag()));
-      } else if (graph_cut_impl == 1) {
+      } else if (cfg.graph_cut_impl == 1) {
         CGAL::alpha_expansion_graphcut(
             graph, Edge_weight_property_map(), Vertex_label_cost_property_map(),
             Vertex_label_property_map(),
             CGAL::parameters::vertex_index_map(Vertex_index_map())
                 .implementation_tag(
                     CGAL::Alpha_expansion_boost_compressed_sparse_row_tag()));
-      } else if (graph_cut_impl == 2) {
+      } else if (cfg.graph_cut_impl == 2) {
         CGAL::alpha_expansion_graphcut(
             graph, Edge_weight_property_map(), Vertex_label_cost_property_map(),
             Vertex_label_property_map(),

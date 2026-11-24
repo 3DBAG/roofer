@@ -95,6 +95,8 @@ TEST_CASE("descriptor names convert to kebab case and hide derived fields") {
   });
 
   CHECK(optimiser_fields.contains("complexity-factor"));
+  CHECK(optimiser_fields.contains("graph-cut-impl"));
+  CHECK(cfg.arrangement_optimiser.graph_cut_impl == 0);
   CHECK_FALSE(optimiser_fields.contains("label-ground-outside-footprint"));
   CHECK_FALSE(optimiser_fields.contains("use-ground"));
 }
