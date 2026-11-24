@@ -79,6 +79,7 @@ namespace roofer::reconstruction {
       Vertex_handle other;
       FaceInfo* left_label = nullptr;
       FaceInfo* right_label = nullptr;
+      T::Point_2 from;
     };
 
     struct FaceLabelSeed {
@@ -993,7 +994,7 @@ namespace roofer::reconstruction {
     ConstraintToRestore get_labelled_constraint(T& tri, const Edge& edge,
                                                 Vertex_handle from,
                                                 Vertex_handle to) {
-      ConstraintToRestore constraint{to, nullptr, nullptr};
+      ConstraintToRestore constraint{to, nullptr, nullptr, from->point()};
       // a 1-dimensional triangulation, all its vertices on one line, has no
       // faces either side of an edge to take labels from
       if (tri.dimension() < 2) return constraint;
@@ -1137,10 +1138,28 @@ namespace roofer::reconstruction {
 
       for (const auto& constraint : constraints_to_restore) {
         if (vnew == constraint.other) continue;
+        if (std::any_of(labelled_constraints.begin(),
+                        labelled_constraints.end(), [&](const auto& restored) {
+                          return restored.second == constraint.other;
+                        }))
+          continue;
 
+        // Constraints from collapsed vertices to the same vertex now coincide
+        // and the regions between them are gone: keep the outer labels.
+        const auto& to = constraint.other->point();
+        auto *leftmost = &constraint, *rightmost = &constraint;
+        for (const auto& candidate : constraints_to_restore) {
+          if (candidate.other != constraint.other) continue;
+          if (CGAL::orientation(leftmost->from, to, candidate.from) ==
+              CGAL::LEFT_TURN)
+            leftmost = &candidate;
+          if (CGAL::orientation(rightmost->from, to, candidate.from) ==
+              CGAL::RIGHT_TURN)
+            rightmost = &candidate;
+        }
         labelled_constraints.push_back({vnew, constraint.other,
-                                        constraint.left_label,
-                                        constraint.right_label});
+                                        leftmost->left_label,
+                                        rightmost->right_label});
       }
       insert_labelled_constraints_and_relabel(tri, labelled_constraints,
                                               source_ids, unbounded_label);
