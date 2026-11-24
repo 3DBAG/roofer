@@ -1192,6 +1192,8 @@ including ceilings at the same height.</p>
 <span class="k">[reconstruction.arrangement-optimiser]</span>
 <span class="c1">## Balance between data fidelity (1) and smoothness (0).</span>
 <span class="n">complexity-factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.888</span>
+<span class="c1">## Graph-cut backend (experimental). 0 uses Boost adjacency list (default). 1 uses Boost compressed sparse row (slower, uses less memory). 2 uses MaxFlow (faster but may consume a lot more memory).</span>
+<span class="n">graph-cut-impl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
 
 <span class="k">[reconstruction.arrangement-snapper]</span>
 <span class="c1">## Vertex snapping distance, in metres.</span>
