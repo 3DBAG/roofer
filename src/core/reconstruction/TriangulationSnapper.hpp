@@ -76,9 +76,9 @@ namespace roofer::reconstruction::detail {
       }
     } while (changed);
     // Faces go stale after a change, so rescan. New constraints are shorter
-    // than the removed one, so this ends. A rerouted edge keeps its original
-    // segment, and every vertex it is rerouted through must lie near that
-    // segment, so successive reroutes cannot drift beyond the threshold.
+    // than the removed one, so this ends. A new edge keeps the segment it was
+    // rerouted from, and a vertex must lie near both that segment and the
+    // current edge, so successive reroutes cannot wear away a wide face.
     using Segment = typename Tri::Segment;
     std::map<std::pair<Vertex, Vertex>, Segment> origins;
     auto key = [](Vertex a, Vertex b) {
@@ -98,14 +98,17 @@ namespace roofer::reconstruction::detail {
           auto length = CGAL::squared_distance(a->point(), b->point());
           bool a_side = tri.is_constrained({f, tri.ccw(i)}),
                b_side = tri.is_constrained({f, tri.cw(i)});
-          if (CGAL::squared_distance(segment, opposite->point()) <
+          if (CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
+                  squared_threshold &&
+              CGAL::squared_distance(segment, opposite->point()) <
                   squared_threshold &&
               CGAL::squared_distance(a->point(), opposite->point()) < length &&
               CGAL::squared_distance(b->point(), opposite->point()) < length &&
               (a_side || b_side)) {
             reroute(typename Tri::Edge(f, i), opposite);
-            if (!a_side) origins.emplace(key(a, opposite), segment);
-            if (!b_side) origins.emplace(key(opposite, b), segment);
+            origins.erase(key(a, b));
+            if (!a_side) origins.insert_or_assign(key(a, opposite), segment);
+            if (!b_side) origins.insert_or_assign(key(opposite, b), segment);
             changed = true;
             break;
           }

@@ -88,3 +88,23 @@ TEST_CASE(
   REQUIRE(tri.is_valid());
   for (auto end : ends) CHECK(constrained_path(tri, a, end));
 }
+
+TEST_CASE("snapper reroutes only through vertices near the current edge") {
+  // above and below lie within the threshold of a-b, but each is farther
+  // than the threshold from the edge the other's reroute leaves.
+  Tri tri;
+  auto a = tri.insert(Point(0, 0)), b = tri.insert(Point(1, 0)),
+       above = tri.insert(Point(0.5, 0.019)),
+       below = tri.insert(Point(0.75, -0.019));
+  tri.insert_constraint(a, b);
+  tri.insert_constraint(a, above);
+  tri.insert_constraint(below, b);
+  snap(tri);
+
+  REQUIRE(tri.is_valid());
+  CHECK(constrained_path(tri, a, b));
+  Tri::Face_handle face;
+  int index;
+  CHECK_FALSE((tri.is_edge(above, below, face, index) &&
+               tri.is_constrained({face, index})));
+}
