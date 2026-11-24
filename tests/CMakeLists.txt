@@ -106,6 +106,8 @@ add_executable("test_vector_reader"
                "${CMAKE_CURRENT_SOURCE_DIR}/test_vector_reader.cpp")
 target_link_libraries("test_vector_reader" PRIVATE Catch2::Catch2WithMain)
 target_link_libraries("test_vector_reader" PRIVATE roofer-extra)
+target_compile_definitions(test_vector_reader PRIVATE
+  MIXED_POLYGONS_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/issue-134-mixed.geojson")
 
 add_executable("test_terrain" "${CMAKE_CURRENT_SOURCE_DIR}/test_terrain.cpp")
 target_link_libraries("test_terrain" PRIVATE Catch2::Catch2WithMain
@@ -143,8 +145,7 @@ add_test(
 
 add_test(
   NAME "vector-reader-skip-invalid-polygons"
-  COMMAND $<TARGET_FILE:test_vector_reader>
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  COMMAND $<TARGET_FILE:test_vector_reader>)
 
 # --- Integration tests that are run on the built executables, before
 # installation.

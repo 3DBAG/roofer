@@ -29,7 +29,7 @@ TEST_CASE("VectorReaderOGR skips invalid polygons when requested") {
   auto pj = roofer::misc::createProjHelper();
   auto vector_reader = roofer::io::createVectorReaderOGR(*pj);
   vector_reader->skip_invalid_polygons = true;
-  vector_reader->open("fixtures/issue-134-mixed.geojson");
+  vector_reader->open(MIXED_POLYGONS_FIXTURE);
 
   std::vector<roofer::LinearRing> footprints;
   roofer::AttributeVecMap attributes;
