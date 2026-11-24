@@ -682,3 +682,35 @@ TEST_CASE("snapper keeps every face's label when it reroutes edges") {
     }
   }
 }
+
+TEST_CASE(
+    "a shared constraint can reroute within every original edge's snap "
+    "distance") {
+  for (const double tip_y : {0.020, 0.036}) {
+    CAPTURE(tip_y);
+    Arrangement_2 arrangement;
+    const Point_2 a(0, 0), b(10, 0), c(9, 0.020), tip(8, tip_y);
+    const Point_2 top_right(10, 10), top_left(0, 10);
+    for (const auto& edge :
+         {Segment_2(a, b), Segment_2(b, top_right),
+          Segment_2(top_right, top_left), Segment_2(top_left, a),
+          Segment_2(a, c), Segment_2(c, tip), Segment_2(tip, Point_2(8, 10))}) {
+      CGAL::insert(arrangement, edge);
+    }
+    for (auto face : arrangement.face_handles()) {
+      face->data().in_footprint = !face->is_unbounded();
+      face->data().segid = face->is_unbounded() ? 0 : 1;
+      face->data().plane = roofer::Plane(0, 0, 1, -face->data().segid);
+    }
+
+    auto snapper = roofer::reconstruction::createArrangementSnapper();
+    snapper->compute(arrangement, {.distance_threshold = 0.021F,
+                                   .repair_non_manifold_vertices = false});
+
+    // The bottom edge follows a-c. It can then follow a-tip only when the
+    // tip is also within 0.021 m of the original bottom edge.
+    CHECK(face_at(arrangement, Point_2(7.8, 0.026))->data().in_footprint);
+    CHECK(face_at(arrangement, Point_2(7.8, 0.018))->data().in_footprint ==
+          (tip_y > 0.021));
+  }
+}

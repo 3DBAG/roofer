@@ -4,6 +4,8 @@
 #include <CGAL/squared_distance_2.h>
 #include <algorithm>
 #include <map>
+#include <set>
+#include <utility>
 #include <vector>
 
 namespace roofer::reconstruction::detail {
@@ -76,13 +78,19 @@ namespace roofer::reconstruction::detail {
       }
     } while (changed);
     // Faces go stale after a change, so rescan. New constraints are shorter
-    // than the removed one, so this ends. A new edge keeps the segment it was
-    // rerouted from, and a vertex must lie near both that segment and the
-    // current edge, so successive reroutes cannot wear away a wide face.
+    // than the removed one, so this ends. A shared side represents every
+    // original constraint routed along it. Their vertex handles stay valid
+    // throughout this phase.
     using Segment = typename Tri::Segment;
-    std::map<std::pair<Vertex, Vertex>, Segment> origins;
+    using EdgeKey = std::pair<Vertex, Vertex>;
+    std::map<EdgeKey, std::set<EdgeKey>> origins;
     auto key = [](Vertex a, Vertex b) {
       return a < b ? std::pair(a, b) : std::pair(b, a);
+    };
+    auto origins_for = [&](const EdgeKey& edge, bool was_constrained) -> auto& {
+      auto& sources = origins[edge];
+      if (sources.empty() && was_constrained) sources.insert(edge);
+      return sources;
     };
     do {
       changed = false;
@@ -92,23 +100,31 @@ namespace roofer::reconstruction::detail {
           auto a = f->vertex(tri.cw(i)), b = f->vertex(tri.ccw(i)),
                opposite = f->vertex(i);
           if (!tri.is_constrained({f, i})) continue;
-          auto origin = origins.find(key(a, b));
-          Segment segment =
-              origin != origins.end() ? origin->second : tri.segment({f, i});
           auto length = CGAL::squared_distance(a->point(), b->point());
           bool a_side = tri.is_constrained({f, tri.ccw(i)}),
                b_side = tri.is_constrained({f, tri.cw(i)});
-          if (CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
-                  squared_threshold &&
-              CGAL::squared_distance(segment, opposite->point()) <
+          if ((a_side || b_side) &&
+              CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
                   squared_threshold &&
               CGAL::squared_distance(a->point(), opposite->point()) < length &&
-              CGAL::squared_distance(b->point(), opposite->point()) < length &&
-              (a_side || b_side)) {
+              CGAL::squared_distance(b->point(), opposite->point()) < length) {
+            const auto edge = key(a, b);
+            const auto& sources = origins_for(edge, true);
+            auto near_opposite = [&](const EdgeKey& source) {
+              Segment segment(source.first->point(), source.second->point());
+              return CGAL::squared_distance(segment, opposite->point()) <
+                     squared_threshold;
+            };
+            if (!std::all_of(sources.begin(), sources.end(), near_opposite))
+              continue;
             reroute(typename Tri::Edge(f, i), opposite);
-            origins.erase(key(a, b));
-            if (!a_side) origins.insert_or_assign(key(a, opposite), segment);
-            if (!b_side) origins.insert_or_assign(key(opposite, b), segment);
+            for (auto [endpoint, was_constrained] :
+                 {std::pair(a, a_side), std::pair(b, b_side)}) {
+              auto& side =
+                  origins_for(key(endpoint, opposite), was_constrained);
+              side.insert(sources.begin(), sources.end());
+            }
+            origins.erase(edge);
             changed = true;
             break;
           }
