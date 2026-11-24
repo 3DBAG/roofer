@@ -3,6 +3,7 @@
 #include <CGAL/centroid.h>
 #include <CGAL/squared_distance_2.h>
 #include <algorithm>
+#include <map>
 #include <vector>
 
 namespace roofer::reconstruction::detail {
@@ -75,7 +76,14 @@ namespace roofer::reconstruction::detail {
       }
     } while (changed);
     // Faces go stale after a change, so rescan. New constraints are shorter
-    // than the removed one, so this ends.
+    // than the removed one, so this ends. A rerouted edge keeps its original
+    // segment, and every vertex it is rerouted through must lie near that
+    // segment, so successive reroutes cannot drift beyond the threshold.
+    using Segment = typename Tri::Segment;
+    std::map<std::pair<Vertex, Vertex>, Segment> origins;
+    auto key = [](Vertex a, Vertex b) {
+      return a < b ? std::pair(a, b) : std::pair(b, a);
+    };
     do {
       changed = false;
       for (auto f = tri.finite_faces_begin(); f != tri.finite_faces_end();
@@ -83,15 +91,21 @@ namespace roofer::reconstruction::detail {
         for (int i = 0; i < 3; ++i) {
           auto a = f->vertex(tri.cw(i)), b = f->vertex(tri.ccw(i)),
                opposite = f->vertex(i);
+          if (!tri.is_constrained({f, i})) continue;
+          auto origin = origins.find(key(a, b));
+          Segment segment =
+              origin != origins.end() ? origin->second : tri.segment({f, i});
           auto length = CGAL::squared_distance(a->point(), b->point());
-          if (tri.is_constrained({f, i}) &&
-              CGAL::squared_distance(tri.segment({f, i}), opposite->point()) <
+          bool a_side = tri.is_constrained({f, tri.ccw(i)}),
+               b_side = tri.is_constrained({f, tri.cw(i)});
+          if (CGAL::squared_distance(segment, opposite->point()) <
                   squared_threshold &&
               CGAL::squared_distance(a->point(), opposite->point()) < length &&
               CGAL::squared_distance(b->point(), opposite->point()) < length &&
-              (tri.is_constrained({f, tri.cw(i)}) ||
-               tri.is_constrained({f, tri.ccw(i)}))) {
+              (a_side || b_side)) {
             reroute(typename Tri::Edge(f, i), opposite);
+            if (!a_side) origins.emplace(key(a, opposite), segment);
+            if (!b_side) origins.emplace(key(opposite, b), segment);
             changed = true;
             break;
           }
