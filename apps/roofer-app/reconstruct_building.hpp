@@ -473,14 +473,16 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     if (cfg->use_rerun) {
       rec.log("world/intersection_lines",
               rerun::LineStrips3D(PlaneIntersector->segments));
+      rec.log("world/external_lines",
+              rerun::LineStrips3D(building.external_lines));
     }
 #endif
 
     t0 = std::chrono::high_resolution_clock::now();
     auto LineRegulariser = roofer::reconstruction::createLineRegulariser();
-    LineRegulariser->compute(LineDetector->edge_segments,
-                             PlaneIntersector->segments,
-                             reconstruction.line_regulariser);
+    LineRegulariser->compute(
+        LineDetector->edge_segments, PlaneIntersector->segments,
+        reconstruction.line_regulariser, building.external_lines);
     timings["LineRegulariser"] = std::chrono::high_resolution_clock::now() - t0;
     // logger.debug("Completed LineRegulariser");
 #ifdef RF_USE_RERUN

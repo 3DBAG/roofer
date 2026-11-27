@@ -121,6 +121,35 @@ the attributes. Equal adjusted heights use the first input in source order.
 Selecting attributes retains ceiling boundaries between different inputs,
 including ceilings at the same height.
 
+### Roof lines
+
+`line-source` adds 2D roof lines, for example ridges and dormer outlines
+extracted from orthophotos, to the lines roofer detects in the point cloud:
+
+```toml
+[input]
+line-source = "roof-lines.gpkg"
+
+[reconstruction.line-regulariser]
+external-line-priority = 0
+```
+
+The source holds LineString or MultiLineString features in the footprint CRS;
+other geometry types are skipped. For each building, the parts of the lines
+inside its footprint are regularised together with the detected boundary and
+plane intersection lines and then partition the roof. The graph cut decides
+which of the resulting faces remain. `external-line-priority` sets their weight
+in the regularisation, where each cluster of nearby parallel lines is replaced
+by its highest priority lines:
+
+- 0 (default): as detected boundary lines, averaged with those nearby and
+  replaced by a nearby plane intersection line.
+- 1: replace nearby boundary lines, replaced by a nearby plane intersection
+  line.
+- 2: as plane intersection lines. Unless `merge-intersection-lines` is set,
+  these are kept separately, so a line close to a detected ridge adds a narrow
+  face that the graph cut assigns to either side.
+
 ## Config file
 Below is an example of a [TOML](https://toml.io/en/) configuration file for the {program}`roofer` CLI application. It shows all the available options. Some of these options are also available as command line arguments, in case one option is provided both in the configuration file and as a command line argument, the command line argument takes precedence.
 

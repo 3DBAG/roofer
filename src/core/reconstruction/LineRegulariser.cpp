@@ -29,11 +29,13 @@ namespace roofer::reconstruction {
   class LineRegulariser : public LineRegulariserInterface {
     void compute(const SegmentCollection& edge_segments,
                  const SegmentCollection& ints_segments,
-                 LineRegulariserConfig cfg) override {
+                 LineRegulariserConfig cfg,
+                 const SegmentCollection& external_segments) override {
       // get clusters from line regularisation
       auto LR = linereg::LineRegulariser();
       LR.add_segments(0, edge_segments);
       LR.add_segments(2, ints_segments);
+      LR.add_segments(cfg.external_line_priority, external_segments);
       LR.dist_threshold = cfg.distance_threshold * cfg.distance_threshold;
       LR.angle_threshold =
           cfg.angle_threshold * std::numbers::pi_v<double> / 180.0;

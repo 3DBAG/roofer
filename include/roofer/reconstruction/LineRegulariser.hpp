@@ -36,7 +36,11 @@ namespace roofer::reconstruction {
   X(float, extension, 3.0F, "Regularised line extension, in metres.",          \
     config::at_least(0.0F), public_)                                           \
   X(bool, merge_intersection_lines, false, "Merge plane intersection lines.",  \
-    config::no_validation<bool>(), public_)
+    config::no_validation<bool>(), public_)                                    \
+  X(int, external_line_priority, 0,                                            \
+    "Priority of external lines: 0 as detected boundary lines, 1 above "       \
+    "them, 2 as plane intersection lines.",                                    \
+    config::in_range(0, 2), public_)
   struct LineRegulariserConfig {
     using Self = LineRegulariserConfig;
     ROOFER_CONFIG_MEMBERS(ROOFER_LINE_REGULARISER_FIELDS)
@@ -61,10 +65,10 @@ namespace roofer::reconstruction {
     // add_output("n_angle_clusters", typeid(int));
 
     virtual ~LineRegulariserInterface() = default;
-    virtual void compute(
-        const SegmentCollection& edge_segments,
-        const SegmentCollection& ints_segments,
-        LineRegulariserConfig config = LineRegulariserConfig()) = 0;
+    virtual void compute(const SegmentCollection& edge_segments,
+                         const SegmentCollection& ints_segments,
+                         LineRegulariserConfig config = LineRegulariserConfig(),
+                         const SegmentCollection& external_segments = {}) = 0;
   };
 
   std::unique_ptr<LineRegulariserInterface> createLineRegulariser();
