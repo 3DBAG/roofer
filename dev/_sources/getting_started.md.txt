@@ -23,7 +23,7 @@ export PATH="$HOME/.local/bin:$PATH"
 To install a specific version, set `ROOFER_VERSION`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | ROOFER_VERSION=1.1.0-beta.1 sh
+curl -fsSL https://raw.githubusercontent.com/3DBAG/roofer/refs/heads/main/distribution/install.sh | ROOFER_VERSION=1.1.0-beta.2 sh
 ```
 
 ### Windows
