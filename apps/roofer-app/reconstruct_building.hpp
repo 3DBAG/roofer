@@ -473,6 +473,8 @@ void reconstruct_building(BuildingObject& building, RooferConfig* cfg) {
     if (cfg->use_rerun) {
       rec.log("world/intersection_lines",
               rerun::LineStrips3D(PlaneIntersector->segments));
+      rec.log("world/external_lines",
+              rerun::LineStrips3D(building.external_lines));
     }
 #endif
 
