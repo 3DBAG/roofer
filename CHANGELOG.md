@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-beta.2] - 2026-11-27
+
 ### Added
 
 - Optional underpass carving in LoD 2.2 models, with OGR input matched by building ID. Underpasses accept explicit ceiling elevations from input or a default clearance above the floor when the height attribute is omitted or its value is null; polygon holes preserve solid pillars. Ceilings are lowered to maintain roof clearance, and invalid or geometrically problematic cutouts are skipped with diagnostics. Carved ceilings are exported as CityJSON `OuterCeilingSurface`.

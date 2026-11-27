@@ -33,7 +33,7 @@
 }:
 stdenv.mkDerivation {
   pname = if withDocHelper then "roofer-docs" else "roofer" + lib.optionalString withBindings "py";
-  version = "1.1.0-beta.1";
+  version = "1.1.0-beta.2";
   inherit src;
 
   nativeBuildInputs = [
